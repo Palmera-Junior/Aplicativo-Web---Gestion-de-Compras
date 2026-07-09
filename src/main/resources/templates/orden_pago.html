@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Orden de Compra</title>
+
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body class="orden-page">
+
+<div class="orden-container">
+
+    <h2>ORDEN DE COMPRA</h2>
+
+    <div class="fila">
+        <div class="campo">
+            <label>Fecha</label>
+            <input type="date">
+        </div>
+
+        <div class="campo">
+            <label>Factura No.</label>
+            <input type="text">
+        </div>
+    </div>
+
+    <div class="fila">
+        <div class="campo">
+            <label>Proceso</label>
+            <input type="text">
+        </div>
+
+        <div class="campo">
+            <label>Solicitante</label>
+            <input type="text">
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="fila">
+        <div class="campo-completo">
+            <label>Proveedor</label>
+
+            <select>
+                <option value="">Seleccione un proveedor</option>
+
+                <option
+                    th:each="proveedor : ${proveedores}"
+                    th:value="${proveedor.id}"
+                    th:text="${proveedor.nombre}">
+                </option>
+
+            </select>
+        </div>
+    </div>
+
+    <div class="datos-proveedor">
+
+        <div>
+            <label>NIT</label>
+            <input type="text" readonly>
+        </div>
+
+        <div>
+            <label>Correo</label>
+            <input type="text" readonly>
+        </div>
+
+        <div>
+            <label>Teléfono</label>
+            <input type="text" readonly>
+        </div>
+
+        <div>
+            <label>Dirección</label>
+            <input type="text" readonly>
+        </div>
+
+    </div>
+
+    <h3>Productos</h3>
+
+    <table class="tabla-productos">
+
+        <thead>
+        <tr>
+            <th>Cantidad</th>
+            <th>Código</th>
+            <th>Descripción</th>
+            <th>Presentación</th>
+            <th>V/Unitario</th>
+            <th>IVA</th>
+            <th>Total</th>
+        </tr>
+        </thead>
+
+        <tbody>
+
+        <tr>
+            <td><input type="number"></td>
+            <td><input type="text"></td>
+            <td><input type="text"></td>
+            <td><input type="text"></td>
+            <td><input type="number"></td>
+            <td><input type="number"></td>
+            <td><input type="number"></td>
+        </tr>
+
+        <tr>
+            <td><input type="number"></td>
+            <td><input type="text"></td>
+            <td><input type="text"></td>
+            <td><input type="text"></td>
+            <td><input type="number"></td>
+            <td><input type="number"></td>
+            <td><input type="number"></td>
+        </tr>
+
+        </tbody>
+
+    </table>
+
+    <div class="totales">
+
+        <div>
+            <label>Subtotal</label>
+            <input type="text">
+        </div>
+
+        <div>
+            <label>IVA</label>
+            <input type="text">
+        </div>
+
+        <div>
+            <label>Total</label>
+            <input type="text">
+        </div>
+
+    </div>
+
+    <div class="observaciones">
+        <label>Observaciones</label>
+        <textarea rows="4"></textarea>
+    </div>
+
+    <button class="btn-guardar">
+        Guardar Orden
+    </button>
+
+</div>
+
+</body>
+</html>
