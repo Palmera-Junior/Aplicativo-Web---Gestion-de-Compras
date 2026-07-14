@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard - Palmera Junior</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 min-h-screen">
+
+    <nav class="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center shadow-sm">
+        <div>
+            <h1 class="text-xl font-bold text-slate-800">Panel de Control</h1>
+            <p class="text-xs text-blue-600 font-semibold uppercase tracking-wider">
+                Sede: <span sec:authentication="principal.usuario.sede.nombre">Cargando...</span>
+            </p>
+        </div>
+
+        <div class="flex items-center space-x-6">
+            <div class="text-right">
+                <p class="text-sm font-semibold text-slate-700" sec:authentication="principal.usuario.nombre + ' ' + principal.usuario.apellido"></p>
+                <p class="text-xs text-slate-400 font-medium">
+                    Rol: <span sec:authentication="principal.usuario.rol">Auxiliar</span>
+                </p>
+            </div>
+
+            <form th:action="@{/logout}" method="POST">
+                <button type="submit" class="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 text-sm font-medium rounded-lg transition">
+                    Cerrar Sesión
+                </button>
+            </form>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto p-8">
+        
+        <div class="bg-white rounded-xl shadow-sm p-6 border border-slate-200 mb-8">
+            <h3 class="text-lg font-bold text-slate-800 mb-2">¡Hola, de vuelta!</h3>
+            <p class="text-slate-600 text-sm">Tu sesión se ha iniciado de forma segura con Spring Security. Toda tu información se mantiene segmentada según los permisos de tu rol de usuario.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <div sec:authorize="hasRole('ADMINISTRADOR')" class="p-6 bg-blue-50 border border-blue-200 rounded-xl">
+                <h4 class="font-bold text-blue-800 mb-2">Sección Exclusiva de Administradores</h4>
+                <p class="text-xs text-blue-600 mb-4">Solo tú puedes ver esta caja porque tienes privilegios generales del sistema.</p>
+                <a href="/admin/configuracion" class="inline-block px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition shadow-sm shadow-blue-100">
+                    Ir a Configuración General
+                </a>
+            </div>
+
+            <div sec:authorize="hasAnyRole('AUXILIAR', 'APROBADOR')" class="p-6 bg-slate-50 border border-slate-200 rounded-xl">
+                <h4 class="font-bold text-slate-800 mb-2">Sección de Gestión de Ordenes</h4>
+                <p class="text-xs text-slate-500 mb-4">Como Auxiliar o Aprobador, aquí verás las operaciones de tu respectiva sede.</p>
+                <a href="/ordenes" class="inline-block px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold rounded-lg transition">
+                    Ver mis Órdenes de Sede
+                </a>
+            </div>
+
+        </div>
+    </main>
+
+</body>
+</html>

@@ -1,5 +1,6 @@
 package com.palmera_junior.gestion_compras.controller;
 
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
@@ -10,16 +11,17 @@ public class LoginController {
 
 
     @GetMapping("/login")
-    public String login() {
-        return "login";
+    public String login(Authentication authentication) {
+        if (authentication != null && authentication.isAuthenticated()){
+            return "redirect:/index";
+        } 
+            return "login";
+        }
     }
 
-    @GetMapping("/")
-    public String inicio() {
-        return "redirect:/login";
-    }
+  
     
 
 
-}
+
 
