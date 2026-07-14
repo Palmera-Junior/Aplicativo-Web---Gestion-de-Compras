@@ -1,34 +1,38 @@
 package com.palmera_junior.gestion_compras.controller;
 
+import java.util.List;
 
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.beans.factory.annotation.*;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
+import com.palmera_junior.gestion_compras.entity.Proveedor;
 import com.palmera_junior.gestion_compras.service.ProveedorService;
 
-import org.springframework.ui.Model;
 
-@Controller
-@RequestMapping("/proveedores")
+@RestController
+@RequestMapping("/api/proveedores")
+@CrossOrigin(origins ="*")
 public class ProveedorController {
 
-    private final ProveedorService service;
+    @Autowired
+    private ProveedorService proveedorService;
 
-    public ProveedorController(
-                ProveedorService service){
-                    this.service = service;
-                }
+    @GetMapping("/sede/{idSede}")
+    public ResponseEntity<List<Proveedor>> listarPorSede(@PathVariable Integer idSede) {
+        List<Proveedor> proveedores = proveedorService.listarPorSede(idSede);
 
-    @GetMapping
-    public String listar(Model model) {
-
-        model.addAttribute(
-            "proveedores",
-            service.Listar()
-        );
-
-        return "proveedores";
+        if (proveedores.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(proveedores);
     }
+
+       
+
+   
+
+        
+    
 }
 

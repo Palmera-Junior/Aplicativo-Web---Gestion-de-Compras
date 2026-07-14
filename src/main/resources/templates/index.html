@@ -5,13 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Órdenes de Compra</title>
     <link rel="stylesheet" href="../static/index.css">
+    <link rel="stylesheet" th:href="@{/index.css}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
 
     <header class="navbar">
         <div class="logo">
-            <h2><i class="fas fa-file-invoice-dollar"></i> Sistema Gestion de Compras</h2>
+            <h2><i class="fas fa-file-invoice-dollar"></i> Sistema OC</h2>
         </div>
         <div class="user-info">
             <span><i class="fas fa-user-circle"></i> Felipe Corzo | Auxiliar (Sede Bucaramanga)</span>
@@ -75,7 +76,7 @@
             </table>
         </div>
     </main>
-<!--######################## EMPIEZA MODAL DE NUEVA ORDEN DE COMPRA #########################-->
+<!-- #################################3Modal########################################### -->
     <div id="modal-orden" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
@@ -87,12 +88,17 @@
                 <form id="form-orden">
                     <h3 class="section-title">Datos Generales</h3>
                     <div class="form-grid-3">
-                        
+                        <div class="form-group">
+                            <label>Fecha</label>
+                            <input type="date" class="input-control" >
+                        </div>
+                        <div class="form-group">
+                            <label>Solicitante</label>
+                            <input type="text" class="input-control"  disabled>
+                        </div>
                         <div class="form-group">
                             <label>Número de Orden</label>
-                            <label>Solicitante: </label>
-                             <input type="date" class="input-control">
-                            
+                            <input type="text" class="input-control" disabled>
                         </div>
                     </div>
 
@@ -101,8 +107,7 @@
                         <label>Seleccionar Proveedor</label>
                         <select class="input-control" id="select-proveedor">
                             <option value="">-- Seleccione un proveedor frecuente --</option>
-                            <option value="1">Suministros del Oriente</option>
-                            <option value="otro">OTRO (Ingresar manualmente)</option>
+                            <option value="otro">Otro (Nuevo)</option>
                         </select>
                     </div>
                     <div class="form-grid-3">
@@ -137,13 +142,13 @@
                         <table class="table-productos">
                             <thead>
                                 <tr>
-                                    <th width="10%">Cant.</th>
-                                    <th width="15%">Cod. Inv.</th>
-                                    <th width="30%">Descripción</th>
+                                    <th width="10%">Cantidad</th>
+                                    <th width="15%">Cod. Inventario</th>
+                                    <th width="30%">Descripción de Producto</th>
                                     <th width="15%">Presentación</th>
-                                    <th width="10%">V. Unitario</th>
+                                    <th width="10%">Valor Unitario</th>
                                     <th width="10%">IVA</th>
-                                    <th width="10%">V. Total</th>
+                                    <th width="10%">Valor Total</th>
                                     <th width="5%"></th>
                                 </tr>
                             </thead>
@@ -153,8 +158,8 @@
                                     <td><input type="text" class="input-control td-input" placeholder="Ej. PROD-01"></td>
                                     <td><input type="text" class="input-control td-input"></td>
                                     <td><input type="text" class="input-control td-input"></td>
-                                    <td><input type="number" class="input-control td-input"></td>
-                                    <td><input type="number" class="input-control td-input" disabled value="0"></td>
+                                    <td><input type="number" class="input-control td-input" value="0"></td>
+                                    <td><input type="number" class="input-control td-input" value="0"></td>
                                     <td><input type="number" class="input-control td-input" disabled value="0"></td>
                                     <td><button type="button" class="btn-icon delete"><i class="fas fa-trash"></i></button></td>
                                 </tr>
@@ -167,26 +172,48 @@
                         <div class="observaciones-section">
                             <label>Observaciones</label>
                             <textarea class="input-control" rows="4"></textarea>
-                            <p class="nota-institucional">Toda factura debe llegar al correo recepcionfacturas@palmerajunior.com de lo contrario no será aceptada.</p>
+                            <p class="nota-institucional">Toda factura debe llegar al correo <strong>recepcionfacturas@palmerajunior.com</strong>  de lo contrario no será aceptada.</p>
                         </div>
                         <div class="totales-section">
                             <div class="total-row"><span>Subtotal:</span> <strong>$ 0.00</strong></div>
-                            <div class="total-row"><span>IVA:</span> <strong>0</strong></div>
-                            <div class="total-row"><span>Descuento:</span> <strong>0</strong></div>
+                            <div class="total-row"><span>IVA:</span> <strong>$ 0.00</strong></div>
+                            <div class="total-row"><span>Descuento:</span> <strong>$ 0.00</strong></div>
                             <div class="total-row highlight"><span>TOTAL:</span> <strong>$ 0.00</strong></div>
                         </div>
                     </div>
-
-                    <div>
-                        <label >Realizada por: <h4>Felipe corzo</h4></label> <br>
-                        <label >Aprobó: _______________________________</label> <br>
-                        <h3 class="section-title">Datos del Proveedor</h3>
-                        <label > Direcion: Cra 34 # 45, Bucaramanga - Santander</label> <br>
-                        <label >Facturar a nombre de: <H4>Palmera Junior S.A.S</H4></label> <br> 
-                        <label>Fecha Recibido: ___________________________</label><br>
-                        <label >Correo de facturacion electronica: <h2>recepcionfacturas@palmerajunior.com</h2> </label>
-
+                    <h3 class="section-title">Firmas de aprobación</h3>
+                    <div class="form-grid-4">
+                        <div class="form-group">
+                            <label>Realizado por:</label>
+                            <p><strong>Felipe Corzo</strong></p>
+                        </div>
+                        <div class="form-group">
+                            <label>Aprobado por:</label>
+                            <p><strong> ______________________________________________</strong></p>
+                        </div>
                     </div>
+
+                    <h3 class="section-title">Datos de Envío</h3>
+                    <div class="form-grid-4">
+                        <div class="form-group">
+                            <label>Facturar a nombre de:</label>
+                            <p><strong>Palmera Junior S.A.S.</strong></p>
+                        </div>
+                        <div class="form-group">
+                            <label>Fecha recibido:</label>
+                            <p><strong>______________________________________________</strong></p>
+                        </div>
+                        <div class="form-group">
+                            <label>Correo de factuacion electronica:</label>
+                            <p><strong>recepcionfacturas@palmerajunior.com</strong></p>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Dirección de envío:</label>
+                            <p > <strong>Cra 45 # 37 - 89, Bucaramanga</strong> </p>
+                        </div>
+                    </div>
+
                 </form>
             </div>
 

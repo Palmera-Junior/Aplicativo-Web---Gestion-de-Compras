@@ -94,12 +94,12 @@ body {
 }
 
 .btn-primary {
-    background-color: var(--primary-color);
+    background-color: #4CAF50;;
     color: white;
 }
 
 .btn-primary:hover {
-    background-color: var(--hover-color);
+    background-color: #72b887;;
 }
 
 .btn-secondary {
@@ -201,7 +201,12 @@ body {
 }
 
 .modal-header {
-    background-color: var(--primary-color);
+    background: linear-gradient(
+        135deg,
+        #000000,
+        #0a0a0a,
+        #0f5f1c
+    );
     color: white;
     padding: 15px 20px;
     display: flex;
@@ -225,7 +230,7 @@ body {
 
 .section-title {
     font-size: 1.1rem;
-    color: var(--primary-color);
+    color: #4CAF50;
     border-bottom: 1px solid var(--border-color);
     padding-bottom: 5px;
     margin: 20px 0 15px 0;
@@ -241,6 +246,13 @@ body {
     grid-template-columns: repeat(3, 1fr);
     gap: 15px;
 }
+
+.form-grid-4 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
 
 .form-group {
     display: flex;
@@ -263,7 +275,7 @@ body {
 }
 
 .table-productos th {
-    background-color: var(--primary-color);
+    background: #4CAF50;
     color: white;
     padding: 8px;
     font-size: 0.85rem;
@@ -318,7 +330,7 @@ body {
 
 .totales-section .total-row.highlight {
     font-size: 1.2rem;
-    color: var(--primary-color);
+    color: #1a8f4e;
     border-bottom: none;
     margin-top: 10px;
 }
