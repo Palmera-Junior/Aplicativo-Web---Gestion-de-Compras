@@ -62,6 +62,28 @@ body{
 
 .input-group{
     margin-bottom: 20px;
+    
+}
+
+.alert-error{
+    background-color: #d19d9d;
+    border-left: 8px solid #ff0000;
+    color: #ff0000;
+    padding: 5px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.alert-success{
+    background-color: #a4dfb3;
+    border-left: 8px solid #00ff08;
+    color: #308833;
+    padding: 5px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    text-align: center;
+   
 }
 
 .input-group label{
@@ -69,6 +91,7 @@ body{
     color: #ffffff;
     margin-bottom: 8px;
     font-size: 14px;
+    
 }
 
 .input-group input{
@@ -79,6 +102,8 @@ body{
     border-radius: 10px;
     font-size: 15px;
     background: #ffffff;
+    box-sizing: border-box;
+    border: 2px solid #1d1c1c
 }
 
 .input-group input:focus{
@@ -115,6 +140,7 @@ body{
     font-size: 16px;
     font-weight: bold;
     transition: 0.3s;
+    border: 2px solid #1d1c1c;
 }
 
 .btn-login:hover{

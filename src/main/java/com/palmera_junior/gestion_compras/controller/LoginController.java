@@ -13,7 +13,7 @@ public class LoginController {
     @GetMapping("/login")
     public String login(Authentication authentication) {
         if (authentication != null && authentication.isAuthenticated()){
-            return "redirect:/index";
+            return "redirect:/dashboard";
         } 
             return "login";
         }

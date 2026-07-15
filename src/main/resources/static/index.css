@@ -3,11 +3,11 @@
 
 /* Variables Globales (Basadas en el formato institucional) */
 :root {
-    --primary-color: #1F4E78; /* Azul Naval del Excel */
+    --primary-color: #0A8240; /* Azul Naval del Excel */
     --secondary-color: #f4f6f9;
     --text-color: #333333;
     --border-color: #d1d5db;
-    --hover-color: #153856;
+    --hover-color: #0A8240;
     --danger-color: #dc3545;
     --success-color: #28a745;
     --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -28,7 +28,12 @@ body {
 
 /* Navbar */
 .navbar {
-    background-color: var(--primary-color);
+    background:linear-gradient(
+        135deg,
+        #2d2e2d,
+        #151f13,
+        #0f5f1c
+    );
     color: white;
     padding: 15px 30px;
     display: flex;
@@ -94,12 +99,12 @@ body {
 }
 
 .btn-primary {
-    background-color: #4CAF50;;
+    background-color:var(--primary-color);
     color: white;
 }
 
 .btn-primary:hover {
-    background-color: #72b887;;
+    background-color: var(--hover-color);
 }
 
 .btn-secondary {
@@ -183,7 +188,7 @@ body {
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.6);
-    display: flex; /* Cambiar a 'flex' mediante JS para mostrar */
+    display: none; /* Cambiar a 'flex' mediante JS para mostrar */
     justify-content: center;
     align-items: center;
     z-index: 1000;
@@ -204,7 +209,7 @@ body {
     background: linear-gradient(
         135deg,
         #000000,
-        #0a0a0a,
+        #1b291a,
         #0f5f1c
     );
     color: white;
@@ -230,7 +235,7 @@ body {
 
 .section-title {
     font-size: 1.1rem;
-    color: #4CAF50;
+    color: var(--primary-color);
     border-bottom: 1px solid var(--border-color);
     padding-bottom: 5px;
     margin: 20px 0 15px 0;
@@ -275,7 +280,7 @@ body {
 }
 
 .table-productos th {
-    background: #4CAF50;
+    background: var(--primary-color);
     color: white;
     padding: 8px;
     font-size: 0.85rem;
