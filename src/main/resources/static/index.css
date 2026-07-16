@@ -101,10 +101,12 @@ body {
 .btn-primary {
     background-color:var(--primary-color);
     color: white;
+    box-shadow: 0 5px 5px rgba(35, 77, 11, 0.281);
 }
 
 .btn-primary:hover {
-    background-color: var(--hover-color);
+    background-color: #0a4e29;
+    transform: translateY(-2px);
 }
 
 .btn-secondary {
@@ -254,6 +256,10 @@ body {
     justify-content: center;
     align-items: center;
     z-index: 1000;
+}
+
+.modal-overlay.active {
+    display: flex;
 }
 
 .modal-content {

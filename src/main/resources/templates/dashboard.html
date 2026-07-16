@@ -32,7 +32,7 @@
                 <h1>Órdenes de Compra</h1>
                 <p>Gestión y consulta de documentos por sede</p>
             </div>
-            <button id="btn-nueva-orden" class="btn-primary">
+            <button type="button" id="btn-nueva-orden" class="btn-primary">
                 <i class="fas fa-plus"></i> Nueva Orden
             </button>
         </div>
@@ -142,7 +142,7 @@
                         <label>Seleccionar Proveedor</label>
                         <select class="input-control" id="select-proveedor">
                             <option value="">-- Seleccione un proveedor frecuente --</option>
-                            <option th:each="proveedor : ${proveedores}" th:value="${proveedor.id}" th:text="${proveedor.nombre}">Proveedor 1</option>
+                            <option th:each="proveedor : ${proveedores}" th:value="${proveedor.idProv}" th:text="${proveedor.nombre}">Proveedor 1</option>
                             <option value="otro">Otro (Nuevo)</option>
                         </select>
                     </div>
@@ -259,6 +259,7 @@
             </div>
         </div>
     </div>
+    <script th:src="@{/dashboard.js}"></script>
 
 </body>
 </html>
