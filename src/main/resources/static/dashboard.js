@@ -36,7 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
         document.body.style.overflow = "auto";
     }
 
-    //Codigo de los campos del proveedor 
+    //Codigo de los campos del proveedor ##################################################################33
 
     const selectProveedor = document.getElementById("select-proveedor");
 
@@ -95,5 +95,39 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     });
+    
 });
 
+// Codigo de los campos del producto ##################################################################
+
+document.addEventListener("input", function(e){
+
+    if(!e.target.classList.contains("codigo-producto")){
+        return;
+    }
+
+    const codigo = e.target.value.trim();
+
+    const producto = productos[codigo];
+
+    if(!producto){
+        return;
+    }
+
+    const fila = e.target.closest("tr");
+
+    console.log("Fila encontrada:", fila);
+
+    const descripcion =
+        fila.querySelector(".descripcion-producto");
+
+    const presentacion =
+        fila.querySelector(".presentacion-producto");
+
+    console.log(descripcion);
+    console.log(presentacion);
+
+    descripcion.value = producto.nombre;
+    presentacion.value = producto.presentacion;
+
+});

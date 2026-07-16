@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.palmera_junior.gestion_compras.entity.OrdenCompra;
 import com.palmera_junior.gestion_compras.service.OrdenCompraService;
+import com.palmera_junior.gestion_compras.service.ProductoService;
 import com.palmera_junior.gestion_compras.service.ProveedorService;
 
 
@@ -25,6 +26,9 @@ public class DashboardController {
     @Autowired
     private ProveedorService proveedorService;
 
+    @Autowired
+    private ProductoService productoService;
+
     @GetMapping("/dashboard")
     public String listarOrdenesCompra(
         @RequestParam(defaultValue = "0") int page,
@@ -33,7 +37,7 @@ public class DashboardController {
 
        Page<OrdenCompra> ordenesCompra = ordenCompraService.ordenesDeCompraPaginadas(PageRequest.of(page, size));     
 
-
+        model.addAttribute("productos", productoService.getAllProductos());
         model.addAttribute("paginaActual", page);
         model.addAttribute("ordenesCompra", ordenesCompra);
         model.addAttribute("proveedores", proveedorService.getAllProveedores());
