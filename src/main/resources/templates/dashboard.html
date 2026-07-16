@@ -142,34 +142,44 @@
                         <label>Seleccionar Proveedor</label>
                         <select class="input-control" id="select-proveedor">
                             <option value="">-- Seleccione un proveedor frecuente --</option>
-                            <option th:each="proveedor : ${proveedores}" th:value="${proveedor.idProv}" th:text="${proveedor.nombre}">Proveedor 1</option>
+                            <option th:each="proveedor : ${proveedores}" 
+                                    th:value="${proveedor.idProv}"  
+                                    th:text="${proveedor.nombre}"                      
+        
+                                    th:data-nit="${proveedor.nit}"
+                                    th:data-nombre="${proveedor.nombre}"
+                                    th:data-ciudad="${proveedor.ciudad}"
+                                    th:data-direccion="${proveedor.direccion}"
+                                    th:data-telefono="${proveedor.telefono}"
+                                    th:data-email="${proveedor.correo}"></option> 
+
                             <option value="otro">Otro (Nuevo)</option>
                         </select>
                     </div>
                     <div class="form-grid-3">
                         <div class="form-group">
                             <label>NIT</label>
-                            <input type="text" class="input-control" id="prov-nit">
+                            <input type="text" class="input-control" id="prov-nit" disabled>
                         </div>
                         <div class="form-group">
                             <label>Nombre</label>
-                            <input type="text" class="input-control" id="prov-nombre">
+                            <input type="text" class="input-control" id="prov-nombre" disabled>
                         </div>
                         <div class="form-group">
                             <label>Ciudad</label>
-                            <input type="text" class="input-control" id="prov-ciudad">
+                            <input type="text" class="input-control" id="prov-ciudad" disabled>
                         </div>
                         <div class="form-group">
                             <label>Dirección</label>
-                            <input type="text" class="input-control" id="prov-direccion">
+                            <input type="text" class="input-control" id="prov-direccion" disabled>
                         </div>
                         <div class="form-group">
                             <label>Teléfono</label>
-                            <input type="text" class="input-control" id="prov-telefono">
+                            <input type="text" class="input-control" id="prov-telefono" disabled>
                         </div>
                         <div class="form-group">
                             <label>Email</label>
-                            <input type="email" class="input-control" id="prov-email">
+                            <input type="email" class="input-control" id="prov-email" disabled>
                         </div>
                     </div>
 
