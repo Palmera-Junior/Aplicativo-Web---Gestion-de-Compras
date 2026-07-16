@@ -129,11 +129,11 @@
                         </div>
                         <div class="form-group">
                             <label>Solicitante</label>
-                            <input type="text" class="input-control" disabled>
+                            <input type="text" class="input-control" th:value="${#authentication.principal.usuario.nombre} + ' ' + ${#authentication.principal.usuario.apellido}" disabled>
                         </div>
                         <div class="form-group">
                             <label>Número de Orden</label>
-                            <input type="text" class="input-control" disabled>
+                            <input type="text" class="input-control" disabled >
                         </div>
                     </div>
 
@@ -217,39 +217,7 @@
                             <div class="total-row highlight"><span>TOTAL:</span> <strong>$ 0.00</strong></div>
                         </div>
                     </div>
-                    <h3 class="section-title">Firmas de aprobación</h3>
-                    <div class="form-grid-4">
-                        <div class="form-group">
-                            <label>Realizado por:</label>
-                            <p><strong>Felipe Corzo</strong></p>
-                        </div>
-                        <div class="form-group">
-                            <label>Aprobado por:</label>
-                            <p><strong> ______________________________________________</strong></p>
-                        </div>
-                    </div>
-
-                    <h3 class="section-title">Datos de Envío</h3>
-                    <div class="form-grid-4">
-                        <div class="form-group">
-                            <label>Facturar a nombre de:</label>
-                            <p><strong>Palmera Junior S.A.S.</strong></p>
-                        </div>
-                        <div class="form-group">
-                            <label>Fecha recibido:</label>
-                            <p><strong>______________________________________________</strong></p>
-                        </div>
-                        <div class="form-group">
-                            <label>Correo de facturación electrónica:</label>
-                            <p><strong>recepcionfacturas@palmerajunior.com</strong></p>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>Dirección de envío:</label>
-                            <p > <strong>Cra 45 # 37 - 89, Bucaramanga</strong> </p>
-                        </div>
-                    </div>
-
+                    
                 </form>
             </div>
 
