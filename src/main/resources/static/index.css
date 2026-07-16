@@ -178,6 +178,68 @@ body {
 .btn-icon.pdf { color: var(--danger-color); }
 .btn-icon.delete { color: var(--danger-color); }
 
+/** =========================================
+   ESTILOS DE PAGINACION */
+
+.paginacion{
+    margin-top:20px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:15px 20px;
+    background:#ffffff;
+    border-radius:10px;
+    box-shadow:0 2px 5px rgba(0,0,0,.08);
+}
+
+.info-pagina{
+    color:#555;
+    font-size:14px;
+}
+
+.info-pagina i{
+    color:#14883d;
+    margin-right:6px;
+}
+
+.controles{
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.btn-pagina{
+    text-decoration:none;
+    background:#14883d;
+    color:white;
+    padding:10px 15px;
+    border-radius:6px;
+    font-weight:600;
+    transition:.2s;
+}
+
+.btn-pagina:hover{
+    background:#0f6d30;
+}
+
+.pagina-actual{
+    min-width:40px;
+    height:40px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:6px;
+    background:#f3f4f6;
+    font-weight:bold;
+}
+
+.disabled{
+    pointer-events:none;
+    opacity:.5;
+}
+
+
+
 /* =========================================
    ESTILOS DEL MODAL (POPUP)
 ========================================= */
@@ -188,7 +250,7 @@ body {
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.6);
-    display: none; /* Cambiar a 'flex' mediante JS para mostrar */
+    display: none    ; /* Cambiar a 'flex' mediante JS para mostrar */
     justify-content: center;
     align-items: center;
     z-index: 1000;
