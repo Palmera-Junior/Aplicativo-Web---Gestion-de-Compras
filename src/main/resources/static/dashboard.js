@@ -175,31 +175,35 @@ function agregarFila() {
 
     nuevaFila.innerHTML = `
         <td>
-            <input type="number" class="cantidad input-control td-input" value="1">
+            <input type="number" class="cantidad input-control td-input" value="1" min="0">
         </td>
 
         <td>
-            <input type="text" class="codigo-producto input-control td-input" placeholder="Ej. PROD-01">
+            <input type="text" class="codigo-producto input-control td-input" placeholder="PROD-01">
         </td>
 
         <td>
             <input type="text" class="descripcion-producto input-control td-input readonly">
         </td>
-
+ 
         <td>
             <input type="text" class="presentacion-producto input-control td-input readonly">
         </td>
 
         <td>
-            <input type="number" class="valor-unitario input-control td-input" value="0">
+            <input type="number" class="valor-unitario input-control td-input" min="0" >
         </td>
 
         <td>
-            <input type="number" class="iva-producto input-control td-input" value="0">
+            <input type="number" class="iva-producto input-control td-input" min="0">
         </td>
 
         <td>
-            <input type="text" class="iva-total input-control td-input" disabled value="0">
+            <input type="text" class="iva-total input-control td-input" disabled >
+            </td>
+
+        <td>
+            <input type="text" class="valor-total input-control td-input" disabled >
         </td>
 
         <td>
@@ -255,15 +259,30 @@ function calcularTotalFila(fila) {
         fila.querySelector(".iva-producto").value
     ) || 0;
 
-    const subtotal = cantidad * valorUnitario;
+    const valorTotal = cantidad * valorUnitario;
 
-    const valorIva = subtotal * (ivaPorcentaje / 100);
+    const valorIva = valorTotal * (ivaPorcentaje/100);
 
-    const valorTotal = subtotal + valorIva;
+ 
+    const campoValorIva =
+        fila.querySelector(".iva-total");
 
-    fila.querySelector(".iva-total").value =
+    const campoValorTotal =
+        fila.querySelector(".valor-total");
+
+    campoValorIva.value =
+        formatearPesos(valorIva);
+
+    campoValorTotal.value =
         formatearPesos(valorTotal);
+
+    // Guardar valor numérico oculto
+    campoValorIva.dataset.valor = valorIva;
+    campoValorTotal.dataset.valor = valorTotal;
+
+    recalcularTotalesGenerales();
 }
+// cambios de valores en vivo y en directo
 
 document.addEventListener("input", function (e) {
 
@@ -278,4 +297,81 @@ document.addEventListener("input", function (e) {
         calcularTotalFila(fila);
     }
 
+});
+
+// Funciones para calculos generales de la orden de compra 
+function recalcularTotalesGenerales() {
+
+    let subtotal = 0;
+    let totalIva = 0;
+
+    document.querySelectorAll("#tbody-productos tr").forEach(fila => {
+
+        const valorTotal =
+            parseFloat(
+                fila.querySelector(".valor-total")
+                    ?.dataset.valor || 0
+            );
+
+        const valorIva =
+            parseFloat(
+                fila.querySelector(".iva-total")
+                    ?.dataset.valor || 0
+            );
+
+        subtotal += valorTotal;
+        totalIva += valorIva;
+    });
+
+    let descuento = 0;
+
+    if (chkDescuento.checked) {
+        descuento = parseFloat(inputDescuento.value) || 0;
+    }
+
+    const totalGeneral =
+        subtotal + totalIva - descuento;
+
+
+    document.getElementById("subtotal-general").textContent =
+        formatearPesos(subtotal);
+
+    document.getElementById("iva-general").textContent =
+        formatearPesos(totalIva);
+
+    document.getElementById("descuento-general").textContent =
+        formatearPesos(descuento);
+
+    document.getElementById("total-general").textContent =
+        formatearPesos(totalGeneral);
+
+    lblDescuento.textContent =
+    formatearPesos(descuento);
+}
+
+// codigo para mostrar/ocultar descuento 
+const chkDescuento = document.getElementById("activar-descuento");
+const inputDescuento = document.getElementById("input-descuento");
+const lblDescuento = document.getElementById("descuento-general");
+
+chkDescuento.addEventListener("change", function () {
+
+    if (this.checked) {
+
+        lblDescuento.style.display = "none";
+        inputDescuento.style.display = "inline-block";
+
+    } else {
+
+        inputDescuento.value = 0;
+        inputDescuento.style.display = "none";
+        lblDescuento.style.display = "inline";
+
+        recalcularTotalesGenerales();
+    }
+
+});
+
+inputDescuento.addEventListener("input", function () {
+    recalcularTotalesGenerales();
 });

@@ -3,7 +3,7 @@
 
 /* Variables Globales (Basadas en el formato institucional) */
 :root {
-    --primary-color: #0A8240; /* Azul Naval del Excel */
+    --primary-color: #0A8240; 
     --secondary-color: #f4f6f9;
     --text-color: #333333;
     --border-color: #d1d5db;

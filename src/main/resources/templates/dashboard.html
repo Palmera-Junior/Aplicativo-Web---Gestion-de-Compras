@@ -188,25 +188,27 @@
                         <table class="table-productos">
                             <thead>
                                 <tr>
-                                    <th width="7%">Cantidad</th>
-                                    <th width="15%">Cod. Inventario</th>
+                                    <th width="5%">Cant.</th>
+                                    <th width="7%">Cod. Inventario</th>
                                     <th width="30%">Descripción de Producto</th>
-                                    <th width="15%">Presentación</th>
+                                    <th width="12%">Presentación</th>
                                     <th width="12%">Valor Unitario</th>
-                                    <th width="7%">IVA</th>
+                                    <th width="7%">% IVA</th>
+                                    <th width="12%">Valor IVA</th>
                                     <th width="14%">Valor Total</th>
                                     <th width="5%"></th>
                                 </tr>
                             </thead>
                             <tbody id="tbody-productos">
                                 <tr>
-                                    <td><input type="number" class="cantidad input-control td-input" value="1"></td>
-                                    <td><input type="text" class="codigo-producto input-control td-input" placeholder="Ej. PROD-01"></td>
+                                    <td><input type="number" class="cantidad input-control td-input" value="1" min="0"></td>
+                                    <td><input type="text" class="codigo-producto input-control td-input" placeholder="PROD-01"></td>
                                     <td><input type="text" class="descripcion-producto input-control td-input readonly"></td>
                                     <td><input type="text" class="presentacion-producto input-control td-input readonly"></td>
-                                    <td><input type="number" class="valor-unitario input-control td-input"></td>
-                                    <td><input type="number" class="iva-producto input-control td-input" ></td>
-                                    <td><input type="text" class="iva-total input-control td-input" disabled value="0"></td>
+                                    <td><input type="number" class="valor-unitario input-control td-input" min="0"></td>
+                                    <td><input type="number" class="iva-producto input-control td-input"  ></td>
+                                    <td><input type="text" class="iva-total input-control td-input" disabled ></td>
+                                    <td><input type="text" class="valor-total input-control td-input" disabled ></td>
                                     <td><button type="button" class="btn-icon delete"><i class="fas fa-trash"></i></button></td>
                                 </tr>
                             </tbody>
@@ -221,10 +223,15 @@
                             <p class="nota-institucional">Toda factura debe llegar al correo <strong>recepcionfacturas@palmerajunior.com</strong> de lo contrario no será aceptada.</p>
                         </div>
                         <div class="totales-section">
-                            <div class="total-row"><span>Subtotal:</span> <strong>$ 0.00</strong></div>
-                            <div class="total-row"><span>IVA:</span> <strong>$ 0.00</strong></div>
-                            <div class="total-row"><span>Descuento:</span> <strong>$ 0.00</strong></div>
-                            <div class="total-row highlight"><span>TOTAL:</span> <strong>$ 0.00</strong></div>
+                            <div class="total-row"><span>Subtotal:</span> <strong id="subtotal-general">$ 0.00</strong></div>
+                            <div class="total-row"><span>IVA:</span> <strong id="iva-general">$ 0.00</strong></div>
+                            <!--<div class="total-row"><span>Descuento:</span> <strong id="descuento-general">$ 0.00</strong></div>-->
+                            <div class="total-row"> <span><input type="checkbox" id="activar-descuento">  Descuento:</span>
+                                <span id="contenedor-descuento">  <strong id="descuento-general"></strong>
+                                  <input
+                                      type="number" id="input-descuento" value="0" min="0" style="display: none; width: 100px; border-radius: 7px; background-color: #0a824036;"></span>
+                            </div>
+                            <div class="total-row highlight"><span>TOTAL:</span> <strong id="total-general">$ 0.00</strong></div>
                         </div>
                     </div>
                     

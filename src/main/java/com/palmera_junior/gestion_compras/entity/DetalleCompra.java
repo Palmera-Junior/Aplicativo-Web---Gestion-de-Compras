@@ -38,6 +38,9 @@ public class DetalleCompra {
     @Column(name ="iva_producto", nullable = false, precision = 10, scale = 2)
     private BigDecimal ivaProducto;
 
+    @Column(name = "valor_iva", nullable = false, precision = 10, scale = 2)
+    private BigDecimal valorIva;
+
     @Column(name = "valor_total_linea", nullable = false, precision = 10, scale = 2)
     private BigDecimal valorTotalLinea;
 
