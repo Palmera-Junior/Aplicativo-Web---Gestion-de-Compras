@@ -1,5 +1,7 @@
 package com.palmera_junior.gestion_compras.controller;
 
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Page;
@@ -7,8 +9,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.palmera_junior.gestion_compras.entity.OrdenCompra;
+import com.palmera_junior.gestion_compras.entity.Producto;
 import com.palmera_junior.gestion_compras.service.OrdenCompraService;
 import com.palmera_junior.gestion_compras.service.ProductoService;
 import com.palmera_junior.gestion_compras.service.ProveedorService;
@@ -43,6 +47,12 @@ public class DashboardController {
         model.addAttribute("proveedores", proveedorService.getAllProveedores());
         return "dashboard";
     }
+
+    @GetMapping("/dashboard/producto")
+    @ResponseBody
+    public Producto buscarProducto(@RequestParam String codigo) {
+        return productoService.buscarPorCodigo(codigo);
+}
     
 }
 

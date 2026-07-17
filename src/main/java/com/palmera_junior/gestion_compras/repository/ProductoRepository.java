@@ -9,9 +9,9 @@ import com.palmera_junior.gestion_compras.entity.Producto;
 
 @Repository
 
-public interface ProductoRepository extends JpaRepository<Producto, Integer>{
+public interface ProductoRepository extends JpaRepository<Producto, Long>{
 
-    Optional<Producto> findByCodigoInventario(String codigoInventario);
+    Producto findByCodigoInventario(String codigoInventario);
 
     List<Producto> findByNombreContainingIgnoreCaseOrCodigoInventarioContainingIgnoreCase(String nombre, String codigoInventario);
 

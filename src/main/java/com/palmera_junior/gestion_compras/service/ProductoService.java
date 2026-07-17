@@ -1,6 +1,7 @@
 package com.palmera_junior.gestion_compras.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,11 @@ public class ProductoService {
 
     public List<Producto> getAllProductos() {
         return productoRepository.findAll();
+    
+    }
+
+    public Producto buscarPorCodigo(String codigo) {
+        return productoRepository.findByCodigoInventario(codigo);
     }
 
 }

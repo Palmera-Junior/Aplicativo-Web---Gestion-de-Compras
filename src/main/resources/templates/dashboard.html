@@ -188,13 +188,13 @@
                         <table class="table-productos">
                             <thead>
                                 <tr>
-                                    <th width="10%">Cantidad</th>
+                                    <th width="7%">Cantidad</th>
                                     <th width="15%">Cod. Inventario</th>
                                     <th width="30%">Descripción de Producto</th>
                                     <th width="15%">Presentación</th>
-                                    <th width="10%">Valor Unitario</th>
-                                    <th width="10%">IVA</th>
-                                    <th width="10%">Valor Total</th>
+                                    <th width="12%">Valor Unitario</th>
+                                    <th width="7%">IVA</th>
+                                    <th width="14%">Valor Total</th>
                                     <th width="5%"></th>
                                 </tr>
                             </thead>
@@ -202,17 +202,17 @@
                                 <tr>
                                     <td><input type="number" class="cantidad input-control td-input" value="1"></td>
                                     <td><input type="text" class="codigo-producto input-control td-input" placeholder="Ej. PROD-01"></td>
-                                    <td><input type="text" class="descripcion-producto input-control td-input"></td>
-                                    <td><input type="text" class="presentacion-producto input-control td-input"></td>
-                                    <td><input type="number" class="valor-unitario input-control td-input" value="0"></td>
-                                    <td><input type="number" class="iva-producto input-control td-input" value="0"></td>
-                                    <td><input type="number" class="iva-total input-control td-input" disabled value="0"></td>
+                                    <td><input type="text" class="descripcion-producto input-control td-input readonly"></td>
+                                    <td><input type="text" class="presentacion-producto input-control td-input readonly"></td>
+                                    <td><input type="number" class="valor-unitario input-control td-input"></td>
+                                    <td><input type="number" class="iva-producto input-control td-input" ></td>
+                                    <td><input type="text" class="iva-total input-control td-input" disabled value="0"></td>
                                     <td><button type="button" class="btn-icon delete"><i class="fas fa-trash"></i></button></td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
-                    <button type="button" class="btn-secondary add-row-btn"><i class="fas fa-plus"></i> Agregar Fila</button>
+                    <button type="button" id="btn-agregar-fila" class="btn-secondary add-row-btn"><i class="fas fa-plus"></i> Agregar Fila</button>
 
                     <div class="form-grid-totals">
                         <div class="observaciones-section">
@@ -239,22 +239,6 @@
     </div>
     <script th:src="@{/dashboard.js}"></script>
 
-                <script th:inline="javascript">
-                
-        window.productos = {};
-                
-        /*[# th:each="producto : ${productos}"]*/
-        window.productos['[[${producto.codigoInventario}]]'] = {
-            nombre: '[[${producto.nombre}]]',
-            descripcion: '[[${producto.descripcion}]]',
-            presentacion: '[[${producto.presentacion}]]'
-        };
-        /*[/]*/
-        
-        console.log(window.productos);
-        
-        </script>
-
-
+               
 </body>
 </html>
