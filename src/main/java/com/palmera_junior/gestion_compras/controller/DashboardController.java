@@ -1,10 +1,9 @@
 package com.palmera_junior.gestion_compras.controller;
 
-import java.util.Optional;
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,11 +16,7 @@ import com.palmera_junior.gestion_compras.service.OrdenCompraService;
 import com.palmera_junior.gestion_compras.service.ProductoService;
 import com.palmera_junior.gestion_compras.service.ProveedorService;
 
-
-
 @Controller
-
-
 public class DashboardController {
 
     @Autowired
@@ -35,11 +30,11 @@ public class DashboardController {
 
     @GetMapping("/dashboard")
     public String listarOrdenesCompra(
-        @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "5") int size,
-        Model model) {
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size,
+            Model model) {
 
-       Page<OrdenCompra> ordenesCompra = ordenCompraService.ordenesDeCompraPaginadas(PageRequest.of(page, size));     
+        Page<OrdenCompra> ordenesCompra = ordenCompraService.ordenesDeCompraPaginadas(PageRequest.of(page, size));     
 
         model.addAttribute("productos", productoService.getAllProductos());
         model.addAttribute("paginaActual", page);
@@ -48,11 +43,13 @@ public class DashboardController {
         return "dashboard";
     }
 
+   
     @GetMapping("/dashboard/producto")
-    @ResponseBody
-    public Producto buscarProducto(@RequestParam String codigo) {
-        return productoService.buscarPorCodigo(codigo);
+@ResponseBody
+public Producto buscarProducto(@RequestParam(required = false) String codigo) {
+    if (codigo == null || codigo.isBlank()) {
+        return null;
+    }
+    return productoService.buscarPorCodigo(codigo);
 }
-    
 }
-

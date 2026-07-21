@@ -20,8 +20,10 @@ public class ProductoService {
     
     }
 
-    public Producto buscarPorCodigo(String codigo) {
-        return productoRepository.findByCodigoInventario(codigo);
-    }
+   
+
+public Producto buscarPorCodigo(String codigo) {
+    return productoRepository.findByCodigoInventario(codigo).orElse(null);
+}
 
 }

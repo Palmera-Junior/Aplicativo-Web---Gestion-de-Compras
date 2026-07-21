@@ -1,7 +1,7 @@
 package com.palmera_junior.gestion_compras.entity;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,9 +29,9 @@ public class OrdenCompra {
     private Proveedor proveedor;
 
     @Column(nullable = false)
-    private LocalDateTime fecha;
+    private LocalDate fecha;
 
-    @Column(name = "numero_orden", nullable = false, length = 20, unique = true)
+    @Column(name = "numero_orden", length = 20, unique = true)
     private String numeroOrden;
 
     @ManyToOne(fetch = FetchType.LAZY)

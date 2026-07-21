@@ -22,10 +22,14 @@ public class SecurityConfig {
     @Bean
 public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http
+
+        .csrf(csrf -> csrf
+                .ignoringRequestMatchers("/api/**") 
+            )
         .authorizeHttpRequests(auth -> auth
             // ⚠️ CRÍTICO: Permitimos acceso público al login y a todos los recursos estáticos 
             // (tu CSS, tus imágenes dentro de /imgs/, favicon, etc.)
-            .requestMatchers("/login", "/login.css", "/imgs/**", "/static/**").permitAll()
+            .requestMatchers("/login", "/login.css", "/imgs/**", "/static/**", "/api/ordenes/**").permitAll()
             
             // Cualquier otra ruta requiere que el usuario esté autenticado
             .anyRequest().authenticated()

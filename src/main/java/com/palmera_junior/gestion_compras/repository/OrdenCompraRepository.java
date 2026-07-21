@@ -17,6 +17,8 @@ public interface OrdenCompraRepository extends JpaRepository<OrdenCompra, Intege
 
     Page<OrdenCompra> findBySedeIdSedeAndNumeroOrdenContainingIgnoreCase(Integer idSede, String numeroOrden, Pageable pageable);
 
+    Optional<OrdenCompra> findById(Integer idOrden);
+
 
 
     

@@ -12,7 +12,7 @@ import lombok.*;
 @ToString
 @Entity
 @Table(name = "detalle_compra")
-
+ 
 public class DetalleCompra {
 
     @Id
@@ -45,7 +45,7 @@ public class DetalleCompra {
     private BigDecimal valorTotalLinea;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_producto", nullable = false)
+    @JoinColumn(name = "id_producto" , nullable = true)
     @ToString.Exclude
     private Producto producto;
 

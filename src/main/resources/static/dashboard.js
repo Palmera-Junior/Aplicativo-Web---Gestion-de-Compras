@@ -375,3 +375,151 @@ chkDescuento.addEventListener("change", function () {
 inputDescuento.addEventListener("input", function () {
     recalcularTotalesGenerales();
 });
+
+// =========================================================================
+// SECCIÓN: GUARDAR Y GENERAR PDF
+// =========================================================================
+
+// Escuchador de eventos (Asegurarse de envolverlo o verificar que el DOM esté listo)
+document.addEventListener('DOMContentLoaded', () => {
+    const btnGuardar = document.getElementById('btn-guardar-pdf');
+    if (btnGuardar) {
+        btnGuardar.addEventListener('click', (e) => {
+            e.preventDefault();
+            guardarYGenerarPdf();
+        });
+    }
+});
+
+function parsearMoneda(elementId) {
+    const el = document.getElementById(elementId);
+    if (!el) return 0;
+    const texto = el.innerText || el.value || "0";
+    const numero = parseFloat(texto.replace(/[^0-9.-]+/g, ""));
+    return isNaN(numero) ? 0 : numero;
+}
+
+async function guardarYGenerarPdf() {
+    // ⚠️ CORRECCIÓN 1: Seleccionar la fecha ESPECÍFICAMENTE dentro del modal
+    const fechaInput = document.querySelector('#modal-orden input[type="date"]')?.value;
+    
+    if (!fechaInput) {
+        alert("Por favor selecciona una fecha válida dentro del formulario.");
+        return;
+    }
+
+    // 1. DTO de la Cabecera
+    const ordenDTO = {
+        fecha: fechaInput,
+        nitProv: document.getElementById('prov-nit')?.value || 'S/N',
+        nombreProv: document.getElementById('prov-nombre')?.value || 'Sin Proveedor',
+        ciudadProv: document.getElementById('prov-ciudad')?.value || 'N/A',
+        direccionProv: document.getElementById('prov-direccion')?.value || 'N/A',
+        telefonoProv: document.getElementById('prov-telefono')?.value || 'N/A',
+        correoProv: document.getElementById('prov-email')?.value || 'N/A',
+        // ⚠️ CORRECCIÓN 2: Acotar el textarea al modal
+        observaciones: document.querySelector('#modal-orden textarea')?.value || '',
+        
+        subTotal: parsearMoneda('subtotal-general'),
+        ivaTotal: parsearMoneda('iva-general'),
+        descuento: parsearMoneda('descuento-general'),
+        total: parsearMoneda('total-general'),
+        
+        detalles: []
+    };
+
+    // 2. DTO de las Líneas de Producto
+    const filas = document.querySelectorAll('#tbody-productos tr');
+    filas.forEach(fila => {
+        const inputs = fila.querySelectorAll('input');
+        const cantidad = parseInt(inputs[0].value) || 0;
+        const codigo = inputs[1].value.trim();
+
+        if (codigo !== '' && cantidad > 0) {
+            const vUnitario = parseFloat(inputs[4].value) || 0;
+            const pctIva = parseFloat(inputs[5].value) || 0;
+            const vIva = (vUnitario * cantidad) * (pctIva / 100);
+            const vTotal = (vUnitario * cantidad) + vIva;
+
+            ordenDTO.detalles.push({
+                cantidad: cantidad,
+                codigoInventario: codigo,
+                descripcion: inputs[2].value || 'Sin descripción',
+                presentacion: inputs[3].value || 'Unidad',
+                valorUnitario: vUnitario,
+                ivaProducto: pctIva,
+                valorIva: vIva,
+                valorTotalLinea: vTotal
+            });
+        }
+    });
+
+    if (ordenDTO.detalles.length === 0) {
+        alert("Debes agregar al menos un producto con código y cantidad válida.");
+        return;
+    }
+
+    // ⚠️ CORRECCIÓN 3: Deshabilitar el botón para evitar duplicados por múltiple clic
+    const btnGuardar = document.getElementById('btn-guardar-pdf');
+    if (btnGuardar) {
+        btnGuardar.disabled = true;
+        btnGuardar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+    }
+
+    // 3. Envío al Backend
+    try {
+        const response = await fetch('/api/ordenes/guardar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(ordenDTO)
+        });
+
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+
+            // Extraer nombre del archivo del header o asignar uno por defecto
+            const disposition = response.headers.get('Content-Disposition');
+            let filename = 'Orden_Compra.pdf';
+            if (disposition && disposition.includes('filename=')) {
+                filename = disposition.split('filename=')[1].replace(/["']/g, '');
+            }
+            a.download = filename;
+
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            
+            // ⚠️ CORRECCIÓN 4: Liberar memoria del Blob
+            window.URL.revokeObjectURL(url);
+            
+            alert('Orden guardada y PDF generado exitosamente.');
+
+            if (typeof cerrarModal === 'function') {
+                cerrarModal();
+            } else {
+                const modal = document.getElementById('modal-orden');
+                if (modal) modal.style.display = 'none';
+            }
+
+            // Actualizar la vista para reflejar la nueva orden en la tabla
+            location.reload();
+
+        } else {
+            const errText = await response.text();
+            console.error("Error servidor:", errText);
+            alert('Error al guardar la orden de compra.');
+        }
+    } catch (error) {
+        console.error('Error de red/servidor:', error);
+        alert('Ocurrió un error al conectar con el servidor.');
+    } finally {
+        // Reactivar el botón al finalizar la operación
+        if (btnGuardar) {
+            btnGuardar.disabled = false;
+            btnGuardar.innerHTML = '<i class="fas fa-save"></i> Guardar y Generar PDF';
+        }
+    }
+}
