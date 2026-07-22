@@ -394,8 +394,17 @@ document.addEventListener('DOMContentLoaded', () => {
 function parsearMoneda(elementId) {
     const el = document.getElementById(elementId);
     if (!el) return 0;
+
     const texto = el.innerText || el.value || "0";
-    const numero = parseFloat(texto.replace(/[^0-9.-]+/g, ""));
+
+    const limpio = texto
+        .replace(/\$/g, '')
+        .replace(/\./g, '')
+        .replace(/,/g, '.')
+        .trim();
+
+    const numero = parseFloat(limpio);
+
     return isNaN(numero) ? 0 : numero;
 }
 
@@ -417,7 +426,7 @@ async function guardarYGenerarPdf() {
         direccionProv: document.getElementById('prov-direccion')?.value || 'N/A',
         telefonoProv: document.getElementById('prov-telefono')?.value || 'N/A',
         correoProv: document.getElementById('prov-email')?.value || 'N/A',
-        // ⚠️ CORRECCIÓN 2: Acotar el textarea al modal
+        //  CORRECCIÓN 2: Acotar el textarea al modal
         observaciones: document.querySelector('#modal-orden textarea')?.value || '',
         
         subTotal: parsearMoneda('subtotal-general'),
@@ -439,7 +448,7 @@ async function guardarYGenerarPdf() {
             const vUnitario = parseFloat(inputs[4].value) || 0;
             const pctIva = parseFloat(inputs[5].value) || 0;
             const vIva = (vUnitario * cantidad) * (pctIva / 100);
-            const vTotal = (vUnitario * cantidad) + vIva;
+            const vTotal = (vUnitario * cantidad);
 
             ordenDTO.detalles.push({
                 cantidad: cantidad,

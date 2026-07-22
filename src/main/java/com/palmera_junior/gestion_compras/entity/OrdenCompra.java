@@ -61,7 +61,7 @@ public class OrdenCompra {
     private String observaciones;
 
     @Column(name = "sub_total", nullable = false, precision = 10, scale = 2)
-    private BigDecimal subTotal;
+    private BigDecimal subTotal; 
 
     @Column(name = "iva_total" , nullable = false, precision = 10, scale = 2)
     private BigDecimal ivaTotal;
