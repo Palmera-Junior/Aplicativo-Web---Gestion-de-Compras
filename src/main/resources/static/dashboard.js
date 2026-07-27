@@ -536,3 +536,57 @@ async function guardarYGenerarPdf() {
         }
     }
 }
+
+// CONFIRMACION PARA APROBAR DOCUMENTO
+
+document.addEventListener("click", async function (e) {
+
+    const boton = e.target.closest(".approve");
+
+    if (!boton) {
+        return;
+    }
+
+    const idOrden = boton.dataset.id;
+
+    const confirmar = confirm(
+        "¿Está seguro de aprobar esta Orden de Compra?\n\n" +
+        "Después de aprobarla no podrá modificar productos ni valores."
+    );
+
+    if (!confirmar) {
+        return;
+    }
+
+    try {
+
+    const response = await fetch(
+        `/orden-compra/${idOrden}/aprobar`,
+        {
+            method: "PUT"
+        }
+    );
+
+    if (!response.ok) {
+
+        const mensaje = await response.text();
+
+
+        throw new Error(mensaje);
+    }
+
+    alert("Orden aprobada correctamente");
+
+    location.reload();
+
+} catch (error) {
+
+    console.error(error);
+
+    alert(error.message);
+}
+});
+
+
+
+

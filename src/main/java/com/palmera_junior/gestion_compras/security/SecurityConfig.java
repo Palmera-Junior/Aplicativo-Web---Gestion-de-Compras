@@ -20,35 +20,31 @@ public class SecurityConfig {
 
     // Bean para encriptar contraseñas usando el estándar seguro BCrypt
     @Bean
-public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-    http
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
 
-        .csrf(csrf -> csrf
-                .ignoringRequestMatchers("/api/**") 
-            )
-        .authorizeHttpRequests(auth -> auth
-            // ⚠️ CRÍTICO: Permitimos acceso público al login y a todos los recursos estáticos 
-            // (tu CSS, tus imágenes dentro de /imgs/, favicon, etc.)
-            .requestMatchers("/login", "/login.css", "/imgs/**", "/static/**", "/api/ordenes/**").permitAll()
-            
-            // Cualquier otra ruta requiere que el usuario esté autenticado
-            .anyRequest().authenticated()
-        )
-        .formLogin(form -> form
-            // Especificamos que la ruta de nuestra vista de login es /login
-            .loginPage("/login")
-            // Redirección exitosa por defecto
-            .defaultSuccessUrl("/dashboard", true)
-            .permitAll()
-        )
-        .logout(logout -> logout
-            .logoutUrl("/logout")
-            // Al salir, redirigimos al login enviando el parámetro ?logout
-            .logoutSuccessUrl("/login?logout")
-            .permitAll()
-        );
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> auth
+                        // ⚠️ CRÍTICO: Permitimos acceso público al login y a todos los recursos
+                        // estáticos
+                        // (tu CSS, tus imágenes dentro de /imgs/, favicon, etc.)
+                        .requestMatchers("/login", "/login.css", "/imgs/**", "/static/**")
+                        .permitAll()
 
-    return http.build();
+                        // Cualquier otra ruta requiere que el usuario esté autenticado
+                        .anyRequest().authenticated())
+                .formLogin(form -> form
+                        // Especificamos que la ruta de nuestra vista de login es /login
+                        .loginPage("/login")
+                        // Redirección exitosa por defecto
+                        .defaultSuccessUrl("/dashboard", true)
+                        .permitAll())
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        // Al salir, redirigimos al login enviando el parámetro ?logout
+                        .logoutSuccessUrl("/login?logout")
+                        .permitAll());
+
+        return http.build();
+    }
 }
-}
-

@@ -7,13 +7,10 @@ public class OrdenCompraDTO {
 
     // Claves foráneas (opcionales si vienen del select del form)
     private Long idProv;
-    private Long idSede;
-    private Long idUsuario;
     private Long idCentroCosto;
 
     // Datos del proveedor y orden (Snapshot)
     private String fecha;          // Fecha seleccionada por el usuario (formato YYYY-MM-DD desde el frontend)
-    private String numeroOrden;
     private String nitProv;
     private String nombreProv;
     private String telefonoProv;
@@ -35,20 +32,12 @@ public class OrdenCompraDTO {
     public Long getIdProv() { return idProv; }
     public void setIdProv(Long idProv) { this.idProv = idProv; }
 
-    public Long getIdSede() { return idSede; }
-    public void setIdSede(Long idSede) { this.idSede = idSede; }
-
-    public Long getIdUsuario() { return idUsuario; }
-    public void setIdUsuario(Long idUsuario) { this.idUsuario = idUsuario; }
-
     public Long getIdCentroCosto() { return idCentroCosto; }
     public void setIdCentroCosto(Long idCentroCosto) { this.idCentroCosto = idCentroCosto; }
 
     public String getFecha() { return fecha; }
     public void setFecha(String fecha) { this.fecha = fecha; }
 
-    public String getNumeroOrden() { return numeroOrden; }
-    public void setNumeroOrden(String numeroOrden) { this.numeroOrden = numeroOrden; }
 
     public String getNitProv() { return nitProv; }
     public void setNitProv(String nitProv) { this.nitProv = nitProv; }

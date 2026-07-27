@@ -19,6 +19,9 @@ public interface OrdenCompraRepository extends JpaRepository<OrdenCompra, Intege
 
     Optional<OrdenCompra> findById(Integer idOrden);
 
+    Page<OrdenCompra> findAllByOrderByIdOrdenDesc(
+        Pageable pageable);
+
 
 
     

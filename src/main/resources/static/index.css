@@ -180,6 +180,41 @@ body {
 .btn-icon.pdf { color: var(--danger-color); }
 .btn-icon.delete { color: var(--danger-color); }
 
+.badge-estado {
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: bold;
+    color: rgb(0, 0, 0);
+}
+
+.borrador {
+    background-color: #97a7b48c;
+    box-shadow:0 2px 5px rgba(0,0,0,.08);
+      border: 1px solid #707070; 
+}
+
+.aprobada {
+    background-color: #1c64cfaf;
+    box-shadow:0 2px 5px rgba(0,0,0,.08);
+    border-bottom: #000000;
+      border: 1px solid #707070; 
+}
+
+.recibida {
+    background-color: #19875477;
+    box-shadow:2px 5px 5px rgba(0,0,0,.08);
+      border: 1px solid #707070; 
+}
+
+.btn-icon.approve {
+    color: #0d6efd;
+}
+
+.btn-icon.approve:hover {
+    color: #084298;
+}
+
 /** =========================================
    ESTILOS DE PAGINACION */
 

@@ -2,6 +2,7 @@ package com.palmera_junior.gestion_compras.entity;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,6 +34,10 @@ public class OrdenCompra {
 
     @Column(name = "numero_orden", length = 20, unique = true)
     private String numeroOrden;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private EstadoOrdenCompra estado;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_sede", nullable = false)
@@ -81,6 +86,23 @@ public class OrdenCompra {
     @JoinColumn(name = "id_usuario", nullable = false)
     @ToString.Exclude
     private Usuario usuario;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_usuario_aprobacion")
+    @ToString.Exclude
+    private Usuario usuarioAprobacion;
+
+    @Column(name = "fecha_aprobacion")
+    private LocalDate fechaAprobacion;
+
+    @Column(name = "numero_factura", length = 100)
+    private String numeroFactura;
+
+    @Column(name = "recibido_por", length = 150)
+    private String recibidoPor;
+
+    @Column(name = "fecha_recepcion")
+    private LocalDate fechaRecepcion;
 
     @OneToMany(mappedBy = "ordenCompra", cascade = CascadeType.ALL, orphanRemoval = true   )
     @ToString.Exclude
