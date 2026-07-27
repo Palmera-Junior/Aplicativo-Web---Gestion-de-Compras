@@ -122,18 +122,19 @@
             <div class="modal-body">
                 <form id="form-orden">
                     <h3 class="section-title">Datos Generales</h3>
-                    <div class="form-grid-3">
+                    <div class="form-grid-2">
                         <div class="form-group">
                             <label>Fecha</label>
                             <input type="date" class="input-control" >
                         </div>
                         <div class="form-group">
-                            <label>Solicitante</label>
-                            <input type="text" class="input-control" th:value="${#authentication.principal.usuario.nombre} + ' ' + ${#authentication.principal.usuario.apellido}" disabled>
-                        </div>
-                        <div class="form-group">
-                            <label>Número de Orden</label>
-                            <input type="text" class="input-control" disabled >
+                            <label>Centro de Costo</label>
+                            <select class="input-control" id="select-centro-costo">
+                                <option value="">-- Seleccione un centro de costo --</option>
+                                <option th:each="centro : ${centroCostos}" 
+                                        th:value="${centro.idCentroCosto}"  
+                                        th:text="${centro.codigo} + ' - ' + ${centro.nombre}"></option>
+                            </select>
                         </div>
                     </div>
 

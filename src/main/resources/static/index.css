@@ -314,6 +314,13 @@ body {
 }
 
 /* Grillas de Formularios */
+.form-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    row-gap: 0;
+}
+
 .form-grid-3 {
     display: grid;
     grid-template-columns: repeat(3, 1fr);

@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.palmera_junior.gestion_compras.dto.OrdenCompraDTO;
+import com.palmera_junior.gestion_compras.entity.CentroCosto;
 import com.palmera_junior.gestion_compras.entity.DetalleCompra;
 import com.palmera_junior.gestion_compras.entity.OrdenCompra;
 import com.palmera_junior.gestion_compras.entity.Producto;
@@ -33,6 +34,9 @@ public class OrdenCompraService {
 
     @Autowired
     private ProductoRepository productoRepository;
+
+    @Autowired
+    private CentroCostoService centroCostoService;
 
     // Método para listar órdenes paginadas en el Dashboard
     public Page<OrdenCompra> ordenesDeCompraPaginadas(Pageable pageable) {
@@ -97,8 +101,12 @@ public class OrdenCompraService {
 
         orden.setSede(usuarioLogueado.getSede());
         orden.setUsuario(usuarioLogueado);
-    
 
+        // Asignar centro de costo seleccionado
+        if (dto.getIdCentroCosto() != null) {
+            CentroCosto centroCosto = centroCostoService.buscarPorId(dto.getIdCentroCosto().intValue());
+            orden.setCentroCosto(centroCosto);
+        }
 
         // 3. Mapeo de los detalles
         if (dto.getDetalles() != null && !dto.getDetalles().isEmpty()) {

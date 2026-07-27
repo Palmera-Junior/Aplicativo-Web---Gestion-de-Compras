@@ -10,9 +10,11 @@ import com.palmera_junior.gestion_compras.entity.Usuario;
 
 public class UsuarioPrincipal implements UserDetails {
     private final Usuario usuario;
+    private final Integer sedeId;
     
     public UsuarioPrincipal(Usuario usuario) {
         this.usuario = usuario;
+        this.sedeId = usuario.getSede() != null ? usuario.getSede().getIdSede() : null;
     }
 
     @Override
@@ -33,6 +35,10 @@ public class UsuarioPrincipal implements UserDetails {
 
     public Usuario getUsuario() {
         return usuario;
+    }
+
+    public Integer getSedeId() {
+        return sedeId;
     }
 
     @Override

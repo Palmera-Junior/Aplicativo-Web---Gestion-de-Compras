@@ -418,8 +418,12 @@ async function guardarYGenerarPdf() {
     }
 
     // 1. DTO de la Cabecera
+    const selectCentroCosto = document.getElementById('select-centro-costo');
+    const idCentroCosto = selectCentroCosto ? selectCentroCosto.value : '';
+
     const ordenDTO = {
         fecha: fechaInput,
+        idCentroCosto: idCentroCosto ? parseInt(idCentroCosto) : null,
         nitProv: document.getElementById('prov-nit')?.value || 'S/N',
         nombreProv: document.getElementById('prov-nombre')?.value || 'Sin Proveedor',
         ciudadProv: document.getElementById('prov-ciudad')?.value || 'N/A',

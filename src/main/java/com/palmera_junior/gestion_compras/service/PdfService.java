@@ -72,6 +72,7 @@ public class PdfService {
         PdfPCell solicitante = new PdfPCell();
         solicitante.setBorder(Rectangle.NO_BORDER);
         solicitante.addElement(new Paragraph("SOLICITANTE:     " + orden.getUsuario().getNombre()+" "+orden.getUsuario().getApellido() +" - "+orden.getSede().getNombre(), fontTexto));
+        solicitante.addElement(new Paragraph("CENTRO COSTO:   " + (orden.getCentroCosto() != null ? orden.getCentroCosto().getCodigo() + " - " + orden.getCentroCosto().getNombre() : "N/A"), fontTexto));
         fechaTable.addCell(solicitante);
         
 
@@ -274,7 +275,7 @@ public class PdfService {
         Paragraph p4 = new Paragraph("FECHA RECIBIDO: __________________________", fontTexto);
         p4.setSpacingAfter(8f);
         
-        Paragraph p5 = new Paragraph("DESTINO: " + orden.getSede().getDireccion() + " , " + orden.getSede().getNombre(),  fontTexto  );
+        Paragraph p5 = new Paragraph("DESTINO: " + orden.getCentroCosto().getDireccion() + " , " + orden.getCentroCosto().getNombre(),  fontTexto  );
         
         datos.addElement(p4);
         datos.addElement(p5);

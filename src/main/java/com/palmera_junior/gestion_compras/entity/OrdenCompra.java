@@ -39,6 +39,11 @@ public class OrdenCompra {
     @ToString.Exclude
     private Sede sede;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_centro_costo")
+    @ToString.Exclude
+    private CentroCosto centroCosto;
+
     @Column(name = "nombre_prov", nullable = false, length = 150)
     private String nombreProv;
 

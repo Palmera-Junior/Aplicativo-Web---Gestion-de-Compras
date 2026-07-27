@@ -23,8 +23,8 @@ public class CentroCosto {
     @Column(length = 20, unique = true)
     private String codigo;
 
-    @Column(columnDefinition = "TEXT")
-    private String descripcion;
+    @Column(nullable = false, length = 200)
+    private String direccion;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_sede", nullable = false)
