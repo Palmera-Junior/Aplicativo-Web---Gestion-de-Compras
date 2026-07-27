@@ -1,5 +1,8 @@
 package com.palmera_junior.gestion_compras.entity;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,6 +25,10 @@ public class Sede {
     private String prefijoCiudad;
     @Column(length = 255)
     private String direccion;
+
+    @OneToMany(mappedBy = "sede", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
+    private List<CentroCosto> centroCostos = new ArrayList<>();
 
     @Override
     public boolean equals(Object o) {
