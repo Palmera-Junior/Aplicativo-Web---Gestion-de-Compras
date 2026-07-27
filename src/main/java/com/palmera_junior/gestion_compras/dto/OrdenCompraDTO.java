@@ -11,6 +11,7 @@ public class OrdenCompraDTO {
     private Long idUsuario;
 
     // Datos del proveedor y orden (Snapshot)
+    private String fecha;          // Fecha seleccionada por el usuario (formato YYYY-MM-DD desde el frontend)
     private String numeroOrden;
     private String nitProv;
     private String nombreProv;
@@ -38,6 +39,9 @@ public class OrdenCompraDTO {
 
     public Long getIdUsuario() { return idUsuario; }
     public void setIdUsuario(Long idUsuario) { this.idUsuario = idUsuario; }
+
+    public String getFecha() { return fecha; }
+    public void setFecha(String fecha) { this.fecha = fecha; }
 
     public String getNumeroOrden() { return numeroOrden; }
     public void setNumeroOrden(String numeroOrden) { this.numeroOrden = numeroOrden; }

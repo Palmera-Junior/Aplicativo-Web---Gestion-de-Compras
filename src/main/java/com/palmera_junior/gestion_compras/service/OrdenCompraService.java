@@ -1,6 +1,7 @@
 package com.palmera_junior.gestion_compras.service;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,8 +21,6 @@ import com.palmera_junior.gestion_compras.entity.Usuario;
 import com.palmera_junior.gestion_compras.repository.OrdenCompraRepository;
 import com.palmera_junior.gestion_compras.repository.ProductoRepository;
 import com.palmera_junior.gestion_compras.repository.UsuarioRepository;
-
-import jakarta.persistence.criteria.Order;
 
 @Service
 public class OrdenCompraService {
@@ -74,7 +73,12 @@ public class OrdenCompraService {
         orden.setObservaciones(dto.getObservaciones());
 
         // 2. Totales y fecha
-        orden.setFecha(LocalDate.now()); 
+        // Usar la fecha seleccionada por el usuario en el formulario; si no viene, usar la actual
+        if (dto.getFecha() != null && !dto.getFecha().isBlank()) {
+            orden.setFecha(LocalDate.parse(dto.getFecha(), DateTimeFormatter.ISO_LOCAL_DATE));
+        } else {
+            orden.setFecha(LocalDate.now());
+        }
         orden.setDescuento(dto.getDescuento());
         orden.setSubTotal(dto.getSubTotal());
         orden.setIvaTotal(dto.getIvaTotal());
