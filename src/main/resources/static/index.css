@@ -181,30 +181,72 @@ body {
 .btn-icon.delete { color: var(--danger-color); }
 
 .badge-estado {
-    padding: 6px 12px;
+    display: inline-block;
+    min-width: 110px;
+    padding: 6px 10px;
+    height: 34px;
+    line-height: 20px;
     border-radius: 8px;
-    font-size: 12px;
-    font-weight: bold;
-    color: rgb(0, 0, 0);
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+    vertical-align: middle;
+    color: #ffffff;
 }
 
 .borrador {
-    background-color: #97a7b48c;
-    box-shadow:0 2px 5px rgba(0,0,0,.08);
-      border: 1px solid #707070; 
+    background: linear-gradient(180deg, #e9ecef 0%, #d1d5db 100%);
+    color: #1f2937;
+    box-shadow: 0 1px 3px rgba(31,41,55,0.08);
+    border: 1px solid rgba(31,41,55,0.06);
 }
 
 .aprobada {
-    background-color: #1c64cfaf;
-    box-shadow:0 2px 5px rgba(0,0,0,.08);
-    border-bottom: #000000;
-      border: 1px solid #707070; 
+    background: linear-gradient(180deg, #0d6efd 0%, #0056b3 100%);
+    box-shadow: 0 3px 8px rgba(13,110,253,0.18);
 }
 
 .recibida {
-    background-color: #19875477;
-    box-shadow:2px 5px 5px rgba(0,0,0,.08);
-      border: 1px solid #707070; 
+    background: linear-gradient(180deg, #20c997 0%, #198754 100%);
+    box-shadow: 0 3px 8px rgba(25,135,84,0.18);
+}
+
+/* Ensure table cells with estado have consistent sizing */
+.estado-cell {
+    width: 160px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+/* Modal metadata styling */
+.orden-metadata {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin: 12px 0 18px 0;
+}
+
+.orden-metadata .meta-item {
+    background: #fbfcfd;
+    border: 1px solid var(--border-color);
+    padding: 10px 12px;
+    border-radius: 8px;
+    min-width: 160px;
+    box-shadow: 0 2px 4px rgba(9,30,66,0.03);
+}
+
+.orden-metadata .meta-item label {
+    display: block;
+    font-size: 12px;
+    color: #6b7280;
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+
+.orden-metadata .meta-value {
+    font-size: 14px;
+    color: #111827;
+    font-weight: 700;
 }
 
 .btn-icon.approve {

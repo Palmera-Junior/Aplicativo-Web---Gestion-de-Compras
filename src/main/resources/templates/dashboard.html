@@ -41,11 +41,15 @@
             </button>
         </div>
 
-        <div class="filtros-section">
-            <input type="text" placeholder="Buscar por número o proveedor..." class="input-control">
-            <input type="date" class="input-control">
-            <button class="btn-secondary"><i class="fas fa-search"></i> Buscar</button>
-        </div>
+        <form class="filtros-section" method="GET" th:action="@{/dashboard}">
+            <input type="text" name="q" placeholder="Buscar por número o proveedor..." class="input-control" th:value="${q}">
+            <label class="sr-only" for="fechaDesde">Desde</label>
+            <input type="date" id="fechaDesde" name="fechaDesde" class="input-control" th:value="${fechaDesde}">
+            <label class="sr-only" for="fechaHasta">Hasta</label>
+            <input type="date" id="fechaHasta" name="fechaHasta" class="input-control" th:value="${fechaHasta}">
+            <button type="submit" class="btn-secondary"><i class="fas fa-search"></i> Buscar</button>
+            <a th:href="@{/dashboard}" class="btn-secondary btn-clear">Limpiar</a>
+        </form>
 
         <div class="table-responsive">
             <table class="data-table">
@@ -67,7 +71,7 @@
                         <td th:text="${orden.nombreProv}">Proveedor S.A.</td>
                         <td th:text="${orden.sede.nombre}">Sede Principal</td>
                         <td th:text="${orden.total}">$ 1,000,000</td>
-                        <td>
+                        <td class="estado-cell">
                             <span th:if="${orden.estado.name() == 'BORRADOR'}" class="badge-estado borrador">
                                 BORRADOR
                             </span>
@@ -78,7 +82,9 @@
                                 RECIBIDA </span>
                         </td>
                         <td>
-                            <button class="btn-icon view"><i class="fas fa-eye"></i></button>
+                            <button class="btn-icon view" th:data-id="${orden.idOrden}">
+                                <i class="fas fa-eye"></i>
+                            </button>
                             <button sec:authorize="hasRole('APROBADOR')" th:if="${orden.estado.name() == 'BORRADOR'}"
                                 class="btn-icon approve" th:data-id="${orden.idOrden}">
                                 <i class="fas fa-check-circle"></i>
@@ -91,7 +97,9 @@
 
                             </button>
 
-                            <button class="btn-icon pdf"><i class="fas fa-file-pdf"></i></button>
+                            <button class="btn-icon pdf" th:data-id="${orden.idOrden}"
+                                th:if="${orden.estado.name() == 'APROBADA' or orden.estado.name() == 'RECIBIDA'}"><i
+                                    class="fas fa-file-pdf"></i></button>
                         </td>
                     </tr>
                 </tbody>
@@ -178,7 +186,7 @@
 
                 <div class="controles">
 
-                    <a th:href="@{/dashboard(page=${paginaActual - 1})}"
+                    <a th:href="@{/dashboard(page=${paginaActual - 1}, q=${q}, fechaDesde=${fechaDesde}, fechaHasta=${fechaHasta})}"
                         th:class="${paginaActual == 0} ? 'btn-pagina disabled' : 'btn-pagina'">
                         <i class="bi bi-chevron-left"></i>
                         Anterior
@@ -188,7 +196,7 @@
                         1
                     </span>
 
-                    <a th:href="@{/dashboard(page=${paginaActual + 1})}"
+                    <a th:href="@{/dashboard(page=${paginaActual + 1}, q=${q}, fechaDesde=${fechaDesde}, fechaHasta=${fechaHasta})}"
                         th:class="${paginaActual >= ordenesCompra.totalPages - 1} ? 'btn-pagina disabled' : 'btn-pagina'">
                         Siguiente
                         <i class="bi bi-chevron-right"></i>
@@ -206,8 +214,17 @@
     <div id="modal-orden" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Crear Nueva Orden de Compra</h2>
+                <h2 id="modal-orden-title">Crear Nueva Orden de Compra</h2>
                 <button id="btn-cerrar-modal" class="btn-close"><i class="fas fa-times"></i></button>
+            </div>
+
+            <div class="orden-metadata">
+                <div class="meta-item"><label>Número de orden:</label> <div class="meta-value" id="orden-numero"></div></div>
+                <div class="meta-item"><label>Estado:</label> <div class="meta-value" id="orden-estado"></div></div>
+                <div class="meta-item"><label>Aprobado por:</label> <div class="meta-value" id="orden-aprobado-por"></div></div>
+                <div class="meta-item"><label>Fecha aprobación:</label> <div class="meta-value" id="orden-fecha-aprobacion"></div></div>
+                <div class="meta-item"><label>Recibido por:</label> <div class="meta-value" id="orden-recibido-por">N/A</div></div>
+                <div class="meta-item"><label>Fecha recibido:</label> <div class="meta-value" id="orden-fecha-recibido">N/A</div></div>
             </div>
 
             <div class="modal-body">
@@ -337,8 +354,7 @@
 
             <div class="modal-footer">
                 <button type="button" class="btn-secondary" id="btn-cancelar">Cancelar</button>
-                <button type="button" class="btn-primary" id="btn-guardar-pdf"><i class="fas fa-save"></i> Guardar y
-                    Generar PDF</button>
+                <button type="button" class="btn-primary" id="btn-guardar-pdf"><i class="fas fa-save"></i> Guardar</button>
             </div>
         </div>
     </div>

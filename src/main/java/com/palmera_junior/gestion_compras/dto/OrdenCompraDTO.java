@@ -19,6 +19,15 @@ public class OrdenCompraDTO {
     private String direccionProv;
     private String observaciones;
 
+    // Metadatos de la orden
+    private String numeroOrden;
+    private String estado;
+    private String aprobadoPor;
+    private String fechaAprobacion;
+    private String recibidoPor;
+    private String fechaRecepcion;
+    private String numeroFactura;
+
     // Totales
     private BigDecimal descuento;
     private BigDecimal subTotal;
@@ -71,6 +80,27 @@ public class OrdenCompraDTO {
 
     public BigDecimal getTotal() { return total; }
     public void setTotal(BigDecimal total) { this.total = total; }
+
+    public String getNumeroOrden() { return numeroOrden; }
+    public void setNumeroOrden(String numeroOrden) { this.numeroOrden = numeroOrden; }
+
+    public String getEstado() { return estado; }
+    public void setEstado(String estado) { this.estado = estado; }
+
+    public String getAprobadoPor() { return aprobadoPor; }
+    public void setAprobadoPor(String aprobadoPor) { this.aprobadoPor = aprobadoPor; }
+
+    public String getFechaAprobacion() { return fechaAprobacion; }
+    public void setFechaAprobacion(String fechaAprobacion) { this.fechaAprobacion = fechaAprobacion; }
+
+    public String getRecibidoPor() { return recibidoPor; }
+    public void setRecibidoPor(String recibidoPor) { this.recibidoPor = recibidoPor; }
+
+    public String getFechaRecepcion() { return fechaRecepcion; }
+    public void setFechaRecepcion(String fechaRecepcion) { this.fechaRecepcion = fechaRecepcion; }
+
+    public String getNumeroFactura() { return numeroFactura; }
+    public void setNumeroFactura(String numeroFactura) { this.numeroFactura = numeroFactura; }
 
     public List<DetalleCompraDTO> getDetalles() { return detalles; }
     public void setDetalles(List<DetalleCompraDTO> detalles) { this.detalles = detalles; }

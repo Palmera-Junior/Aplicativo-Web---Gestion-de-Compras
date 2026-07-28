@@ -2,6 +2,9 @@ package com.palmera_junior.gestion_compras.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import com.palmera_junior.gestion_compras.dto.OrdenCompraDTO;
@@ -16,13 +19,32 @@ public class OrdenCompraController {
     @Autowired
     private OrdenCompraService ordenCompraService;
 
+    @Autowired
+    private com.palmera_junior.gestion_compras.service.PdfService pdfService;
+
     @PostMapping
     public ResponseEntity<OrdenCompra> guardarOrden(
             @RequestBody OrdenCompraDTO dto) {
 
+        if (dto.getIdCentroCosto() == null) {
+            return ResponseEntity.badRequest().body(null);
+        }
+
         OrdenCompra ordenGuardada = ordenCompraService.guardarOrdenDesdeDTO(dto);
 
         return ResponseEntity.ok(ordenGuardada);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<OrdenCompra> actualizarOrden(
+            @PathVariable Integer id,
+            @RequestBody OrdenCompraDTO dto) {
+        if (dto.getIdCentroCosto() == null) {
+            return ResponseEntity.badRequest().body(null);
+        }
+
+        OrdenCompra ordenActualizada = ordenCompraService.actualizarOrdenDesdeDTO(id, dto);
+        return ResponseEntity.ok(ordenActualizada);
     }
 
     @PutMapping("/{id}/aprobar")
@@ -58,6 +80,34 @@ public class OrdenCompraController {
 
             return ResponseEntity.badRequest()
                     .body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/{id}/pdf")
+    public ResponseEntity<byte[]> descargarPdf(@PathVariable Integer id) {
+        try {
+            OrdenCompra orden = ordenCompraService.obtenerPorId(id);
+            if (orden == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            if (orden.getEstado() != com.palmera_junior.gestion_compras.entity.EstadoOrdenCompra.APROBADA
+                    && orden.getEstado() != com.palmera_junior.gestion_compras.entity.EstadoOrdenCompra.RECIBIDA) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            }
+
+            byte[] pdfBytes = pdfService.generarPdfOrdenCompra(orden);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            String filename = "Orden_Compra_" + (orden.getNumeroOrden() != null ? orden.getNumeroOrden() : id) + ".pdf";
+            headers.setContentDispositionFormData("attachment", filename);
+
+            return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }

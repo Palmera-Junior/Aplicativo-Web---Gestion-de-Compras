@@ -9,7 +9,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // Abrir modal
     if (btnAbrir) {
         btnAbrir.addEventListener("click", () => {
+            resetFormularioOrden();
             modal.classList.add("active");
+            modal.style.display = 'flex';
             document.body.style.overflow = "hidden";
         });
     }
@@ -17,6 +19,12 @@ document.addEventListener("DOMContentLoaded", () => {
     // Cerrar con la X
     if (btnCerrar) {
         btnCerrar.addEventListener("click", cerrarModal);
+    }
+
+    // Botón cancelar dentro del modal
+    const btnCancelar = document.getElementById('btn-cancelar');
+    if (btnCancelar) {
+        btnCancelar.addEventListener('click', cerrarModal);
     }
 
     // Cerrar al hacer click sobre el fondo oscuro
@@ -35,8 +43,120 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function cerrarModal() {
         modal.classList.remove("active");
+        modal.style.display = "none";
         document.body.style.overflow = "auto";
     }
+});
+
+let ordenIdActual = null;
+
+function resetFormularioOrden() {
+    const fechaInput = document.querySelector('#modal-orden input[type="date"]');
+    if (fechaInput) {
+        fechaInput.value = '';
+        fechaInput.disabled = false;
+    }
+
+    const selectCentroCosto = document.getElementById('select-centro-costo');
+    if (selectCentroCosto) {
+        selectCentroCosto.value = '';
+        selectCentroCosto.disabled = false;
+    }
+
+    const camposProveedor = [
+        document.getElementById('prov-nit'),
+        document.getElementById('prov-nombre'),
+        document.getElementById('prov-ciudad'),
+        document.getElementById('prov-direccion'),
+        document.getElementById('prov-telefono'),
+        document.getElementById('prov-email')
+    ];
+
+    camposProveedor.forEach(campo => {
+        if (campo) {
+            campo.value = '';
+            campo.disabled = false;
+        }
+    });
+
+    const observaciones = document.querySelector('#modal-orden textarea');
+    if (observaciones) {
+        observaciones.value = '';
+        observaciones.disabled = false;
+    }
+
+    const tbody = document.getElementById('tbody-productos');
+    if (tbody) {
+        tbody.innerHTML = '';
+    }
+
+    document.getElementById('subtotal-general').textContent = '$ 0.00';
+    document.getElementById('iva-general').textContent = '$ 0.00';
+    document.getElementById('descuento-general').textContent = '$ 0.00';
+    document.getElementById('total-general').textContent = '$ 0.00';
+
+    const chkDescuento = document.getElementById('activar-descuento');
+    const inputDescuento = document.getElementById('input-descuento');
+    if (chkDescuento) {
+        chkDescuento.checked = false;
+    }
+    if (inputDescuento) {
+        inputDescuento.value = 0;
+        inputDescuento.style.display = 'none';
+    }
+    const descuentoGeneral = document.getElementById('descuento-general');
+    if (descuentoGeneral) {
+        descuentoGeneral.style.display = 'inline';
+    }
+
+    const ordenNumero = document.getElementById('orden-numero');
+    const ordenEstado = document.getElementById('orden-estado');
+    const ordenAprobadoPor = document.getElementById('orden-aprobado-por');
+    const ordenFechaAprobacion = document.getElementById('orden-fecha-aprobacion');
+    const ordenRecibidoPor = document.getElementById('orden-recibido-por');
+    const ordenFechaRecibido = document.getElementById('orden-fecha-recibido');
+    const modalOrdenTitle = document.getElementById('modal-orden-title');
+
+    if (ordenNumero) { ordenNumero.textContent = ''; }
+    if (ordenEstado) { ordenEstado.textContent = ''; }
+    if (ordenAprobadoPor) { ordenAprobadoPor.textContent = ''; }
+    if (ordenFechaAprobacion) { ordenFechaAprobacion.textContent = ''; }
+    if (ordenRecibidoPor) { ordenRecibidoPor.textContent = ''; }
+    if (ordenFechaRecibido) { ordenFechaRecibido.textContent = ''; }
+    if (modalOrdenTitle) { modalOrdenTitle.textContent = 'Crear Nueva Orden de Compra'; }
+
+    setModalOrdenModoVista(false);
+}
+
+function setModalOrdenModoVista(esVista) {
+    const controles = document.querySelectorAll('#modal-orden input, #modal-orden textarea, #modal-orden select');
+    controles.forEach(control => {
+        if (control.id === 'btn-cerrar-modal') {
+            return;
+        }
+        if (control.type === 'button' || control.type === 'submit' || control.type === 'reset') {
+            return;
+        }
+        control.disabled = esVista;
+    });
+
+    const btnAgregarFila = document.getElementById('btn-agregar-fila');
+    const btnGuardar = document.getElementById('btn-guardar-pdf');
+    const botonesEliminar = document.querySelectorAll('#tbody-productos .btn-icon.delete');
+
+    if (btnAgregarFila) {
+        btnAgregarFila.disabled = esVista;
+        btnAgregarFila.style.display = esVista ? 'none' : 'inline-block';
+    }
+    if (btnGuardar) {
+        btnGuardar.disabled = esVista;
+        btnGuardar.style.display = esVista ? 'none' : 'inline-block';
+    }
+    botonesEliminar.forEach(boton => {
+        boton.disabled = esVista;
+        boton.style.display = esVista ? 'none' : 'inline-block';
+    });
+}
 
     //Codigo de los campos del proveedor ##################################################################33
 
@@ -98,7 +218,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     });
 
-});
+
 
 // Codigo de los campos del producto ##################################################################
 
@@ -421,6 +541,12 @@ async function guardarYGenerarPdf() {
     const selectCentroCosto = document.getElementById('select-centro-costo');
     const idCentroCosto = selectCentroCosto ? selectCentroCosto.value : '';
 
+    // Validación: centro de costo obligatorio
+    if (!idCentroCosto) {
+        alert('El campo "Centro de Costo" es obligatorio. Por favor selecciona uno.');
+        return;
+    }
+
     const ordenDTO = {
         fecha: fechaInput,
         idCentroCosto: idCentroCosto ? parseInt(idCentroCosto) : null,
@@ -481,45 +607,22 @@ async function guardarYGenerarPdf() {
 
     // 3. Envío al Backend
     try {
-        const response = await fetch('/api/ordenes/guardar', {
-            method: 'POST',
+        const url = ordenIdActual ? `/orden-compra/${ordenIdActual}` : '/orden-compra';
+        const response = await fetch(url, {
+            method: ordenIdActual ? 'PUT' : 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(ordenDTO)
         });
 
         if (response.ok) {
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-
-            // Extraer nombre del archivo del header o asignar uno por defecto
-            const disposition = response.headers.get('Content-Disposition');
-            let filename = 'Orden_Compra.pdf';
-            if (disposition && disposition.includes('filename=')) {
-                filename = disposition.split('filename=')[1].replace(/["']/g, '');
-            }
-            a.download = filename;
-
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-
-            // ⚠️ CORRECCIÓN 4: Liberar memoria del Blob
-            window.URL.revokeObjectURL(url);
-
-            alert('Orden guardada y PDF generado exitosamente.');
-
+            alert('Orden guardada exitosamente.');
             if (typeof cerrarModal === 'function') {
                 cerrarModal();
             } else {
                 const modal = document.getElementById('modal-orden');
                 if (modal) modal.style.display = 'none';
             }
-
-            // Actualizar la vista para reflejar la nueva orden en la tabla
             location.reload();
-
         } else {
             const errText = await response.text();
             console.error("Error servidor:", errText);
@@ -532,7 +635,7 @@ async function guardarYGenerarPdf() {
         // Reactivar el botón al finalizar la operación
         if (btnGuardar) {
             btnGuardar.disabled = false;
-            btnGuardar.innerHTML = '<i class="fas fa-save"></i> Guardar y Generar PDF';
+            btnGuardar.innerHTML = '<i class="fas fa-save"></i> Guardar';
         }
     }
 }
@@ -584,6 +687,45 @@ document.addEventListener("click", async function (e) {
         console.error(error);
 
         alert(error.message);
+    }
+});
+
+// DESCARGAR PDF (solo para APROBADA/RECIBIDA)
+document.addEventListener("click", async function (e) {
+    const boton = e.target.closest(".pdf");
+    if (!boton) return;
+
+    const idOrden = boton.dataset.id;
+    if (!idOrden) {
+        alert('ID de orden no disponible para la descarga.');
+        return;
+    }
+
+    try {
+        const response = await fetch(`/orden-compra/${idOrden}/pdf`);
+        if (!response.ok) {
+            const txt = await response.text();
+            throw new Error(txt || 'No se pudo descargar el PDF.');
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const disposition = response.headers.get('Content-Disposition');
+        let filename = `Orden_Compra_${idOrden}.pdf`;
+        if (disposition && disposition.includes('filename=')) {
+            filename = disposition.split('filename=')[1].replace(/['"]/g, '');
+        }
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+
+    } catch (err) {
+        console.error(err);
+        alert(err.message || 'Error descargando PDF');
     }
 });
 
@@ -816,3 +958,204 @@ function limpiarFormularioRecepcion() {
     idOrdenSeleccionada = null;
 }
 
+// LISTENER BOTN VIEW 
+document.addEventListener(
+    "click",
+    async function (e) {
+
+        const boton =
+            e.target.closest(".view");
+
+        if (!boton) {
+            return;
+        }
+
+        const idOrden =
+            boton.dataset.id;
+
+        try {
+
+            const response =
+                await fetch(
+                    `/orden-compra/${idOrden}`
+                );
+
+            if (!response.ok) {
+
+                throw new Error(
+                    "No fue posible cargar la orden."
+                );
+
+            }
+
+            const orden =
+                await response.json();
+
+            ordenIdActual = parseInt(idOrden, 10);
+            cargarOrdenEnModal(
+                orden
+            );
+
+            abrirModalOrden();
+
+        } catch (error) {
+
+            console.error(error);
+
+            alert(error.message);
+
+        }
+    }
+);
+
+function abrirModalOrden() {
+
+    document.getElementById(
+        "modal-orden"
+    ).style.display = "flex";
+
+}
+
+function cargarOrdenEnModal(
+    orden
+) {
+    resetFormularioOrden();
+
+    const esVista = orden.estado !== 'BORRADOR';
+    const fechaInput = document.querySelector('#modal-orden input[type="date"]');
+    if (fechaInput) {
+        fechaInput.value = orden.fecha || '';
+        fechaInput.disabled = esVista;
+    }
+
+    const selectCentroCosto = document.getElementById('select-centro-costo');
+    if (selectCentroCosto) {
+        selectCentroCosto.value = orden.idCentroCosto || '';
+        selectCentroCosto.disabled = esVista;
+    }
+
+    document.getElementById(
+        "prov-nit"
+    ).value =
+        orden.nitProv || "";
+
+    document.getElementById(
+        "prov-nombre"
+    ).value =
+        orden.nombreProv || "";
+
+    document.getElementById(
+        "prov-ciudad"
+    ).value =
+        orden.ciudadProv || "";
+
+    document.getElementById(
+        "prov-direccion"
+    ).value =
+        orden.direccionProv || "";
+
+    document.getElementById(
+        "prov-telefono"
+    ).value =
+        orden.telefonoProv || "";
+
+    document.getElementById(
+        "prov-email"
+    ).value =
+        orden.correoProv || "";
+
+    const observaciones = document.querySelector('#modal-orden textarea');
+    if (observaciones) {
+        observaciones.value = orden.observaciones || "";
+        observaciones.disabled = esVista;
+    }
+
+    const tbody = document.getElementById('tbody-productos');
+    if (tbody) {
+        tbody.innerHTML = '';
+
+        if (orden.detalles && orden.detalles.length > 0) {
+            orden.detalles.forEach(detalle => {
+                const fila = document.createElement('tr');
+                fila.innerHTML = `
+                    <td>
+                        <input type="number" class="cantidad input-control td-input" value="${detalle.cantidad || 0}" ${esVista ? 'disabled' : ''}>
+                    </td>
+                    <td>
+                        <input type="text" class="codigo-producto input-control td-input" value="${detalle.codigoInventario || ''}" ${esVista ? 'disabled' : ''}>
+                    </td>
+                    <td>
+                        <input type="text" class="descripcion-producto input-control td-input readonly" value="${detalle.descripcion || ''}" ${esVista ? 'disabled' : ''}>
+                    </td>
+                    <td>
+                        <input type="text" class="presentacion-producto input-control td-input readonly" value="${detalle.presentacion || ''}" ${esVista ? 'disabled' : ''}>
+                    </td>
+                    <td>
+                        <input type="number" class="valor-unitario input-control td-input" value="${detalle.valorUnitario || 0}" ${esVista ? 'disabled' : ''}>
+                    </td>
+                    <td>
+                        <input type="number" class="iva-producto input-control td-input" value="${detalle.ivaProducto || 0}" ${esVista ? 'disabled' : ''}>
+                    </td>
+                    <td>
+                        <input type="text" class="iva-total input-control td-input" value="${formatearPesos(Number(detalle.valorIva || 0))}" disabled>
+                    </td>
+                    <td>
+                        <input type="text" class="valor-total input-control td-input" value="${formatearPesos(Number(detalle.valorTotalLinea || 0))}" disabled>
+                    </td>
+                    <td>
+                        <button type="button" class="btn-icon delete" ${esVista ? 'disabled' : ''}>
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+
+                const campoIvaTotal = fila.querySelector('.iva-total');
+                const campoValorTotal = fila.querySelector('.valor-total');
+                if (campoIvaTotal) {
+                    campoIvaTotal.dataset.valor = Number(detalle.valorIva || 0);
+                }
+                if (campoValorTotal) {
+                    campoValorTotal.dataset.valor = Number(detalle.valorTotalLinea || 0);
+                }
+
+                tbody.appendChild(fila);
+            });
+        } else {
+            const fila = document.createElement('tr');
+            fila.innerHTML = `
+                <td colspan="9" style="text-align: center; padding: 1rem;">No hay detalles registrados para esta orden.</td>
+            `;
+            tbody.appendChild(fila);
+        }
+    }
+
+    document.getElementById('subtotal-general').textContent = formatearPesos(Number(orden.subTotal || 0));
+    document.getElementById('iva-general').textContent = formatearPesos(Number(orden.ivaTotal || 0));
+    document.getElementById('descuento-general').textContent = formatearPesos(Number(orden.descuento || 0));
+    document.getElementById('total-general').textContent = formatearPesos(Number(orden.total || 0));
+
+    const chkDescuento = document.getElementById('activar-descuento');
+    const inputDescuento = document.getElementById('input-descuento');
+    if (chkDescuento && inputDescuento) {
+        if (Number(orden.descuento || 0) > 0) {
+            chkDescuento.checked = true;
+            inputDescuento.style.display = 'inline-block';
+            inputDescuento.value = Number(orden.descuento || 0);
+        } else {
+            chkDescuento.checked = false;
+            inputDescuento.style.display = 'none';
+            inputDescuento.value = 0;
+        }
+        chkDescuento.disabled = esVista;
+    }
+
+    document.getElementById('orden-numero').textContent = orden.numeroOrden || '';
+    document.getElementById('orden-estado').textContent = orden.estado || '';
+    document.getElementById('orden-aprobado-por').textContent = orden.aprobadoPor || 'N/A';
+    document.getElementById('orden-fecha-aprobacion').textContent = orden.fechaAprobacion || 'N/A';
+    document.getElementById('orden-recibido-por').textContent = orden.recibidoPor || 'N/A';
+    document.getElementById('orden-fecha-recibido').textContent = orden.fechaRecepcion || 'N/A';
+    document.getElementById('modal-orden-title').textContent = esVista ? 'Ver Orden de Compra' : 'Editar Orden de Compra';
+
+    setModalOrdenModoVista(esVista);
+}

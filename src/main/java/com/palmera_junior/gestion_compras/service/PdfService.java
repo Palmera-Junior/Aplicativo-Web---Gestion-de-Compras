@@ -58,6 +58,12 @@ public class PdfService {
         document.add(new Paragraph(" "));
         agregarSeparador(document);
 
+        // Sección: Datos Generales
+        Paragraph seccionGenerales = new Paragraph("DATOS GENERALES", fontSub);
+        seccionGenerales.setSpacingBefore(4f);
+        seccionGenerales.setSpacingAfter(4f);
+        document.add(seccionGenerales);
+
         // Tabla fecha y solicitate 
 
         PdfPTable fechaTable = new PdfPTable(2);
@@ -78,6 +84,12 @@ public class PdfService {
 
         document.add(fechaTable);
         agregarSeparador(document);
+
+        // Sección: Datos del Proveedor
+        Paragraph seccionProveedor = new Paragraph("DATOS DEL PROVEEDOR", fontSub);
+        seccionProveedor.setSpacingBefore(4f);
+        seccionProveedor.setSpacingAfter(4f);
+        document.add(seccionProveedor);
 
 
         // Tabla de información del Proveedor (2 columnas)
@@ -231,21 +243,22 @@ public class PdfService {
         document.add(contenedor);
 
         agregarSeparador(document);
-                
-        // Aprovador y quien recibe
-
+        // Auditoría: Aprobación y Recepción
         PdfPTable auditoriaTable = new PdfPTable(2);
-        auditoriaTable.setWidthPercentage(100);  
-        
-                
+        auditoriaTable.setWidthPercentage(100);
+
+        String aproboText = orden.getUsuarioAprobacion() != null ?
+            orden.getUsuarioAprobacion().getNombre() + " " + orden.getUsuarioAprobacion().getApellido() : "N/A";
+
         PdfPCell aprobo = new PdfPCell();
         aprobo.setBorder(Rectangle.NO_BORDER);
-        aprobo.addElement(new Paragraph("APROBÓ  : " + "_______________________________", fontTexto));
+        aprobo.addElement(new Paragraph("APROBÓ: " + aproboText, fontTexto));
         auditoriaTable.addCell(aprobo);
 
+        String recibioText = orden.getRecibidoPor() != null ? orden.getRecibidoPor() : "N/A";
         PdfPCell recibio = new PdfPCell();
         recibio.setBorder(Rectangle.NO_BORDER);
-        recibio.addElement(new Paragraph("RECIBIÓ  : " + "_______________________________", fontTexto));
+        recibio.addElement(new Paragraph("RECIBIÓ: " + recibioText, fontTexto));
         auditoriaTable.addCell(recibio);
 
         document.add(auditoriaTable);
@@ -271,13 +284,31 @@ public class PdfService {
         
         PdfPCell datos = new PdfPCell();
         datos.setBorder(Rectangle.NO_BORDER);
-        
-        Paragraph p4 = new Paragraph("FECHA RECIBIDO: __________________________", fontTexto);
-        p4.setSpacingAfter(8f);
-        
-        Paragraph p5 = new Paragraph("DESTINO: " + orden.getCentroCosto().getDireccion() + " , " + orden.getCentroCosto().getNombre(),  fontTexto  );
-        
+
+        // Sección: Datos de Envío
+        Paragraph seccionEnvio = new Paragraph("DATOS DE ENVÍO", fontSub);
+        seccionEnvio.setSpacingBefore(4f);
+        seccionEnvio.setSpacingAfter(4f);
+        datos.addElement(seccionEnvio);
+
+        String fechaRecibido = orden.getFechaRecepcion() != null ? orden.getFechaRecepcion().toString() : "N/A";
+        Paragraph p4 = new Paragraph("FECHA RECIBIDO: " + fechaRecibido, fontTexto);
+        p4.setSpacingAfter(6f);
+
+        String numeroFactura = orden.getNumeroFactura() != null ? orden.getNumeroFactura() : "N/A";
+        Paragraph pFactura = new Paragraph("NÚM. FACTURA PROVEEDOR: " + numeroFactura, fontTexto);
+        pFactura.setSpacingAfter(6f);
+
+        String destino = "N/A";
+        if (orden.getCentroCosto() != null) {
+            String dir = orden.getCentroCosto().getDireccion() != null ? orden.getCentroCosto().getDireccion() : "";
+            String nombreCentro = orden.getCentroCosto().getNombre() != null ? orden.getCentroCosto().getNombre() : "";
+            destino = (dir + " , " + nombreCentro).trim();
+        }
+        Paragraph p5 = new Paragraph("DESTINO: " + destino, fontTexto);
+
         datos.addElement(p4);
+        datos.addElement(pFactura);
         datos.addElement(p5);
         
         envioTable.addCell(datos);
