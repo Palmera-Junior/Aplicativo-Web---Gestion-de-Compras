@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.palmera_junior.gestion_compras.dto.OrdenCompraDTO;
+import com.palmera_junior.gestion_compras.dto.RecibirOrdenDTO;
 import com.palmera_junior.gestion_compras.entity.OrdenCompra;
 import com.palmera_junior.gestion_compras.service.OrdenCompraService;
 
@@ -25,20 +26,38 @@ public class OrdenCompraController {
     }
 
     @PutMapping("/{id}/aprobar")
-public ResponseEntity<?> aprobarOrden(
-        @PathVariable Integer id) {
+    public ResponseEntity<?> aprobarOrden(
+            @PathVariable Integer id) {
 
-    try {
+        try {
 
-        OrdenCompra orden =
-                ordenCompraService.aprobarOrden(id);
+            OrdenCompra orden = ordenCompraService.aprobarOrden(id);
 
-        return ResponseEntity.ok(orden);
+            return ResponseEntity.ok(orden);
 
-    } catch (RuntimeException e) {
+        } catch (RuntimeException e) {
 
-        return ResponseEntity.badRequest()
-                .body(e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(e.getMessage());
+        }
     }
-}
+
+    @PutMapping("/{id}/recibir")
+    public ResponseEntity<?> recibirOrden(
+            @PathVariable Integer id,
+            @RequestBody RecibirOrdenDTO dto) {
+
+        try {
+
+            ordenCompraService.recibirOrden(id, dto);
+
+            return ResponseEntity.ok(
+                    "Orden recibida correctamente");
+
+        } catch (RuntimeException e) {
+
+            return ResponseEntity.badRequest()
+                    .body(e.getMessage());
+        }
+    }
 }

@@ -24,7 +24,7 @@ public class OrdenCompra {
     @Column(name = "id_orden")
     private Integer idOrden;
 
-    @ManyToOne(fetch = FetchType.LAZY , optional=true)
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "id_prov", nullable = true)
     @ToString.Exclude
     private Proveedor proveedor;
@@ -71,9 +71,9 @@ public class OrdenCompra {
     private String observaciones;
 
     @Column(name = "sub_total", nullable = false, precision = 10, scale = 2)
-    private BigDecimal subTotal; 
+    private BigDecimal subTotal;
 
-    @Column(name = "iva_total" , nullable = false, precision = 10, scale = 2)
+    @Column(name = "iva_total", nullable = false, precision = 10, scale = 2)
     private BigDecimal ivaTotal;
 
     @Column(precision = 10, scale = 2)
@@ -104,7 +104,10 @@ public class OrdenCompra {
     @Column(name = "fecha_recepcion")
     private LocalDate fechaRecepcion;
 
-    @OneToMany(mappedBy = "ordenCompra", cascade = CascadeType.ALL, orphanRemoval = true   )
+    @Column(name = "observacion_recepcion")
+    private String observacionRecepcion;
+
+    @OneToMany(mappedBy = "ordenCompra", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     private List<DetalleCompra> detalles = new ArrayList<>();
 
@@ -121,27 +124,17 @@ public class OrdenCompra {
 
     @Override
     public boolean equals(Object o) {
-        if(this== o) return true;
-        if(!(o instanceof OrdenCompra)) return false;
+        if (this == o)
+            return true;
+        if (!(o instanceof OrdenCompra))
+            return false;
         OrdenCompra other = (OrdenCompra) o;
         return idOrden != null && idOrden.equals(other.getIdOrden());
     }
+
     @Override
     public int hashCode() {
         return getClass().hashCode();
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-    
 }

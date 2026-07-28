@@ -8,6 +8,8 @@ public class RecibirOrdenDTO {
 
     private String recibidoPor;
 
+    private String observacionRecepcion;
+
     public Integer getIdOrden() {
         return idOrden;
     }
@@ -30,5 +32,13 @@ public class RecibirOrdenDTO {
 
     public void setRecibidoPor(String recibidoPor) {
         this.recibidoPor = recibidoPor;
+    }
+
+    public String getObservacionRecepcion() {
+        return observacionRecepcion;
+    }
+
+    public void setObservacionRecepcion(String observacionRecepcion) {
+        this.observacionRecepcion = observacionRecepcion;
     }
 }

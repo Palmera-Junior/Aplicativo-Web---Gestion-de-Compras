@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.palmera_junior.gestion_compras.dto.OrdenCompraDTO;
+import com.palmera_junior.gestion_compras.dto.RecibirOrdenDTO;
 import com.palmera_junior.gestion_compras.entity.CentroCosto;
 import com.palmera_junior.gestion_compras.entity.DetalleCompra;
 import com.palmera_junior.gestion_compras.entity.EstadoOrdenCompra;
@@ -223,6 +224,40 @@ public class OrdenCompraService {
         orden.setFechaAprobacion(LocalDate.now());
 
         return ordenCompraRepository.save(orden);
+    }
+
+    @Transactional
+    public OrdenCompra recibirOrden(
+            Integer idOrden,
+            RecibirOrdenDTO dto) {
+
+        OrdenCompra orden = ordenCompraRepository.findById(idOrden)
+                .orElseThrow(() -> new RuntimeException(
+                        "Orden no encontrada"));
+
+        if (orden.getEstado() != EstadoOrdenCompra.APROBADA) {
+
+            throw new RuntimeException(
+                    "Solo las órdenes APROBADAS pueden recibirse");
+        }
+
+        orden.setNumeroFactura(
+                dto.getNumeroFactura());
+
+        orden.setRecibidoPor(
+                dto.getRecibidoPor());
+
+         orden.setObservacionRecepcion(
+                dto.getObservacionRecepcion());
+
+        orden.setFechaRecepcion(
+                LocalDate.now());
+
+        orden.setEstado(
+                EstadoOrdenCompra.RECIBIDA);
+
+        return ordenCompraRepository.save(
+                orden);
     }
 
 }

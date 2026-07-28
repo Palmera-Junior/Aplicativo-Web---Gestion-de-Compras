@@ -83,12 +83,84 @@
                                 class="btn-icon approve" th:data-id="${orden.idOrden}">
                                 <i class="fas fa-check-circle"></i>
                             </button>
+                            <button th:if="${orden.estado.name() == 'APROBADA'}" class="btn-icon receive"
+                                th:data-id="${orden.idOrden}" th:data-numero-orden="${orden.numeroOrden}"
+                                th:data-proveedor="${orden.nombreProv}">
+
+                                <i class="fas fa-box-open"></i>
+
+                            </button>
 
                             <button class="btn-icon pdf"><i class="fas fa-file-pdf"></i></button>
                         </td>
                     </tr>
                 </tbody>
             </table>
+
+            <!-- MODAL RECEPCIÓN ORDEN -->
+            <div id="modal-recibir-oc" class="modal-recibir-oc-overlay">
+
+                <div class="modal-recibir-oc-content">
+
+                    <div class="modal-recibir-oc-header">
+                        <h2>Recepción de Orden</h2>
+                    </div>
+
+                    <div class="modal-recibir-oc-body">
+
+                        <div class="recepcion-resumen">
+
+                            <div>
+                                <strong>Orden:</strong>
+                                <span id="recepcion-numero-orden"></span>
+                            </div>
+
+                            <div>
+                                <strong>Proveedor:</strong>
+                                <span id="recepcion-proveedor"></span>
+                            </div>
+
+                        </div>
+
+                        <div class="recepcion-form-group">
+                            <label>Factura Proveedor *</label>
+                            <input type="text" id="recepcion-numero-factura">
+                        </div>
+
+                        <div class="recepcion-form-group">
+                            <label>Recibido Por *</label>
+                            <input type="text" id="recepcion-recibido-por">
+                        </div>
+
+                        <div class="recepcion-form-group">
+                            <label>Observación Recepción</label>
+
+                            <textarea id="recepcion-observacion" rows="4"
+                                placeholder="Observaciones sobre la recepción del pedido">
+                </textarea>
+                        </div>
+
+                    </div>
+
+                    <div class="modal-recibir-oc-footer">
+
+                        <button type="button" id="btn-cancelar-recepcion">
+
+                            Cancelar
+
+                        </button>
+
+                        <button type="button" id="btn-confirmar-recepcion">
+
+                            Registrar Recepción
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
 
             <div class="paginacion">
 

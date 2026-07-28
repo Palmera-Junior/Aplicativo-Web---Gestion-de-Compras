@@ -50,39 +50,39 @@ document.addEventListener("DOMContentLoaded", () => {
     const email = document.getElementById("prov-email");
 
     const campos = [
-    nit,
-    nombre,
-    ciudad,
-    direccion,
-    telefono,
-    email
-];
+        nit,
+        nombre,
+        ciudad,
+        direccion,
+        telefono,
+        email
+    ];
 
     selectProveedor.addEventListener("change", function () {
 
         const opcion = this.options[this.selectedIndex];
 
         // Opción "Otro"
-    if (this.value === "otro") {
+        if (this.value === "otro") {
 
-        campos.forEach(campo => {
-            campo.disabled = false;
-            campo.value = "";
-        });
+            campos.forEach(campo => {
+                campo.disabled = false;
+                campo.value = "";
+            });
 
-        return;
-    }
+            return;
+        }
 
-    // Ningún proveedor seleccionado
-    if (this.value === "") {
+        // Ningún proveedor seleccionado
+        if (this.value === "") {
 
-        campos.forEach(campo => {
-            campo.disabled = true;
-            campo.value = "";
-        });
+            campos.forEach(campo => {
+                campo.disabled = true;
+                campo.value = "";
+            });
 
-        return;
-    }
+            return;
+        }
 
         // Proveedor existente
         nit.value = opcion.dataset.nit || "";
@@ -93,11 +93,11 @@ document.addEventListener("DOMContentLoaded", () => {
         email.value = opcion.dataset.email || "";
 
         campos.forEach(campo => {
-        campo.disabled = true;
-    });
+            campo.disabled = true;
+        });
 
     });
-    
+
 });
 
 // Codigo de los campos del producto ##################################################################
@@ -213,7 +213,7 @@ function agregarFila() {
         </td>
     `;
 
-    tbody.appendChild(nuevaFila);  
+    tbody.appendChild(nuevaFila);
     calcularTotalFila(nuevaFila);
 }
 
@@ -261,9 +261,9 @@ function calcularTotalFila(fila) {
 
     const valorTotal = cantidad * valorUnitario;
 
-    const valorIva = valorTotal * (ivaPorcentaje/100);
+    const valorIva = valorTotal * (ivaPorcentaje / 100);
 
- 
+
     const campoValorIva =
         fila.querySelector(".iva-total");
 
@@ -346,7 +346,7 @@ function recalcularTotalesGenerales() {
         formatearPesos(totalGeneral);
 
     lblDescuento.textContent =
-    formatearPesos(descuento);
+        formatearPesos(descuento);
 }
 
 // codigo para mostrar/ocultar descuento 
@@ -411,7 +411,7 @@ function parsearMoneda(elementId) {
 async function guardarYGenerarPdf() {
     // ⚠️ CORRECCIÓN 1: Seleccionar la fecha ESPECÍFICAMENTE dentro del modal
     const fechaInput = document.querySelector('#modal-orden input[type="date"]')?.value;
-    
+
     if (!fechaInput) {
         alert("Por favor selecciona una fecha válida dentro del formulario.");
         return;
@@ -432,12 +432,12 @@ async function guardarYGenerarPdf() {
         correoProv: document.getElementById('prov-email')?.value || 'N/A',
         //  CORRECCIÓN 2: Acotar el textarea al modal
         observaciones: document.querySelector('#modal-orden textarea')?.value || '',
-        
+
         subTotal: parsearMoneda('subtotal-general'),
         ivaTotal: parsearMoneda('iva-general'),
         descuento: parsearMoneda('descuento-general'),
         total: parsearMoneda('total-general'),
-        
+
         detalles: []
     };
 
@@ -504,10 +504,10 @@ async function guardarYGenerarPdf() {
             document.body.appendChild(a);
             a.click();
             a.remove();
-            
+
             // ⚠️ CORRECCIÓN 4: Liberar memoria del Blob
             window.URL.revokeObjectURL(url);
-            
+
             alert('Orden guardada y PDF generado exitosamente.');
 
             if (typeof cerrarModal === 'function') {
@@ -560,33 +560,259 @@ document.addEventListener("click", async function (e) {
 
     try {
 
-    const response = await fetch(
-        `/orden-compra/${idOrden}/aprobar`,
-        {
-            method: "PUT"
+        const response = await fetch(
+            `/orden-compra/${idOrden}/aprobar`,
+            {
+                method: "PUT"
+            }
+        );
+
+        if (!response.ok) {
+
+            const mensaje = await response.text();
+
+
+            throw new Error(mensaje);
         }
-    );
 
-    if (!response.ok) {
+        alert("Orden aprobada correctamente");
 
-        const mensaje = await response.text();
+        location.reload();
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(error.message);
+    }
+});
+
+// ==========================================
+// RECEPCIÓN DE ORDEN DE COMPRA
+// ==========================================
+
+let idOrdenSeleccionada = null;
 
 
-        throw new Error(mensaje);
+// ABRIR MODAL
+document.addEventListener("click", function (e) {
+
+    const boton = e.target.closest(".receive");
+
+    if (!boton) {
+        return;
     }
 
-    alert("Orden aprobada correctamente");
+    idOrdenSeleccionada = boton.dataset.id;
 
-    location.reload();
+    document.getElementById(
+        "recepcion-numero-orden"
+    ).textContent = boton.dataset.numeroOrden;
 
-} catch (error) {
+    document.getElementById(
+        "recepcion-proveedor"
+    ).textContent = boton.dataset.proveedor;
 
-    console.error(error);
+    document.getElementById(
+        "recepcion-observacion"
+    ).textContent = boton.dataset.observacionRecepcion;
 
-    alert(error.message);
-}
+    document.getElementById(
+        "modal-recibir-oc"
+    ).style.display = "flex";
+
 });
 
 
+// CANCELAR RECEPCIÓN
+document
+    .getElementById("btn-cancelar-recepcion")
+    ?.addEventListener("click", function () {
 
+        document.getElementById(
+            "modal-recibir-oc"
+        ).style.display = "none";
+
+        limpiarFormularioRecepcion();
+
+    });
+
+
+// CONFIRMAR RECEPCIÓN
+document
+    .getElementById("btn-confirmar-recepcion")
+    ?.addEventListener("click", async function () {
+
+        const numeroFactura = document
+            .getElementById("recepcion-numero-factura")
+            .value
+            .trim();
+
+        const recibidoPor = document
+            .getElementById("recepcion-recibido-por")
+            .value
+            .trim();
+
+        const observacion = document
+            .getElementById("recepcion-observacion")
+            .value
+            .trim();
+
+        // ========================
+        // VALIDACIONES
+        // ========================
+
+        if (!numeroFactura) {
+
+            alert(
+                "Debes ingresar el número de factura."
+            );
+
+            return;
+        }
+
+        if (numeroFactura.length < 3) {
+
+            alert(
+                "El número de factura parece inválido."
+            );
+
+            return;
+        }
+
+        if (!recibidoPor) {
+
+            alert(
+                "Debes indicar quién recibió el pedido."
+            );
+
+            return;
+        }
+
+        if (recibidoPor.length < 3) {
+
+            alert(
+                "El nombre del receptor es demasiado corto."
+            );
+
+            return;
+        }
+
+        // ========================
+        // CONFIRMACIÓN
+        // ========================
+
+        const confirmar = confirm(
+
+`Confirme los datos de recepción:
+
+Factura:
+${numeroFactura}
+
+Recibido por:
+${recibidoPor}
+
+${observacion ? "Observación:\n" + observacion : ""}
+
+La orden cambiará al estado RECIBIDA.
+
+¿Desea continuar?`
+
+        );
+
+        if (!confirmar) {
+            return;
+        }
+
+        const btn = document.getElementById(
+            "btn-confirmar-recepcion"
+        );
+
+        try {
+
+            btn.disabled = true;
+
+            btn.innerHTML =
+                '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+
+            const response = await fetch(
+                `/orden-compra/${idOrdenSeleccionada}/recibir`,
+                {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        numeroFactura,
+                        recibidoPor,
+                        observacionRecepcion: observacion
+                    })
+                }
+            );
+
+            if (!response.ok) {
+
+                const mensaje =
+                    await response.text();
+
+                throw new Error(mensaje);
+            }
+
+            alert(
+                "Recepción registrada correctamente."
+            );
+
+            limpiarFormularioRecepcion();
+
+            document.getElementById(
+                "modal-recibir-oc"
+            ).style.display = "none";
+
+            location.reload();
+
+        } catch (error) {
+
+            console.error(error);
+
+            alert(
+                error.message ||
+                "No fue posible registrar la recepción."
+            );
+
+        } finally {
+
+            btn.disabled = false;
+
+            btn.innerHTML =
+                "Registrar Recepción";
+        }
+
+    });
+
+
+// LIMPIAR FORMULARIO
+function limpiarFormularioRecepcion() {
+
+    document.getElementById(
+        "recepcion-numero-factura"
+    ).value = "";
+
+    document.getElementById(
+        "recepcion-recibido-por"
+    ).value = "";
+
+    document.getElementById(
+        "recepcion-observacion"
+    ).value = "";
+
+    document.getElementById(
+        "recepcion-numero-orden"
+    ).textContent = "";
+
+    document.getElementById(
+        "recepcion-proveedor"
+    ).textContent = "";
+
+    idOrdenSeleccionada = null;
+}
 
