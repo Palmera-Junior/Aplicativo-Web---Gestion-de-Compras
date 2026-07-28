@@ -17,10 +17,104 @@ import java.text.DecimalFormat;
 
 public class PdfService {
 
+    // ==========================================
+    // PALETA DE COLORES (misma línea visual que
+    // el dashboard web: verde institucional,
+    // grises sutiles en vez de negro/rojo puro)
+    // ==========================================
+    private static final Color COLOR_PRIMARY = new Color(25, 135, 84);      // #198754
+    private static final Color COLOR_TEXTO = new Color(33, 37, 41);        // #212529
+    private static final Color COLOR_TEXTO_MUTED = new Color(108, 117, 125); // #6c757d
+    private static final Color COLOR_BORDE = new Color(206, 212, 218);      // #ced4da
+
+    // ==========================================
+    // DATOS DE CONTROL DEL DOCUMENTO (encabezado)
+    // ==========================================
+    private static final String CODIGO_DOCUMENTO = "CA-F-01";
+    private static final String VERSION_DOCUMENTO = "09";
+    private static final String FECHA_VERSION_DOCUMENTO = "03/08/2026";
+
+    /**
+     * Construye el encabezado tipo "formato controlado": dos celdas para
+     * logos a la izquierda, el título centrado en medio, y el bloque de
+     * Código/Versión/Fecha a la derecha (igual a la plantilla de Excel).
+     */
+    private PdfPTable construirEncabezado(Font fontTitulo, Font fontInfo) throws DocumentException {
+        PdfPTable headerTable = new PdfPTable(3);
+        headerTable.setWidthPercentage(100);
+        headerTable.setWidths(new float[]{21f, 50f, 29f});
+
+        // ---- Columna izquierda: 2 celdas para logos ----
+        PdfPTable logosTable = new PdfPTable(1);
+        logosTable.setWidthPercentage(100);
+
+        PdfPCell logoCell1 = new PdfPCell();
+        logoCell1.setFixedHeight(35f);
+        logoCell1.setBorderColor(Color.BLACK);
+        // TODO: reemplazar por el logo real, por ejemplo:
+        // Image logo1 = Image.getInstance("ruta/al/logo1.png");
+        // logo1.scaleToFit(80f, 30f);
+        // logoCell1.addElement(logo1);
+        logosTable.addCell(logoCell1);
+
+        PdfPCell logoCell2 = new PdfPCell();
+        logoCell2.setFixedHeight(35f);
+        logoCell2.setBorderColor(Color.BLACK);
+        // TODO: reemplazar por el segundo logo real de la misma forma
+        logosTable.addCell(logoCell2);
+
+        PdfPCell leftCell = new PdfPCell();
+        leftCell.setFixedHeight(70f); // 35 + 35, mismo total que la columna derecha
+        leftCell.setPadding(0);
+        leftCell.setBorder(Rectangle.NO_BORDER);
+        leftCell.addElement(logosTable);
+        headerTable.addCell(leftCell);
+
+        // ---- Columna central: título ----
+        PdfPCell centerCell = new PdfPCell(new Phrase("ORDEN DE COMPRA", fontTitulo));
+        centerCell.setFixedHeight(70f); // mismo alto total que logos e info
+        centerCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        centerCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        centerCell.setBorderColor(Color.BLACK);
+        headerTable.addCell(centerCell);
+
+        // ---- Columna derecha: Código / Versión / Fecha ----
+        PdfPTable infoTable = new PdfPTable(1);
+        infoTable.setWidthPercentage(100);
+
+        PdfPCell codigoCell = new PdfPCell(new Phrase("Código: " + CODIGO_DOCUMENTO, fontInfo));
+        codigoCell.setFixedHeight(23.33f); // 70 / 3, para repartir el mismo total
+        codigoCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        codigoCell.setBorderColor(Color.BLACK);
+        infoTable.addCell(codigoCell);
+
+        PdfPCell versionCell = new PdfPCell(new Phrase("Versión:" + VERSION_DOCUMENTO, fontInfo));
+        versionCell.setFixedHeight(23.33f);
+        versionCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        versionCell.setBorderColor(Color.BLACK);
+        infoTable.addCell(versionCell);
+
+        PdfPCell fechaCell = new PdfPCell(new Phrase("Fecha:" + FECHA_VERSION_DOCUMENTO, fontInfo));
+        fechaCell.setFixedHeight(23.34f); // 23.33+23.33+23.34 = 70 exacto
+        fechaCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        fechaCell.setBorderColor(Color.BLACK);
+        infoTable.addCell(fechaCell);
+
+        PdfPCell rightCell = new PdfPCell();
+        rightCell.setFixedHeight(70f); // mismo total que leftCell y centerCell
+        rightCell.setPadding(0);
+        rightCell.setBorder(Rectangle.NO_BORDER);
+        rightCell.addElement(infoTable);
+        headerTable.addCell(rightCell);
+
+        return headerTable;
+    }
+
     private void agregarSeparador(Document document) throws DocumentException {
     LineSeparator ls = new LineSeparator();
-    ls.setLineWidth(1f);
+    ls.setLineWidth(0.75f);
     ls.setPercentage(100);
+    ls.setLineColor(COLOR_BORDE);
 
     document.add(new Chunk(ls));
     document.add(new Paragraph(" "));
@@ -44,17 +138,18 @@ public class PdfService {
 
         document.open();
 
-        // Fuentes profesionales
-        Font fontTitulo = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, new Color(40, 40, 40));
-        Font fontSub = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11, new Color(80, 80, 80));
-        Font fontTexto = FontFactory.getFont(FontFactory.HELVETICA, 10, new Color(0, 0, 0));
-        Font fontalert = FontFactory.getFont(FontFactory.HELVETICA, 10, Color.red);
+        // Fuentes profesionales (paleta alineada al dashboard: verde
+        // institucional para acentos, gris institucional para texto,
+        // gris muted itálico para notas en vez de rojo de alerta)
+        Font fontTitulo = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, COLOR_TEXTO);
+        Font fontSub = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11, COLOR_PRIMARY);
+        Font fontTexto = FontFactory.getFont(FontFactory.HELVETICA, 10, COLOR_TEXTO);
+        Font fontalert = FontFactory.getFont(FontFactory.HELVETICA_OBLIQUE, 9, COLOR_TEXTO_MUTED);
         Font fontHeaderTabla = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8, Color.WHITE);
 
-        // Título del reporte
-        Paragraph titulo = new Paragraph("ORDEN DE COMPRA", fontTitulo);
-        titulo.setAlignment(Element.ALIGN_CENTER);
-        document.add(titulo);
+        // Encabezado tipo formato controlado (logos + título + código/versión/fecha)
+        Font fontInfoEncabezado = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, COLOR_TEXTO);
+        document.add(construirEncabezado(fontTitulo, fontInfoEncabezado));
         document.add(new Paragraph(" "));
         agregarSeparador(document);
 
@@ -125,7 +220,7 @@ public class PdfService {
         String[] headers = {"CTD", "CODIGO", "DESCRIPCIÓN", "PRESENTACION", "VALOR U.", "IVA", "VALOR IVA", "TOTAL"};
         for (String h : headers) {
             PdfPCell c = new PdfPCell(new Paragraph(h, fontHeaderTabla));
-            c.setBackgroundColor(new Color(10, 130, 64)); // Color elegante azul oscuro/gris
+            c.setBackgroundColor(COLOR_PRIMARY); // Verde institucional, igual al encabezado de tabla del dashboard
             c.setHorizontalAlignment(Element.ALIGN_CENTER);
             c.setPadding(8);
             tablaDetalles.addCell(c);
@@ -220,6 +315,7 @@ public class PdfService {
         );
         
         notaCell.setBorder(Rectangle.TOP);
+        notaCell.setBorderColor(COLOR_BORDE);
         notaCell.setHorizontalAlignment(Element.ALIGN_CENTER);
         notaCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
         
@@ -322,5 +418,3 @@ public class PdfService {
         return baos.toByteArray();
     }
 }
-
-
