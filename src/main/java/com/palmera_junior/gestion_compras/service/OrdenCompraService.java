@@ -1,7 +1,7 @@
 package com.palmera_junior.gestion_compras.service;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
@@ -9,7 +9,9 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -86,7 +88,8 @@ public class OrdenCompraService {
             spec = spec.and((root, query, cb) -> cb.equal(root.get("sede").get("idSede"), idSede));
         }
 
-        return ordenCompraRepository.findAll(spec, pageable);
+        Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(Sort.Direction.DESC, "fecha"));
+        return ordenCompraRepository.findAll(spec, sortedPageable);
     }
 
     // Método para obtener todas las órdenes

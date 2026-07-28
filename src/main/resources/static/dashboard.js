@@ -9,6 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Abrir modal
     if (btnAbrir) {
         btnAbrir.addEventListener("click", () => {
+            ordenIdActual = null;
             resetFormularioOrden();
             modal.classList.add("active");
             modal.style.display = 'flex';
@@ -45,6 +46,7 @@ document.addEventListener("DOMContentLoaded", () => {
         modal.classList.remove("active");
         modal.style.display = "none";
         document.body.style.overflow = "auto";
+        ordenIdActual = null;
     }
 });
 
@@ -88,6 +90,9 @@ function resetFormularioOrden() {
     const tbody = document.getElementById('tbody-productos');
     if (tbody) {
         tbody.innerHTML = '';
+        if (ordenIdActual === null) {
+            agregarFila();
+        }
     }
 
     document.getElementById('subtotal-general').textContent = '$ 0.00';
@@ -319,16 +324,16 @@ function agregarFila() {
         </td>
 
         <td>
-            <input type="text" class="iva-total input-control td-input" disabled >
+            <input type="text" class="iva-total input-control td-input" disabled readonly>
             </td>
 
         <td>
-            <input type="text" class="valor-total input-control td-input" disabled >
+            <input type="text" class="valor-total input-control td-input" disabled readonly>
         </td>
 
         <td>
-            <button type="button" class="btn-icon delete">
-                <i class="fas fa-trash"></i>
+            <button type="button" class="btn-icon delete" aria-label="Eliminar fila">
+                <span class="material-symbols">delete</span>
             </button>
         </td>
     `;
@@ -547,15 +552,34 @@ async function guardarYGenerarPdf() {
         return;
     }
 
+    const camposProveedor = [
+        { id: 'prov-nit', label: 'NIT' },
+        { id: 'prov-nombre', label: 'Nombre' },
+        { id: 'prov-ciudad', label: 'Ciudad' },
+        { id: 'prov-direccion', label: 'Dirección' },
+        { id: 'prov-telefono', label: 'Teléfono' },
+        { id: 'prov-email', label: 'Correo' }
+    ];
+
+    const proveedorIncompleto = camposProveedor.find(campo => {
+        const valor = document.getElementById(campo.id)?.value?.trim() || '';
+        return !valor;
+    });
+
+    if (proveedorIncompleto) {
+        alert(`El campo "${proveedorIncompleto.label}" del proveedor es obligatorio.`);
+        return;
+    }
+
     const ordenDTO = {
         fecha: fechaInput,
         idCentroCosto: idCentroCosto ? parseInt(idCentroCosto) : null,
-        nitProv: document.getElementById('prov-nit')?.value || 'S/N',
-        nombreProv: document.getElementById('prov-nombre')?.value || 'Sin Proveedor',
-        ciudadProv: document.getElementById('prov-ciudad')?.value || 'N/A',
-        direccionProv: document.getElementById('prov-direccion')?.value || 'N/A',
-        telefonoProv: document.getElementById('prov-telefono')?.value || 'N/A',
-        correoProv: document.getElementById('prov-email')?.value || 'N/A',
+        nitProv: document.getElementById('prov-nit')?.value?.trim() || '',
+        nombreProv: document.getElementById('prov-nombre')?.value?.trim() || '',
+        ciudadProv: document.getElementById('prov-ciudad')?.value?.trim() || '',
+        direccionProv: document.getElementById('prov-direccion')?.value?.trim() || '',
+        telefonoProv: document.getElementById('prov-telefono')?.value?.trim() || '',
+        correoProv: document.getElementById('prov-email')?.value?.trim() || '',
         //  CORRECCIÓN 2: Acotar el textarea al modal
         observaciones: document.querySelector('#modal-orden textarea')?.value || '',
 
@@ -626,7 +650,7 @@ async function guardarYGenerarPdf() {
         } else {
             const errText = await response.text();
             console.error("Error servidor:", errText);
-            alert('Error al guardar la orden de compra.');
+            alert(errText || 'Error al guardar la orden de compra.');
         }
     } catch (error) {
         console.error('Error de red/servidor:', error);
@@ -1097,10 +1121,10 @@ function cargarOrdenEnModal(
                         <input type="number" class="iva-producto input-control td-input" value="${detalle.ivaProducto || 0}" ${esVista ? 'disabled' : ''}>
                     </td>
                     <td>
-                        <input type="text" class="iva-total input-control td-input" value="${formatearPesos(Number(detalle.valorIva || 0))}" disabled>
+                        <input type="text" class="iva-total input-control td-input" value="${formatearPesos(Number(detalle.valorIva || 0))}" disabled readonly>
                     </td>
                     <td>
-                        <input type="text" class="valor-total input-control td-input" value="${formatearPesos(Number(detalle.valorTotalLinea || 0))}" disabled>
+                        <input type="text" class="valor-total input-control td-input" value="${formatearPesos(Number(detalle.valorTotalLinea || 0))}" disabled readonly>
                     </td>
                     <td>
                         <button type="button" class="btn-icon delete" ${esVista ? 'disabled' : ''}>
