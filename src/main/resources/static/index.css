@@ -662,8 +662,14 @@ body {
 /* Header sutil: fondo claro + borde inferior de acento, en vez del
    gradiente negro/verde original */
 .modal-header {
-    background: #f8f9fa;
-    color: var(--text-color);
+    background: linear-gradient(
+        135deg,
+        #080f0c,
+        #0a2b17,
+        #175c32,
+        #198754
+    );
+    color: #ffffff;
     padding: 18px 24px;
     display: flex;
     justify-content: space-between;
