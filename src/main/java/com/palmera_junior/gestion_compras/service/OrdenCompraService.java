@@ -89,7 +89,15 @@ public class OrdenCompraService {
         }
 
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(Sort.Direction.DESC, "fecha"));
-        return ordenCompraRepository.findAll(spec, sortedPageable);
+        Page<OrdenCompra> resultado = ordenCompraRepository.findAll(spec, sortedPageable);
+
+        resultado.getContent().forEach(orden -> {
+            if (necesitaNumeroOrden(orden)) {
+                asignarNumeroOrden(orden);
+            }
+        });
+
+        return resultado;
     }
 
     // Método para obtener todas las órdenes
@@ -99,7 +107,11 @@ public class OrdenCompraService {
 
     // Método para buscar una orden por ID
     public OrdenCompra obtenerPorId(Integer idOrden) {
-        return ordenCompraRepository.findById(idOrden).orElse(null);
+        OrdenCompra orden = ordenCompraRepository.findById(idOrden).orElse(null);
+        if (orden != null && necesitaNumeroOrden(orden)) {
+            return asignarNumeroOrden(orden);
+        }
+        return orden;
     }
 
     // Guardar orden de compra desde el DTO del formulario
@@ -193,7 +205,7 @@ public class OrdenCompraService {
 
         orden.setEstado(
                 EstadoOrdenCompra.BORRADOR);
-        OrdenCompra ordenGuardada = ordenCompraRepository.save(orden);
+        OrdenCompra ordenGuardada = ordenCompraRepository.saveAndFlush(orden);
 
                 return asignarNumeroOrden(ordenGuardada);
     }
@@ -207,7 +219,9 @@ public class OrdenCompraService {
                         throw new RuntimeException("Solo las órdenes en BORRADOR pueden editarse");
                 }
 
-                // Mantener el mismo número de orden y estado, solo actualizar detalles y datos del proveedor
+                LocalDate fechaAnterior = orden.getFecha();
+                LocalDate fechaNueva = fechaAnterior;
+
                 orden.setNitProv(dto.getNitProv());
                 orden.setNombreProv(dto.getNombreProv());
                 orden.setTelefonoProv(dto.getTelefonoProv());
@@ -217,7 +231,8 @@ public class OrdenCompraService {
                 orden.setObservaciones(dto.getObservaciones());
 
                 if (dto.getFecha() != null && !dto.getFecha().isBlank()) {
-                        orden.setFecha(LocalDate.parse(dto.getFecha(), DateTimeFormatter.ISO_LOCAL_DATE));
+                        fechaNueva = LocalDate.parse(dto.getFecha(), DateTimeFormatter.ISO_LOCAL_DATE);
+                        orden.setFecha(fechaNueva);
                 }
                 orden.setDescuento(dto.getDescuento());
                 orden.setSubTotal(dto.getSubTotal());
@@ -253,8 +268,31 @@ public class OrdenCompraService {
                         orden.getDetalles().addAll(detallesEntidad);
                 }
 
-                return ordenCompraRepository.save(orden);
+                OrdenCompra ordenGuardada = ordenCompraRepository.saveAndFlush(orden);
+                if (debeRegenerarNumeroOrden(ordenGuardada, fechaNueva, fechaAnterior) || necesitaNumeroOrden(ordenGuardada)) {
+                        return asignarNumeroOrden(ordenGuardada);
+                }
+
+                return ordenGuardada;
         }
+
+    private boolean necesitaNumeroOrden(OrdenCompra orden) {
+        return orden != null
+                && orden.getEstado() == EstadoOrdenCompra.BORRADOR
+                && (orden.getNumeroOrden() == null || orden.getNumeroOrden().isBlank());
+    }
+
+    private boolean debeRegenerarNumeroOrden(OrdenCompra orden, LocalDate fechaNueva, LocalDate fechaAnterior) {
+        if (orden == null || orden.getEstado() != EstadoOrdenCompra.BORRADOR || fechaNueva == null) {
+            return false;
+        }
+
+        if (fechaAnterior == null) {
+            return true;
+        }
+
+        return fechaAnterior.getMonthValue() != fechaNueva.getMonthValue();
+    }
 
     private String generarNumeroOrden(OrdenCompra ordenCompra) {
 
@@ -284,7 +322,7 @@ public class OrdenCompraService {
 
         ordenCompra.setNumeroOrden(numeroOrden);
 
-        return ordenCompraRepository.save(ordenCompra);
+        return ordenCompraRepository.saveAndFlush(ordenCompra);
     }
 
     @PreAuthorize("hasRole('APROBADOR')")

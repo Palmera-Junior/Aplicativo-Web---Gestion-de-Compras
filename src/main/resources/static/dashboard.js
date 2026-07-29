@@ -53,7 +53,7 @@ document.addEventListener("DOMContentLoaded", () => {
 let ordenIdActual = null;
 
 function resetFormularioOrden() {
-    const fechaInput = document.querySelector('#modal-orden input[type="date"]');
+    const fechaInput = document.getElementById('fecha-orden');
     if (fechaInput) {
         fechaInput.value = '';
         fechaInput.disabled = false;
@@ -535,7 +535,7 @@ function parsearMoneda(elementId) {
 
 async function guardarYGenerarPdf() {
     // ⚠️ CORRECCIÓN 1: Seleccionar la fecha ESPECÍFICAMENTE dentro del modal
-    const fechaInput = document.querySelector('#modal-orden input[type="date"]')?.value;
+    const fechaInput = document.getElementById('fecha-orden')?.value;
 
     if (!fechaInput) {
         alert("Por favor selecciona una fecha válida dentro del formulario.");
@@ -1046,7 +1046,7 @@ function cargarOrdenEnModal(
     resetFormularioOrden();
 
     const esVista = orden.estado !== 'BORRADOR';
-    const fechaInput = document.querySelector('#modal-orden input[type="date"]');
+    const fechaInput = document.getElementById('fecha-orden');
     if (fechaInput) {
         fechaInput.value = orden.fecha || '';
         fechaInput.disabled = esVista;
@@ -1161,15 +1161,10 @@ function cargarOrdenEnModal(
     const chkDescuento = document.getElementById('activar-descuento');
     const inputDescuento = document.getElementById('input-descuento');
     if (chkDescuento && inputDescuento) {
-        if (Number(orden.descuento || 0) > 0) {
-            chkDescuento.checked = true;
-            inputDescuento.style.display = 'inline-block';
-            inputDescuento.value = Number(orden.descuento || 0);
-        } else {
-            chkDescuento.checked = false;
-            inputDescuento.style.display = 'none';
-            inputDescuento.value = 0;
-        }
+        const valorDescuento = Number(orden.descuento || 0);
+        chkDescuento.checked = valorDescuento > 0;
+        inputDescuento.value = valorDescuento;
+        inputDescuento.style.display = esVista ? 'none' : (valorDescuento > 0 ? 'inline-block' : 'none');
         chkDescuento.disabled = esVista;
     }
 
