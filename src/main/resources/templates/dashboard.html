@@ -112,7 +112,7 @@
 
                             <button title="Descargar Orden de Compra" class="btn-icon pdf" th:data-id="${orden.idOrden}"
                                 th:if="${orden.estado.name() == 'APROBADA' or orden.estado.name() == 'RECIBIDA'}"><span
-                                    class="material-symbols">picture_as_pdf</span></button>
+                                    class="material-symbols">download</span></button>
                         </td>
                     </tr>
                 </tbody>
@@ -235,31 +235,10 @@
                 </button>
             </div>
 
-            <div class="orden-metadata">
-                <div class="meta-item"><label>Número de orden:</label>
-                    <div class="meta-value" id="orden-numero"></div>
-                </div>
-                <div class="meta-item"><label>Estado:</label>
-                    <div class="meta-value" id="orden-estado"></div>
-                </div>
-                <div class="meta-item"><label>Aprobado por:</label>
-                    <div class="meta-value" id="orden-aprobado-por"></div>
-                </div>
-                <div class="meta-item"><label>Fecha aprobación:</label>
-                    <div class="meta-value" id="orden-fecha-aprobacion"></div>
-                </div>
-                <div class="meta-item"><label>Recibido por:</label>
-                    <div class="meta-value" id="orden-recibido-por">N/A</div>
-                </div>
-                <div class="meta-item"><label>Fecha recibido:</label>
-                    <div class="meta-value" id="orden-fecha-recibido">N/A</div>
-                </div>
-            </div>
-
             <div class="modal-body">
                 <form id="form-orden">
                     <h3 class="section-title">Datos Generales</h3>
-                    <div class="form-grid-2">
+                    <div class="form-grid-datos-generales">
                         <div class="form-group">
                             <label>Fecha</label>
                             <input type="date" class="input-control">
@@ -271,6 +250,14 @@
                                 <option th:each="centro : ${centroCostos}" th:value="${centro.idCentroCosto}"
                                     th:text="${centro.codigo} + ' - ' + ${centro.nombre}"></option>
                             </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Número de orden:</label>
+                            <input type="text" id="orden-numero" class="input-control" disabled readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Estado:</label>
+                            <input type="text" id="orden-estado" class="input-control" disabled readonly>
                         </div>
                     </div>
 
@@ -380,13 +367,34 @@
                         </div>
                     </div>
 
+                    <h3 class="section-title">Auditoria</h3>
+
+                    <div class="auditoria-grid">
+                        <div class="auditoria-item">
+                            <span class="auditoria-label">Aprobado por:</span>
+                            <span class="auditoria-value" id="orden-aprobado-por"></span>
+                        </div>
+                        <div class="auditoria-item">
+                            <span class="auditoria-label">Fecha aprobación:</span>
+                            <span class="auditoria-value" id="orden-fecha-aprobacion"></span>
+                        </div>
+                        <div class="auditoria-item">
+                            <span class="auditoria-label">Recibido por:</span>
+                            <span class="auditoria-value" id="orden-recibido-por">N/A</span>
+                        </div>
+                        <div class="auditoria-item">
+                            <span class="auditoria-label">Fecha recibido:</span>
+                            <span class="auditoria-value" id="orden-fecha-recibido">N/A</span>
+                        </div>
+                    </div>
+
                 </form>
             </div>
 
             <div class="modal-footer">
-                <button title="Guardar Orden de Compra" type="button" class="btn-secondary"
+                <button title="Guardar Orden de Compra" type="button" class="btn-modal-secundario"
                     id="btn-cancelar">Cancelar</button>
-                <button title="Cancelar y Salir" type="button" class="btn-primary" id="btn-guardar-pdf"><i
+                <button title="Cancelar y Salir" type="button" class="btn-modal-primario" id="btn-guardar-pdf"><i
                         class="fas fa-save"></i> Guardar</button>
             </div>
         </div>

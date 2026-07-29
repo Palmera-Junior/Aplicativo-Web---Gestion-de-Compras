@@ -122,8 +122,8 @@ function resetFormularioOrden() {
     const ordenFechaRecibido = document.getElementById('orden-fecha-recibido');
     const modalOrdenTitle = document.getElementById('modal-orden-title');
 
-    if (ordenNumero) { ordenNumero.textContent = ''; }
-    if (ordenEstado) { ordenEstado.textContent = ''; }
+    if (ordenNumero) { ordenNumero.value = ''; }
+    if (ordenEstado) { ordenEstado.value = ''; }
     if (ordenAprobadoPor) { ordenAprobadoPor.textContent = ''; }
     if (ordenFechaAprobacion) { ordenFechaAprobacion.textContent = ''; }
     if (ordenRecibidoPor) { ordenRecibidoPor.textContent = ''; }
@@ -1173,8 +1173,8 @@ function cargarOrdenEnModal(
         chkDescuento.disabled = esVista;
     }
 
-    document.getElementById('orden-numero').textContent = orden.numeroOrden || '';
-    document.getElementById('orden-estado').textContent = orden.estado || '';
+    document.getElementById('orden-numero').value = orden.numeroOrden || '';
+    document.getElementById('orden-estado').value = orden.estado || '';
     document.getElementById('orden-aprobado-por').textContent = orden.aprobadoPor || 'N/A';
     document.getElementById('orden-fecha-aprobacion').textContent = orden.fechaAprobacion || 'N/A';
     document.getElementById('orden-recibido-por').textContent = orden.recibidoPor || 'N/A';

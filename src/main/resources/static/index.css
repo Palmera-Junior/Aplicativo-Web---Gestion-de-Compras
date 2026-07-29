@@ -34,46 +34,52 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 14px 28px;
-    background: #ffffff;
-    border-bottom: 1px solid #e9ecef;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    background: linear-gradient(
+        135deg,
+        #080f0c,
+        #0a2b17,
+        #175c32,
+        #198754
+    );
+    border-bottom: 1px solid #0f5f1c;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
-
+ 
 .navbar .logo h2 {
     display: flex;
     align-items: center;
     gap: 8px;
     font-size: 18px;
     font-weight: 700;
-    color: #212529;
+    color: #ffffff;
     margin: 0;
 }
-
+ 
 .navbar .logo .material-symbols {
-    color: #198754;
+    color: #ffffff;
     font-size: 22px;
 }
-
+ 
 .user-info {
     display: flex;
     align-items: center;
     gap: 8px;
     font-size: 14px;
-    color: #495057;
+    color: rgba(255, 255, 255, 0.9);
 }
-
+ 
 .user-info .material-symbols {
     font-size: 22px;
-    color: #868e96;
+    color: rgba(255, 255, 255, 0.938);
 }
-
+ 
 .btn-logout {
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    background: transparent;
-    border: 1px solid #ced4da;
-    color: #6c757d;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #ffffff;
     font-size: 13px;
     font-weight: 500;
     padding: 6px 12px;
@@ -82,18 +88,17 @@ body {
     margin-left: 8px;
     transition: all .2s ease;
 }
-
+ 
 .btn-logout:hover {
-    background: #fef2f2;
-    border-color: #f1aeb5;
-    color: #dc3545;
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.4);
+    color: #af6969;
 }
-
+ 
 .btn-logout .material-symbols {
     font-size: 16px;
     color: inherit;
 }
-
 /* ============================================
    CONTENEDOR PRINCIPAL
    ============================================ */
@@ -131,32 +136,33 @@ body {
     margin: 2px 0 0 0;
 }
 
-.btn-primary {
+
+#btn-nueva-orden-compra,.btn-primary {
     display: flex;
     align-items: center;
-    gap: 6px;
-    background: #198754;
-    color: #fff;
-    border: none;
+    gap: 8px;
+    background: #ffffff;
+    color: #00421e;
+    border: 2px ;
     padding: 10px 20px;
-    border-radius: 8px;
+    border-radius: 70px;
     font-size: 14px;
     font-weight: 600;
-    box-shadow: 0 2px 4px rgba(25, 135, 84, 0.25);
+    box-shadow: 0 2px 3px rgba(2, 53, 29, 0.733);
     transition: all .2s ease;
     cursor: pointer;
 }
 
-.btn-primary:hover {
-    background: #157347;
-    box-shadow: 0 4px 8px rgba(25, 135, 84, 0.3);
-    transform: translateY(-1px);
+#btn-nueva-orden-compra, .btn-primary:hover {
+    color: #ffffff;
+    background: #00421e;
+    box-shadow: 0 4px 8px rgba(3, 83, 46, 0.932);
+    transform: translateY(-3px);
 }
 
 .btn-primary .material-symbols {
     font-size: 20px;
 }
-
 /* ============================================
    SECCIÓN DE FILTROS
    ============================================ */
@@ -253,7 +259,7 @@ body {
 .data-table thead th {
     background: #f8f9fa;
     color: #495057;
-    border-bottom: 2px solid #198754;
+    border-bottom: 3px solid #198754;
     font-size: 12px;
     text-transform: uppercase;
     letter-spacing: 0.4px;
@@ -287,7 +293,7 @@ body {
     align-items: center;
     gap: 6px;
     padding: 5px 12px;
-    border-radius: 20px;
+    border-radius: 60px;
     font-size: 12px;
     font-weight: 600;
     letter-spacing: 0.3px;
@@ -298,7 +304,7 @@ body {
     content: "";
     width: 6px;
     height: 6px;
-    border-radius: 50%;
+    border-radius: 100%;
     flex-shrink: 0;
 }
 
@@ -356,36 +362,28 @@ body {
 }
 
 /* Ver: neutro, informativo */
-.btn-icon.view .material-symbols {
-    color: #495057;
+.material-symbols {
+    color: #717880;
 }
-.btn-icon.view:hover {
-    background: #e9ecef;
+.btn-icon.view .material-symbols:hover {
+    color: #0080ff;
 }
 
 /* Aprobar: verde, acción positiva */
-.btn-icon.approve .material-symbols {
-    color: #198754;
-}
-.btn-icon.approve:hover {
-    background: #e6f6ec;
+.btn-icon.approve .material-symbols:hover {
+    color: #00fd2a;
 }
 
-/* Recibir: azul, acción de flujo */
-.btn-icon.receive .material-symbols {
-    color: #1c64f2;
-}
-.btn-icon.receive:hover {
-    background: #e7f1ff;
+/* Recibir: naranja, acción de flujo */
+.btn-icon.receive .material-symbols:hover {
+    color: #ff9900;
 }
 
 /* PDF: rojo suave, menos agresivo que el rojo puro */
-.btn-icon.pdf .material-symbols {
-    color: #c9432f;
+.btn-icon.pdf .material-symbols:hover {
+    color: #f72606;
 }
-.btn-icon.pdf:hover {
-    background: #fdeeec;
-}
+
 
 
 /* Tablas Generales */
@@ -455,23 +453,6 @@ body {
     color: #ffffff;
 }
 
-.borrador {
-    background: linear-gradient(180deg, #e9ecef 0%, #d1d5db 100%);
-    color: #1f2937;
-    box-shadow: 0 1px 3px rgba(31,41,55,0.08);
-    border: 1px solid rgba(31,41,55,0.06);
-}
-
-.aprobada {
-    background: linear-gradient(180deg, #0d6efd 0%, #0056b3 100%);
-    box-shadow: 0 3px 8px rgba(13,110,253,0.18);
-}
-
-.recibida {
-    background: linear-gradient(180deg, #20c997 0%, #198754 100%);
-    box-shadow: 0 3px 8px rgba(25,135,84,0.18);
-}
-
 /* Ensure table cells with estado have consistent sizing */
 .estado-cell {
     width: 160px;
@@ -479,44 +460,8 @@ body {
     vertical-align: middle;
 }
 
-/* Modal metadata styling */
-.orden-metadata {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin: 12px 0 18px 0;
-}
 
-.orden-metadata .meta-item {
-    background: #fbfcfd;
-    border: 1px solid var(--border-color);
-    padding: 10px 12px;
-    border-radius: 8px;
-    min-width: 160px;
-    box-shadow: 0 2px 4px rgba(9,30,66,0.03);
-}
 
-.orden-metadata .meta-item label {
-    display: block;
-    font-size: 12px;
-    color: #6b7280;
-    margin-bottom: 6px;
-    font-weight: 600;
-}
-
-.orden-metadata .meta-value {
-    font-size: 14px;
-    color: #111827;
-    font-weight: 700;
-}
-
-.btn-icon.approve {
-    color: #0d6efd;
-}
-
-.btn-icon.approve:hover {
-    color: #084298;
-}
 
 /* ============================================
    PAGINACIÓN
@@ -631,6 +576,55 @@ body {
     --danger-color: #c9432f;
     --text-color: #212529;
     --text-muted: #6c757d;
+}
+
+/* =========================================
+   DATOS GENERALES - GRID MEJORADO
+========================================= */
+.form-grid-datos-generales {
+    display: grid;
+    grid-template-columns: 0.8fr 2.4fr 0.8fr 0.8fr;
+    gap: 14px;
+    row-gap: 4px;
+}
+
+/* =========================================
+   AUDITORIA - GRID TARJETAS
+========================================= */
+.auditoria-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+.auditoria-item {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: box-shadow 0.15s ease;
+}
+
+.auditoria-item:hover {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.auditoria-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--text-muted);
+}
+
+.auditoria-value {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-color);
+    word-break: break-word;
 }
 
 /* =========================================
