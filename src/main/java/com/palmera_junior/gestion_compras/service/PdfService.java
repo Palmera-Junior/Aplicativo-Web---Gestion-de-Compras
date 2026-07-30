@@ -6,15 +6,15 @@ import com.lowagie.text.*;
 import com.lowagie.text.pdf.*;
 import com.lowagie.text.pdf.draw.LineSeparator;
 
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
-
+import org.springframework.core.io.ClassPathResource;
 import java.awt.Color;
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 
 @Service
-
 
 public class PdfService {
 
@@ -23,10 +23,10 @@ public class PdfService {
     // el dashboard web: verde institucional,
     // grises sutiles en vez de negro/rojo puro)
     // ==========================================
-    private static final Color COLOR_PRIMARY = new Color(25, 135, 84);      // #198754
-    private static final Color COLOR_TEXTO = new Color(33, 37, 41);        // #212529
+    private static final Color COLOR_PRIMARY = new Color(25, 135, 84); // #198754
+    private static final Color COLOR_TEXTO = new Color(33, 37, 41); // #212529
     private static final Color COLOR_TEXTO_MUTED = new Color(108, 117, 125); // #6c757d
-    private static final Color COLOR_BORDE = new Color(206, 212, 218);      // #ced4da
+    private static final Color COLOR_BORDE = new Color(206, 212, 218); // #ced4da
 
     // ==========================================
     // DATOS DE CONTROL DEL DOCUMENTO (encabezado)
@@ -40,41 +40,68 @@ public class PdfService {
      * logos a la izquierda, el título centrado en medio, y el bloque de
      * Código/Versión/Fecha a la derecha (igual a la plantilla de Excel).
      */
+
     private PdfPTable construirEncabezado(Font fontTitulo, Font fontInfo) throws DocumentException {
         PdfPTable headerTable = new PdfPTable(3);
         headerTable.setWidthPercentage(100);
-        headerTable.setWidths(new float[]{21f, 50f, 29f});
+        headerTable.setWidths(new float[] { 21f, 50f, 29f });
 
         // ---- Columna izquierda: 2 celdas para logos ----
         PdfPTable logosTable = new PdfPTable(1);
         logosTable.setWidthPercentage(100);
 
+        // --- LOGO 1 ---
         PdfPCell logoCell1 = new PdfPCell();
-        logoCell1.setFixedHeight(35f);
+        logoCell1.setFixedHeight(25f);
         logoCell1.setBorderColor(Color.BLACK);
-     // Image logo1 = Image.getInstance("/img/logo1.png");
-     // logo1.scaleToFit(80f, 30f);
-    //  logoCell1.addElement(logo1);
+        
+
+        try (java.io.InputStream isLogo1 = getClass().getResourceAsStream("/static/imgs/logoAnticimex.png")) {
+            if (isLogo1 != null) {
+                byte[] bytesLogo1 = isLogo1.readAllBytes();
+                Image logo1 = Image.getInstance(bytesLogo1);
+                logo1.scaleToFit(100f, 40f);
+                logoCell1.addElement(logo1);
+                logo1.setAlignment(Element.ALIGN_CENTER);
+            } else {
+                System.err.println("CRÍTICO: No se encontró logoAnticimex.png en el classpath.");
+            }
+        } catch (Exception e) {
+            System.err.println("Error al procesar logoAnticimex.png: " + e.getMessage());
+        }
         logosTable.addCell(logoCell1);
 
+        // --- LOGO 2 ---
         PdfPCell logoCell2 = new PdfPCell();
-        logoCell2.setFixedHeight(35f);
+        logoCell2.setFixedHeight(45f);
         logoCell2.setBorderColor(Color.BLACK);
-     // Image logo2 = Image.getInstance("/img/logo2.png");
-     // logo2.scaleToFit(80f, 30f);
-    //  logoCell2.addElement(logo2);
+
+        try (java.io.InputStream isLogo2 = getClass().getResourceAsStream("/static/imgs/logoPalmera.png")) {
+            if (isLogo2 != null) {
+                byte[] bytesLogo2 = isLogo2.readAllBytes();
+                Image logo2 = Image.getInstance(bytesLogo2);
+                logo2.scaleToFit(120f,50f);
+                logo2.setAlignment(Element.ALIGN_CENTER);
+                logoCell2.addElement(logo2);
+            } else {
+                System.err.println("CRÍTICO: No se encontró logoPalmera.png en el classpath.");
+            }
+        } catch (Exception e) {
+            System.err.println("Error al procesar logoPalmera.png: " + e.getMessage());
+        }
         logosTable.addCell(logoCell2);
 
+        // --- Celda contenedora izquierda (ESTO FALTABA) ---
         PdfPCell leftCell = new PdfPCell();
-        leftCell.setFixedHeight(70f); // 35 + 35, mismo total que la columna derecha
+        leftCell.setFixedHeight(70f);
         leftCell.setPadding(0);
         leftCell.setBorder(Rectangle.NO_BORDER);
         leftCell.addElement(logosTable);
-        headerTable.addCell(leftCell);
+        headerTable.addCell(leftCell); // <-- Esta línea es vital para que se imprima la fila
 
         // ---- Columna central: título ----
         PdfPCell centerCell = new PdfPCell(new Phrase("ORDEN DE COMPRA", fontTitulo));
-        centerCell.setFixedHeight(70f); // mismo alto total que logos e info
+        centerCell.setFixedHeight(70f);
         centerCell.setHorizontalAlignment(Element.ALIGN_CENTER);
         centerCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
         centerCell.setBorderColor(Color.BLACK);
@@ -85,25 +112,25 @@ public class PdfService {
         infoTable.setWidthPercentage(100);
 
         PdfPCell codigoCell = new PdfPCell(new Phrase("Código: " + CODIGO_DOCUMENTO, fontInfo));
-        codigoCell.setFixedHeight(23.33f); // 70 / 3, para repartir el mismo total
+        codigoCell.setFixedHeight(23.33f);
         codigoCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
         codigoCell.setBorderColor(Color.BLACK);
         infoTable.addCell(codigoCell);
 
-        PdfPCell versionCell = new PdfPCell(new Phrase("Versión:" + VERSION_DOCUMENTO, fontInfo));
+        PdfPCell versionCell = new PdfPCell(new Phrase("Versión: " + VERSION_DOCUMENTO, fontInfo));
         versionCell.setFixedHeight(23.33f);
         versionCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
         versionCell.setBorderColor(Color.BLACK);
         infoTable.addCell(versionCell);
 
-        PdfPCell fechaCell = new PdfPCell(new Phrase("Fecha:" + FECHA_VERSION_DOCUMENTO, fontInfo));
-        fechaCell.setFixedHeight(23.34f); // 23.33+23.33+23.34 = 70 exacto
+        PdfPCell fechaCell = new PdfPCell(new Phrase("Fecha: " + FECHA_VERSION_DOCUMENTO, fontInfo));
+        fechaCell.setFixedHeight(23.34f);
         fechaCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
         fechaCell.setBorderColor(Color.BLACK);
         infoTable.addCell(fechaCell);
 
         PdfPCell rightCell = new PdfPCell();
-        rightCell.setFixedHeight(70f); // mismo total que leftCell y centerCell
+        rightCell.setFixedHeight(70f);
         rightCell.setPadding(0);
         rightCell.setBorder(Rectangle.NO_BORDER);
         rightCell.addElement(infoTable);
@@ -113,23 +140,22 @@ public class PdfService {
     }
 
     private void agregarSeparador(Document document) throws DocumentException {
-    LineSeparator ls = new LineSeparator();
-    ls.setLineWidth(0.75f);
-    ls.setPercentage(100);
-    ls.setLineColor(COLOR_BORDE);
+        LineSeparator ls = new LineSeparator();
+        ls.setLineWidth(0.75f);
+        ls.setPercentage(100);
+        ls.setLineColor(COLOR_BORDE);
 
-    document.add(new Chunk(ls));
-    
-    
-}
+        document.add(new Chunk(ls));
+
+    }
 
     private PdfPCell crearCelda(String texto, Font font) {
-    PdfPCell cell = new PdfPCell(new Phrase(texto, font));
-    cell.setBorder(Rectangle.NO_BORDER);
-    cell.setVerticalAlignment(Element.ALIGN_RIGHT);
-    return cell;
+        PdfPCell cell = new PdfPCell(new Phrase(texto, font));
+        cell.setBorder(Rectangle.NO_BORDER);
+        cell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        return cell;
 
-}
+    }
 
     private Paragraph crearSeccion(String titulo, Font font) {
         Paragraph seccion = new Paragraph(titulo, font);
@@ -164,17 +190,8 @@ public class PdfService {
         }
         String nombre = orden.getUsuario().getNombre() != null ? orden.getUsuario().getNombre() : "";
         String apellido = orden.getUsuario().getApellido() != null ? orden.getUsuario().getApellido() : "";
-        
-        return (nombre + " " + apellido).trim();
-    }
 
-    private String obtenerDestino(OrdenCompra orden) {
-        if (orden == null || orden.getCentroCosto() == null) {
-            return "N/A";
-        }
-        String direccion = orden.getCentroCosto().getDireccion() != null ? orden.getCentroCosto().getDireccion() : "";
-        String nombre = orden.getCentroCosto().getNombre() != null ? orden.getCentroCosto().getNombre() : "";
-        return (direccion + " - " + nombre).trim();
+        return (nombre + " " + apellido).trim();
     }
 
     /**
@@ -194,10 +211,14 @@ public class PdfService {
      * en una sola página tamaño carta (Opción A: fuente adaptativa).
      */
     private int calcularTamanoFuenteDetalle(int numFilas) {
-        if (numFilas <= 12) return 10;
-        if (numFilas <= 20) return 9;
-        if (numFilas <= 28) return 8;
-        if (numFilas <= 35) return 7;
+        if (numFilas <= 12)
+            return 10;
+        if (numFilas <= 20)
+            return 9;
+        if (numFilas <= 28)
+            return 8;
+        if (numFilas <= 35)
+            return 7;
         return 6;
     }
 
@@ -207,10 +228,14 @@ public class PdfService {
      * más pequeño.
      */
     private float calcularPaddingCelda(int numFilas) {
-        if (numFilas <= 12) return 6f;
-        if (numFilas <= 20) return 5f;
-        if (numFilas <= 28) return 4f;
-        if (numFilas <= 35) return 3f;
+        if (numFilas <= 12)
+            return 6f;
+        if (numFilas <= 20)
+            return 5f;
+        if (numFilas <= 28)
+            return 4f;
+        if (numFilas <= 35)
+            return 3f;
         return 2f;
     }
 
@@ -219,10 +244,14 @@ public class PdfService {
      * la fuente para que muchas filas sigan cabiendo en una sola hoja.
      */
     private float calcularAlturaMinimaCelda(int numFilas) {
-        if (numFilas <= 12) return 22f;
-        if (numFilas <= 20) return 18f;
-        if (numFilas <= 28) return 15f;
-        if (numFilas <= 35) return 13f;
+        if (numFilas <= 12)
+            return 22f;
+        if (numFilas <= 20)
+            return 18f;
+        if (numFilas <= 28)
+            return 15f;
+        if (numFilas <= 35)
+            return 13f;
         return 11f;
     }
 
@@ -235,30 +264,31 @@ public class PdfService {
      */
     private void construirContenidoOrden(Document document, OrdenCompra orden) throws Exception {
         Font fontTitulo = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, COLOR_TEXTO);
-        Font fontSub = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11, COLOR_PRIMARY);
+        Font fontSub = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, COLOR_PRIMARY);
         Font fontTexto = FontFactory.getFont(FontFactory.HELVETICA, 10, COLOR_TEXTO);
         Font fontalert = FontFactory.getFont(FontFactory.HELVETICA_OBLIQUE, 9, COLOR_TEXTO_MUTED);
         Font fontHeaderTabla = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8, Color.WHITE);
         Font fontInfoEncabezado = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, COLOR_TEXTO);
 
         document.add(construirEncabezado(fontTitulo, fontInfoEncabezado));
-        
 
         document.add(crearSeccion("DATOS GENERALES", fontSub));
         PdfPTable generalesTable = new PdfPTable(2);
         generalesTable.setWidthPercentage(100);
-        generalesTable.setWidths(new float[]{55f, 45f});
+        generalesTable.setWidths(new float[] { 55f, 45f });
 
         PdfPCell generalesLeft = new PdfPCell();
         generalesLeft.setBorder(Rectangle.NO_BORDER);
-        generalesLeft.addElement(crearParrafo("Fecha:  " + valorTexto(orden.getFecha() != null ? orden.getFecha().toString() : null), fontTexto));
+        generalesLeft.addElement(crearParrafo(
+                "Fecha:  " + valorTexto(orden.getFecha() != null ? orden.getFecha().toString() : null), fontTexto));
         generalesLeft.addElement(crearParrafo("N° Orden:  " + valorTexto(orden.getNumeroOrden()), fontTexto));
         generalesTable.addCell(generalesLeft);
 
         PdfPCell generalesRight = new PdfPCell();
         generalesRight.setBorder(Rectangle.NO_BORDER);
         generalesRight.addElement(crearParrafo("Solicitante:  " + valorTexto(orden.getSede().getNombre()), fontTexto));
-        generalesRight.addElement(crearParrafo("Centro de costo:  " + valorTexto(orden.getCentroCosto().getNombre()), fontTexto));
+        generalesRight.addElement(
+                crearParrafo("Centro de costo:  " + valorTexto(orden.getCentroCosto().getNombre()), fontTexto));
         generalesTable.addCell(generalesRight);
         document.add(generalesTable);
         agregarSeparador(document);
@@ -266,7 +296,7 @@ public class PdfService {
         document.add(crearSeccion("DATOS DEL PROVEEDOR", fontSub));
         PdfPTable infoTable = new PdfPTable(3);
         infoTable.setWidthPercentage(100);
-        infoTable.setWidths(new float[]{24f, 38f, 38f});
+        infoTable.setWidths(new float[] { 24f, 38f, 38f });
 
         PdfPCell cellProv1 = new PdfPCell();
         cellProv1.setBorder(Rectangle.NO_BORDER);
@@ -274,7 +304,7 @@ public class PdfService {
         infoTable.addCell(cellProv1);
 
         PdfPCell cellProv2 = new PdfPCell();
-        cellProv2.setBorder(Rectangle.NO_BORDER); 
+        cellProv2.setBorder(Rectangle.NO_BORDER);
         cellProv2.addElement(new Paragraph("Nombre:  " + valorTexto(orden.getNombreProv()), fontTexto));
         infoTable.addCell(cellProv2);
 
@@ -303,7 +333,7 @@ public class PdfService {
 
         PdfPTable tablaDetalles = new PdfPTable(8);
         tablaDetalles.setWidthPercentage(100);
-        tablaDetalles.setWidths(new float[]{0.8f, 1.1f, 3f, 2f, 1.3f, 1f, 1.3f, 1.6f});
+        tablaDetalles.setWidths(new float[] { 0.7f, 1.0f, 3f, 1.8f, 1.5f, 1f, 1.5f, 1.6f });
 
         // ---- Opción A: fuente/altura/padding adaptativos según la
         // cantidad de filas, para garantizar que quepa en una sola hoja ----
@@ -313,14 +343,15 @@ public class PdfService {
         float alturaMinimaDetalle = calcularAlturaMinimaCelda(numFilas);
 
         Font fontTextoDetalle = FontFactory.getFont(FontFactory.HELVETICA, tamanoFuenteDetalle, COLOR_TEXTO);
-        Font fontHeaderTablaDetalle = FontFactory.getFont(FontFactory.HELVETICA_BOLD, Math.max(tamanoFuenteDetalle - 1, 5), Color.WHITE);
+        Font fontHeaderTablaDetalle = FontFactory.getFont(FontFactory.HELVETICA_BOLD,
+                Math.max(tamanoFuenteDetalle - 2, 5), Color.WHITE);
 
         PdfPCell defaulCell = tablaDetalles.getDefaultCell();
         defaulCell.setMinimumHeight(alturaMinimaDetalle);
         defaulCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
         defaulCell.setPadding(paddingCeldaDetalle);
 
-        String[] headers = {"CTD", "CODIGO", "DESCRIPCIÓN", "PRESENTACIÓN", "VALOR U.", "IVA", "VALOR IVA", "TOTAL"};
+        String[] headers = { "CTD", "CODIGO", "DESCRIPCIÓN", "PRESENTACIÓN", "VALOR U.", "IVA", "VALOR IVA", "TOTAL" };
         for (String h : headers) {
             PdfPCell c = new PdfPCell(new Paragraph(h, fontHeaderTablaDetalle));
             c.setBackgroundColor(COLOR_PRIMARY);
@@ -337,16 +368,19 @@ public class PdfService {
                 cCant.setPadding(paddingCeldaDetalle);
                 tablaDetalles.addCell(cCant);
 
-                PdfPCell cCod = new PdfPCell(new Paragraph(String.valueOf(det.getCodigoInventario()), fontTextoDetalle));
+                PdfPCell cCod = new PdfPCell(
+                        new Paragraph(String.valueOf(det.getCodigoInventario()), fontTextoDetalle));
                 cCod.setHorizontalAlignment(Element.ALIGN_CENTER);
                 cCod.setPadding(paddingCeldaDetalle);
                 tablaDetalles.addCell(cCod);
 
-                PdfPCell cDesc = new PdfPCell(new Paragraph(det.getDescripcion() != null ? det.getDescripcion() : "", fontTextoDetalle));
+                PdfPCell cDesc = new PdfPCell(
+                        new Paragraph(det.getDescripcion() != null ? det.getDescripcion() : "", fontTextoDetalle));
                 cDesc.setPadding(paddingCeldaDetalle);
                 tablaDetalles.addCell(cDesc);
 
-                PdfPCell cPres = new PdfPCell(new Paragraph(det.getPresentacion() != null ? det.getPresentacion() : "", fontTextoDetalle));
+                PdfPCell cPres = new PdfPCell(
+                        new Paragraph(det.getPresentacion() != null ? det.getPresentacion() : "", fontTextoDetalle));
                 cPres.setPadding(paddingCeldaDetalle);
                 tablaDetalles.addCell(cPres);
 
@@ -355,7 +389,8 @@ public class PdfService {
                 cUnit.setPadding(paddingCeldaDetalle);
                 tablaDetalles.addCell(cUnit);
 
-                PdfPCell cIva = new PdfPCell(new Paragraph(formatearPorcentaje(det.getIvaProducto()) + "%", fontTextoDetalle));
+                PdfPCell cIva = new PdfPCell(
+                        new Paragraph(formatearPorcentaje(det.getIvaProducto()) + "%", fontTextoDetalle));
                 cIva.setHorizontalAlignment(Element.ALIGN_CENTER);
                 cIva.setPadding(paddingCeldaDetalle);
                 tablaDetalles.addCell(cIva);
@@ -373,10 +408,10 @@ public class PdfService {
         }
 
         document.add(tablaDetalles);
-        
+
         PdfPTable obsTotalesTable = new PdfPTable(2);
         obsTotalesTable.setWidthPercentage(100);
-        obsTotalesTable.setWidths(new float[]{65f, 35f});
+        obsTotalesTable.setWidths(new float[] { 65f, 35f });
 
         PdfPCell obsCell = new PdfPCell();
         obsCell.setBorder(Rectangle.NO_BORDER);
@@ -387,7 +422,9 @@ public class PdfService {
         } else {
             obsCell.addElement(new Paragraph("Observaciones: sin comentarios", fontalert));
         }
-        obsCell.addElement(new Paragraph("Toda factura debe llegar al correo recepcionfacturas@palmerajunior.com de lo contrario no será aceptada", fontalert));
+        obsCell.addElement(new Paragraph(
+                "Toda factura debe llegar al correo recepcionfacturas@palmerajunior.com de lo contrario no será aceptada",
+                fontalert));
         obsTotalesTable.addCell(obsCell);
 
         PdfPTable totalesTable = new PdfPTable(2);
@@ -412,30 +449,31 @@ public class PdfService {
         document.add(crearSeccion("AUDITORÍA", fontSub));
         PdfPTable auditoriaTable = new PdfPTable(3);
         auditoriaTable.setWidthPercentage(100);
-        auditoriaTable.setWidths(new float[]{33.33f, 33.33f, 33.34f});
+        auditoriaTable.setWidths(new float[] { 33.33f, 33.33f, 33.34f });
 
         String aproboText = orden.getUsuarioAprobacion() != null
                 ? orden.getUsuarioAprobacion().getNombre() + " " + orden.getUsuarioAprobacion().getApellido()
                 : "N/A";
         String recibioText = orden.getRecibidoPor() != null ? orden.getRecibidoPor() : "N/A";
         String fechaRecepcion = orden.getFechaRecepcion() != null ? orden.getFechaRecepcion().toString() : "N/A";
-        
+
         PdfPCell auditoriaLeft = new PdfPCell();
         auditoriaLeft.setBorder(Rectangle.NO_BORDER);
-        auditoriaLeft.addElement(crearParrafo("Realizada por:  " +  valorTexto(obtenerUsuarioSolicitante(orden)), fontTexto));
+        auditoriaLeft
+                .addElement(crearParrafo("Realizada por:  " + valorTexto(obtenerUsuarioSolicitante(orden)), fontTexto));
         auditoriaLeft.addElement(crearParrafo("Fecha recepción:  " + valorTexto(fechaRecepcion), fontTexto));
         auditoriaTable.addCell(auditoriaLeft);
 
         PdfPCell auditoriaCenter = new PdfPCell();
         auditoriaCenter.setBorder(Rectangle.NO_BORDER);
         auditoriaCenter.addElement(crearParrafo("Aprobó:  " + valorTexto(aproboText), fontTexto));
-         auditoriaCenter.addElement(crearParrafo("N° Factura:  " + valorTexto(orden.getNumeroFactura()), fontTexto));
+        auditoriaCenter.addElement(crearParrafo("N° Factura:  " + valorTexto(orden.getNumeroFactura()), fontTexto));
         auditoriaTable.addCell(auditoriaCenter);
 
         PdfPCell auditoriaRight = new PdfPCell();
         auditoriaRight.setBorder(Rectangle.NO_BORDER);
         auditoriaRight.addElement(new Paragraph("Recibió:  " + valorTexto(recibioText), fontTexto));
-        
+
         auditoriaTable.addCell(auditoriaRight);
         document.add(auditoriaTable);
 
@@ -458,7 +496,7 @@ public class PdfService {
         document.add(crearSeccion("DATOS DE ENVÍO", fontSub));
         PdfPTable envioTable = new PdfPTable(2);
         envioTable.setWidthPercentage(100);
-        envioTable.setWidths(new float[]{55f, 45f});
+        envioTable.setWidths(new float[] { 55f, 45f });
 
         PdfPCell palmera = new PdfPCell();
         palmera.setBorder(Rectangle.NO_BORDER);
@@ -470,7 +508,7 @@ public class PdfService {
 
         PdfPCell datos = new PdfPCell();
         datos.setBorder(Rectangle.NO_BORDER);
-        datos.addElement(new Paragraph("Destino:  " + valorTexto(obtenerDestino(orden)), fontTexto));
+        datos.addElement(new Paragraph("Destino:  " + valorTexto(orden.getCentroCosto().getDireccion()), fontTexto));
         envioTable.addCell(datos);
         document.add(envioTable);
 
@@ -489,7 +527,8 @@ public class PdfService {
 
         PdfPTable footer = new PdfPTable(1);
         footer.setWidthPercentage(100);
-        PdfPCell footerCell = new PdfPCell(new Phrase("Esta orden de compra es válida solo si es enviada desde el correo institucional", fontHeaderTabla));
+        PdfPCell footerCell = new PdfPCell(new Phrase(
+                "Esta orden de compra es válida solo si es enviada desde el correo institucional", fontHeaderTabla));
         footerCell.setBackgroundColor(COLOR_PRIMARY);
         footerCell.setPadding(7);
         footerCell.setHorizontalAlignment(Element.ALIGN_CENTER);
@@ -585,10 +624,10 @@ public class PdfService {
         seccionGenerales.setSpacingAfter(4f);
         document.add(seccionGenerales);
 
-        // Tabla fecha y solicitate 
+        // Tabla fecha y solicitate
 
         PdfPTable fechaTable = new PdfPTable(2);
-        fechaTable.setWidthPercentage(100);     
+        fechaTable.setWidthPercentage(100);
 
         PdfPCell fecha = new PdfPCell();
         fecha.setBorder(Rectangle.NO_BORDER);
@@ -598,10 +637,12 @@ public class PdfService {
 
         PdfPCell solicitante = new PdfPCell();
         solicitante.setBorder(Rectangle.NO_BORDER);
-        solicitante.addElement(new Paragraph("SOLICITANTE:     " + orden.getUsuario().getNombre()+" "+orden.getUsuario().getApellido() +" - "+orden.getSede().getNombre(), fontTexto));
-        solicitante.addElement(new Paragraph("CENTRO COSTO:   " + (orden.getCentroCosto() != null ? orden.getCentroCosto().getCodigo() + " - " + orden.getCentroCosto().getNombre() : "N/A"), fontTexto));
+        solicitante.addElement(new Paragraph("SOLICITANTE:     " + orden.getUsuario().getNombre() + " "
+                + orden.getUsuario().getApellido() + " - " + orden.getSede().getNombre(), fontTexto));
+        solicitante.addElement(new Paragraph("CENTRO COSTO:   " + (orden.getCentroCosto() != null
+                ? orden.getCentroCosto().getCodigo() + " - " + orden.getCentroCosto().getNombre()
+                : "N/A"), fontTexto));
         fechaTable.addCell(solicitante);
-        
 
         document.add(fechaTable);
         agregarSeparador(document);
@@ -611,7 +652,6 @@ public class PdfService {
         seccionProveedor.setSpacingBefore(4f);
         seccionProveedor.setSpacingAfter(4f);
         document.add(seccionProveedor);
-
 
         // Tabla de información del Proveedor (2 columnas)
         PdfPTable infoTable = new PdfPTable(2);
@@ -637,13 +677,13 @@ public class PdfService {
         // Tabla de Productos / Detalles
         PdfPTable tablaDetalles = new PdfPTable(8);
         tablaDetalles.setWidthPercentage(100);
-        tablaDetalles.setWidths(new float[]{0.8f ,1.1f, 3f, 2f, 1.3f, 1f, 1.3f, 1.6f});
+        tablaDetalles.setWidths(new float[] { 0.8f, 1.1f, 2.9f, 2f, 1.3f, 0.8f, 1.6f, 1.6f });
 
-        PdfPCell defaulCell=tablaDetalles.getDefaultCell();
+        PdfPCell defaulCell = tablaDetalles.getDefaultCell();
         defaulCell.setMinimumHeight(25f);
         defaulCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
 
-        String[] headers = {"CTD", "CODIGO", "DESCRIPCIÓN", "PRESENTACION", "VALOR U.", "IVA", "VALOR IVA", "TOTAL"};
+        String[] headers = { "CTD", "CODIGO", "DESCRIPCIÓN", "PRESENTACION", "VALOR U.", "IVA", "VALOR IVA", "TOTAL" };
         for (String h : headers) {
             PdfPCell c = new PdfPCell(new Paragraph(h, fontHeaderTabla));
             c.setBackgroundColor(COLOR_PRIMARY); // Verde institucional, igual al encabezado de tabla del dashboard
@@ -665,9 +705,8 @@ public class PdfService {
                 cCod.setHorizontalAlignment(Element.ALIGN_CENTER);
                 tablaDetalles.addCell(cCod);
 
-
                 tablaDetalles.addCell(new Paragraph(det.getDescripcion(), fontTexto));
-                tablaDetalles.addCell(new Paragraph(det.getPresentacion(), fontTexto ));                
+                tablaDetalles.addCell(new Paragraph(det.getPresentacion(), fontTexto));
 
                 PdfPCell cUnit = new PdfPCell(new Paragraph(df.format(det.getValorUnitario()), fontTexto));
                 cUnit.setHorizontalAlignment(Element.ALIGN_RIGHT);
@@ -677,11 +716,11 @@ public class PdfService {
                 cIva.setHorizontalAlignment(Element.ALIGN_CENTER);
                 tablaDetalles.addCell(cIva);
 
-                PdfPCell cVIva = new PdfPCell(new Paragraph( df.format(det.getValorIva()), fontTexto));
+                PdfPCell cVIva = new PdfPCell(new Paragraph(df.format(det.getValorIva()), fontTexto));
                 cVIva.setHorizontalAlignment(Element.ALIGN_RIGHT);
                 tablaDetalles.addCell(cVIva);
 
-                PdfPCell cTotal = new PdfPCell(new Paragraph( df.format(det.getValorTotalLinea()), fontTexto));
+                PdfPCell cTotal = new PdfPCell(new Paragraph(df.format(det.getValorTotalLinea()), fontTexto));
                 cTotal.setHorizontalAlignment(Element.ALIGN_RIGHT);
                 tablaDetalles.addCell(cTotal);
             }
@@ -694,7 +733,7 @@ public class PdfService {
         PdfPTable totalesTable = new PdfPTable(2);
         totalesTable.setWidthPercentage(100);
         totalesTable.setHorizontalAlignment(Element.ALIGN_RIGHT);
-        
+
         totalesTable.addCell(crearCelda("Subtotal:", fontSub));
         totalesTable.addCell(crearCelda(df.format(orden.getSubTotal()), fontTexto));
 
@@ -707,60 +746,56 @@ public class PdfService {
         totalesTable.addCell(crearCelda("TOTAL:", fontSub));
         totalesTable.addCell(crearCelda(df.format(orden.getTotal()), fontSub));
 
-                // Tabla contenedora
+        // Tabla contenedora
         PdfPTable contenedor = new PdfPTable(2);
         contenedor.setWidthPercentage(100);
-        contenedor.setWidths(new float[]{65, 35});
-            
+        contenedor.setWidths(new float[] { 65, 35 });
+
         // ===== TABLA INTERNA DE OBSERVACIONES =====
         PdfPTable obsTable = new PdfPTable(1);
         obsTable.setWidthPercentage(100);
-            
+
         // Parte superior (observaciones)
         PdfPCell obsContenido = new PdfPCell();
         obsContenido.setBorder(Rectangle.NO_BORDER);
         obsContenido.setFixedHeight(80f); // Ajusta según necesites
-            
+
         obsContenido.addElement(new Paragraph("OBSERVACIONES:", fontSub));
-            
+
         obsContenido.addElement(
-            new Paragraph(
-                orden.getObservaciones() != null ? orden.getObservaciones() : "",
-                fontTexto
-            )
-        );
-        
+                new Paragraph(
+                        orden.getObservaciones() != null ? orden.getObservaciones() : "",
+                        fontTexto));
+
         obsTable.addCell(obsContenido);
-        
+
         // Parte inferior (mensaje fijo)
         PdfPCell notaCell = new PdfPCell(
-            new Phrase(
-                "Toda factura debe llegar al correo recepcionfacturas@palmerajunior.com de lo contrario no será aceptada",
-                fontalert
-            )
-        );
-        
+                new Phrase(
+                        "Toda factura debe llegar al correo recepcionfacturas@palmerajunior.com de lo contrario no será aceptada",
+                        fontalert));
+
         notaCell.setBorder(Rectangle.TOP);
         notaCell.setBorderColor(COLOR_BORDE);
         notaCell.setHorizontalAlignment(Element.ALIGN_CENTER);
         notaCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
-        
+
         obsTable.addCell(notaCell);
-        
+
         // Celda contenedora de observaciones
         PdfPCell observacionesCell = new PdfPCell();
         observacionesCell.setBorder(Rectangle.NO_BORDER);
         observacionesCell.addElement(obsTable);
-        
+
         contenedor.addCell(observacionesCell);
-        
+
         // ===== TOTALES =====
         PdfPCell totalesCell = new PdfPCell();
         totalesCell.setBorder(Rectangle.NO_BORDER);
         totalesCell.addElement(totalesTable);
-        
+
         contenedor.addCell(totalesCell);
-        
+
         // Agregar al documento
         document.add(contenedor);
 
@@ -769,8 +804,9 @@ public class PdfService {
         PdfPTable auditoriaTable = new PdfPTable(2);
         auditoriaTable.setWidthPercentage(100);
 
-        String aproboText = orden.getUsuarioAprobacion() != null ?
-            orden.getUsuarioAprobacion().getNombre() + " " + orden.getUsuarioAprobacion().getApellido() : "N/A";
+        String aproboText = orden.getUsuarioAprobacion() != null
+                ? orden.getUsuarioAprobacion().getNombre() + " " + orden.getUsuarioAprobacion().getApellido()
+                : "N/A";
 
         PdfPCell aprobo = new PdfPCell();
         aprobo.setBorder(Rectangle.NO_BORDER);
@@ -788,24 +824,24 @@ public class PdfService {
         // Datos de envío
         PdfPTable envioTable = new PdfPTable(2);
         envioTable.setWidthPercentage(100);
-            
+
         PdfPCell palmera = new PdfPCell();
         palmera.setBorder(Rectangle.NO_BORDER);
-            
-        Paragraph p1 = new Paragraph("FACTURAR A NOMBRE DE: PALMERA JUNIOR S.A.S.", fontTexto);
-        p1.setSpacingAfter(8f);        
-        Paragraph p2 = new Paragraph("CORREO DE FACTURACION ELECTRONICA:", fontTexto );  
 
-        Paragraph p3 = new Paragraph("recepcionfacturas@palmerajunior.com",fontalert );
+        Paragraph p1 = new Paragraph("FACTURAR A NOMBRE DE: PALMERA JUNIOR S.A.S.", fontTexto);
+        p1.setSpacingAfter(8f);
+        Paragraph p2 = new Paragraph("CORREO DE FACTURACION ELECTRONICA:", fontTexto);
+
+        Paragraph p3 = new Paragraph("recepcionfacturas@palmerajunior.com", fontalert);
 
         document.add(new Paragraph(" "));
-        
+
         palmera.addElement(p1);
         palmera.addElement(p2);
         palmera.addElement(p3);
-        
-        envioTable.addCell(palmera);        
-        
+
+        envioTable.addCell(palmera);
+
         PdfPCell datos = new PdfPCell();
         datos.setBorder(Rectangle.NO_BORDER);
 
@@ -834,13 +870,11 @@ public class PdfService {
         datos.addElement(p4);
         datos.addElement(pFactura);
         datos.addElement(p5);
-        
+
         envioTable.addCell(datos);
-        
+
         document.add(envioTable);
         document.add(new Paragraph(" "));
-
-
 
         document.close();
         return baos.toByteArray();
