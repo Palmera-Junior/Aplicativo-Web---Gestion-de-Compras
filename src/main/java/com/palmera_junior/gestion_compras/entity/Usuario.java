@@ -1,5 +1,7 @@
 package com.palmera_junior.gestion_compras.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -33,7 +35,9 @@ public class Usuario {
 
     @Column(name = "nombre_usuario" ,nullable = false, length = 50, unique = true)
     private String nombreUsuario;
-
+    
+    @ToString.Exclude
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column(nullable = false, length = 255)
     private String contraseña;
 

@@ -19,7 +19,8 @@ body{
         135deg,
         #000000,
         #0a0a0a,
-        #0f5f1c
+        #032515,
+        #198754
     );
 }
 
@@ -59,7 +60,7 @@ body{
 }
 
 .logo h1{
-    color: #4CAF50;
+    color: #198754;
     font-size: 2.2rem;
     margin-bottom: 5px;
 }
@@ -133,7 +134,7 @@ body{
 
 .options a{
     text-decoration: none;
-    color: #4CAF50;
+    color: #198754;
     font-weight: 600;
 }
 
@@ -147,7 +148,7 @@ body{
     border: none;
     border-radius: 10px;
     cursor: pointer;
-    background: #4CAF50;
+    background: #198754;
     color: white;
     font-size: 16px;
     font-weight: bold;
@@ -156,7 +157,7 @@ body{
 }
 
 .btn-login:hover{
-    background: #3b9440;
+    background: #94d8b0;
     transform: translateY(-2px);
 }
 
