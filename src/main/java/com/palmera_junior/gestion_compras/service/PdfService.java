@@ -6,9 +6,7 @@ import com.lowagie.text.*;
 import com.lowagie.text.pdf.*;
 import com.lowagie.text.pdf.draw.LineSeparator;
 
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
-import org.springframework.core.io.ClassPathResource;
 import java.awt.Color;
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
@@ -212,14 +210,14 @@ public class PdfService {
      */
     private int calcularTamanoFuenteDetalle(int numFilas) {
         if (numFilas <= 12)
-            return 10;
-        if (numFilas <= 20)
-            return 9;
-        if (numFilas <= 28)
             return 8;
-        if (numFilas <= 35)
+        if (numFilas <= 20)
             return 7;
-        return 6;
+        if (numFilas <= 28)
+            return 6;
+        if (numFilas <= 35)
+            return 5;
+        return 5;
     }
 
     /**
@@ -229,13 +227,13 @@ public class PdfService {
      */
     private float calcularPaddingCelda(int numFilas) {
         if (numFilas <= 12)
-            return 6f;
-        if (numFilas <= 20)
             return 5f;
-        if (numFilas <= 28)
+        if (numFilas <= 20)
             return 4f;
-        if (numFilas <= 35)
+        if (numFilas <= 28)
             return 3f;
+        if (numFilas <= 35)
+            return 2f;
         return 2f;
     }
 
@@ -245,14 +243,14 @@ public class PdfService {
      */
     private float calcularAlturaMinimaCelda(int numFilas) {
         if (numFilas <= 12)
-            return 22f;
+            return 20f;
         if (numFilas <= 20)
-            return 18f;
+            return 16f;
         if (numFilas <= 28)
-            return 15f;
-        if (numFilas <= 35)
             return 13f;
-        return 11f;
+        if (numFilas <= 35)
+            return 10f;
+        return 10f;
     }
 
     /**
