@@ -332,7 +332,7 @@ function agregarFila() {
         </td>
 
         <td>
-            <button type="button" class="btn-icon delete" aria-label="Eliminar fila">
+            <button  title="Eliminar producto" type="button" class="btn-icon delete" aria-label="Eliminar fila">
                 <span class="material-symbols">delete</span>
             </button>
         </td>
