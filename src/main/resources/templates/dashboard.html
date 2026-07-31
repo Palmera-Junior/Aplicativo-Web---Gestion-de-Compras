@@ -110,6 +110,12 @@
 
                             </button>
 
+                            <button title="Eliminar Orden de Compra" th:if="${orden.estado.name() == 'BORRADOR'}"
+                                class="btn-icon delete-orden" th:data-id="${orden.idOrden}"
+                                th:data-numero-orden="${orden.numeroOrden}">
+                                <span class="material-symbols">delete</span>
+                            </button>
+
                             <button title="Descargar Orden de Compra" class="btn-icon pdf" th:data-id="${orden.idOrden}"
                                 th:if="${orden.estado.name() == 'APROBADA' or orden.estado.name() == 'RECIBIDA'}"><span
                                     class="material-symbols">download</span></button>

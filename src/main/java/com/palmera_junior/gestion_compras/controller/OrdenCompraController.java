@@ -83,6 +83,24 @@ public class OrdenCompraController {
         }
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> eliminarOrden(
+            @PathVariable Integer id) {
+
+        try {
+
+            ordenCompraService.eliminarOrden(id);
+
+            return ResponseEntity.ok(
+                    "Orden eliminada correctamente");
+
+        } catch (RuntimeException e) {
+
+            return ResponseEntity.badRequest()
+                    .body(e.getMessage());
+        }
+    }
+
     @GetMapping("/{id}/pdf")
     public ResponseEntity<byte[]> descargarPdf(@PathVariable Integer id) {
         try {

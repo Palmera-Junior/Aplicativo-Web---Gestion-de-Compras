@@ -384,6 +384,11 @@ body {
     color: #f72606;
 }
 
+/* Eliminar orden: rojo peligro */
+.btn-icon.delete-orden .material-symbols:hover {
+    color: #dc3545;
+}
+
 
 
 /* Tablas Generales */

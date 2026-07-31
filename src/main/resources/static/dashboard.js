@@ -714,6 +714,48 @@ document.addEventListener("click", async function (e) {
     }
 });
 
+// ELIMINAR ORDEN (solo para BORRADOR y creador)
+document.addEventListener("click", async function (e) {
+    const boton = e.target.closest(".delete-orden");
+    if (!boton) return;
+
+    const idOrden = boton.dataset.id;
+    const numeroOrden = boton.dataset.numeroOrden || "";
+
+    if (!idOrden) {
+        alert('ID de orden no disponible para eliminarla.');
+        return;
+    }
+
+    const confirmar = confirm(
+        "¿Está seguro de eliminar esta Orden de Compra?\n\n" +
+        "N° Orden: " + (numeroOrden || idOrden) + "\n\n" +
+        "Solo podrá eliminar una orden en estado BORRADOR y únicamente si usted fue quien la creó.\n\n" +
+        "Esta acción no se puede deshacer."
+    );
+
+    if (!confirmar) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/orden-compra/${idOrden}`, {
+            method: "DELETE"
+        });
+
+        if (!response.ok) {
+            const mensaje = await response.text();
+            throw new Error(mensaje || "No se pudo eliminar la orden.");
+        }
+
+        alert("Orden eliminada correctamente.");
+        location.reload();
+    } catch (error) {
+        console.error(error);
+        alert(error.message);
+    }
+});
+
 // DESCARGAR PDF (solo para APROBADA/RECIBIDA)
 document.addEventListener("click", async function (e) {
     const boton = e.target.closest(".pdf");

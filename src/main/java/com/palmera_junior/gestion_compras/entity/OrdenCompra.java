@@ -2,7 +2,6 @@ package com.palmera_junior.gestion_compras.entity;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 

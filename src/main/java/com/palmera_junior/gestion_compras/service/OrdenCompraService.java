@@ -367,6 +367,30 @@ public class OrdenCompraService {
     }
 
     @Transactional
+    public void eliminarOrden(Integer idOrden) {
+
+        OrdenCompra orden = ordenCompraRepository.findById(idOrden)
+                .orElseThrow(() -> new RuntimeException("Orden no encontrada"));
+
+        if (orden.getEstado() != EstadoOrdenCompra.BORRADOR) {
+            throw new RuntimeException("Solo las órdenes en BORRADOR pueden eliminarse");
+        }
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+
+        Usuario usuarioLogueado = usuarioRepository.findByNombreUsuario(username)
+                .orElseThrow(() -> new RuntimeException("Usuario no autenticado o no encontrado"));
+
+        if (orden.getUsuario() == null
+                || !orden.getUsuario().getIdUsuario().equals(usuarioLogueado.getIdUsuario())) {
+            throw new RuntimeException("Solo el usuario que creó la orden puede eliminarla");
+        }
+
+        ordenCompraRepository.delete(orden);
+    }
+
+    @Transactional
     public OrdenCompra recibirOrden(
             Integer idOrden,
             RecibirOrdenDTO dto) {
