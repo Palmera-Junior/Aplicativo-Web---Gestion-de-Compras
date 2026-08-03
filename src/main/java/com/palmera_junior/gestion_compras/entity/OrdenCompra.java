@@ -48,23 +48,6 @@ public class OrdenCompra {
     @ToString.Exclude
     private CentroCosto centroCosto;
 
-    @Column(name = "nombre_prov", nullable = false, length = 150)
-    private String nombreProv;
-
-    @Column(name = "nit_prov", nullable = false, length = 50)
-    private String nitProv;
-
-    @Column(name = "direccion_prov", nullable = false, length = 255)
-    private String direccionProv;
-
-    @Column(name = "ciudad_prov", nullable = false, length = 150)
-    private String ciudadProv;
-
-    @Column(name = "telefono_prov", nullable = false, length = 50)
-    private String telefonoProv;
-
-    @Column(name = "correo_prov", nullable = false, length = 150)
-    private String correoProv;
 
     @Column(columnDefinition = "TEXT")
     private String observaciones;

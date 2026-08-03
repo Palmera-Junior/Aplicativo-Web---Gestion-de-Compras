@@ -15,7 +15,7 @@ public class ProveedorService {
     private ProveedorRepository proveedorRepository;
 
     public List<Proveedor> listarPorSede(Integer idSede) {
-        return proveedorRepository.findBySedeIdSedeOrderByNombreAsc(idSede);
+        return proveedorRepository.findBySedesIdSedeOrderByNombreAsc(idSede);
     }
 
     public @Nullable Object getAllProveedores() {

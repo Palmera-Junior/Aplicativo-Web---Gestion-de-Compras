@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,10 +29,13 @@ import com.palmera_junior.gestion_compras.entity.EstadoOrdenCompra;
 import com.palmera_junior.gestion_compras.entity.OrdenCompra;
 import com.palmera_junior.gestion_compras.entity.Producto;
 import com.palmera_junior.gestion_compras.entity.Rol;
+import com.palmera_junior.gestion_compras.entity.Sede;
 import com.palmera_junior.gestion_compras.entity.Usuario;
 import com.palmera_junior.gestion_compras.repository.OrdenCompraRepository;
 import com.palmera_junior.gestion_compras.repository.ProductoRepository;
+import com.palmera_junior.gestion_compras.repository.ProveedorRepository;
 import com.palmera_junior.gestion_compras.repository.UsuarioRepository;
+import com.palmera_junior.gestion_compras.entity.Proveedor;
 
 @Service
 public class OrdenCompraService {
@@ -46,6 +50,9 @@ public class OrdenCompraService {
     private ProductoRepository productoRepository;
 
     @Autowired
+    private ProveedorRepository proveedorRepository;
+
+    @Autowired
     private CentroCostoService centroCostoService;
 
     // Método para listar órdenes paginadas en el Dashboard
@@ -54,10 +61,13 @@ public class OrdenCompraService {
 
         if (search != null && !search.isBlank()) {
             String termino = "%" + search.trim().toLowerCase() + "%";
-            spec = spec.and((root, query, cb) -> cb.or(
+            spec = spec.and((root, query, cb) -> {
+                jakarta.persistence.criteria.Join<Object, Object> provJoin = root.join("proveedor", jakarta.persistence.criteria.JoinType.LEFT);
+                return cb.or(
                     cb.like(cb.lower(root.get("numeroOrden")), termino),
-                    cb.like(cb.lower(root.get("nombreProv")), termino)
-            ));
+                    cb.like(cb.lower(provJoin.get("nombre")), termino)
+                );
+            });
         }
 
         if (fechaDesde != null && !fechaDesde.isBlank() && fechaHasta != null && !fechaHasta.isBlank()) {
@@ -119,14 +129,6 @@ public class OrdenCompraService {
     public OrdenCompra guardarOrdenDesdeDTO(OrdenCompraDTO dto) {
         OrdenCompra orden = new OrdenCompra();
 
-        // 1. Datos principales y del Proveedor (Snapshot del formulario)
-        orden.setNitProv(dto.getNitProv());
-        orden.setNombreProv(dto.getNombreProv());
-        orden.setTelefonoProv(dto.getTelefonoProv());
-        orden.setCiudadProv(dto.getCiudadProv());
-        orden.setCorreoProv(dto.getCorreoProv());
-        orden.setDireccionProv(dto.getDireccionProv());
-        orden.setObservaciones(dto.getObservaciones());
 
         // 2. Totales y fecha
         // Usar la fecha seleccionada por el usuario en el formulario; si no viene, usar
@@ -151,8 +153,13 @@ public class OrdenCompraService {
         Usuario usuarioLogueado = usuarioRepository.findByNombreUsuario(username)
                 .orElseThrow(() -> new RuntimeException("Usuario no autenticado o no encontrado"));
 
+        // Asignar o crear proveedor asociado
+        Proveedor proveedorAsignado = obtenerProveedorParaOrden(dto, usuarioLogueado);
+        orden.setProveedor(proveedorAsignado);
+
         orden.setSede(usuarioLogueado.getSede());
         orden.setUsuario(usuarioLogueado);
+        orden.setObservaciones(dto.getObservaciones());
 
         // Asignar centro de costo seleccionado
         if (dto.getIdCentroCosto() != null) {
@@ -161,57 +168,129 @@ public class OrdenCompraService {
         }
 
         // 3. Mapeo de los detalles
-                if (dto.getDetalles() != null) {
+            if (dto.getDetalles() != null) {
                         List<DetalleCompra> detallesEntidad = dto.getDetalles().stream().map(dDto -> {
-                DetalleCompra detalle = new DetalleCompra();
+            DetalleCompra detalle = new DetalleCompra();
 
-                // Si el usuario seleccionó un producto existente que tiene ID, puedes buscarlo
-                // opcionalmente:
-                if (dDto.getIdProducto() != null) {
+            // Si el usuario seleccionó un producto existente que tiene ID, puedes buscarlo
+            // opcionalmente:
+            if (dDto.getIdProducto() != null) {
                     Producto prodExistente = productoRepository.findById(dDto.getIdProducto()).orElse(null);
                     detalle.setProducto(prodExistente);
-                } else {
+            } else {
                     detalle.setProducto(null); // Producto nuevo, no hay llave foránea
-                }
+            }
 
-                // Datos snapshot del producto
-                detalle.setCodigoInventario(dDto.getCodigoInventario());
-                detalle.setPresentacion(dDto.getPresentacion());
-                detalle.setDescripcion(dDto.getDescripcion());
+            // Datos snapshot del producto
+            detalle.setCodigoInventario(dDto.getCodigoInventario());
+            detalle.setPresentacion(dDto.getPresentacion());
+            detalle.setDescripcion(dDto.getDescripcion());
 
-                // Valores numéricos de la línea
-                detalle.setCantidad(dDto.getCantidad());
-                detalle.setValorUnitario(dDto.getValorUnitario());
-                detalle.setIvaProducto(dDto.getIvaProducto());
-                detalle.setValorIva(dDto.getValorIva());
-                detalle.setValorTotalLinea(dDto.getValorTotalLinea());
+            // Valores numéricos de la línea
+            detalle.setCantidad(dDto.getCantidad());
+            detalle.setValorUnitario(dDto.getValorUnitario());
+            detalle.setIvaProducto(dDto.getIvaProducto());
+            detalle.setValorIva(dDto.getValorIva());
+            detalle.setValorTotalLinea(dDto.getValorTotalLinea());
 
-                // (Misma regla de arriba para la FK de idProducto)
+            // (Misma regla de arriba para la FK de idProducto)
 
-                // Relación bidireccional (asignar el padre al hijo)
-                detalle.setOrdenCompra(orden);
+            // Relación bidireccional (asignar el padre al hijo)
+            detalle.setOrdenCompra(orden);
 
-                return detalle;
+            return detalle;
             }).collect(Collectors.toList());
 
             // Asignamos la lista completa de detalles a la orden
                         orden.setDetalles(detallesEntidad);
-        }
+            }
 
-        System.out.println("NIT: " + dto.getNitProv());
-        System.out.println("Nombre: " + dto.getNombreProv());
-        System.out.println("Ciudad: " + dto.getCiudadProv());
-        System.out.println("Correo: " + dto.getCorreoProv());
-
-        orden.setEstado(
-                EstadoOrdenCompra.BORRADOR);
-        OrdenCompra ordenGuardada = ordenCompraRepository.saveAndFlush(orden);
-
+            orden.setEstado(
+                        EstadoOrdenCompra.BORRADOR);
+            OrdenCompra ordenGuardada = ordenCompraRepository.saveAndFlush(orden);
                 return asignarNumeroOrden(ordenGuardada);
     }
 
-        @Transactional
-        public OrdenCompra actualizarOrdenDesdeDTO(Integer idOrden, OrdenCompraDTO dto) {
+    private Proveedor obtenerProveedorParaOrden(OrdenCompraDTO dto, Usuario usuarioLogueado) {
+            String nit = dto.getNitProv() != null ? dto.getNitProv().trim() : null;
+            String nombre = dto.getNombreProv() != null ? dto.getNombreProv().trim() : null;
+            String ciudad = dto.getCiudadProv() != null ? dto.getCiudadProv().trim() : null;
+            String direccion = dto.getDireccionProv() != null ? dto.getDireccionProv().trim() : null;
+            String telefono = dto.getTelefonoProv() != null ? dto.getTelefonoProv().trim() : null;
+            String correo = dto.getCorreoProv() != null ? dto.getCorreoProv().trim() : null;
+
+            boolean tieneDatosProveedor = (nit != null && !nit.isBlank())
+                    || (nombre != null && !nombre.isBlank())
+                    || (ciudad != null && !ciudad.isBlank())
+                    || (direccion != null && !direccion.isBlank())
+                    || (telefono != null && !telefono.isBlank())
+                    || (correo != null && !correo.isBlank());
+
+            if (dto.getIdProv() == null && !tieneDatosProveedor) {
+                return null;
+            }
+
+            if (dto.getIdProv() != null) {
+                if (nit == null || nit.isBlank()) {
+                    throw new RuntimeException("El NIT del proveedor es obligatorio.");
+                }
+
+                Proveedor proveedorAsignado = proveedorRepository.findById(dto.getIdProv().intValue())
+                        .orElseThrow(() -> new RuntimeException("Proveedor seleccionado no existe"));
+
+                Optional<Proveedor> proveedorConMismoNit = proveedorRepository.findByNitIgnoreCase(nit);
+                if (proveedorConMismoNit.isPresent() && !proveedorConMismoNit.get().getIdProv().equals(proveedorAsignado.getIdProv())) {
+                    throw new RuntimeException("Ya existe otro proveedor con ese NIT.");
+                }
+
+                actualizarCamposProveedor(proveedorAsignado, dto);
+                asociarProveedorASede(proveedorAsignado, usuarioLogueado.getSede());
+                return proveedorRepository.save(proveedorAsignado);
+            }
+
+            if (nit == null || nit.isBlank()) {
+                throw new RuntimeException("El NIT del proveedor es obligatorio.");
+            }
+
+            Optional<Proveedor> proveedorExistente = proveedorRepository.findByNitIgnoreCase(nit);
+            if (proveedorExistente.isPresent()) {
+                Proveedor proveedor = proveedorExistente.get();
+                actualizarCamposProveedor(proveedor, dto);
+                asociarProveedorASede(proveedor, usuarioLogueado.getSede());
+                return proveedorRepository.save(proveedor);
+            }
+
+            Proveedor nuevoProv = new Proveedor();
+            nuevoProv.setNit(nit);
+            nuevoProv.setNombre(nombre);
+            nuevoProv.setCorreo(correo);
+            nuevoProv.setDireccion(direccion);
+            nuevoProv.setTelefono(telefono);
+            nuevoProv.setCiudad(ciudad);
+            asociarProveedorASede(nuevoProv, usuarioLogueado.getSede());
+            return proveedorRepository.save(nuevoProv);
+    }
+
+    private void actualizarCamposProveedor(Proveedor proveedor, OrdenCompraDTO dto) {
+            proveedor.setNit(dto.getNitProv());
+            proveedor.setNombre(dto.getNombreProv());
+            proveedor.setCorreo(dto.getCorreoProv());
+            proveedor.setDireccion(dto.getDireccionProv());
+            proveedor.setTelefono(dto.getTelefonoProv());
+            proveedor.setCiudad(dto.getCiudadProv());
+    }
+
+    private void asociarProveedorASede(Proveedor proveedor, Sede sede) {
+            if (sede == null) {
+                return;
+            }
+            if (!proveedor.getSedes().contains(sede)) {
+                proveedor.getSedes().add(sede);
+            }
+    }
+
+            @Transactional
+            public OrdenCompra actualizarOrdenDesdeDTO(Integer idOrden, OrdenCompraDTO dto) {
                 OrdenCompra orden = ordenCompraRepository.findById(idOrden)
                                 .orElseThrow(() -> new RuntimeException("Orden no encontrada"));
 
@@ -222,12 +301,13 @@ public class OrdenCompraService {
                 LocalDate fechaAnterior = orden.getFecha();
                 LocalDate fechaNueva = fechaAnterior;
 
-                orden.setNitProv(dto.getNitProv());
-                orden.setNombreProv(dto.getNombreProv());
-                orden.setTelefonoProv(dto.getTelefonoProv());
-                orden.setCiudadProv(dto.getCiudadProv());
-                orden.setCorreoProv(dto.getCorreoProv());
-                orden.setDireccionProv(dto.getDireccionProv());
+                Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+                String username = auth.getName();
+                Usuario usuarioLogueado = usuarioRepository.findByNombreUsuario(username)
+                        .orElseThrow(() -> new RuntimeException("Usuario no autenticado o no encontrado"));
+
+                Proveedor proveedorAsignado = obtenerProveedorParaOrden(dto, usuarioLogueado);
+                orden.setProveedor(proveedorAsignado);
                 orden.setObservaciones(dto.getObservaciones());
 
                 if (dto.getFecha() != null && !dto.getFecha().isBlank()) {
@@ -436,23 +516,21 @@ public class OrdenCompraService {
         dto.setFecha(
                 orden.getFecha().toString());
 
-        dto.setNombreProv(
-                orden.getNombreProv());
-
-        dto.setNitProv(
-                orden.getNitProv());
-
-        dto.setCiudadProv(
-                orden.getCiudadProv());
-
-        dto.setDireccionProv(
-                orden.getDireccionProv());
-
-        dto.setTelefonoProv(
-                orden.getTelefonoProv());
-
-        dto.setCorreoProv(
-                orden.getCorreoProv());
+        if (orden.getProveedor() != null) {
+            dto.setNombreProv(orden.getProveedor().getNombre());
+            dto.setNitProv(orden.getProveedor().getNit());
+            dto.setCiudadProv(orden.getProveedor().getCiudad());
+            dto.setDireccionProv(orden.getProveedor().getDireccion());
+            dto.setTelefonoProv(orden.getProveedor().getTelefono());
+            dto.setCorreoProv(orden.getProveedor().getCorreo());
+        } else {
+            dto.setNombreProv(null);
+            dto.setNitProv(null);
+            dto.setCiudadProv(null);
+            dto.setDireccionProv(null);
+            dto.setTelefonoProv(null);
+            dto.setCorreoProv(null);
+        }
 
         dto.setObservaciones(
                 orden.getObservaciones());

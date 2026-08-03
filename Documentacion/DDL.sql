@@ -40,9 +40,16 @@ CREATE TABLE proveedor (
     correo VARCHAR(150),
     direccion VARCHAR(255),
     telefono VARCHAR(50),
-    ciudad VARCHAR(100),
+    ciudad VARCHAR(100)
+);
+
+-- Tabla intermedia para asociar proveedores a múltiples sedes
+CREATE TABLE proveedor_sede (
+    id_prov INT NOT NULL,
     id_sede INT NOT NULL,
-    CONSTRAINT fk_proveedor_sede FOREIGN KEY (id_sede) REFERENCES sede (id_sede)
+    PRIMARY KEY (id_prov, id_sede),
+    CONSTRAINT fk_ps_proveedor FOREIGN KEY (id_prov) REFERENCES proveedor (id_prov) ON DELETE CASCADE,
+    CONSTRAINT fk_ps_sede FOREIGN KEY (id_sede) REFERENCES sede (id_sede) ON DELETE CASCADE
 );
 
 -- 4. Creación de tabla principal transaccional (Nivel 2)
@@ -54,14 +61,6 @@ CREATE TABLE orden_compra (
     id_usuario INT NOT NULL,
     numero_orden VARCHAR(50) NOT NULL UNIQUE,
     fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
-    -- Snapshot del Proveedor
-    nombre_prov VARCHAR(150) NOT NULL,
-    nit_prov VARCHAR(50) NOT NULL,
-    direccion_prov VARCHAR(255),
-    ciudad_prov VARCHAR(100),
-    telefono_prov VARCHAR(50),
-    correo_prov VARCHAR(150),
     
     -- Totales y Observaciones
     observaciones TEXT, -- Nullable

@@ -385,11 +385,13 @@ body {
 }
 
 /* Eliminar orden: rojo peligro */
-.btn-icon.delete-orden .material-symbols:hover {
+.btn-icon.delete .material-symbols:hover {
     color: #dc3545;
 }
 
-
+.btn-icon.delete-orden .material-symbols:hover {
+    color: #dc3545;
+}
 
 /* Tablas Generales */
 .table-responsive {

@@ -80,7 +80,7 @@ public class DashboardController {
         model.addAttribute("productos", productoService.getAllProductos());
         model.addAttribute("paginaActual", page);
         model.addAttribute("ordenesCompra", ordenesCompra);
-        model.addAttribute("proveedores", proveedorService.getAllProveedores());
+        model.addAttribute("proveedores", esNacional ? proveedorService.getAllProveedores() : proveedorService.listarPorSede(idSede));
         model.addAttribute("q", q);
         model.addAttribute("fechaDesde", fechaDesde);
         model.addAttribute("fechaHasta", fechaHasta);

@@ -79,7 +79,7 @@
                     <tr th:each="orden : ${ordenesCompra.content}">
                         <td><strong th:text="${orden.numeroOrden}">BUC070013</strong></td>
                         <td th:text="${orden.fecha}">2023-10-01</td>
-                        <td th:text="${orden.nombreProv}">Proveedor S.A.</td>
+                        <td th:text="${orden.proveedor != null ? orden.proveedor.nombre : ''}">Proveedor S.A.</td>
                         <td th:text="${orden.sede.nombre}">Sede Principal</td>
                         <td style="text-align: right;"
                             th:text="'$ ' + ${#numbers.formatDecimal(orden.total, 1, 'COMMA', 0, 'POINT')}"></td>
@@ -104,7 +104,7 @@
                             </button>
                             <button title="Recibir Orden de Compra" th:if="${orden.estado.name() == 'APROBADA'}"
                                 class="btn-icon receive" th:data-id="${orden.idOrden}"
-                                th:data-numero-orden="${orden.numeroOrden}" th:data-proveedor="${orden.nombreProv}">
+                                th:data-numero-orden="${orden.numeroOrden}" th:data-proveedor="${orden.proveedor != null ? orden.proveedor.nombre : ''}">
 
                                 <span class="material-symbols">inventory_2</span>
 

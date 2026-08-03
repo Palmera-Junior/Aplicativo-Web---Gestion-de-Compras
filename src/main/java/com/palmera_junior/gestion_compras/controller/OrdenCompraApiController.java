@@ -26,7 +26,7 @@ public class OrdenCompraApiController {
     private PdfService pdfService;
 
     @PostMapping("/guardar")
-    public ResponseEntity<byte[]> guardarYGenerarPdf(@RequestBody OrdenCompraDTO ordenCompraDTO) {
+    public ResponseEntity<?> guardarYGenerarPdf(@RequestBody OrdenCompraDTO ordenCompraDTO) {
         try {
             // 1. Guardar la orden y sus detalles en la base de datos
             OrdenCompra nuevaOrden = ordenCompraService.guardarOrdenDesdeDTO(ordenCompraDTO);
@@ -43,6 +43,9 @@ public class OrdenCompraApiController {
             // 4. Retornar el archivo binario exitosamente
             return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
             
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
             e.printStackTrace();
             // Si algo falla, devolver error 500 para que el frontend lo capture en el bloque .catch()

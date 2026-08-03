@@ -2,6 +2,8 @@ package com.palmera_junior.gestion_compras.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import java.util.Set;
+import java.util.HashSet;
 
 @Getter
 @Setter
@@ -35,10 +37,14 @@ public class Proveedor {
    @Column(length = 150)
    private String ciudad; 
 
-   @ManyToOne(fetch = FetchType.LAZY)
-   @JoinColumn(name = "id_sede", nullable = false)
+   @ManyToMany
+   @JoinTable(
+       name = "proveedor_sede",
+       joinColumns = @JoinColumn(name = "id_prov"),
+       inverseJoinColumns = @JoinColumn(name = "id_sede")
+   )
    @ToString.Exclude
-   private Sede sede;
+   private Set<Sede> sedes = new HashSet<>();
 
    @Override
    public boolean equals(Object o) {

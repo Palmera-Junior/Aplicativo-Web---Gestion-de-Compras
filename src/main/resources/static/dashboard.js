@@ -217,8 +217,9 @@ function setModalOrdenModoVista(esVista) {
         telefono.value = opcion.dataset.telefono || "";
         email.value = opcion.dataset.email || "";
 
+        // Permitir edición de los datos del proveedor existente en el modal
         campos.forEach(campo => {
-            campo.disabled = true;
+            campo.disabled = false;
         });
 
     });
@@ -333,7 +334,7 @@ function agregarFila() {
 
         <td>
             <button  title="Eliminar producto" type="button" class="btn-icon delete" aria-label="Eliminar fila">
-                <span class="material-symbols">delete</span>
+                <span class="material-symbols">delete</span> 
             </button>
         </td>
     `;
@@ -561,19 +562,27 @@ async function guardarYGenerarPdf() {
         { id: 'prov-email', label: 'Correo' }
     ];
 
-    const proveedorIncompleto = camposProveedor.find(campo => {
-        const valor = document.getElementById(campo.id)?.value?.trim() || '';
-        return !valor;
-    });
+    const selectProveedorElem = document.getElementById('select-proveedor');
+    const proveedorSeleccion = selectProveedorElem ? selectProveedorElem.value : '';
 
-    if (proveedorIncompleto) {
-        alert(`El campo "${proveedorIncompleto.label}" del proveedor es obligatorio.`);
-        return;
+    // Validar los datos de proveedor cuando hay un proveedor seleccionado
+    if (proveedorSeleccion !== '') {
+        const proveedorIncompleto = camposProveedor.find(campo => {
+            const valor = document.getElementById(campo.id)?.value?.trim() || '';
+            return !valor;
+        });
+
+        if (proveedorIncompleto) {
+            alert(`El campo "${proveedorIncompleto.label}" del proveedor es obligatorio.`);
+            return;
+        }
     }
 
     const ordenDTO = {
         fecha: fechaInput,
         idCentroCosto: idCentroCosto ? parseInt(idCentroCosto) : null,
+        // Si se seleccionó un proveedor existente, enviar su id; si fue 'otro' o vacío, enviar null
+        idProv: proveedorSeleccion && proveedorSeleccion !== 'otro' ? parseInt(proveedorSeleccion) : null,
         nitProv: document.getElementById('prov-nit')?.value?.trim() || '',
         nombreProv: document.getElementById('prov-nombre')?.value?.trim() || '',
         ciudadProv: document.getElementById('prov-ciudad')?.value?.trim() || '',
@@ -1170,7 +1179,7 @@ function cargarOrdenEnModal(
                     </td>
                     <td>
                         <button type="button" class="btn-icon delete" ${esVista ? 'disabled' : ''}>
-                            <i class="fas fa-trash"></i>
+                             <span  class="material-symbols">delete</span>
                         </button>
                     </td>
                 `;

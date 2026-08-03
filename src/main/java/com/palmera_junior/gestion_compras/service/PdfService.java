@@ -296,34 +296,41 @@ public class PdfService {
         infoTable.setWidthPercentage(100);
         infoTable.setWidths(new float[] { 24f, 38f, 38f });
 
+        String provNit = orden.getProveedor() != null ? orden.getProveedor().getNit() : "";
+        String provNombre = orden.getProveedor() != null ? orden.getProveedor().getNombre() : "";
+        String provCiudad = orden.getProveedor() != null ? orden.getProveedor().getCiudad() : "";
+        String provTelefono = orden.getProveedor() != null ? orden.getProveedor().getTelefono() : "";
+        String provDireccion = orden.getProveedor() != null ? orden.getProveedor().getDireccion() : "";
+        String provCorreo = orden.getProveedor() != null ? orden.getProveedor().getCorreo() : "";
+
         PdfPCell cellProv1 = new PdfPCell();
         cellProv1.setBorder(Rectangle.NO_BORDER);
-        cellProv1.addElement(new Paragraph("NIT: " + valorTexto(orden.getNitProv()), fontTexto));
+        cellProv1.addElement(new Paragraph("NIT: " + valorTexto(provNit), fontTexto));
         infoTable.addCell(cellProv1);
 
         PdfPCell cellProv2 = new PdfPCell();
         cellProv2.setBorder(Rectangle.NO_BORDER);
-        cellProv2.addElement(new Paragraph("Nombre:  " + valorTexto(orden.getNombreProv()), fontTexto));
+        cellProv2.addElement(new Paragraph("Nombre:  " + valorTexto(provNombre), fontTexto));
         infoTable.addCell(cellProv2);
 
         PdfPCell cellProv3 = new PdfPCell();
         cellProv3.setBorder(Rectangle.NO_BORDER);
-        cellProv3.addElement(new Paragraph("Ciudad:  " + valorTexto(orden.getCiudadProv()), fontTexto));
+        cellProv3.addElement(new Paragraph("Ciudad:  " + valorTexto(provCiudad), fontTexto));
         infoTable.addCell(cellProv3);
 
         PdfPCell cellProv4 = new PdfPCell();
         cellProv4.setBorder(Rectangle.NO_BORDER);
-        cellProv4.addElement(new Paragraph("Teléfono:  " + valorTexto(orden.getTelefonoProv()), fontTexto));
+        cellProv4.addElement(new Paragraph("Teléfono:  " + valorTexto(provTelefono), fontTexto));
         infoTable.addCell(cellProv4);
 
         PdfPCell cellProv5 = new PdfPCell();
         cellProv5.setBorder(Rectangle.NO_BORDER);
-        cellProv5.addElement(new Paragraph("Dirección:  " + valorTexto(orden.getDireccionProv()), fontTexto));
+        cellProv5.addElement(new Paragraph("Dirección:  " + valorTexto(provDireccion), fontTexto));
         infoTable.addCell(cellProv5);
 
         PdfPCell cellProv6 = new PdfPCell();
         cellProv6.setBorder(Rectangle.NO_BORDER);
-        cellProv6.addElement(new Paragraph("Email:  " + valorTexto(orden.getCorreoProv()), fontTexto));
+        cellProv6.addElement(new Paragraph("Email:  " + valorTexto(provCorreo), fontTexto));
         infoTable.addCell(cellProv6);
         document.add(infoTable);
         Font fontEspaciador = FontFactory.getFont(FontFactory.HELVETICA, 4, COLOR_TEXTO);
@@ -655,18 +662,25 @@ public class PdfService {
         PdfPTable infoTable = new PdfPTable(2);
         infoTable.setWidthPercentage(100);
 
+        String provNombre = orden.getProveedor() != null ? orden.getProveedor().getNombre() : "";
+        String provNit = orden.getProveedor() != null ? orden.getProveedor().getNit() : "";
+        String provDireccion = orden.getProveedor() != null ? orden.getProveedor().getDireccion() : "";
+        String provCiudad = orden.getProveedor() != null ? orden.getProveedor().getCiudad() : "";
+        String provTelefono = orden.getProveedor() != null ? orden.getProveedor().getTelefono() : "";
+        String provCorreo = orden.getProveedor() != null ? orden.getProveedor().getCorreo() : "";
+
         PdfPCell cellProv = new PdfPCell();
         cellProv.setBorder(Rectangle.NO_BORDER);
-        cellProv.addElement(new Paragraph("NOMBRE: " + orden.getNombreProv(), fontTexto));
-        cellProv.addElement(new Paragraph("NIT: " + orden.getNitProv(), fontTexto));
-        cellProv.addElement(new Paragraph("DIRECCIÓN: " + orden.getDireccionProv(), fontTexto));
+        cellProv.addElement(new Paragraph("NOMBRE: " + provNombre, fontTexto));
+        cellProv.addElement(new Paragraph("NIT: " + provNit, fontTexto));
+        cellProv.addElement(new Paragraph("DIRECCIÓN: " + provDireccion, fontTexto));
         infoTable.addCell(cellProv);
 
         PdfPCell cellProv2 = new PdfPCell();
         cellProv2.setBorder(Rectangle.NO_BORDER);
-        cellProv2.addElement(new Paragraph("CIUDAD: " + orden.getCiudadProv(), fontTexto));
-        cellProv2.addElement(new Paragraph("TELEFONO: " + orden.getTelefonoProv(), fontTexto));
-        cellProv2.addElement(new Paragraph("EMAIL: " + orden.getCorreoProv(), fontTexto));
+        cellProv2.addElement(new Paragraph("CIUDAD: " + provCiudad, fontTexto));
+        cellProv2.addElement(new Paragraph("TELEFONO: " + provTelefono, fontTexto));
+        cellProv2.addElement(new Paragraph("EMAIL: " + provCorreo, fontTexto));
         infoTable.addCell(cellProv2);
 
         document.add(infoTable);
