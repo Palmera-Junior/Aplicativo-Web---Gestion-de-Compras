@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administración - Gestión de Compras</title>
+    <link rel="stylesheet" th:href="@{/index.css}">
+    <link rel="stylesheet" th:href="@{/admin.css}">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap">
+</head>
+<body>
+    <header class="navbar">
+        <div class="logo">
+            <h2><span class="material-symbols">admin_panel_settings</span> Panel de Administración</h2>
+        </div>
+        <div class="user-info"><span class="material-symbols">account_circle</span>
+            <span th:text="${#authentication.principal.usuario.nombre + ' ' + #authentication.principal.usuario.apellido}">Administrador</span> |
+            <span th:text="${#authentication.principal.usuario.sede.nombre}">Sede</span>
+            <form th:action="@{/logout}" method="POST" style="display: inline; margin: 0;">
+                <button title="Cerrar Sesión" type="submit" class="btn-logout">
+                    <span class="material-symbols">logout</span> Salir
+                </button>
+            </form>
+        </div>
+    </header>
+
+    <main class="dashboard-container">
+<div class="dashboard-header">
+            <div>
+                <h1>Administración General</h1>
+                <p>Crear y administrar proveedores, usuarios, productos, sedes y centros de costo.</p>
+            </div>
+            <div class="dashboard-header-actions">
+                <button title="Refrescar página" type="button" id="btn-refrescar" class="btn-refrescar"
+                    aria-label="Refrescar página">
+                    <span class="material-symbols">refresh</span>
+                </button>
+            </div>
+        </div>
+
+        <div th:if="${successMessage}" class="alert-success">
+            <span class="material-symbols">check_circle</span>
+            <p th:text="${successMessage}"></p>
+        </div>
+        <div th:if="${errorMessage}" class="alert-error">
+            <span class="material-symbols">error</span>
+            <p th:text="${errorMessage}"></p>
+        </div>
+
+        <!-- ============================================
+             TARJETAS DE MÓDULOS
+             ============================================ -->
+        <section class="modules-grid">
+            <div class="module-card accent-blue" data-target="section-usuarios">
+                <div class="module-icon-wrap">
+                    <span class="material-symbols">group</span>
+                </div>
+                <div class="module-body">
+                    <h3>Usuarios</h3>
+                    <p>Cuentas y roles del sistema — Solicitante, Aprobador, Administrador.</p>
+                </div>
+                <div class="module-footer">
+                    <span class="module-badge" th:text="${usuarios.size()}">0</span>
+                    <span class="module-badge-label">registrados</span>
+                    <span class="material-symbols module-arrow">arrow_forward</span>
+                </div>
+            </div>
+
+            <div class="module-card accent-green" data-target="section-proveedores">
+                <div class="module-icon-wrap">
+                    <span class="material-symbols">local_shipping</span>
+                </div>
+                <div class="module-body">
+                    <h3>Proveedores</h3>
+                    <p>Proveedores registrados y sus sedes asociadas.</p>
+                </div>
+                <div class="module-footer">
+                    <span class="module-badge" th:text="${proveedores.size()}">0</span>
+                    <span class="module-badge-label">registrados</span>
+                    <span class="material-symbols module-arrow">arrow_forward</span>
+                </div>
+            </div>
+
+            <div class="module-card accent-amber" data-target="section-productos">
+                <div class="module-icon-wrap">
+                    <span class="material-symbols">inventory_2</span>
+                </div>
+                <div class="module-body">
+                    <h3>Productos</h3>
+                    <p>Catálogo e inventario disponible para órdenes de compra.</p>
+                </div>
+                <div class="module-footer">
+                    <span class="module-badge" th:text="${productos.size()}">0</span>
+                    <span class="module-badge-label">registrados</span>
+                    <span class="material-symbols module-arrow">arrow_forward</span>
+                </div>
+            </div>
+
+            <div class="module-card accent-teal" data-target="section-sedes">
+                <div class="module-icon-wrap">
+                    <span class="material-symbols">store</span>
+                </div>
+                <div class="module-body">
+                    <h3>Sedes</h3>
+                    <p>Sedes de la compañía y su información de contacto.</p>
+                </div>
+                <div class="module-footer">
+                    <span class="module-badge" th:text="${sedes.size()}">0</span>
+                    <span class="module-badge-label">registradas</span>
+                    <span class="material-symbols module-arrow">arrow_forward</span>
+                </div>
+            </div>
+
+            <div class="module-card accent-purple" data-target="section-centros">
+                <div class="module-icon-wrap">
+                    <span class="material-symbols">account_tree</span>
+                </div>
+                <div class="module-body">
+                    <h3>Centros de costo</h3>
+                    <p>Centros de costo agrupados por cada sede.</p>
+                </div>
+                <div class="module-footer">
+                    <span class="module-badge" th:text="${centrosCosto.size()}">0</span>
+                    <span class="module-badge-label">registrados</span>
+                    <span class="material-symbols module-arrow">arrow_forward</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECCIONES (formulario + listado)
+             ============================================ -->
+        <section class="admin-grid">
+
+            <!-- ---------- PROVEEDORES ---------- -->
+            <div class="card admin-card" id="section-proveedores" style="display:none;">
+                <div class="section-panel-header accent-green">
+                    <span class="material-symbols">local_shipping</span>
+                    <div>
+                        <h2>Proveedores</h2>
+                        <p>Registra un nuevo proveedor o consulta los existentes</p>
+                    </div>
+                </div>
+
+                <div class="form-card">
+                    <h3 class="form-card-title">Nuevo proveedor</h3>
+                    <form th:action="@{/admin/proveedores}" method="post" id="proveedorForm">
+                        <input type="hidden" id="idProv" name="idProv">
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label>NIT</label>
+                                <input type="text" id="nit" class="input-control" name="nit" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Nombre</label>
+                                <input type="text" id="nombreProveedor" class="input-control" name="nombre" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Ciudad</label>
+                                <input type="text" id="ciudad" class="input-control" name="ciudad">
+                            </div>
+                            <div class="form-group">
+                                <label>Dirección</label>
+                                <input type="text" id="direccionProveedor" class="input-control" name="direccion">
+                            </div>
+                            <div class="form-group">
+                                <label>Teléfono</label>
+                                <input type="text" id="telefono" class="input-control" name="telefono">
+                            </div>
+                            <div class="form-group">
+                                <label>Correo</label>
+                                <input type="email" id="correo" class="input-control" name="correo">
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Sedes asociadas</label>
+                                <div class="sede-checkbox-grid">
+                                    <label th:each="sede : ${sedes}" class="checkbox-chip">
+                                        <input type="checkbox" name="sedeIds" th:value="${sede.idSede}" />
+                                        <span th:text="${sede.nombre}"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+<div class="form-actions">
+                            <button type="button" class="btn-cancel" onclick="resetForm('proveedor')">Cancelar</button>
+                            <button type="submit" id="providerSubmitButton" class="btn-primary">
+                                <span class="material-symbols">add</span> Crear Proveedor
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="admin-list">
+                    <h3 class="list-title">Proveedores existentes</h3>
+                    <div class="tabla-card">
+                        <div class="table-responsive">
+                            <table class="data-table admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>NIT</th>
+                                        <th>Nombre</th>
+                                        <th>Sedes</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="proveedor : ${proveedores}"
+                                        th:data-id="${proveedor.idProv}"
+                                        th:data-nit="${proveedor.nit}"
+                                        th:data-nombre="${proveedor.nombre}"
+                                        th:data-ciudad="${proveedor.ciudad}"
+                                        th:data-direccion="${proveedor.direccion}"
+                                        th:data-telefono="${proveedor.telefono}"
+                                        th:data-correo="${proveedor.correo}"
+                                        th:data-sede-ids="${proveedor.sedeIdsCsv}">
+                                        <td class="mono" th:text="${proveedor.nit}"></td>
+                                        <td th:text="${proveedor.nombre}"></td>
+                                        <td>
+                                            <span th:each="sede, sedeStat : ${proveedor.sedes}" th:text="${sede.nombre + ( !sedeStat.last ? ', ' : '' )}"></span>
+                                        </td>
+                                        <td class="actions">
+                                            <button type="button" class="btn-icon edit" title="Editar" onclick="editEntity('proveedor', this)">
+                                                <span class="material-symbols">edit</span>
+                                            </button>
+                                            <button type="button" class="btn-icon delete" title="Eliminar" th:attr="data-id=${proveedor.idProv}" onclick="deleteEntity('proveedor', this.getAttribute('data-id'))">
+                                                <span class="material-symbols">delete</span>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ---------- USUARIOS ---------- -->
+            <div class="card admin-card" id="section-usuarios" style="display:none;">
+                <div class="section-panel-header accent-blue">
+                    <span class="material-symbols">group</span>
+                    <div>
+                        <h2>Usuarios</h2>
+                        <p>Crea cuentas y asigna roles y sede a cada usuario</p>
+                    </div>
+                </div>
+
+                <div class="form-card">
+                    <h3 class="form-card-title">Nuevo usuario</h3>
+                    <form th:action="@{/admin/usuarios}" method="post" id="usuarioForm">
+                        <input type="hidden" id="idUsuario" name="idUsuario">
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label>Cédula</label>
+                                <input type="text" id="cedula" class="input-control" name="cedula" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Nombre</label>
+                                <input type="text" id="nombreUsuarioField" class="input-control" name="nombre" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Apellido</label>
+                                <input type="text" id="apellido" class="input-control" name="apellido" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Cargo</label>
+                                <input type="text" id="cargo" class="input-control" name="cargo">
+                            </div>
+                            <div class="form-group">
+                                <label>Usuario</label>
+                                <input type="text" id="nombreUsuario" class="input-control" name="nombreUsuario" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Contraseña</label>
+                                <input type="password" id="contrasena" class="input-control" name="contrasena" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Rol</label>
+                                <select id="rol" class="input-control" name="rol" required>
+                                    <option th:each="rol : ${roles}" th:value="${rol}" th:text="${rol}"></option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Sede</label>
+                                <select id="sedeUsuario" class="input-control" name="sedeId" required>
+                                    <option value="" disabled selected>Seleccionar sede</option>
+                                    <option th:each="sede : ${sedes}" th:value="${sede.idSede}" th:text="${sede.nombre}"></option>
+                                </select>
+                            </div>
+                        </div>
+<div class="form-actions">
+                            <button type="button" class="btn-cancel" onclick="resetForm('usuario')">Cancelar</button>
+                            <button type="submit" id="userSubmitButton" class="btn-primary">
+                                <span class="material-symbols">add</span> Crear usuario
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="admin-list">
+                    <h3 class="list-title">Usuarios existentes</h3>
+                    <div class="tabla-card">
+                        <div class="table-responsive">
+                            <table class="data-table admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Cédula</th>
+                                        <th>Nombre</th>
+                                        <th>Rol</th>
+                                        <th>Sede</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="usuario : ${usuarios}"
+                                        th:data-id="${usuario.idUsuario}"
+                                        th:data-cedula="${usuario.cedula}"
+                                        th:data-nombre="${usuario.nombre}"
+                                        th:data-apellido="${usuario.apellido}"
+                                        th:data-cargo="${usuario.cargo}"
+                                        th:data-nombre-usuario="${usuario.nombreUsuario}"
+                                        th:data-rol="${usuario.rol}"
+                                        th:data-sede-id="${usuario.sede != null ? usuario.sede.idSede : ''}">
+                                        <td class="mono" th:text="${usuario.cedula}"></td>
+                                        <td th:text="${usuario.nombre + ' ' + usuario.apellido}"></td>
+                                        <td>
+                                            <span class="badge-rol"
+                                                  th:classappend="${usuario.rol.toString().toLowerCase()}"
+                                                  th:text="${usuario.rol}"></span>
+                                        </td>
+                                        <td th:text="${usuario.sede != null ? usuario.sede.nombre : ''}"></td>
+                                        <td class="actions">
+                                            <button type="button" class="btn-icon edit" title="Editar" onclick="editEntity('usuario', this)">
+                                                <span class="material-symbols">edit</span>
+                                            </button>
+                                            <button type="button" class="btn-icon delete" title="Eliminar" th:attr="data-id=${usuario.idUsuario}" onclick="deleteEntity('usuario', this.getAttribute('data-id'))">
+                                                <span class="material-symbols">delete</span>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ---------- PRODUCTOS ---------- -->
+            <div class="card admin-card" id="section-productos" style="display:none;">
+                <div class="section-panel-header accent-amber">
+                    <span class="material-symbols">inventory_2</span>
+                    <div>
+                        <h2>Productos</h2>
+                        <p>Registra productos y consulta el catálogo de inventario</p>
+                    </div>
+                </div>
+
+                <div class="form-card">
+                    <h3 class="form-card-title">Nuevo producto</h3>
+                    <form th:action="@{/admin/productos}" method="post" id="productForm">
+                        <input type="hidden" id="idProducto" name="idProducto">
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label>Código de inventario</label>
+                                <input type="text" id="codigoInventario" class="input-control" name="codigoInventario" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Nombre</label>
+                                <input type="text" id="nombreProducto" class="input-control" name="nombre" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Presentación</label>
+                                <input type="text" id="presentacion" class="input-control" name="presentacion">
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Descripción</label>
+                                <textarea id="descripcion" class="input-control" rows="3" name="descripcion"></textarea>
+                            </div>
+                        </div>
+<div class="form-actions">
+                            <button type="button" class="btn-cancel" onclick="resetForm('producto')">Cancelar</button>
+                            <button type="submit" id="productSubmitButton" class="btn-primary">
+                                <span class="material-symbols">add</span> Crear producto
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="admin-list">
+                    <h3 class="list-title">Productos existentes</h3>
+                    <div class="tabla-card">
+                        <div class="table-responsive">
+                            <table class="data-table admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Código</th>
+                                        <th>Nombre</th>
+                                        <th>Presentación</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="producto : ${productos}"
+                                        th:data-id="${producto.idProducto}"
+                                        th:data-codigo="${producto.codigoInventario}"
+                                        th:data-nombre="${producto.nombre}"
+                                        th:data-presentacion="${producto.presentacion}"
+                                        th:data-descripcion="${producto.descripcion}">
+                                        <td class="mono" th:text="${producto.codigoInventario}"></td>
+                                        <td th:text="${producto.nombre}"></td>
+                                        <td th:text="${producto.presentacion}"></td>
+                                        <td class="actions">
+                                            <button type="button" class="btn-icon edit" title="Editar" onclick="editEntity('producto', this)">
+                                                <span class="material-symbols">edit</span>
+                                            </button>
+                                            <button type="button" class="btn-icon delete" title="Eliminar" th:attr="data-id=${producto.idProducto}" onclick="deleteEntity('producto', this.getAttribute('data-id'))">
+                                                <span class="material-symbols">delete</span>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ---------- SEDES ---------- -->
+            <div class="card admin-card" id="section-sedes" style="display:none;">
+                <div class="section-panel-header accent-teal">
+                    <span class="material-symbols">store</span>
+                    <div>
+                        <h2>Sedes</h2>
+                        <p>Registra las sedes de la compañía</p>
+                    </div>
+                </div>
+
+                <div class="form-card">
+                    <h3 class="form-card-title">Nueva sede</h3>
+                    <form th:action="@{/admin/sedes}" method="post" id="sedeForm">
+                        <input type="hidden" id="idSede" name="idSede">
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label>Nombre</label>
+                                <input type="text" id="nombreSede" class="input-control" name="nombre" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Prefijo ciudad</label>
+                                <input type="text" id="prefijoCiudad" class="input-control" name="prefijoCiudad" required>
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Dirección</label>
+                                <input type="text" id="direccionSede" class="input-control" name="direccion">
+                            </div>
+                        </div>
+<div class="form-actions">
+                            <button type="button" class="btn-cancel" onclick="resetForm('sede')">Cancelar</button>
+                            <button type="submit" id="sedeSubmitButton" class="btn-primary">
+                                <span class="material-symbols">add</span> Crear sede
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="admin-list">
+                    <h3 class="list-title">Sedes existentes</h3>
+                    <div class="tabla-card">
+                        <div class="table-responsive">
+                            <table class="data-table admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th>Prefijo</th>
+                                        <th>Dirección</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="sede : ${sedes}"
+                                        th:data-id="${sede.idSede}"
+                                        th:data-nombre="${sede.nombre}"
+                                        th:data-prefijo="${sede.prefijoCiudad}"
+                                        th:data-direccion="${sede.direccion}">
+                                        <td th:text="${sede.nombre}"></td>
+                                        <td class="mono" th:text="${sede.prefijoCiudad}"></td>
+                                        <td th:text="${sede.direccion}"></td>
+                                        <td class="actions">
+                                            <button type="button" class="btn-icon edit" title="Editar" onclick="editEntity('sede', this)">
+                                                <span class="material-symbols">edit</span>
+                                            </button>
+                                            <button type="button" class="btn-icon delete" title="Eliminar" th:attr="data-id=${sede.idSede}" onclick="deleteEntity('sede', this.getAttribute('data-id'))">
+                                                <span class="material-symbols">delete</span>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ---------- CENTROS DE COSTO ---------- -->
+            <div class="card admin-card" id="section-centros" style="display:none;">
+                <div class="section-panel-header accent-purple">
+                    <span class="material-symbols">account_tree</span>
+                    <div>
+                        <h2>Centros de costo</h2>
+                        <p>Agrupa los centros de costo dentro de cada sede</p>
+                    </div>
+                </div>
+
+                <div class="form-card">
+                    <h3 class="form-card-title">Nuevo centro de costo</h3>
+                    <form th:action="@{/admin/centros-costo}" method="post" id="centroForm">
+                        <input type="hidden" id="idCentroCosto" name="idCentroCosto">
+<div class="form-grid-2">
+                            <div class="form-group">
+                                <label>Nombre</label>
+                                <input type="text" id="nombreCentro" class="input-control" name="nombre" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Código</label>
+                                <input type="text" id="codigoCentro" class="input-control" name="codigo" placeholder="Código del centro de costo">
+                            </div>
+                            <div class="form-group">
+                                <label>Sede</label>
+                                <select id="sedeCentro" class="input-control" name="sedeId" required>
+                                    <option value="" disabled selected>Seleccionar sede</option>
+                                    <option th:each="sede : ${sedes}" th:value="${sede.idSede}" th:text="${sede.nombre}"></option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Dirección</label>
+                                <input type="text" id="direccionCentro" class="input-control" name="direccion" placeholder="Dirección del centro de costo">
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn-cancel" onclick="resetForm('centro')">Cancelar</button>
+                            <button type="submit" id="centroSubmitButton" class="btn-primary">
+                                <span class="material-symbols">add</span> Crear centro de costo
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="admin-list">
+                    <h3 class="list-title">Centros de costo existentes</h3>
+                    <div class="tabla-card">
+                        <div class="table-responsive">
+                            <table class="data-table admin-table">
+<thead>
+                                    <tr>
+                                        <th>Código</th>
+                                        <th>Nombre</th>
+                                        <th>Sede</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="centro : ${centrosCosto}"
+                                        th:data-id="${centro.idCentroCosto}"
+                                        th:data-codigo="${centro.codigo}"
+                                        th:data-nombre="${centro.nombre}"
+                                        th:data-sede-id="${centro.sede != null ? centro.sede.idSede : ''}"
+                                        th:data-direccion="${centro.direccion}">
+                                        <td class="mono" th:text="${centro.codigo}"></td>
+                                        <td th:text="${centro.nombre}"></td>
+                                        <td th:text="${centro.sede != null ? centro.sede.nombre : ''}"></td>
+                                        <td class="actions">
+                                            <button type="button" class="btn-icon edit" title="Editar" onclick="editEntity('centro', this)">
+                                                <span class="material-symbols">edit</span>
+                                            </button>
+                                            <button type="button" class="btn-icon delete" title="Eliminar" th:attr="data-id=${centro.idCentroCosto}" onclick="deleteEntity('centro', this.getAttribute('data-id'))">
+                                                <span class="material-symbols">delete</span>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script th:src="@{/admin.js}"></script>
+</body>
+</html>

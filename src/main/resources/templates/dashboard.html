@@ -34,17 +34,20 @@
     </header>
 
     <main class="dashboard-container">
-        <div class="dashboard-header">
+<div class="dashboard-header">
             <div>
                 <h1>Órdenes de Compra</h1>
                 <p>Gestión y consulta de documentos</p>
             </div>
-            <button title="Crear Orden de Compra" type="button" id="btn-nueva-orden" class="btn-primary">
-                <span class="material-symbols">add</span> Nueva Orden
-            </button>
+                <button title="Crear Orden de Compra" type="button" id="btn-nueva-orden" class="btn-primary">
+                    <span class="material-symbols">add</span> Nueva Orden
+                </button>
         </div>
 
-        <form class="filtros-section" method="GET" th:action="@{/dashboard}">
+<form class="filtros-section" method="GET" th:action="@{/dashboard}">
+            <span class="filtro-icon" title="Filtros">
+                <span class="material-symbols-outlined">filter_alt</span>
+            </span>
             <input type="text" name="q" placeholder="Buscar por número o proveedor..."
                 class="input-control buscar-input" th:value="${q}">
             <label class="sr-only" for="fechaDesde">Desde</label>

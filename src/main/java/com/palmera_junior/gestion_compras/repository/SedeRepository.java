@@ -4,5 +4,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.palmera_junior.gestion_compras.entity.Sede;
 
 public interface SedeRepository extends JpaRepository<Sede, Integer>{
-    
+    boolean existsByNombreIgnoreCase(String nombre);
+    boolean existsByPrefijoCiudadIgnoreCase(String prefijoCiudad);
 }

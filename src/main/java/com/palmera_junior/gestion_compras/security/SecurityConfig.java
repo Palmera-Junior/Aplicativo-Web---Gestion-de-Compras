@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -25,19 +26,28 @@ public class SecurityConfig {
 
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // ⚠️ CRÍTICO: Permitimos acceso público al login y a todos los recursos
-                        // estáticos
-                        // (tu CSS, tus imágenes dentro de /imgs/, favicon, etc.)
-                        .requestMatchers("/login", "/login.css", "/imgs/**", "/static/**")
-                        .permitAll()
+                        // Permitimos acceso público al login y a recursos estáticos
+                        .requestMatchers("/login", "/login.css", "/imgs/**", "/static/**").permitAll()
 
-                        // Cualquier otra ruta requiere que el usuario esté autenticado
+                        // Solo ADMIN puede acceder a /admin/**
+                        .requestMatchers("/admin/**").hasRole("ADMINISTRADOR")
+
+                        // Dashboard y APIs/paths de órdenes solo para SOLICITANTE y APROBADOR
+                        .requestMatchers("/dashboard", "/dashboard/**", "/ordenes/**", "/orden_compra/**", "/api/orden_compra/**", "/api/ordenes/**")
+                        .hasAnyRole("SOLICITANTE", "APROBADOR")
+
+                        // Cualquier otra ruta autenticada por defecto
                         .anyRequest().authenticated())
                 .formLogin(form -> form
                         // Especificamos que la ruta de nuestra vista de login es /login
                         .loginPage("/login")
-                        // Redirección exitosa por defecto
-                        .defaultSuccessUrl("/dashboard", true)
+                        // Redirección de acuerdo al rol del usuario
+                        .successHandler((request, response, authentication) -> {
+                            boolean isAdmin = authentication.getAuthorities().stream()
+                                    .map(GrantedAuthority::getAuthority)
+                                    .anyMatch(authRole -> authRole.equals("ROLE_ADMINISTRADOR"));
+                            response.sendRedirect(isAdmin ? "/admin" : "/dashboard");
+                        })
                         .permitAll())
                 .logout(logout -> logout
                         .logoutUrl("/logout")

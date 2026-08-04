@@ -23,7 +23,7 @@ public class CentroCosto {
     @Column(length = 20, unique = true)
     private String codigo;
 
-    @Column(nullable = false, length = 200)
+    @Column(length = 200)
     private String direccion;
 
     @ManyToOne(fetch = FetchType.LAZY)

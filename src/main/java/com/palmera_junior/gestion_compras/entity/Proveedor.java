@@ -3,6 +3,7 @@ package com.palmera_junior.gestion_compras.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.HashSet;
 
 @Getter
@@ -57,6 +58,12 @@ public class Proveedor {
    public int hashCode() {
       return getClass().hashCode();
    }
+
+   public String getSedeIdsCsv() {
+    return sedes.stream()
+            .map(sede -> String.valueOf(sede.getIdSede()))
+            .collect(Collectors.joining(","));
+}
 
 
 }

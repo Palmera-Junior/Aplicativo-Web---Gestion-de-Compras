@@ -1,6 +1,37 @@
 // codigo acciones del MODAL ##########################################################333
 
+// ==========================================
+// TOAST (mensaje temporal auto-ocultable)
+// ==========================================
+function mostrarToast(mensaje, tipo) {
+    tipo = tipo || 'success';
+    let toast = document.getElementById('toast-root');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'toast-root';
+        document.body.appendChild(toast);
+    }
+    const t = document.createElement('div');
+    t.className = 'toast-item toast-' + tipo;
+    t.textContent = mensaje;
+    toast.appendChild(t);
+
+    // Ocultar automáticamente a los 3 segundos
+    setTimeout(() => {
+        t.classList.add('toast-hide');
+        setTimeout(() => t.remove(), 400);
+    }, 3000);
+}
+
 document.addEventListener("DOMContentLoaded", () => {
+
+    // Botón refrescar página
+    const btnRefrescar = document.getElementById("btn-refrescar");
+    if (btnRefrescar) {
+        btnRefrescar.addEventListener("click", () => {
+            window.location.reload();
+        });
+    }
 
     const modal = document.getElementById("modal-orden");
     const btnCerrar = document.getElementById("btn-cerrar-modal");
@@ -711,9 +742,10 @@ document.addEventListener("click", async function (e) {
             throw new Error(mensaje);
         }
 
-        alert("Orden aprobada correctamente");
+mostrarToast("Orden aprobada correctamente");
 
-        location.reload();
+        // Recargar después de que el toast se haya ocultado (3s)
+        setTimeout(() => location.reload(), 3000);
 
     } catch (error) {
 

@@ -174,8 +174,8 @@ public class OrdenCompraService {
 
             // Si el usuario seleccionó un producto existente que tiene ID, puedes buscarlo
             // opcionalmente:
-            if (dDto.getIdProducto() != null) {
-                    Producto prodExistente = productoRepository.findById(dDto.getIdProducto()).orElse(null);
+if (dDto.getIdProducto() != null) {
+                    Producto prodExistente = productoRepository.findById(dDto.getIdProducto().intValue()).orElse(null);
                     detalle.setProducto(prodExistente);
             } else {
                     detalle.setProducto(null); // Producto nuevo, no hay llave foránea
@@ -328,8 +328,8 @@ public class OrdenCompraService {
                         orden.getDetalles().clear();
                         List<DetalleCompra> detallesEntidad = dto.getDetalles().stream().map(dDto -> {
                                 DetalleCompra detalle = new DetalleCompra();
-                                if (dDto.getIdProducto() != null) {
-                                        Producto prodExistente = productoRepository.findById(dDto.getIdProducto()).orElse(null);
+if (dDto.getIdProducto() != null) {
+                                        Producto prodExistente = productoRepository.findById(dDto.getIdProducto().intValue()).orElse(null);
                                         detalle.setProducto(prodExistente);
                                 } else {
                                         detalle.setProducto(null);

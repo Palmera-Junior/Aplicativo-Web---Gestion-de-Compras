@@ -16,5 +16,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer>{
     boolean existsByNombreUsuario(String nombreUsuario);
     
     boolean existsByCedula(String cedula);
+
+    Optional<Usuario> findByCedula(String cedula);
     
 }
