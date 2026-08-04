@@ -211,7 +211,7 @@
                     <a th:href="@{/dashboard(page=${paginaActual - 1}, q=${q}, fechaDesde=${fechaDesde}, fechaHasta=${fechaHasta})}"
                         th:class="${paginaActual == 0} ? 'btn-pagina disabled' : 'btn-pagina'">
                         <i class="bi bi-chevron-left"></i>
-                        Anterior
+                        Anterior 
                     </a>
 
                     <span class="pagina-actual" th:text="${paginaActual + 1}">

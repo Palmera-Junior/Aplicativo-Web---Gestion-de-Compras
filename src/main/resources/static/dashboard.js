@@ -570,7 +570,7 @@ async function guardarYGenerarPdf() {
     const fechaInput = document.getElementById('fecha-orden')?.value;
 
     if (!fechaInput) {
-        alert("Por favor selecciona una fecha válida dentro del formulario.");
+        mostrarToast("Por favor selecciona una fecha válida dentro del formulario.", 'error');
         return;
     }
 
@@ -580,7 +580,7 @@ async function guardarYGenerarPdf() {
 
     // Validación: centro de costo obligatorio
     if (!idCentroCosto) {
-        alert('El campo "Centro de Costo" es obligatorio. Por favor selecciona uno.');
+        mostrarToast('Debes seleccionar un Centro de Costo para continuar.', 'error');
         return;
     }
 
@@ -604,7 +604,7 @@ async function guardarYGenerarPdf() {
         });
 
         if (proveedorIncompleto) {
-            alert(`El campo "${proveedorIncompleto.label}" del proveedor es obligatorio.`);
+            mostrarToast(`El campo "${proveedorIncompleto.label}" del proveedor es obligatorio.`, 'error');
             return;
         }
     }
@@ -657,8 +657,8 @@ async function guardarYGenerarPdf() {
         }
     });
 
-    if (ordenDTO.detalles.length === 0) {
-        alert("Debes agregar al menos un producto con código y cantidad válida.");
+if (ordenDTO.detalles.length === 0) {
+        mostrarToast("Debes agregar al menos un producto con código y cantidad válida.", 'error');
         return;
     }
 
@@ -678,23 +678,23 @@ async function guardarYGenerarPdf() {
             body: JSON.stringify(ordenDTO)
         });
 
-        if (response.ok) {
-            alert('Orden guardada exitosamente.');
+if (response.ok) {
+            mostrarToast('Orden guardada exitosamente.', 'success');
             if (typeof cerrarModal === 'function') {
                 cerrarModal();
             } else {
                 const modal = document.getElementById('modal-orden');
                 if (modal) modal.style.display = 'none';
             }
-            location.reload();
+            setTimeout(() => location.reload(), 1200);
         } else {
             const errText = await response.text();
             console.error("Error servidor:", errText);
-            alert(errText || 'Error al guardar la orden de compra.');
+            mostrarToast(errText || 'Error al guardar la orden de compra.', 'error');
         }
     } catch (error) {
         console.error('Error de red/servidor:', error);
-        alert('Ocurrió un error al conectar con el servidor.');
+        mostrarToast('Ocurrió un error al conectar con el servidor.', 'error');
     } finally {
         // Reactivar el botón al finalizar la operación
         if (btnGuardar) {
@@ -742,16 +742,16 @@ document.addEventListener("click", async function (e) {
             throw new Error(mensaje);
         }
 
-mostrarToast("Orden aprobada correctamente");
+mostrarToast("Orden aprobada correctamente", 'success');
 
         // Recargar después de que el toast se haya ocultado (3s)
-        setTimeout(() => location.reload(), 3000);
+        setTimeout(() => location.reload(), 1200);
 
     } catch (error) {
 
         console.error(error);
 
-        alert(error.message);
+        mostrarToast(error.message || 'No fue posible aprobar la orden.', 'error');
     }
 });
 
@@ -764,7 +764,7 @@ document.addEventListener("click", async function (e) {
     const numeroOrden = boton.dataset.numeroOrden || "";
 
     if (!idOrden) {
-        alert('ID de orden no disponible para eliminarla.');
+        mostrarToast('ID de orden no disponible para eliminarla.', 'error');
         return;
     }
 
@@ -784,16 +784,16 @@ document.addEventListener("click", async function (e) {
             method: "DELETE"
         });
 
-        if (!response.ok) {
+if (!response.ok) {
             const mensaje = await response.text();
             throw new Error(mensaje || "No se pudo eliminar la orden.");
         }
 
-        alert("Orden eliminada correctamente.");
-        location.reload();
+        mostrarToast("Orden eliminada correctamente.", 'success');
+        setTimeout(() => location.reload(), 1200);
     } catch (error) {
         console.error(error);
-        alert(error.message);
+        mostrarToast(error.message, 'error');
     }
 });
 
@@ -804,7 +804,7 @@ document.addEventListener("click", async function (e) {
 
     const idOrden = boton.dataset.id;
     if (!idOrden) {
-        alert('ID de orden no disponible para la descarga.');
+        mostrarToast('ID de orden no disponible para la descarga.', 'error');
         return;
     }
 
@@ -830,9 +830,9 @@ document.addEventListener("click", async function (e) {
         a.remove();
         window.URL.revokeObjectURL(url);
 
-    } catch (err) {
+} catch (err) {
         console.error(err);
-        alert(err.message || 'Error descargando PDF');
+        mostrarToast(err.message || 'Error descargando PDF', 'error');
     }
 });
 
@@ -911,10 +911,11 @@ document
         // VALIDACIONES
         // ========================
 
-        if (!numeroFactura) {
+if (!numeroFactura) {
 
-            alert(
-                "Debes ingresar el número de factura."
+            mostrarToast(
+                "Debes ingresar el número de factura.",
+                'error'
             );
 
             return;
@@ -922,8 +923,9 @@ document
 
         if (numeroFactura.length < 3) {
 
-            alert(
-                "El número de factura parece inválido."
+            mostrarToast(
+                "El número de factura parece inválido.",
+                'error'
             );
 
             return;
@@ -931,8 +933,9 @@ document
 
         if (!recibidoPor) {
 
-            alert(
-                "Debes indicar quién recibió el pedido."
+            mostrarToast(
+                "Debes indicar quién recibió el pedido.",
+                'error'
             );
 
             return;
@@ -940,8 +943,9 @@ document
 
         if (recibidoPor.length < 3) {
 
-            alert(
-                "El nombre del receptor es demasiado corto."
+            mostrarToast(
+                "El nombre del receptor es demasiado corto.",
+                'error'
             );
 
             return;
@@ -1007,8 +1011,9 @@ La orden cambiará al estado RECIBIDA.
                 throw new Error(mensaje);
             }
 
-            alert(
-                "Recepción registrada correctamente."
+mostrarToast(
+                "Recepción registrada correctamente.",
+                'success'
             );
 
             limpiarFormularioRecepcion();
@@ -1017,15 +1022,16 @@ La orden cambiará al estado RECIBIDA.
                 "modal-recibir-oc"
             ).style.display = "none";
 
-            location.reload();
+            setTimeout(() => location.reload(), 1200);
 
         } catch (error) {
 
             console.error(error);
 
-            alert(
+            mostrarToast(
                 error.message ||
-                "No fue posible registrar la recepción."
+                "No fue posible registrar la recepción.",
+                'error'
             );
 
         } finally {

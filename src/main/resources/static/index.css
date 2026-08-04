@@ -193,7 +193,7 @@ body {
     border-radius: 70px;
     font-size: 14px;
     font-weight: 600;
-    box-shadow: 0 2px 3px rgba(2, 53, 29, 0.733);
+    box-shadow: 0 1px 2px rgba(2, 53, 29, 0.733);
     transition: all .2s ease;
     cursor: pointer;
 }
@@ -202,7 +202,7 @@ body {
 .btn-primary:hover {
     color: #ffffff;
     background: #00421e;
-    box-shadow: 0 4px 8px rgba(3, 83, 46, 0.932);
+    box-shadow: 0 2px 4px rgba(3, 83, 46, 0.932);
     transform: translateY(-3px);
 }
 
@@ -1154,51 +1154,58 @@ body {
 
 /* ==========================================
    TOAST (mensaje temporal auto-ocultable)
+   Posicionado abajo a la derecha con colores
+   llamativos y borde de acento
 ========================================== */
 #toast-root {
     position: fixed;
-    top: 20px;
+    bottom: 24px;
     right: 20px;
     z-index: 99999;
     display: flex;
     flex-direction: column;
     gap: 10px;
+    align-items: flex-end;
 }
 
 .toast-item {
-    min-width: 260px;
-    max-width: 360px;
-    padding: 12px 18px;
-    border-radius: 8px;
+    min-width: 280px;
+    max-width: 380px;
+    padding: 14px 18px 14px 16px;
+    border-radius: 10px;
     font-size: 14px;
     font-weight: 600;
     color: #ffffff;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+    border-left: 5px solid rgba(255, 255, 255, 0.85);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
     animation: toastIn .25s ease;
     transition: opacity .4s ease, transform .4s ease;
 }
 
 .toast-success {
-    background: #198754;
+    background: #e6f6ec; color: #157347; border: 1px solid #b7e4c7; 
+    border-left-color: #00ff85;
 }
 
 .toast-error {
-    background: #c9432f;
+    background: #fdeeec; color: #c9432f; border: 1px solid #f3c6bd;
+    border-left-color: #f85555;
 }
 
 .toast-info {
-    background: #1c64f2;
+    background: #a9c4ec; color: #113bc7; border: 1px solid #bdc7f3;
+    border-left-color: #9cc6ff;
 }
 
 .toast-hide {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateY(12px);
 }
 
 @keyframes toastIn {
     from {
         opacity: 0;
-        transform: translateY(-10px);
+        transform: translateY(12px);
     }
     to {
         opacity: 1;

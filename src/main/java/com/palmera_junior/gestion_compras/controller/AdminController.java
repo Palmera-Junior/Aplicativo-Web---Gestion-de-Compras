@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -261,39 +262,49 @@ public class AdminController {
             return "redirect:/admin";
         }
 
-        if (idProducto == null) {
-            if (productoRepository.findByCodigoInventario(codigoInventario).isPresent()) {
-                redirectAttributes.addAttribute("error", "Ya existe un producto con ese código de inventario.");
+try {
+            if (idProducto == null) {
+                if (productoRepository.findByCodigoInventario(codigoInventario).isPresent()) {
+                    redirectAttributes.addAttribute("error", "Ya existe un producto con ese código de inventario.");
+                    return "redirect:/admin";
+                }
+                Producto producto = new Producto();
+                producto.setCodigoInventario(codigoInventario);
+                producto.setNombre(nombre);
+                producto.setPresentacion(presentacion);
+                producto.setDescripcion(descripcion);
+                productoRepository.save(producto);
+                redirectAttributes.addAttribute("success", "Producto creado correctamente.");
                 return "redirect:/admin";
             }
-            Producto producto = new Producto();
+
+            var opt = productoRepository.findById(idProducto);
+            if (opt.isEmpty()) {
+                redirectAttributes.addAttribute("error", "Producto no encontrado para actualizar.");
+                return "redirect:/admin";
+            }
+            if (productoRepository.findByCodigoInventario(codigoInventario)
+                    .filter(p -> !p.getIdProducto().equals(idProducto)).isPresent()) {
+                redirectAttributes.addAttribute("error", "Hay otro producto con el mismo código de inventario.");
+                return "redirect:/admin";
+            }
+            Producto producto = opt.get();
             producto.setCodigoInventario(codigoInventario);
             producto.setNombre(nombre);
             producto.setPresentacion(presentacion);
             producto.setDescripcion(descripcion);
             productoRepository.save(producto);
-            redirectAttributes.addAttribute("success", "Producto creado correctamente.");
+            redirectAttributes.addAttribute("success", "Producto actualizado correctamente.");
+            return "redirect:/admin";
+        } catch (DataAccessException e) {
+            redirectAttributes.addAttribute("error",
+                    "No se pudo guardar el producto. Verifica que el código de inventario no esté duplicado y que la base de datos tenga la columna 'descripcion' en la tabla 'producto'.");
+            return "redirect:/admin";
+        } catch (Exception e) {
+            redirectAttributes.addAttribute("error",
+                    "Ocurrió un error inesperado al guardar el producto: " + e.getMessage());
             return "redirect:/admin";
         }
-
-        var opt = productoRepository.findById(idProducto);
-        if (opt.isEmpty()) {
-            redirectAttributes.addAttribute("error", "Producto no encontrado para actualizar.");
-            return "redirect:/admin";
-        }
-        if (productoRepository.findByCodigoInventario(codigoInventario)
-                .filter(p -> !p.getIdProducto().equals(idProducto)).isPresent()) {
-            redirectAttributes.addAttribute("error", "Hay otro producto con el mismo código de inventario.");
-            return "redirect:/admin";
-        }
-        Producto producto = opt.get();
-        producto.setCodigoInventario(codigoInventario);
-        producto.setNombre(nombre);
-        producto.setPresentacion(presentacion);
-        producto.setDescripcion(descripcion);
-        productoRepository.save(producto);
-        redirectAttributes.addAttribute("success", "Producto actualizado correctamente.");
-        return "redirect:/admin";
     }
 
     @PostMapping("/admin/sedes")

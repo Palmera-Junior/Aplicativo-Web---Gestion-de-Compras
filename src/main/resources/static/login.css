@@ -7,7 +7,8 @@ LOGIN
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    font-family: 'Inter', 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    font-weight: 300;
 }
 
 body{
@@ -47,8 +48,8 @@ body{
 .logo{
     text-align: center;
     margin-bottom: 30px;
-    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
-    font-weight: bold;
+    font-family: 'Inter', 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    font-weight: 300;
 }
 
 .logo img{
@@ -76,7 +77,6 @@ body{
 
 .login-container.login-error {
     animation: shake 0.2s ease-in-out;
-    font-family: system-ui, -apple-system, sans-serif;
 }
 
 .alert-error,
@@ -87,7 +87,7 @@ body{
     padding: 0 0 12px;
     margin-bottom: 12px;
     text-align: center;
-    font-weight: 600;
+    font-weight: 300;
 }
 
 .alert-error{
@@ -96,7 +96,6 @@ body{
 
 .alert-success{
     color: #c8e9cbb0;
-    font-family: system-ui, -apple-system, sans-serif;
 }
 
 .input-group label{
@@ -135,7 +134,7 @@ body{
 .options a{
     text-decoration: none;
     color: #198754;
-    font-weight: 600;
+    font-weight: 300;
 }
 
 .options a:hover{
@@ -151,7 +150,7 @@ body{
     background: #198754;
     color: white;
     font-size: 16px;
-    font-weight: bold;
+    font-weight: 300;
     transition: 0.3s;
     border: 2px solid #1d1c1c;
 }
@@ -170,7 +169,7 @@ body{
 .register a{
     color: #4CAF50;
     text-decoration: none;
-    font-weight: bold;
+    font-weight: 300;
 }
 
 .register a:hover{
