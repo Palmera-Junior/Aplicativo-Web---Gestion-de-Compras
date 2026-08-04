@@ -275,11 +275,11 @@ public class AdminController {
 
     @PostMapping("/admin/productos")
     @PreAuthorize("hasRole('ADMINISTRADOR')")
-    public String guardarProducto(@RequestParam(required = false) Integer idProducto,
+public String guardarProducto(@RequestParam(required = false) Integer idProducto,
             @RequestParam String codigoInventario,
             @RequestParam String nombre,
             @RequestParam(required = false) String presentacion,
-            @RequestParam(required = false) String descripcion,
+            @RequestParam(required = false) String categoria,
             RedirectAttributes redirectAttributes) {
 
         codigoInventario = codigoInventario == null ? null : codigoInventario.trim();
@@ -300,7 +300,7 @@ try {
                 producto.setCodigoInventario(codigoInventario);
                 producto.setNombre(nombre);
                 producto.setPresentacion(presentacion);
-                producto.setDescripcion(descripcion);
+                producto.setCategoria(categoria);
                 productoRepository.save(producto);
                 redirectAttributes.addAttribute("success", "Producto creado correctamente.");
                 return "redirect:/admin";
@@ -320,13 +320,13 @@ try {
             producto.setCodigoInventario(codigoInventario);
             producto.setNombre(nombre);
             producto.setPresentacion(presentacion);
-            producto.setDescripcion(descripcion);
+            producto.setCategoria(categoria);
             productoRepository.save(producto);
             redirectAttributes.addAttribute("success", "Producto actualizado correctamente.");
             return "redirect:/admin";
         } catch (DataAccessException e) {
             redirectAttributes.addAttribute("error",
-                    "No se pudo guardar el producto. Verifica que el código de inventario no esté duplicado y que la base de datos tenga la columna 'descripcion' en la tabla 'producto'.");
+                    "No se pudo guardar el producto. Verifica que el código de inventario no esté duplicado y que la base de datos tenga la columna 'categoria' en la tabla 'producto'.");
             return "redirect:/admin";
         } catch (Exception e) {
             redirectAttributes.addAttribute("error",

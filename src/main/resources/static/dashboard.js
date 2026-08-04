@@ -293,10 +293,12 @@ document.addEventListener("change", async function (e) {
 
         const producto = await response.json();
 
-        if (producto) {
+if (producto) {
 
+            // La columna "descripción" del modal ahora muestra el nombre
+            // del producto (antes se usaba la columna descripcion/categoria)
             campoDescripcion.value =
-                producto.descripcion || "";
+                producto.nombre || "";
 
             campoPresentacion.value =
                 producto.presentacion || "";

@@ -58,12 +58,12 @@ function setButtonLabel(buttonId, iconName, label){
 }
 
 function resetForm(entity){
-    if(entity === 'producto'){
+if(entity === 'producto'){
         document.getElementById('idProducto').value = '';
         document.getElementById('codigoInventario').value = '';
         document.getElementById('nombreProducto').value = '';
         document.getElementById('presentacion').value = '';
-        document.getElementById('descripcion').value = '';
+        document.getElementById('categoria').value = '';
         setButtonLabel('productSubmitButton', 'add', 'Crear producto');
     }
 if(entity === 'centro'){
@@ -110,13 +110,13 @@ if(entity === 'centro'){
 function editEntity(entity, element){
     const row = element.closest('tr');
     if(!row) return;
-    if(entity==='producto'){
+    if(entity === 'producto'){
         showSection('section-productos');
         document.getElementById('idProducto').value = row.dataset.id || '';
         document.getElementById('codigoInventario').value = row.dataset.codigo || '';
         document.getElementById('nombreProducto').value = row.dataset.nombre || '';
         document.getElementById('presentacion').value = row.dataset.presentacion || '';
-        document.getElementById('descripcion').value = row.dataset.descripcion || '';
+        document.getElementById('categoria').value = row.dataset.categoria || '';
         setButtonLabel('productSubmitButton', 'save', 'Guardar cambios');
         return;
     }

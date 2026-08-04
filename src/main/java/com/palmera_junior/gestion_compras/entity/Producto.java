@@ -27,7 +27,7 @@ public class Producto {
     private String presentacion;
 
     @Column(columnDefinition = "TEXT")
-    private String descripcion;
+    private String categoria;
 
     @Override
     public boolean equals(Object o) {
@@ -42,3 +42,4 @@ public class Producto {
     }
 
 }
+

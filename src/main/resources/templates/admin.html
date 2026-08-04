@@ -255,17 +255,17 @@
                                 )
                             </div>
                             <div class="controles">
-                                <a title="Página anterior" aria-label="Página anterior"
-                                    th:href="@{/admin(pageProveedores=${pageProveedores - 1}, pageUsuarios=${pageUsuarios}, pageProductos=${pageProductos}, pageSedes=${pageSedes}, pageCentros=${pageCentros}, size=${size})}"
-                                    th:class="${proveedoresPage.number == 0} ? 'btn-pagina disabled' : 'btn-pagina'">
-                                    <span class="material-symbols">chevron_left</span>
-                                </a>
-                                <span class="pagina-actual" th:text="${proveedoresPage.number + 1}">1</span>
-                                <a title="Siguiente página" aria-label="Siguiente página"
-                                    th:href="@{/admin(pageProveedores=${pageProveedores + 1}, pageUsuarios=${pageUsuarios}, pageProductos=${pageProductos}, pageSedes=${pageSedes}, pageCentros=${pageCentros}, size=${size})}"
-                                    th:class="${proveedoresPage.number >= proveedoresPage.totalPages - 1} ? 'btn-pagina disabled' : 'btn-pagina'">
-                                    <span class="material-symbols">chevron_right</span>
-                                </a>
+<a title="Página anterior" aria-label="Página anterior"
+                        th:href="@{/admin(pageProveedores=${pageProveedores - 1}, pageUsuarios=${pageUsuarios}, pageProductos=${pageProductos}, pageSedes=${pageSedes}, pageCentros=${pageCentros}, size=${size})}"
+                        th:class="${proveedoresPage.number == 0} ? 'btn-pagina disabled' : 'btn-pagina'">
+                        <span class="material-symbols">chevron_left</span>
+                    </a>
+                    <span class="pagina-actual" th:text="${proveedoresPage.number + 1}">1</span>
+                    <a title="Siguiente página" aria-label="Siguiente página"
+                        th:href="@{/admin(pageProveedores=${pageProveedores + 1}, pageUsuarios=${pageUsuarios}, pageProductos=${pageProductos}, pageSedes=${pageSedes}, pageCentros=${pageCentros}, size=${size})}"
+                        th:class="${proveedoresPage.number >= proveedoresPage.totalPages - 1} ? 'btn-pagina disabled' : 'btn-pagina'">
+                        <span class="material-symbols">chevron_right</span>
+                    </a>
                             </div>
                         </div>
                     </div>
@@ -438,9 +438,9 @@
                                 <label>Presentación</label>
                                 <input type="text" id="presentacion" class="input-control" name="presentacion">
                             </div>
-                            <div class="form-group full-width">
-                                <label>Descripción</label>
-                                <textarea id="descripcion" class="input-control" rows="3" name="descripcion"></textarea>
+<div class="form-group full-width">
+                                <label>Categoría</label>
+                                <textarea id="categoria" class="input-control" rows="3" name="categoria"></textarea>
                             </div>
                         </div>
                         <div class="form-actions">
@@ -462,6 +462,7 @@
                                         <th>Código</th>
                                         <th>Nombre</th>
                                         <th>Presentación</th>
+                                        <th>Categoría</th>  
                                         <th>Acciones</th>
                                     </tr>
                                 </thead>
@@ -471,10 +472,11 @@
                                         th:data-codigo="${producto.codigoInventario}"
                                         th:data-nombre="${producto.nombre}"
                                         th:data-presentacion="${producto.presentacion}"
-                                        th:data-descripcion="${producto.descripcion}">
+                                        th:data-categoria="${producto.categoria}">
                                         <td class="mono" th:text="${producto.codigoInventario}"></td>
                                         <td th:text="${producto.nombre}"></td>
                                         <td th:text="${producto.presentacion}"></td>
+                                        <td th:text="${producto.categoria}"></td>
                                         <td class="actions">
                                             <button type="button" class="btn-icon edit" title="Editar"
                                                 onclick="editEntity('producto', this)">
