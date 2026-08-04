@@ -17,13 +17,11 @@ public class ProductoService {
 
     public List<Producto> getAllProductos() {
         return productoRepository.findAll();
-    
+
     }
 
-   
-
-public Producto buscarPorCodigo(String codigo) {
-    return productoRepository.findByCodigoInventario(codigo).orElse(null);
-}
+    public Producto buscarPorCodigo(String codigo) {
+        return productoRepository.findByCodigoInventario(codigo).orElse(null);
+    }
 
 }

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,13 +12,17 @@
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap">
 </head>
+
 <body>
     <header class="navbar">
         <div class="logo">
             <h2><span class="material-symbols">admin_panel_settings</span> Panel de Administración</h2>
         </div>
-        <div class="user-info"><span class="material-symbols">account_circle</span>
-            <span th:text="${#authentication.principal.usuario.nombre + ' ' + #authentication.principal.usuario.apellido}">Administrador</span> |
+        <div class="user-info">
+            <span class="material-symbols">account_circle</span>
+            <span
+                th:text="${#authentication.principal.usuario.nombre + ' ' + #authentication.principal.usuario.apellido}">Administrador</span>
+            |
             <span th:text="${#authentication.principal.usuario.sede.nombre}">Sede</span>
             <form th:action="@{/logout}" method="POST" style="display: inline; margin: 0;">
                 <button title="Cerrar Sesión" type="submit" class="btn-logout">
@@ -28,7 +33,7 @@
     </header>
 
     <main class="dashboard-container">
-<div class="dashboard-header">
+        <div class="dashboard-header">
             <div>
                 <h1>Administración General</h1>
                 <p>Crear y administrar proveedores, usuarios, productos, sedes y centros de costo.</p>
@@ -60,7 +65,7 @@
                 </div>
                 <div class="module-body">
                     <h2>Usuarios</h2>
-                    <p>Cuentas y roles del sistema  Solicitante, Aprobador, Administrador.</p>
+                    <p>Cuentas y roles del sistema Solicitante, Aprobador, Administrador.</p>
                 </div>
                 <div class="module-footer">
                     <span class="module-badge" th:text="${usuarios.size()}">0</span>
@@ -184,7 +189,7 @@
                                 </div>
                             </div>
                         </div>
-<div class="form-actions">
+                        <div class="form-actions">
                             <button type="button" class="btn-cancel" onclick="resetForm('proveedor')">Cancelar</button>
                             <button type="submit" id="providerSubmitButton" class="btn-primary">
                                 <span class="material-symbols">add</span> Crear Proveedor
@@ -194,7 +199,7 @@
                 </div>
 
                 <div class="admin-list">
-                    <h2 class="list-title"> <span class="material-symbols">chevron_right</span> Proveedores existentes</h2>
+                    <h2 class="list-title"><span class="material-symbols">chevron_right</span> Proveedores existentes</h2>
                     <div class="tabla-card">
                         <div class="table-responsive">
                             <table class="data-table admin-table">
@@ -207,7 +212,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr th:each="proveedor : ${proveedores}"
+                                    <tr th:each="proveedor : ${proveedoresPage.content}"
                                         th:data-id="${proveedor.idProv}"
                                         th:data-nit="${proveedor.nit}"
                                         th:data-nombre="${proveedor.nombre}"
@@ -219,19 +224,49 @@
                                         <td class="mono" th:text="${proveedor.nit}"></td>
                                         <td th:text="${proveedor.nombre}"></td>
                                         <td>
-                                            <span th:each="sede, sedeStat : ${proveedor.sedes}" th:text="${sede.nombre + ( !sedeStat.last ? ', ' : '' )}"></span>
+                                            <span th:each="sede, sedeStat : ${proveedor.sedes}"
+                                                th:text="${sede.nombre + ( !sedeStat.last ? ', ' : '' )}"></span>
                                         </td>
                                         <td class="actions">
-                                            <button type="button" class="btn-icon edit" title="Editar" onclick="editEntity('proveedor', this)">
+                                            <button type="button" class="btn-icon edit" title="Editar"
+                                                onclick="editEntity('proveedor', this)">
                                                 <span class="material-symbols">edit</span>
                                             </button>
-                                            <button type="button" class="btn-icon delete" title="Eliminar" th:attr="data-id=${proveedor.idProv}" onclick="deleteEntity('proveedor', this.getAttribute('data-id'))">
+                                            <button type="button" class="btn-icon delete" title="Eliminar"
+                                                th:attr="data-id=${proveedor.idProv}"
+                                                onclick="deleteEntity('proveedor', this.getAttribute('data-id'))">
                                                 <span class="material-symbols">delete</span>
                                             </button>
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
+                        </div>
+                        <div class="paginacion">
+                            <div class="info-pagina">
+                                <span class="material-symbols">local_shipping</span>
+                                Mostrando página
+                                <strong th:text="${proveedoresPage.number + 1}">1</strong>
+                                de
+                                <strong th:text="${proveedoresPage.totalPages}">1</strong>
+                                (
+                                <strong th:text="${proveedoresPage.totalElements}">0</strong>
+                                proveedores
+                                )
+                            </div>
+                            <div class="controles">
+                                <a title="Página anterior" aria-label="Página anterior"
+                                    th:href="@{/admin(pageProveedores=${pageProveedores - 1}, pageUsuarios=${pageUsuarios}, pageProductos=${pageProductos}, pageSedes=${pageSedes}, pageCentros=${pageCentros}, size=${size})}"
+                                    th:class="${proveedoresPage.number == 0} ? 'btn-pagina disabled' : 'btn-pagina'">
+                                    <span class="material-symbols">chevron_left</span>
+                                </a>
+                                <span class="pagina-actual" th:text="${proveedoresPage.number + 1}">1</span>
+                                <a title="Siguiente página" aria-label="Siguiente página"
+                                    th:href="@{/admin(pageProveedores=${pageProveedores + 1}, pageUsuarios=${pageUsuarios}, pageProductos=${pageProductos}, pageSedes=${pageSedes}, pageCentros=${pageCentros}, size=${size})}"
+                                    th:class="${proveedoresPage.number >= proveedoresPage.totalPages - 1} ? 'btn-pagina disabled' : 'btn-pagina'">
+                                    <span class="material-symbols">chevron_right</span>
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -290,7 +325,7 @@
                                 </select>
                             </div>
                         </div>
-<div class="form-actions">
+                        <div class="form-actions">
                             <button type="button" class="btn-cancel" onclick="resetForm('usuario')">Cancelar</button>
                             <button type="submit" id="userSubmitButton" class="btn-primary">
                                 <span class="material-symbols">add</span> Crear usuario
@@ -300,7 +335,7 @@
                 </div>
 
                 <div class="admin-list">
-                    <h2 class="list-title"> <span class="material-symbols">chevron_right</span> Usuarios existentes</h2>
+                    <h2 class="list-title"><span class="material-symbols">chevron_right</span> Usuarios existentes</h2>
                     <div class="tabla-card">
                         <div class="table-responsive">
                             <table class="data-table admin-table">
@@ -314,7 +349,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr th:each="usuario : ${usuarios}"
+                                    <tr th:each="usuario : ${usuariosPage.content}"
                                         th:data-id="${usuario.idUsuario}"
                                         th:data-cedula="${usuario.cedula}"
                                         th:data-nombre="${usuario.nombre}"
@@ -327,21 +362,50 @@
                                         <td th:text="${usuario.nombre + ' ' + usuario.apellido}"></td>
                                         <td>
                                             <span class="badge-rol"
-                                                  th:classappend="${usuario.rol.toString().toLowerCase()}"
-                                                  th:text="${usuario.rol}"></span>
+                                                th:classappend="${usuario.rol.toString().toLowerCase()}"
+                                                th:text="${usuario.rol}"></span>
                                         </td>
                                         <td th:text="${usuario.sede != null ? usuario.sede.nombre : ''}"></td>
                                         <td class="actions">
-                                            <button type="button" class="btn-icon edit" title="Editar" onclick="editEntity('usuario', this)">
+                                            <button type="button" class="btn-icon edit" title="Editar"
+                                                onclick="editEntity('usuario', this)">
                                                 <span class="material-symbols">edit</span>
                                             </button>
-                                            <button type="button" class="btn-icon delete" title="Eliminar" th:attr="data-id=${usuario.idUsuario}" onclick="deleteEntity('usuario', this.getAttribute('data-id'))">
+                                            <button type="button" class="btn-icon delete" title="Eliminar"
+                                                th:attr="data-id=${usuario.idUsuario}"
+                                                onclick="deleteEntity('usuario', this.getAttribute('data-id'))">
                                                 <span class="material-symbols">delete</span>
                                             </button>
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
+                        </div>
+                        <div class="paginacion">
+                            <div class="info-pagina">
+                                <span class="material-symbols">group</span>
+                                Mostrando página
+                                <strong th:text="${usuariosPage.number + 1}">1</strong>
+                                de
+                                <strong th:text="${usuariosPage.totalPages}">1</strong>
+                                (
+                                <strong th:text="${usuariosPage.totalElements}">0</strong>
+                                usuarios
+                                )
+                            </div>
+                            <div class="controles">
+                                <a title="Página anterior" aria-label="Página anterior"
+                                    th:href="@{/admin(pageProveedores=${pageProveedores}, pageUsuarios=${pageUsuarios - 1}, pageProductos=${pageProductos}, pageSedes=${pageSedes}, pageCentros=${pageCentros}, size=${size})}"
+                                    th:class="${usuariosPage.number == 0} ? 'btn-pagina disabled' : 'btn-pagina'">
+                                    <span class="material-symbols">chevron_left</span>
+                                </a>
+                                <span class="pagina-actual" th:text="${usuariosPage.number + 1}">1</span>
+                                <a title="Siguiente página" aria-label="Siguiente página"
+                                    th:href="@{/admin(pageProveedores=${pageProveedores}, pageUsuarios=${pageUsuarios + 1}, pageProductos=${pageProductos}, pageSedes=${pageSedes}, pageCentros=${pageCentros}, size=${size})}"
+                                    th:class="${usuariosPage.number >= usuariosPage.totalPages - 1} ? 'btn-pagina disabled' : 'btn-pagina'">
+                                    <span class="material-symbols">chevron_right</span>
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -379,7 +443,7 @@
                                 <textarea id="descripcion" class="input-control" rows="3" name="descripcion"></textarea>
                             </div>
                         </div>
-<div class="form-actions">
+                        <div class="form-actions">
                             <button type="button" class="btn-cancel" onclick="resetForm('producto')">Cancelar</button>
                             <button type="submit" id="productSubmitButton" class="btn-primary">
                                 <span class="material-symbols">add</span> Crear producto
@@ -389,7 +453,7 @@
                 </div>
 
                 <div class="admin-list">
-                    <h2 class="list-title"> <span class="material-symbols">chevron_right</span> Productos existentes</h2>
+                    <h2 class="list-title"><span class="material-symbols">chevron_right</span> Productos existentes</h2>
                     <div class="tabla-card">
                         <div class="table-responsive">
                             <table class="data-table admin-table">
@@ -402,7 +466,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr th:each="producto : ${productos}"
+                                    <tr th:each="producto : ${productosPage.content}"
                                         th:data-id="${producto.idProducto}"
                                         th:data-codigo="${producto.codigoInventario}"
                                         th:data-nombre="${producto.nombre}"
@@ -412,16 +476,45 @@
                                         <td th:text="${producto.nombre}"></td>
                                         <td th:text="${producto.presentacion}"></td>
                                         <td class="actions">
-                                            <button type="button" class="btn-icon edit" title="Editar" onclick="editEntity('producto', this)">
+                                            <button type="button" class="btn-icon edit" title="Editar"
+                                                onclick="editEntity('producto', this)">
                                                 <span class="material-symbols">edit</span>
                                             </button>
-                                            <button type="button" class="btn-icon delete" title="Eliminar" th:attr="data-id=${producto.idProducto}" onclick="deleteEntity('producto', this.getAttribute('data-id'))">
+                                            <button type="button" class="btn-icon delete" title="Eliminar"
+                                                th:attr="data-id=${producto.idProducto}"
+                                                onclick="deleteEntity('producto', this.getAttribute('data-id'))">
                                                 <span class="material-symbols">delete</span>
                                             </button>
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
+                        </div>
+                        <div class="paginacion">
+                            <div class="info-pagina">
+                                <span class="material-symbols">inventory_2</span>
+                                Mostrando página
+                                <strong th:text="${productosPage.number + 1}">1</strong>
+                                de
+                                <strong th:text="${productosPage.totalPages}">1</strong>
+                                (
+                                <strong th:text="${productosPage.totalElements}">0</strong>
+                                productos
+                                )
+                            </div>
+                            <div class="controles">
+                                <a title="Página anterior" aria-label="Página anterior"
+                                    th:href="@{/admin(pageProveedores=${pageProveedores}, pageUsuarios=${pageUsuarios}, pageProductos=${pageProductos - 1}, pageSedes=${pageSedes}, pageCentros=${pageCentros}, size=${size})}"
+                                    th:class="${productosPage.number == 0} ? 'btn-pagina disabled' : 'btn-pagina'">
+                                    <span class="material-symbols">chevron_left</span>
+                                </a>
+                                <span class="pagina-actual" th:text="${productosPage.number + 1}">1</span>
+                                <a title="Siguiente página" aria-label="Siguiente página"
+                                    th:href="@{/admin(pageProveedores=${pageProveedores}, pageUsuarios=${pageUsuarios}, pageProductos=${pageProductos + 1}, pageSedes=${pageSedes}, pageCentros=${pageCentros}, size=${size})}"
+                                    th:class="${productosPage.number >= productosPage.totalPages - 1} ? 'btn-pagina disabled' : 'btn-pagina'">
+                                    <span class="material-symbols">chevron_right</span>
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -455,7 +548,7 @@
                                 <input type="text" id="direccionSede" class="input-control" name="direccion">
                             </div>
                         </div>
-<div class="form-actions">
+                        <div class="form-actions">
                             <button type="button" class="btn-cancel" onclick="resetForm('sede')">Cancelar</button>
                             <button type="submit" id="sedeSubmitButton" class="btn-primary">
                                 <span class="material-symbols">add</span> Crear sede
@@ -465,7 +558,7 @@
                 </div>
 
                 <div class="admin-list">
-                    <h2 class="list-title"> <span class="material-symbols">chevron_right</span> Sedes existentes</h2>
+                    <h2 class="list-title"><span class="material-symbols">chevron_right</span> Sedes existentes</h2>
                     <div class="tabla-card">
                         <div class="table-responsive">
                             <table class="data-table admin-table">
@@ -478,7 +571,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr th:each="sede : ${sedes}"
+                                    <tr th:each="sede : ${sedesPage.content}"
                                         th:data-id="${sede.idSede}"
                                         th:data-nombre="${sede.nombre}"
                                         th:data-prefijo="${sede.prefijoCiudad}"
@@ -487,16 +580,45 @@
                                         <td class="mono" th:text="${sede.prefijoCiudad}"></td>
                                         <td th:text="${sede.direccion}"></td>
                                         <td class="actions">
-                                            <button type="button" class="btn-icon edit" title="Editar" onclick="editEntity('sede', this)">
+                                            <button type="button" class="btn-icon edit" title="Editar"
+                                                onclick="editEntity('sede', this)">
                                                 <span class="material-symbols">edit</span>
                                             </button>
-                                            <button type="button" class="btn-icon delete" title="Eliminar" th:attr="data-id=${sede.idSede}" onclick="deleteEntity('sede', this.getAttribute('data-id'))">
+                                            <button type="button" class="btn-icon delete" title="Eliminar"
+                                                th:attr="data-id=${sede.idSede}"
+                                                onclick="deleteEntity('sede', this.getAttribute('data-id'))">
                                                 <span class="material-symbols">delete</span>
                                             </button>
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
+                        </div>
+                        <div class="paginacion">
+                            <div class="info-pagina">
+                                <span class="material-symbols">store</span>
+                                Mostrando página
+                                <strong th:text="${sedesPage.number + 1}">1</strong>
+                                de
+                                <strong th:text="${sedesPage.totalPages}">1</strong>
+                                (
+                                <strong th:text="${sedesPage.totalElements}">0</strong>
+                                sedes
+                                )
+                            </div>
+                            <div class="controles">
+                                <a title="Página anterior" aria-label="Página anterior"
+                                    th:href="@{/admin(pageProveedores=${pageProveedores}, pageUsuarios=${pageUsuarios}, pageProductos=${pageProductos}, pageSedes=${pageSedes - 1}, pageCentros=${pageCentros}, size=${size})}"
+                                    th:class="${sedesPage.number == 0} ? 'btn-pagina disabled' : 'btn-pagina'">
+                                    <span class="material-symbols">chevron_left</span>
+                                </a>
+                                <span class="pagina-actual" th:text="${sedesPage.number + 1}">1</span>
+                                <a title="Siguiente página" aria-label="Siguiente página"
+                                    th:href="@{/admin(pageProveedores=${pageProveedores}, pageUsuarios=${pageUsuarios}, pageProductos=${pageProductos}, pageSedes=${pageSedes + 1}, pageCentros=${pageCentros}, size=${size})}"
+                                    th:class="${sedesPage.number >= sedesPage.totalPages - 1} ? 'btn-pagina disabled' : 'btn-pagina'">
+                                    <span class="material-symbols">chevron_right</span>
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -516,7 +638,7 @@
                     <h3 class="form-card-title">Nuevo centro de costo</h3>
                     <form th:action="@{/admin/centros-costo}" method="post" id="centroForm">
                         <input type="hidden" id="idCentroCosto" name="idCentroCosto">
-<div class="form-grid-2">
+                        <div class="form-grid-2">
                             <div class="form-group">
                                 <label>Nombre</label>
                                 <input type="text" id="nombreCentro" class="input-control" name="nombre" required>
@@ -547,11 +669,11 @@
                 </div>
 
                 <div class="admin-list">
-                    <h2 class="list-title"> <span class="material-symbols">chevron_right</span> Centros de costo existentes</h2>
+                    <h2 class="list-title"><span class="material-symbols">chevron_right</span> Centros de costo existentes</h2>
                     <div class="tabla-card">
                         <div class="table-responsive">
                             <table class="data-table admin-table">
-<thead>
+                                <thead>
                                     <tr>
                                         <th>Código</th>
                                         <th>Nombre</th>
@@ -560,7 +682,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr th:each="centro : ${centrosCosto}"
+                                    <tr th:each="centro : ${centrosCostoPage.content}"
                                         th:data-id="${centro.idCentroCosto}"
                                         th:data-codigo="${centro.codigo}"
                                         th:data-nombre="${centro.nombre}"
@@ -570,16 +692,45 @@
                                         <td th:text="${centro.nombre}"></td>
                                         <td th:text="${centro.sede != null ? centro.sede.nombre : ''}"></td>
                                         <td class="actions">
-                                            <button type="button" class="btn-icon edit" title="Editar" onclick="editEntity('centro', this)">
+                                            <button type="button" class="btn-icon edit" title="Editar"
+                                                onclick="editEntity('centro', this)">
                                                 <span class="material-symbols">edit</span>
                                             </button>
-                                            <button type="button" class="btn-icon delete" title="Eliminar" th:attr="data-id=${centro.idCentroCosto}" onclick="deleteEntity('centro', this.getAttribute('data-id'))">
+                                            <button type="button" class="btn-icon delete" title="Eliminar"
+                                                th:attr="data-id=${centro.idCentroCosto}"
+                                                onclick="deleteEntity('centro', this.getAttribute('data-id'))">
                                                 <span class="material-symbols">delete</span>
                                             </button>
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
+                        </div>
+                        <div class="paginacion">
+                            <div class="info-pagina">
+                                <span class="material-symbols">account_tree</span>
+                                Mostrando página
+                                <strong th:text="${centrosCostoPage.number + 1}">1</strong>
+                                de
+                                <strong th:text="${centrosCostoPage.totalPages}">1</strong>
+                                (
+                                <strong th:text="${centrosCostoPage.totalElements}">0</strong>
+                                centros de costo
+                                )
+                            </div>
+                            <div class="controles">
+                                <a title="Página anterior" aria-label="Página anterior"
+                                    th:href="@{/admin(pageProveedores=${pageProveedores}, pageUsuarios=${pageUsuarios}, pageProductos=${pageProductos}, pageSedes=${pageSedes}, pageCentros=${pageCentros - 1}, size=${size})}"
+                                    th:class="${centrosCostoPage.number == 0} ? 'btn-pagina disabled' : 'btn-pagina'">
+                                    <span class="material-symbols">chevron_left</span>
+                                </a>
+                                <span class="pagina-actual" th:text="${centrosCostoPage.number + 1}">1</span>
+                                <a title="Siguiente página" aria-label="Siguiente página"
+                                    th:href="@{/admin(pageProveedores=${pageProveedores}, pageUsuarios=${pageUsuarios}, pageProductos=${pageProductos}, pageSedes=${pageSedes}, pageCentros=${pageCentros + 1}, size=${size})}"
+                                    th:class="${centrosCostoPage.number >= centrosCostoPage.totalPages - 1} ? 'btn-pagina disabled' : 'btn-pagina'">
+                                    <span class="material-symbols">chevron_right</span>
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -589,4 +740,5 @@
 
     <script th:src="@{/admin.js}"></script>
 </body>
+
 </html>

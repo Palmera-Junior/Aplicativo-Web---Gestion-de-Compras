@@ -6,6 +6,8 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -54,20 +56,46 @@ public class AdminController {
     @GetMapping("/admin")
     @PreAuthorize("hasRole('ADMINISTRADOR')")
     public String mostrarPanelAdministracion(Model model,
+            @RequestParam(defaultValue = "0") int pageProveedores,
+            @RequestParam(defaultValue = "0") int pageUsuarios,
+            @RequestParam(defaultValue = "0") int pageProductos,
+            @RequestParam(defaultValue = "0") int pageSedes,
+            @RequestParam(defaultValue = "0") int pageCentros,
+            @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String success,
             @RequestParam(required = false) String error) {
 
+        // Mantener las listas completas para los selectores y contadores (badges)
         List<Proveedor> proveedores = proveedorRepository.findAll();
         List<Usuario> usuarios = usuarioRepository.findAll();
         List<Producto> productos = productoRepository.findAll();
         List<Sede> sedes = sedeRepository.findAll();
         List<CentroCosto> centroCostos = centroCostoRepository.findAll();
 
+        // Páginas por entidad (cada lista pagina de forma independiente)
+        Page<Proveedor> proveedoresPage = proveedorRepository.findAll(PageRequest.of(pageProveedores, size));
+        Page<Usuario> usuariosPage = usuarioRepository.findAll(PageRequest.of(pageUsuarios, size));
+        Page<Producto> productosPage = productoRepository.findAll(PageRequest.of(pageProductos, size));
+        Page<Sede> sedesPage = sedeRepository.findAll(PageRequest.of(pageSedes, size));
+        Page<CentroCosto> centrosCostoPage = centroCostoRepository.findAll(PageRequest.of(pageCentros, size));
+
+        model.addAttribute("proveedoresPage", proveedoresPage);
+        model.addAttribute("usuariosPage", usuariosPage);
+        model.addAttribute("productosPage", productosPage);
+        model.addAttribute("sedesPage", sedesPage);
+        model.addAttribute("centrosCostoPage", centrosCostoPage);
+
         model.addAttribute("proveedores", proveedores);
         model.addAttribute("usuarios", usuarios);
         model.addAttribute("productos", productos);
         model.addAttribute("sedes", sedes);
         model.addAttribute("centrosCosto", centroCostos);
+        model.addAttribute("pageProveedores", pageProveedores);
+        model.addAttribute("pageUsuarios", pageUsuarios);
+        model.addAttribute("pageProductos", pageProductos);
+        model.addAttribute("pageSedes", pageSedes);
+        model.addAttribute("pageCentros", pageCentros);
+        model.addAttribute("size", size);
         model.addAttribute("roles", Arrays.asList(Rol.values()));
         model.addAttribute("successMessage", success);
         model.addAttribute("errorMessage", error);

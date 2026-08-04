@@ -5,13 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Órdenes de Compra</title>
-
     <link rel="stylesheet" th:href="@{/index.css}">
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap">
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap">
-
 </head>
 
 <body>
@@ -20,11 +18,11 @@
         <div class="logo">
             <h2><span class="material-symbols">assignment</span> Gestión de Órdenes de Compra</h2>
         </div>
-        <div class="user-info"><span class="material-symbols">account_circle</span>
+        <div class="user-info">
+            <span class="material-symbols">account_circle</span>
             <span
-                th:text="${#authentication.principal.usuario.nombre} + ' ' + ${#authentication.principal.usuario.apellido}">Nombre
-                Apellido</span>|<span th:text="${#authentication.principal.usuario.sede.nombre}">Cargando...</span>
-
+                th:text="${#authentication.principal.usuario.nombre} + ' ' + ${#authentication.principal.usuario.apellido}">Nombre Apellido</span>
+            |<span th:text="${#authentication.principal.usuario.sede.nombre}">Cargando...</span>
             <form th:action="@{/logout}" method="POST" style="display: inline; margin: 0;">
                 <button title="Cerrar Sesión" type="submit" class="btn-logout">
                     <span class="material-symbols">logout</span> Salir
@@ -34,33 +32,29 @@
     </header>
 
     <main class="dashboard-container">
-<div class="dashboard-header">
+        <div class="dashboard-header">
             <div>
                 <h1>Órdenes de Compra</h1>
                 <p>Gestión y consulta de documentos</p>
             </div>
-                <button title="Crear Orden de Compra" type="button" id="btn-nueva-orden" class="btn-primary">
-                    <span class="material-symbols">add</span> Nueva Orden
-                </button>
+            <button title="Crear Orden de Compra" type="button" id="btn-nueva-orden" class="btn-primary">
+                <span class="material-symbols">add</span> Nueva Orden
+            </button>
         </div>
 
-<form class="filtros-section" method="GET" th:action="@{/dashboard}">
+        <form class="filtros-section" method="GET" th:action="@{/dashboard}">
             <span class="filtro-icon" title="Filtros">
                 <span class="material-symbols-outlined">filter_alt</span>
             </span>
-            <input type="text" name="q" placeholder="Buscar por número o proveedor..."
-                class="input-control buscar-input" th:value="${q}">
+            <input type="text" name="q" placeholder="Buscar por número o proveedor..." class="input-control buscar-input" th:value="${q}">
             <label class="sr-only" for="fechaDesde">Desde</label>
-            <input type="date" id="fechaDesde" name="fechaDesde" class="input-control fecha-input"
-                th:value="${fechaDesde}">
+            <input type="date" id="fechaDesde" name="fechaDesde" class="input-control fecha-input" th:value="${fechaDesde}">
             <label class="sr-only" for="fechaHasta">Hasta</label>
-            <input type="date" id="fechaHasta" name="fechaHasta" class="input-control fecha-input"
-                th:value="${fechaHasta}">
+            <input type="date" id="fechaHasta" name="fechaHasta" class="input-control fecha-input" th:value="${fechaHasta}">
             <button title="Buscar.." type="submit" class="btn-secondary btn-buscar">
                 <span class="material-symbols-outlined">search</span>
             </button>
-            <a title="Limpiar Filtros" aria-label="Limpiar Filtros" th:href="@{/dashboard}"
-                class="btn-secondary btn-limpiar">
+            <a title="Limpiar Filtros" aria-label="Limpiar Filtros" th:href="@{/dashboard}" class="btn-secondary btn-limpiar">
                 <span class="material-symbols-outlined">close</span>
             </a>
         </form>
@@ -84,17 +78,11 @@
                         <td th:text="${orden.fecha}">2023-10-01</td>
                         <td th:text="${orden.proveedor != null ? orden.proveedor.nombre : ''}">Proveedor S.A.</td>
                         <td th:text="${orden.sede.nombre}">Sede Principal</td>
-                        <td style="text-align: right;"
-                            th:text="'$ ' + ${#numbers.formatDecimal(orden.total, 1, 'COMMA', 0, 'POINT')}"></td>
+                        <td style="text-align: right;" th:text="'$ ' + ${#numbers.formatDecimal(orden.total, 1, 'COMMA', 0, 'POINT')}"></td>
                         <td class="estado-cell">
-                            <span th:if="${orden.estado.name() == 'BORRADOR'}" class="badge-estado borrador">
-                                BORRADOR
-                            </span>
-                            <span th:if="${orden.estado.name() == 'APROBADA'}" class="badge-estado aprobada">
-                                APROBADA
-                            </span>
-                            <span th:if="${orden.estado.name() == 'RECIBIDA'}" class="badge-estado recibida">
-                                RECIBIDA </span>
+                            <span th:if="${orden.estado.name() == 'BORRADOR'}" class="badge-estado borrador">BORRADOR</span>
+                            <span th:if="${orden.estado.name() == 'APROBADA'}" class="badge-estado aprobada">APROBADA</span>
+                            <span th:if="${orden.estado.name() == 'RECIBIDA'}" class="badge-estado recibida">RECIBIDA</span>
                         </td>
                         <td>
                             <button title="Ver Orden de Compra" class="btn-icon view" th:data-id="${orden.idOrden}">
@@ -107,21 +95,19 @@
                             </button>
                             <button title="Recibir Orden de Compra" th:if="${orden.estado.name() == 'APROBADA'}"
                                 class="btn-icon receive" th:data-id="${orden.idOrden}"
-                                th:data-numero-orden="${orden.numeroOrden}" th:data-proveedor="${orden.proveedor != null ? orden.proveedor.nombre : ''}">
-
+                                th:data-numero-orden="${orden.numeroOrden}"
+                                th:data-proveedor="${orden.proveedor != null ? orden.proveedor.nombre : ''}">
                                 <span class="material-symbols">inventory_2</span>
-
                             </button>
-
                             <button title="Eliminar Orden de Compra" th:if="${orden.estado.name() == 'BORRADOR'}"
                                 class="btn-icon delete-orden" th:data-id="${orden.idOrden}"
                                 th:data-numero-orden="${orden.numeroOrden}">
                                 <span class="material-symbols">delete</span>
                             </button>
-
                             <button title="Descargar Orden de Compra" class="btn-icon pdf" th:data-id="${orden.idOrden}"
-                                th:if="${orden.estado.name() == 'APROBADA' or orden.estado.name() == 'RECIBIDA'}"><span
-                                    class="material-symbols">download</span></button>
+                                th:if="${orden.estado.name() == 'APROBADA' or orden.estado.name() == 'RECIBIDA'}">
+                                <span class="material-symbols">download</span>
+                            </button>
                         </td>
                     </tr>
                 </tbody>
@@ -129,73 +115,37 @@
 
             <!-- MODAL RECEPCIÓN ORDEN -->
             <div id="modal-recibir-oc" class="modal-recibir-oc-overlay">
-
                 <div class="modal-recibir-oc-content">
-
                     <div class="modal-recibir-oc-header">
                         <h2>Recepción de Orden</h2>
                     </div>
-
                     <div class="modal-recibir-oc-body">
-
                         <div class="recepcion-resumen">
-
-                            <div>
-                                <strong>Orden:</strong>
-                                <span id="recepcion-numero-orden"></span>
-                            </div>
-
-                            <div>
-                                <strong>Proveedor:</strong>
-                                <span id="recepcion-proveedor"></span>
-                            </div>
-
+                            <div><strong>Orden:</strong> <span id="recepcion-numero-orden"></span></div>
+                            <div><strong>Proveedor:</strong> <span id="recepcion-proveedor"></span></div>
                         </div>
-
                         <div class="recepcion-form-group">
                             <label>Factura Proveedor *</label>
                             <input type="text" id="recepcion-numero-factura">
                         </div>
-
                         <div class="recepcion-form-group">
                             <label>Recibido Por *</label>
                             <input type="text" id="recepcion-recibido-por">
                         </div>
-
                         <div class="recepcion-form-group">
                             <label>Observación Recepción</label>
-
-                            <textarea id="recepcion-observacion" rows="4"
-                                placeholder="Observaciones sobre la recepción del pedido">
-                </textarea>
+                            <textarea id="recepcion-observacion" rows="4" placeholder="Observaciones sobre la recepción del pedido"></textarea>
                         </div>
-
                     </div>
-
                     <div class="modal-recibir-oc-footer">
-
-                        <button title="Cerrar" type="button" id="btn-cancelar-recepcion">
-
-                            Cancelar
-
-                        </button>
-
-                        <button title="Registrar.. " type="button" id="btn-confirmar-recepcion">
-
-                            Registrar Recepción
-
-                        </button>
-
+                        <button title="Cerrar" type="button" id="btn-cancelar-recepcion">Cancelar</button>
+                        <button title="Registrar.." type="button" id="btn-confirmar-recepcion">Registrar Recepción</button>
                     </div>
-
                 </div>
-
             </div>
 
             <div class="paginacion">
-
                 <div class="info-pagina">
-                    <i class="bi bi-file-earmark-text"></i>
                     Mostrando página
                     <strong th:text="${paginaActual + 1}">1</strong>
                     de
@@ -205,45 +155,33 @@
                     registros
                     )
                 </div>
-
                 <div class="controles">
-
-                    <a th:href="@{/dashboard(page=${paginaActual - 1}, q=${q}, fechaDesde=${fechaDesde}, fechaHasta=${fechaHasta})}"
+                    <a title="Página anterior" aria-label="Página anterior"
+                        th:href="@{/dashboard(page=${paginaActual - 1}, q=${q}, fechaDesde=${fechaDesde}, fechaHasta=${fechaHasta})}"
                         th:class="${paginaActual == 0} ? 'btn-pagina disabled' : 'btn-pagina'">
-                        <i class="bi bi-chevron-left"></i>
-                        Anterior 
+                        <span class="material-symbols">chevron_left</span>
                     </a>
-
-                    <span class="pagina-actual" th:text="${paginaActual + 1}">
-                        1
-                    </span>
-
-                    <a title="Siguiente página"
+                    <span class="pagina-actual" th:text="${paginaActual + 1}">1</span>
+                    <a title="Siguiente página" aria-label="Siguiente página"
                         th:href="@{/dashboard(page=${paginaActual + 1}, q=${q}, fechaDesde=${fechaDesde}, fechaHasta=${fechaHasta})}"
                         th:class="${paginaActual >= ordenesCompra.totalPages - 1} ? 'btn-pagina disabled' : 'btn-pagina'">
-                        Siguiente
-                        <i class="bi bi-chevron-right"></i>
+                        <span class="material-symbols">chevron_right</span>
                     </a>
-
                 </div>
-
             </div>
 
         </div>
     </main>
 
     <!-- Modal para crear nueva orden de compra -->
-
     <div id="modal-orden" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
                 <h2 id="modal-orden-title">Crear Nueva Orden de Compra</h2>
-                <button title="Cerrar Orden" id="btn-cerrar-modal" class="btn-close" type="button"
-                    aria-label="Cerrar modal">
+                <button title="Cerrar Orden" id="btn-cerrar-modal" class="btn-close" type="button" aria-label="Cerrar modal">
                     <span class="material-symbols">close</span>
                 </button>
             </div>
-
             <div class="modal-body">
                 <form id="form-orden">
                     <h3 class="section-title">Datos Generales</h3>
@@ -280,7 +218,6 @@
                                 th:data-nombre="${proveedor.nombre}" th:data-ciudad="${proveedor.ciudad}"
                                 th:data-direccion="${proveedor.direccion}" th:data-telefono="${proveedor.telefono}"
                                 th:data-email="${proveedor.correo}"></option>
-
                             <option value="otro">Otro (Nuevo)</option>
                         </select>
                     </div>
@@ -329,55 +266,48 @@
                             </thead>
                             <tbody id="tbody-productos">
                                 <tr>
-                                    <td><input type="number" class="cantidad input-control td-input" value="1" min="0">
-                                    </td>
-                                    <td><input type="text" class="codigo-producto input-control td-input"
-                                            placeholder="PROD-01"></td>
-                                    <td><input type="text" class="descripcion-producto input-control td-input readonly">
-                                    </td>
-                                    <td><input type="text"
-                                            class="presentacion-producto input-control td-input readonly"></td>
+                                    <td><input type="number" class="cantidad input-control td-input" value="1" min="0"></td>
+                                    <td><input type="text" class="codigo-producto input-control td-input" placeholder="PROD-01"></td>
+                                    <td><input type="text" class="descripcion-producto input-control td-input readonly"></td>
+                                    <td><input type="text" class="presentacion-producto input-control td-input readonly"></td>
                                     <td><input type="number" class="valor-unitario input-control td-input" min="0"></td>
                                     <td><input type="number" class="iva-producto input-control td-input" min="0"></td>
                                     <td><input type="text" class="iva-total input-control td-input" disabled></td>
                                     <td><input type="text" class="valor-total input-control td-input" disabled></td>
-                                    <td><button title="Eliminar producto" type="button" class="btn-icon delete"
-                                            aria-label="Eliminar fila">
-                                            <span  class="material-symbols">delete</span>
-                                        </button></td>
+                                    <td><button title="Eliminar producto" type="button" class="btn-icon delete" aria-label="Eliminar fila">
+                                        <span class="material-symbols">delete</span>
+                                    </button></td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
-                    <button title="Agregar Nueva Fila" type="button" id="btn-agregar-fila"
-                        class="btn-secondary add-row-btn"><i class="fas fa-plus"></i> Agregar Fila</button>
+                    <button title="Agregar Nueva Fila" type="button" id="btn-agregar-fila" class="btn-secondary add-row-btn">
+                        <i class="fas fa-plus"></i> Agregar Fila
+                    </button>
 
                     <div class="form-grid-totals">
                         <div class="observaciones-section">
                             <label>Observaciones</label>
                             <textarea class="input-control" rows="4"></textarea>
                             <p class="nota-institucional">Toda factura debe llegar al correo
-                                <strong>recepcionfacturas@palmerajunior.com</strong> de lo contrario no será aceptada.
-                            </p>
+                                <strong>recepcionfacturas@palmerajunior.com</strong> de lo contrario no será aceptada.</p>
                         </div>
                         <div class="totales-section">
-                            <div class="total-row"><span>Subtotal:</span> <strong id="subtotal-general">$ 0.00</strong>
-                            </div>
+                            <div class="total-row"><span>Subtotal:</span> <strong id="subtotal-general">$ 0.00</strong></div>
                             <div class="total-row"><span>IVA:</span> <strong id="iva-general">$ 0.00</strong></div>
-                            <!--<div class="total-row"><span>Descuento:</span> <strong id="descuento-general">$ 0.00</strong></div>-->
-                            <div class="total-row"> <span><input type="checkbox" id="activar-descuento">
-                                    Descuento:</span>
-                                <span id="contenedor-descuento"> <strong id="descuento-general"></strong>
+                            <div class="total-row">
+                                <span><input type="checkbox" id="activar-descuento"> Descuento:</span>
+                                <span id="contenedor-descuento">
+                                    <strong id="descuento-general"></strong>
                                     <input type="number" id="input-descuento" value="0" min="0"
-                                        style="display: none; width: 100px; border-radius: 7px; background-color: #0a824036;"></span>
+                                        style="display: none; width: 100px; border-radius: 7px; background-color: #0a824036;">
+                                </span>
                             </div>
-                            <div class="total-row highlight"><span>TOTAL:</span> <strong id="total-general">$
-                                    0.00</strong></div>
+                            <div class="total-row highlight"><span>TOTAL:</span> <strong id="total-general">$ 0.00</strong></div>
                         </div>
                     </div>
 
                     <h3 class="section-title">Auditoria</h3>
-
                     <div class="auditoria-grid">
                         <div class="auditoria-item">
                             <span class="auditoria-label">Aprobado por:</span>
@@ -399,17 +329,15 @@
 
                 </form>
             </div>
-
             <div class="modal-footer">
-                <button title="Guardar Orden de Compra" type="button" class="btn-modal-secundario"
-                    id="btn-cancelar">Cancelar</button>
-                <button title="Cancelar y Salir" type="button" class="btn-modal-primario" id="btn-guardar-pdf"><i
-                        class="fas fa-save"></i> Guardar</button>
+                <button title="Guardar Orden de Compra" type="button" class="btn-modal-secundario" id="btn-cancelar">Cancelar</button>
+                <button title="Cancelar y Salir" type="button" class="btn-modal-primario" id="btn-guardar-pdf">
+                    <i class="fas fa-save"></i> Guardar
+                </button>
             </div>
         </div>
     </div>
     <script th:src="@{/dashboard.js}"></script>
-
 
 </body>
 
