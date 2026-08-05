@@ -97,6 +97,13 @@ public Producto buscarProducto(@RequestParam(required = false) String codigo) {
     return productoService.buscarPorCodigo(codigo);
 }
 
+@GetMapping("/dashboard/productos/buscar")
+@ResponseBody
+public java.util.List<Producto> buscarProductosPorTermino(
+        @RequestParam(required = false) String query) {
+    return productoService.buscarPorTermino(query);
+}
+
 @GetMapping("/orden-compra/{id}")
 @ResponseBody
 public OrdenCompraDTO obtenerOrden(

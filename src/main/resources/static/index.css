@@ -1212,3 +1212,62 @@ body {
         transform: translateY(0);
     }
 }
+
+/* ==========================================
+   AUTOCOMPLETADO - Descripción de Producto
+========================================== */
+.autocomplete-container {
+    position: relative;
+    width: 100%;
+}
+
+.autocomplete-container .descripcion-producto {
+    width: 100%;
+}
+
+.autocomplete-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 2000;
+    background: #ffffff;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    max-height: 220px;
+    overflow-y: auto;
+    margin-top: 2px;
+}
+
+/* El contenedor de la tabla de productos no debe recortar el dropdown */
+.tabla-productos {
+    overflow: visible;
+}
+
+.autocomplete-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 0.88rem;
+    color: #343a40;
+    border-bottom: 1px solid #f1f3f5;
+    transition: background .15s ease;
+}
+
+.autocomplete-item:hover,
+.autocomplete-item.active {
+    background: #e6f6ec;
+    color: #198754;
+}
+
+.autocomplete-item:last-child {
+    border-bottom: none;
+}
+
+.autocomplete-item small {
+    display: block;
+    font-size: 0.72rem;
+    color: #868e96;
+    margin-top: 2px;
+}

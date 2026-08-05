@@ -321,6 +321,141 @@ if (producto) {
 
 });
 
+// ============================================
+// AUTOCOMPLETADO - Descripción de Producto
+// ============================================
+// Se usan dropdowns individuales DENTRO de cada fila (.autocomplete-container)
+// con posición absolute. La tabla de productos (.tabla-productos) tiene
+// overflow: visible para no recortarlos. Adicionalmente, si el contenedor
+// .autocomplete-dropdown no existe, se crea automáticamente en la fila.
+
+let autocompleteTimer = null;
+
+// Asegura que la fila tenga su dropdown
+function obtenerDropdown(input) {
+    const container = input.closest(".autocomplete-container");
+    if (!container) {
+        return null;
+    }
+    let dropdown = container.querySelector(".autocomplete-dropdown");
+    if (!dropdown) {
+        dropdown = document.createElement("div");
+        dropdown.className = "autocomplete-dropdown";
+        container.appendChild(dropdown);
+    }
+    return dropdown;
+}
+
+document.addEventListener("input", function (e) {
+    if (!e.target.classList.contains("descripcion-producto")) {
+        return;
+    }
+
+    const input = e.target;
+    const fila = input.closest("tr");
+    const dropdown = obtenerDropdown(input);
+
+    // Limpiar el código de inventario cuando el usuario edita el texto manualmente
+    const campoCodigo = fila ? fila.querySelector(".codigo-producto") : null;
+    const campoPresentacion = fila ? fila.querySelector(".presentacion-producto") : null;
+
+    const termino = input.value.trim();
+
+    // Limpiar el temporizador anterior
+    clearTimeout(autocompleteTimer);
+
+    if (!dropdown) {
+        return;
+    }
+
+    if (termino.length < 2) {
+        dropdown.innerHTML = "";
+        dropdown.style.display = "none";
+        return;
+    }
+
+    autocompleteTimer = setTimeout(async () => {
+        try {
+            const response = await fetch(
+                `/dashboard/productos/buscar?query=${encodeURIComponent(termino)}`
+            );
+
+            if (!response.ok) {
+                dropdown.innerHTML = "";
+                dropdown.style.display = "none";
+                return;
+            }
+
+            const productos = await response.json();
+
+
+            if (!productos || productos.length === 0) {
+                dropdown.innerHTML = "";
+                dropdown.style.display = "none";
+                return;
+            }
+
+            dropdown.innerHTML = "";
+            dropdown.style.display = "block";
+
+            productos.slice(0, 8).forEach(producto => {
+                const item = document.createElement("div");
+                item.className = "autocomplete-item";
+                item.textContent = producto.nombre;
+
+                // Mostrar el código como subtexto si existe
+                if (producto.codigoInventario) {
+                    const sub = document.createElement("small");
+                    sub.textContent = " (" + producto.codigoInventario + ")";
+                    item.appendChild(sub);
+                }
+
+                item.addEventListener("mousedown", function (ev) {
+                    ev.preventDefault();
+
+                    // Rellenar descripción, código y presentación
+                    input.value = producto.nombre || "";
+                    input.dataset.idProducto = producto.idProducto || "";
+                    if (campoCodigo) {
+                        campoCodigo.value = producto.codigoInventario || "";
+                        campoCodigo.dataset.idProducto = producto.idProducto || "";
+                    }
+                    if (campoPresentacion) {
+                        campoPresentacion.value = producto.presentacion || "";
+                    }
+
+                    dropdown.innerHTML = "";
+                    dropdown.style.display = "none";
+                });
+
+                
+                dropdown.appendChild(item);
+
+            });
+
+        } catch (error) {
+            console.error(error);
+            if (dropdown) {
+                dropdown.innerHTML = "";
+                dropdown.style.display = "none";
+            }
+        }
+    }, 250);
+});
+
+// Cerrar todos los dropdowns al hacer clic fuera de un input de producto
+document.addEventListener("click", function (e) {
+    if (e.target.classList.contains("descripcion-producto")) {
+        return;
+    }
+    document.querySelectorAll(".autocomplete-dropdown").forEach(function (dd) {
+        if (dd.style.display === "block") {
+            dd.innerHTML = "";
+            dd.style.display = "none";
+        }
+    });
+});
+
 // Codigo para boton de agregar fila ###############################################33333
 const btnAgregarFila = document.getElementById("btn-agregar-fila");
 
@@ -341,10 +476,13 @@ function agregarFila() {
             <input type="text" class="codigo-producto input-control td-input" placeholder="PROD-01">
         </td>
 
-        <td>
-            <input type="text" class="descripcion-producto input-control td-input readonly">
+<td>
+            <div class="autocomplete-container">
+                <input type="text" class="descripcion-producto input-control td-input" placeholder="Escriba el producto...">
+                <div class="autocomplete-dropdown"></div>
+            </div>
         </td>
- 
+
         <td>
             <input type="text" class="presentacion-producto input-control td-input readonly">
         </td>
@@ -646,7 +784,13 @@ async function guardarYGenerarPdf() {
             const vIva = (vUnitario * cantidad) * (pctIva / 100);
             const vTotal = (vUnitario * cantidad);
 
+const campoCodigo = fila.querySelector('.codigo-producto');
+            const idProducto = campoCodigo && campoCodigo.dataset.idProducto
+                ? parseInt(campoCodigo.dataset.idProducto)
+                : null;
+
             ordenDTO.detalles.push({
+                idProducto: idProducto,
                 cantidad: cantidad,
                 codigoInventario: codigo,
                 descripcion: inputs[2].value || 'Sin descripción',
@@ -1199,8 +1343,11 @@ function cargarOrdenEnModal(
                     <td>
                         <input type="text" class="codigo-producto input-control td-input" value="${detalle.codigoInventario || ''}" ${esVista ? 'disabled' : ''}>
                     </td>
-                    <td>
-                        <input type="text" class="descripcion-producto input-control td-input readonly" value="${detalle.descripcion || ''}" ${esVista ? 'disabled' : ''}>
+<td>
+                        <div class="autocomplete-container">
+                            <input type="text" class="descripcion-producto input-control td-input" value="${detalle.descripcion || ''}" ${esVista ? 'disabled' : ''}>
+                            <div class="autocomplete-dropdown"></div>
+                        </div>
                     </td>
                     <td>
                         <input type="text" class="presentacion-producto input-control td-input readonly" value="${detalle.presentacion || ''}" ${esVista ? 'disabled' : ''}>
@@ -1224,13 +1371,19 @@ function cargarOrdenEnModal(
                     </td>
                 `;
 
-                const campoIvaTotal = fila.querySelector('.iva-total');
+const campoIvaTotal = fila.querySelector('.iva-total');
                 const campoValorTotal = fila.querySelector('.valor-total');
                 if (campoIvaTotal) {
                     campoIvaTotal.dataset.valor = Number(detalle.valorIva || 0);
                 }
                 if (campoValorTotal) {
                     campoValorTotal.dataset.valor = Number(detalle.valorTotalLinea || 0);
+                }
+
+                // Preservar la FK del producto al editar una orden existente
+                const campoCodigo = fila.querySelector('.codigo-producto');
+                if (campoCodigo && detalle.idProducto) {
+                    campoCodigo.dataset.idProducto = detalle.idProducto;
                 }
 
                 tbody.appendChild(fila);

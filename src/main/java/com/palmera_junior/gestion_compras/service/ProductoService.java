@@ -24,4 +24,12 @@ public class ProductoService {
         return productoRepository.findByCodigoInventario(codigo).orElse(null);
     }
 
+    public List<Producto> buscarPorTermino(String termino) {
+        if (termino == null || termino.isBlank()) {
+            return java.util.Collections.emptyList();
+        }
+        return productoRepository
+                .findByNombreContainingIgnoreCaseOrCodigoInventarioContainingIgnoreCase(termino.trim(), termino.trim());
+    }
+
 }

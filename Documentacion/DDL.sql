@@ -15,7 +15,7 @@ CREATE TABLE producto (
     codigo_inventario VARCHAR(50) NOT NULL UNIQUE,
     nombre VARCHAR(150) NOT NULL,
     presentacion VARCHAR(100),
-    descripcion TEXT
+    categoria TEXT
 );
 
 -- 3. Creación de tablas con dependencias simples (Nivel 1)
