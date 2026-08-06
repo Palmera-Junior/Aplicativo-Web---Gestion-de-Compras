@@ -508,7 +508,7 @@
 <span th:if="${producto.presentaciones.isEmpty()}" class="text-muted">Sin presentaciones</span>
                                             <span th:if="${!producto.presentaciones.isEmpty()}">
                                                 <span th:each="pres, presStat : ${producto.presentaciones}"
-                                                    th:text="${pres.cantidad != null ? pres.presentacion + ' (' + pres.cantidad + ' ' + pres.unidad + ')' : pres.presentacion + ' (' + pres.unidad + ')'} + ' ($' + ${#numbers.formatDecimal(pres.precio, 1, 'COMMA', 0, 'POINT')} + ')' + ( !presStat.last ? ';<br/>' : '' )"></span>
+                                                    th:text="${pres.cantidad != null ? pres.presentacion + ' (' + pres.cantidad + ' ' + pres.unidad + ')' : pres.presentacion + ' (' + pres.unidad + ')'} + '  |  ' + ( !presStat.last ? ';<br/>' : '' )"></span>
                                             </span>
                                         </td>
                                         <td th:text="${producto.categoria}"></td>

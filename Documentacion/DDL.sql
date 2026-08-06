@@ -76,8 +76,10 @@ CREATE TABLE orden_compra (
     -- Totales y Observaciones
     observaciones TEXT, -- Nullable
     sub_total DECIMAL(10,2) NOT NULL,
-    iva_total DECIMAL(10,2) NOT NULL,
+iva_total DECIMAL(10,2) NOT NULL,
     descuento DECIMAL(10,2) DEFAULT 0.00, -- Nullable/Default 0
+    paga_flete BOOLEAN NOT NULL DEFAULT FALSE, -- Indica si la orden contempla pago de flete
+    valor_flete DECIMAL(10,2) NULL, -- Valor del flete (nullable)
     total DECIMAL(10,2) NOT NULL,
     
     CONSTRAINT fk_orden_proveedor FOREIGN KEY (id_prov) REFERENCES proveedor (id_prov) ON DELETE SET NULL,

@@ -96,7 +96,9 @@
                             <button title="Recibir Orden de Compra" th:if="${orden.estado.name() == 'APROBADA'}"
                                 class="btn-icon receive" th:data-id="${orden.idOrden}"
                                 th:data-numero-orden="${orden.numeroOrden}"
-                                th:data-proveedor="${orden.proveedor != null ? orden.proveedor.nombre : ''}">
+                                th:data-proveedor="${orden.proveedor != null ? orden.proveedor.nombre : ''}"
+                                th:data-paga-flete="${orden.pagaFlete}"
+                                th:data-valor-flete="${orden.valorFlete}">
                                 <span class="material-symbols">inventory_2</span>
                             </button>
                             <button title="Eliminar Orden de Compra" th:if="${orden.estado.name() == 'BORRADOR'}"
@@ -131,6 +133,10 @@
                         <div class="recepcion-form-group">
                             <label>Recibido Por *</label>
                             <input type="text" id="recepcion-recibido-por">
+                        </div>
+<div class="recepcion-form-group" id="recepcion-flete-group" style="display: none;">
+                            <label>Valor del Flete *</label>
+                            <input type="text" id="recepcion-valor-flete" inputmode="numeric" placeholder="$ 0">
                         </div>
                         <div class="recepcion-form-group">
                             <label>Observación Recepción</label>
@@ -302,11 +308,19 @@
                         <div class="totales-section">
                             <div class="total-row"><span>Subtotal:</span> <strong id="subtotal-general">$ 0.00</strong></div>
                             <div class="total-row"><span>IVA:</span> <strong id="iva-general">$ 0.00</strong></div>
-                            <div class="total-row">
+<div class="total-row">
                                 <span><input type="checkbox" id="activar-descuento"> Descuento:</span>
                                 <span id="contenedor-descuento">
                                     <strong id="descuento-general"></strong>
                                     <input type="number" id="input-descuento" value="0" min="0"
+                                        style="display: none; width: 100px; border-radius: 7px; background-color: #0a824036;">
+                                </span>
+                            </div>
+                            <div class="total-row">
+                                <span><input type="checkbox" id="activar-flete"> Flete:</span>
+                                <span id="contenedor-flete">
+                                    <strong id="flete-general"></strong>
+                                    <input type="number" id="input-flete" value="0" min="0"
                                         style="display: none; width: 100px; border-radius: 7px; background-color: #0a824036;">
                                 </span>
                             </div>

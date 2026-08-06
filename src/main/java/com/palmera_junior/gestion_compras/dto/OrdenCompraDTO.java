@@ -28,11 +28,15 @@ public class OrdenCompraDTO {
     private String fechaRecepcion;
     private String numeroFactura;
 
-    // Totales
+// Totales
     private BigDecimal descuento;
     private BigDecimal subTotal;
     private BigDecimal ivaTotal;
     private BigDecimal total;
+
+    // Flete
+    private Boolean pagaFlete;
+    private BigDecimal valorFlete;
 
     // Relación con el detalle
     private List<DetalleCompraDTO> detalles;
@@ -80,6 +84,12 @@ public class OrdenCompraDTO {
 
     public BigDecimal getTotal() { return total; }
     public void setTotal(BigDecimal total) { this.total = total; }
+
+    public Boolean getPagaFlete() { return pagaFlete; }
+    public void setPagaFlete(Boolean pagaFlete) { this.pagaFlete = pagaFlete; }
+
+    public BigDecimal getValorFlete() { return valorFlete; }
+    public void setValorFlete(BigDecimal valorFlete) { this.valorFlete = valorFlete; }
 
     public String getNumeroOrden() { return numeroOrden; }
     public void setNumeroOrden(String numeroOrden) { this.numeroOrden = numeroOrden; }

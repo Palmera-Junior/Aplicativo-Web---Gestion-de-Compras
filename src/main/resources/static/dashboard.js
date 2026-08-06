@@ -129,6 +129,7 @@ function resetFormularioOrden() {
     document.getElementById('subtotal-general').textContent = '$ 0.00';
     document.getElementById('iva-general').textContent = '$ 0.00';
     document.getElementById('descuento-general').textContent = '$ 0.00';
+    document.getElementById('flete-general').textContent = '$ 0.00';
     document.getElementById('total-general').textContent = '$ 0.00';
 
     const chkDescuento = document.getElementById('activar-descuento');
@@ -143,6 +144,20 @@ function resetFormularioOrden() {
     const descuentoGeneral = document.getElementById('descuento-general');
     if (descuentoGeneral) {
         descuentoGeneral.style.display = 'inline';
+    }
+
+    const chkFlete = document.getElementById('activar-flete');
+    const inputFlete = document.getElementById('input-flete');
+    if (chkFlete) {
+        chkFlete.checked = false;
+    }
+    if (inputFlete) {
+        inputFlete.value = 0;
+        inputFlete.style.display = 'none';
+    }
+    const fleteGeneral = document.getElementById('flete-general');
+    if (fleteGeneral) {
+        fleteGeneral.style.display = 'inline';
     }
 
     const ordenNumero = document.getElementById('orden-numero');
@@ -571,7 +586,7 @@ function agregarFila() {
         </td>
 
         <td>
-            <input type="text" class="codigo-producto input-control td-input" placeholder="123456">
+            <input type="text" class="codigo-producto input-control td-input" >
         </td>
 
 <td>
@@ -718,14 +733,20 @@ function recalcularTotalesGenerales() {
         totalIva += valorIva;
     });
 
-    let descuento = 0;
+let descuento = 0;
 
     if (chkDescuento.checked) {
         descuento = parseFloat(inputDescuento.value) || 0;
     }
 
+    let flete = 0;
+
+    if (chkFlete.checked) {
+        flete = parseFloat(inputFlete.value) || 0;
+    }
+
     const totalGeneral =
-        subtotal + totalIva - descuento;
+        subtotal + totalIva - descuento + flete;
 
 
     document.getElementById("subtotal-general").textContent =
@@ -737,11 +758,17 @@ function recalcularTotalesGenerales() {
     document.getElementById("descuento-general").textContent =
         formatearPesos(descuento);
 
+    document.getElementById("flete-general").textContent =
+        formatearPesos(flete);
+
     document.getElementById("total-general").textContent =
         formatearPesos(totalGeneral);
 
     lblDescuento.textContent =
         formatearPesos(descuento);
+
+    lblFlete.textContent =
+        formatearPesos(flete);
 }
 
 // codigo para mostrar/ocultar descuento 
@@ -770,6 +797,31 @@ chkDescuento.addEventListener("change", function () {
 inputDescuento.addEventListener("input", function () {
     recalcularTotalesGenerales();
 });
+
+// codigo para mostrar/ocultar flete
+const chkFlete = document.getElementById("activar-flete");
+const inputFlete = document.getElementById("input-flete");
+const lblFlete = document.getElementById("flete-general");
+
+if (chkFlete) {
+    chkFlete.addEventListener("change", function () {
+        if (this.checked) {
+            lblFlete.style.display = "none";
+            inputFlete.style.display = "inline-block";
+        } else {
+            inputFlete.value = 0;
+            inputFlete.style.display = "none";
+            lblFlete.style.display = "inline";
+            recalcularTotalesGenerales();
+        }
+    });
+}
+
+if (inputFlete) {
+    inputFlete.addEventListener("input", function () {
+        recalcularTotalesGenerales();
+    });
+}
 
 // =========================================================================
 // SECCIÓN: GUARDAR Y GENERAR PDF
@@ -861,10 +913,15 @@ async function guardarYGenerarPdf() {
         //  CORRECCIÓN 2: Acotar el textarea al modal
         observaciones: document.querySelector('#modal-orden textarea')?.value || '',
 
-        subTotal: parsearMoneda('subtotal-general'),
+subTotal: parsearMoneda('subtotal-general'),
         ivaTotal: parsearMoneda('iva-general'),
         descuento: parsearMoneda('descuento-general'),
         total: parsearMoneda('total-general'),
+
+        pagaFlete: document.getElementById('activar-flete')?.checked || false,
+        valorFlete: document.getElementById('activar-flete')?.checked
+            ? (parseFloat(document.getElementById('input-flete')?.value) || null)
+            : null,
 
         detalles: []
     };
@@ -1115,9 +1172,24 @@ document.addEventListener("click", function (e) {
         "recepcion-proveedor"
     ).textContent = boton.dataset.proveedor;
 
-    document.getElementById(
+document.getElementById(
         "recepcion-observacion"
     ).textContent = boton.dataset.observacionRecepcion;
+
+// Flete: mostrar el campo solo si la orden tiene pagaFlete
+    const pagaFlete = boton.dataset.pagaFlete === 'true';
+    const fleteGroup = document.getElementById('recepcion-flete-group');
+    const fleteInput = document.getElementById('recepcion-valor-flete');
+    if (fleteGroup && fleteInput) {
+        if (pagaFlete) {
+            fleteGroup.style.display = 'block';
+            const valorFleteInicial = boton.dataset.valorFlete ? parseFloat(boton.dataset.valorFlete) : 0;
+            fleteInput.value = valorFleteInicial > 0 ? formatearPesos(valorFleteInicial) : '';
+        } else {
+            fleteGroup.style.display = 'none';
+            fleteInput.value = '';
+        }
+    }
 
     document.getElementById(
         "modal-recibir-oc"
@@ -1155,10 +1227,24 @@ document
             .value
             .trim();
 
-        const observacion = document
+const observacion = document
             .getElementById("recepcion-observacion")
             .value
             .trim();
+
+        const pagaFleteSegunOrden = document.getElementById('recepcion-flete-group').style.display === 'block';
+        const valorFleteInput = document.getElementById('recepcion-valor-flete');
+        // Limpiar el formato de moneda (p. ej. "$15.000" -> "15000") antes de parsear
+        let valorFlete = null;
+        if (valorFleteInput && valorFleteInput.value.trim() !== '') {
+            const limpioFlete = valorFleteInput.value
+                .replace(/\$/g, '')
+                .replace(/\./g, '')
+                .replace(/,/g, '.')
+                .trim();
+            const numeroFlete = parseFloat(limpioFlete);
+            valorFlete = isNaN(numeroFlete) ? null : numeroFlete;
+        }
 
         // ========================
         // VALIDACIONES
@@ -1194,10 +1280,21 @@ document
             return;
         }
 
-        if (recibidoPor.length < 3) {
+if (recibidoPor.length < 3) {
 
             mostrarToast(
                 "El nombre del receptor es demasiado corto.",
+                'error'
+            );
+
+            return;
+        }
+
+        // Validación: si la orden maneja flete (pagaFlete), el valor no puede ser 0 ni vacío
+        if (pagaFleteSegunOrden && (valorFlete === null || valorFlete <= 0)) {
+
+            mostrarToast(
+                "El valor del flete debe ser mayor a 0.",
                 'error'
             );
 
@@ -1248,10 +1345,11 @@ La orden cambiará al estado RECIBIDA.
                     headers: {
                         "Content-Type": "application/json"
                     },
-                    body: JSON.stringify({
+body: JSON.stringify({
                         numeroFactura,
                         recibidoPor,
-                        observacionRecepcion: observacion
+                        observacionRecepcion: observacion,
+                        valorFlete
                     })
                 }
             );
@@ -1317,9 +1415,14 @@ function limpiarFormularioRecepcion() {
         "recepcion-numero-orden"
     ).textContent = "";
 
-    document.getElementById(
+document.getElementById(
         "recepcion-proveedor"
     ).textContent = "";
+
+    const fleteInput = document.getElementById('recepcion-valor-flete');
+    if (fleteInput) {
+        fleteInput.value = "";
+    }
 
     idOrdenSeleccionada = null;
 }
@@ -1504,9 +1607,10 @@ function cargarOrdenEnModal(
         }
     }
 
-    document.getElementById('subtotal-general').textContent = formatearPesos(Number(orden.subTotal || 0));
+document.getElementById('subtotal-general').textContent = formatearPesos(Number(orden.subTotal || 0));
     document.getElementById('iva-general').textContent = formatearPesos(Number(orden.ivaTotal || 0));
     document.getElementById('descuento-general').textContent = formatearPesos(Number(orden.descuento || 0));
+    document.getElementById('flete-general').textContent = formatearPesos(Number(orden.valorFlete || 0));
     document.getElementById('total-general').textContent = formatearPesos(Number(orden.total || 0));
 
     const chkDescuento = document.getElementById('activar-descuento');
@@ -1517,6 +1621,30 @@ function cargarOrdenEnModal(
         inputDescuento.value = valorDescuento;
         inputDescuento.style.display = esVista ? 'none' : (valorDescuento > 0 ? 'inline-block' : 'none');
         chkDescuento.disabled = esVista;
+    }
+
+    const chkFlete = document.getElementById('activar-flete');
+    const inputFlete = document.getElementById('input-flete');
+    const lblFlete = document.getElementById('flete-general');
+    if (chkFlete && inputFlete && lblFlete) {
+        const pagaFlete = !!orden.pagaFlete;
+        const valorFlete = Number(orden.valorFlete || 0);
+        chkFlete.checked = pagaFlete;
+        chkFlete.disabled = esVista;
+        inputFlete.value = valorFlete;
+        if (esVista) {
+            inputFlete.style.display = 'none';
+            lblFlete.style.display = 'inline';
+            lblFlete.textContent = formatearPesos(valorFlete);
+        } else {
+            if (pagaFlete) {
+                lblFlete.style.display = 'none';
+                inputFlete.style.display = 'inline-block';
+            } else {
+                inputFlete.style.display = 'none';
+                lblFlete.style.display = 'inline';
+            }
+        }
     }
 
     document.getElementById('orden-numero').value = orden.numeroOrden || '';

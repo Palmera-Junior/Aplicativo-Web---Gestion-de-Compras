@@ -1,5 +1,7 @@
 package com.palmera_junior.gestion_compras.dto;
 
+import java.math.BigDecimal;
+
 public class RecibirOrdenDTO {
 
     private Integer idOrden;
@@ -9,6 +11,8 @@ public class RecibirOrdenDTO {
     private String recibidoPor;
 
     private String observacionRecepcion;
+
+    private BigDecimal valorFlete;
 
     public Integer getIdOrden() {
         return idOrden;
@@ -40,5 +44,13 @@ public class RecibirOrdenDTO {
 
     public void setObservacionRecepcion(String observacionRecepcion) {
         this.observacionRecepcion = observacionRecepcion;
+    }
+
+    public BigDecimal getValorFlete() {
+        return valorFlete;
+    }
+
+    public void setValorFlete(BigDecimal valorFlete) {
+        this.valorFlete = valorFlete;
     }
 }

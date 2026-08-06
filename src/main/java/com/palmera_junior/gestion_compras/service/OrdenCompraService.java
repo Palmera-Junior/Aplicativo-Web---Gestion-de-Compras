@@ -1,5 +1,6 @@
 package com.palmera_junior.gestion_compras.service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import java.time.format.DateTimeFormatter;
@@ -138,10 +139,19 @@ public class OrdenCompraService {
         } else {
             orden.setFecha(LocalDate.now());
         }
-        orden.setDescuento(dto.getDescuento());
+orden.setDescuento(dto.getDescuento());
         orden.setSubTotal(dto.getSubTotal());
         orden.setIvaTotal(dto.getIvaTotal());
-        orden.setTotal(dto.getTotal());
+
+        // Flete: se guarda la decisión y el valor (si paga flete)
+        boolean pagaFlete = Boolean.TRUE.equals(dto.getPagaFlete());
+        orden.setPagaFlete(pagaFlete);
+        if (pagaFlete) {
+            orden.setValorFlete(dto.getValorFlete());
+        } else {
+            orden.setValorFlete(null);
+        }
+        orden.setTotal(calcularTotal(orden));
 
         // 3. obtener sede
 
@@ -317,7 +327,16 @@ if (dDto.getIdProducto() != null) {
                 orden.setDescuento(dto.getDescuento());
                 orden.setSubTotal(dto.getSubTotal());
                 orden.setIvaTotal(dto.getIvaTotal());
-                orden.setTotal(dto.getTotal());
+
+                // Flete: se actualiza la decisión y el valor
+                boolean pagaFlete = Boolean.TRUE.equals(dto.getPagaFlete());
+                orden.setPagaFlete(pagaFlete);
+                if (pagaFlete) {
+                    orden.setValorFlete(dto.getValorFlete());
+                } else {
+                    orden.setValorFlete(null);
+                }
+                orden.setTotal(calcularTotal(orden));
 
                 if (dto.getIdCentroCosto() != null) {
                         CentroCosto centroCosto = centroCostoService.buscarPorId(dto.getIdCentroCosto().intValue());
@@ -479,10 +498,25 @@ if (dDto.getIdProducto() != null) {
                 .orElseThrow(() -> new RuntimeException(
                         "Orden no encontrada"));
 
-        if (orden.getEstado() != EstadoOrdenCompra.APROBADA) {
+if (orden.getEstado() != EstadoOrdenCompra.APROBADA) {
 
             throw new RuntimeException(
                     "Solo las órdenes APROBADAS pueden recibirse");
+        }
+
+        // Validación de flete: solo se permite capturar el valor del flete
+        // si al crear la orden se definió que se pagará flete.
+        if (!Boolean.TRUE.equals(orden.getPagaFlete())) {
+            if (dto.getValorFlete() != null && dto.getValorFlete().signum() != 0) {
+                throw new RuntimeException(
+                        "Esta orden no contempla el pago de flete. No puede ingresar un valor de flete.");
+            }
+        } else {
+            // Si la orden contempla flete, se actualiza el valor (se conserva el
+            // inicial si no se envía uno nuevo).
+            if (dto.getValorFlete() != null) {
+                orden.setValorFlete(dto.getValorFlete());
+            }
         }
 
         orden.setNumeroFactura(
@@ -494,6 +528,9 @@ if (dDto.getIdProducto() != null) {
         orden.setObservacionRecepcion(
                 dto.getObservacionRecepcion());
 
+        // Recalcular el total incluyendo el flete (si aplica)
+        orden.setTotal(calcularTotal(orden));
+
         orden.setFechaRecepcion(
                 LocalDate.now());
 
@@ -502,6 +539,22 @@ if (dDto.getIdProducto() != null) {
 
         return ordenCompraRepository.save(
                 orden);
+    }
+
+    /**
+     * Calcula el total de la orden: subtotal + IVA - descuento + flete (si se paga).
+     */
+    private BigDecimal calcularTotal(OrdenCompra orden) {
+        BigDecimal subtotal = orden.getSubTotal() != null ? orden.getSubTotal() : BigDecimal.ZERO;
+        BigDecimal iva = orden.getIvaTotal() != null ? orden.getIvaTotal() : BigDecimal.ZERO;
+        BigDecimal descuento = orden.getDescuento() != null ? orden.getDescuento() : BigDecimal.ZERO;
+        BigDecimal flete = BigDecimal.ZERO;
+
+        if (Boolean.TRUE.equals(orden.getPagaFlete()) && orden.getValorFlete() != null) {
+            flete = orden.getValorFlete();
+        }
+
+        return subtotal.add(iva).subtract(descuento).add(flete);
     }
 
     public OrdenCompraDTO obtenerOrdenDTO(
@@ -544,8 +597,14 @@ if (dDto.getIdProducto() != null) {
         dto.setDescuento(
                 orden.getDescuento());
 
-        dto.setTotal(
+dto.setTotal(
                 orden.getTotal());
+
+        // Datos del flete
+        dto.setPagaFlete(
+                orden.getPagaFlete());
+        dto.setValorFlete(
+                orden.getValorFlete());
 
         dto.setNumeroOrden(
                 orden.getNumeroOrden());

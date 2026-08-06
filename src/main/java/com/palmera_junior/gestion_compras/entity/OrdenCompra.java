@@ -58,8 +58,14 @@ public class OrdenCompra {
     @Column(name = "iva_total", nullable = false, precision = 10, scale = 2)
     private BigDecimal ivaTotal;
 
-    @Column(precision = 10, scale = 2)
+@Column(precision = 10, scale = 2)
     private BigDecimal descuento;
+
+    @Column(name = "paga_flete", nullable = false)
+    private Boolean pagaFlete = false;
+
+    @Column(name = "valor_flete", precision = 10, scale = 2)
+    private BigDecimal valorFlete;
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal total;

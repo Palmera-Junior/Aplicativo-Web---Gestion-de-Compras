@@ -439,8 +439,12 @@ public class PdfService {
         totalesTable.addCell(crearCelda(df.format(orden.getSubTotal()), fontTexto));
         totalesTable.addCell(crearCelda("IVA Total:", fontSub));
         totalesTable.addCell(crearCelda(df.format(orden.getIvaTotal()), fontTexto));
-        totalesTable.addCell(crearCelda("Descuento:", fontSub));
+totalesTable.addCell(crearCelda("Descuento:", fontSub));
         totalesTable.addCell(crearCelda(df.format(orden.getDescuento()), fontTexto));
+        if (Boolean.TRUE.equals(orden.getPagaFlete())) {
+            totalesTable.addCell(crearCelda("Flete:", fontSub));
+            totalesTable.addCell(crearCelda(df.format(orden.getValorFlete() != null ? orden.getValorFlete() : BigDecimal.ZERO), fontTexto));
+        }
         totalesTable.addCell(crearCelda("TOTAL:", fontSub));
         totalesTable.addCell(crearCelda(df.format(orden.getTotal()), fontSub));
 
