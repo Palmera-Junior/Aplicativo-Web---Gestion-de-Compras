@@ -722,7 +722,7 @@ body {
 .modal-content {
     background: white;
     width: 90%;
-    max-width: 1000px;
+    max-width: 1150px;
     max-height: 90vh;
     border-radius: 12px;
     display: flex;
@@ -848,12 +848,14 @@ body {
     letter-spacing: 0.3px;
     border-bottom: 2px solid var(--primary-color);
     text-align: left;
+
 }
 
 .table-productos td {
     padding: 6px 8px;
     border-bottom: 1px solid var(--border-color);
     font-size: 0.9rem;
+   
 }
 
 .td-input {

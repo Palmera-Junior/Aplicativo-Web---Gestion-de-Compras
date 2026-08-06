@@ -194,66 +194,66 @@ function setModalOrdenModoVista(esVista) {
     });
 }
 
-    //Codigo de los campos del proveedor ##################################################################33
+//Codigo de los campos del proveedor ##################################################################33
 
-    const selectProveedor = document.getElementById("select-proveedor");
+const selectProveedor = document.getElementById("select-proveedor");
 
-    const nit = document.getElementById("prov-nit");
-    const nombre = document.getElementById("prov-nombre");
-    const ciudad = document.getElementById("prov-ciudad");
-    const direccion = document.getElementById("prov-direccion");
-    const telefono = document.getElementById("prov-telefono");
-    const email = document.getElementById("prov-email");
+const nit = document.getElementById("prov-nit");
+const nombre = document.getElementById("prov-nombre");
+const ciudad = document.getElementById("prov-ciudad");
+const direccion = document.getElementById("prov-direccion");
+const telefono = document.getElementById("prov-telefono");
+const email = document.getElementById("prov-email");
 
-    const campos = [
-        nit,
-        nombre,
-        ciudad,
-        direccion,
-        telefono,
-        email
-    ];
+const campos = [
+    nit,
+    nombre,
+    ciudad,
+    direccion,
+    telefono,
+    email
+];
 
-    selectProveedor.addEventListener("change", function () {
+selectProveedor.addEventListener("change", function () {
 
-        const opcion = this.options[this.selectedIndex];
+    const opcion = this.options[this.selectedIndex];
 
-        // Opción "Otro"
-        if (this.value === "otro") {
+    // Opción "Otro"
+    if (this.value === "otro") {
 
-            campos.forEach(campo => {
-                campo.disabled = false;
-                campo.value = "";
-            });
-
-            return;
-        }
-
-        // Ningún proveedor seleccionado
-        if (this.value === "") {
-
-            campos.forEach(campo => {
-                campo.disabled = true;
-                campo.value = "";
-            });
-
-            return;
-        }
-
-        // Proveedor existente
-        nit.value = opcion.dataset.nit || "";
-        nombre.value = opcion.dataset.nombre || "";
-        ciudad.value = opcion.dataset.ciudad || "";
-        direccion.value = opcion.dataset.direccion || "";
-        telefono.value = opcion.dataset.telefono || "";
-        email.value = opcion.dataset.email || "";
-
-        // Permitir edición de los datos del proveedor existente en el modal
         campos.forEach(campo => {
             campo.disabled = false;
+            campo.value = "";
         });
 
+        return;
+    }
+
+    // Ningún proveedor seleccionado
+    if (this.value === "") {
+
+        campos.forEach(campo => {
+            campo.disabled = true;
+            campo.value = "";
+        });
+
+        return;
+    }
+
+    // Proveedor existente
+    nit.value = opcion.dataset.nit || "";
+    nombre.value = opcion.dataset.nombre || "";
+    ciudad.value = opcion.dataset.ciudad || "";
+    direccion.value = opcion.dataset.direccion || "";
+    telefono.value = opcion.dataset.telefono || "";
+    email.value = opcion.dataset.email || "";
+
+    // Permitir edición de los datos del proveedor existente en el modal
+    campos.forEach(campo => {
+        campo.disabled = false;
     });
+
+});
 
 
 
@@ -271,10 +271,12 @@ document.addEventListener("change", async function (e) {
 
     const campoDescripcion = fila.querySelector(".descripcion-producto");
     const campoPresentacion = fila.querySelector(".presentacion-producto");
+    const campoValorUnitario = fila.querySelector(".valor-unitario");
 
     if (!codigo) {
         campoDescripcion.value = "";
-        campoPresentacion.value = "";
+        if (campoPresentacion) campoPresentacion.value = "";
+        campoValorUnitario.value = "";
         return;
     }
 
@@ -287,26 +289,27 @@ document.addEventListener("change", async function (e) {
         // Si el servidor devuelve error o no encontró el producto
         if (!response.ok) {
             campoDescripcion.value = "";
-            campoPresentacion.value = "";
+            if (campoPresentacion) campoPresentacion.value = "";
+            campoValorUnitario.value = "";
             return;
         }
 
         const producto = await response.json();
 
-if (producto) {
+        if (producto) {
 
             // La columna "descripción" del modal ahora muestra el nombre
             // del producto (antes se usaba la columna descripcion/categoria)
             campoDescripcion.value =
                 producto.nombre || "";
 
-            campoPresentacion.value =
-                producto.presentacion || "";
+            poblarPresentacionEnFila(campoPresentacion, producto.presentaciones, campoValorUnitario, fila);
 
         } else {
 
             campoDescripcion.value = "";
-            campoPresentacion.value = "";
+            if (campoPresentacion) campoPresentacion.value = "";
+            campoValorUnitario.value = "";
 
         }
 
@@ -315,10 +318,100 @@ if (producto) {
         console.error(error);
 
         campoDescripcion.value = "";
-        campoPresentacion.value = "";
+        if (campoPresentacion) campoPresentacion.value = "";
+        campoValorUnitario.value = "";
 
     }
 
+});
+
+// Rellena el datalist de la fila con las presentaciones del producto seleccionado.
+// Cada fila tiene su propio datalist, por lo que solo se sugieren las presentaciones
+// de SU producto (no las de los demás productos del modal).
+function poblarDatalistPresentaciones(datalist, presentaciones) {
+    if (!datalist || !presentaciones) return;
+    datalist.innerHTML = "";
+    presentaciones.forEach(function (pres) {
+        const opt = document.createElement("option");
+        opt.value = textoPresentacion(pres);
+        datalist.appendChild(opt);
+    });
+}
+
+// Formatea el texto visible de una presentación (coincide con el option del datalist).
+// Si la cantidad es null (1 unidad por defecto), no se muestra "1".
+function textoPresentacion(pres) {
+    if (pres.cantidad != null && pres.unidad) {
+        return pres.presentacion + " (" + pres.cantidad + " " + pres.unidad + ")";
+    }
+    return pres.presentacion + " (" + (pres.unidad || "Unidad") + ")";
+}
+
+// Rellena el input editable de presentación y autocompleta el valor unitario
+// si el producto tiene una única presentación. Además guarda las presentaciones
+// del producto en el input para poder cargar el precio al seleccionar una.
+function poblarPresentacionEnFila(campoPresentacion, presentaciones, campoValorUnitario, fila) {
+    if (!campoPresentacion) return;
+    // Guardar las presentaciones del producto en el input para reconocer el precio
+    campoPresentacion._presentaciones = presentaciones || [];
+    // Limpiar solo si el usuario no escribió manualmente un valor personalizado
+    if (!campoPresentacion.dataset.manual) {
+        campoPresentacion.value = "";
+    }
+    // Poblar el datalist propio de la fila con las presentaciones del producto
+    const datalistId = campoPresentacion.getAttribute("list");
+    const datalist = datalistId ? document.getElementById(datalistId) : null;
+    poblarDatalistPresentaciones(datalist, presentaciones);
+    if (presentaciones && presentaciones.length === 1) {
+        const pres = presentaciones[0];
+        campoPresentacion.value = textoPresentacion(pres);
+        if (campoValorUnitario) {
+            campoValorUnitario.value = pres.precio;
+        }
+        if (fila) calcularTotalFila(fila);
+    }
+}
+
+// Al cambiar la presentación seleccionada en el datalist, cargar el precio
+// de esa presentación en el campo "valor unitario".
+document.addEventListener("change", function (e) {
+    if (e.target.classList.contains("presentacion-producto")) {
+        const input = e.target;
+        const fila = e.target.closest("tr");
+        const campoValorUnitario = fila ? fila.querySelector(".valor-unitario") : null;
+        const presentaciones = input._presentaciones || [];
+        if (presentaciones.length > 0) {
+            const seleccionada = presentaciones.find(function (pres) {
+                return textoPresentacion(pres) === input.value;
+            });
+            if (seleccionada && campoValorUnitario) {
+                campoValorUnitario.value = seleccionada.precio;
+                if (fila) calcularTotalFila(fila);
+            }
+        }
+    }
+});
+
+// Genera un id único para el datalist de cada fila
+let contadorDatalist = 0;
+function crearDatalistFila() {
+    contadorDatalist++;
+    const id = "datalist-presentaciones-" + contadorDatalist;
+    let datalist = document.getElementById(id);
+    if (!datalist) {
+        datalist = document.createElement("datalist");
+        datalist.id = id;
+        document.body.appendChild(datalist);
+    }
+    return id;
+}
+
+// Al cambiar la presentación seleccionada (o escribir manualmente), recalcular
+document.addEventListener("input", function (e) {
+    if (e.target.classList.contains("presentacion-producto")) {
+        const fila = e.target.closest("tr");
+        if (fila) calcularTotalFila(fila);
+    }
 });
 
 // ============================================
@@ -421,14 +514,15 @@ document.addEventListener("input", function (e) {
                         campoCodigo.dataset.idProducto = producto.idProducto || "";
                     }
                     if (campoPresentacion) {
-                        campoPresentacion.value = producto.presentacion || "";
+                        const campoVal = fila ? fila.querySelector(".valor-unitario") : null;
+                        poblarPresentacionEnFila(campoPresentacion, producto.presentaciones, campoVal, fila);
                     }
 
                     dropdown.innerHTML = "";
                     dropdown.style.display = "none";
                 });
 
-                
+
                 dropdown.appendChild(item);
 
             });
@@ -465,6 +559,10 @@ function agregarFila() {
 
     const tbody = document.getElementById("tbody-productos");
 
+    // Cada fila tiene su propio datalist para que la presentación solo sugiera
+    // las presentaciones del producto de esa fila (no las de los demás).
+    const idDatalist = crearDatalistFila();
+
     const nuevaFila = document.createElement("tr");
 
     nuevaFila.innerHTML = `
@@ -473,7 +571,7 @@ function agregarFila() {
         </td>
 
         <td>
-            <input type="text" class="codigo-producto input-control td-input" placeholder="PROD-01">
+            <input type="text" class="codigo-producto input-control td-input" placeholder="123456">
         </td>
 
 <td>
@@ -483,8 +581,8 @@ function agregarFila() {
             </div>
         </td>
 
-        <td>
-            <input type="text" class="presentacion-producto input-control td-input readonly">
+<td>
+            <input type="text" class="presentacion-producto input-control td-input" list="${idDatalist}" placeholder="Seleccione o escriba...">
         </td>
 
         <td>
@@ -492,7 +590,7 @@ function agregarFila() {
         </td>
 
         <td>
-            <input type="number" class="iva-producto input-control td-input" min="0">
+            <input type="number" class="iva-producto input-control td-input"  min="0">
         </td>
 
         <td>
@@ -774,27 +872,36 @@ async function guardarYGenerarPdf() {
     // 2. DTO de las Líneas de Producto
     const filas = document.querySelectorAll('#tbody-productos tr');
     filas.forEach(fila => {
-        const inputs = fila.querySelectorAll('input');
-        const cantidad = parseInt(inputs[0].value) || 0;
-        const codigo = inputs[1].value.trim();
+        const completo = fila.querySelector('.cantidad');
+        const cantidad = parseInt(completo ? completo.value : 0) || 0;
+        const campoCodigoFila = fila.querySelector('.codigo-producto');
+        const codigo = campoCodigoFila ? (campoCodigoFila.value || '').trim() : '';
 
         if (codigo !== '' && cantidad > 0) {
-            const vUnitario = parseFloat(inputs[4].value) || 0;
-            const pctIva = parseFloat(inputs[5].value) || 0;
+            const campoValorUnitario = fila.querySelector('.valor-unitario');
+            const campoCampoIva = fila.querySelector('.iva-producto');
+            const vUnitario = parseFloat(campoValorUnitario ? campoValorUnitario.value : 0) || 0;
+            const pctIva = parseFloat(campoCampoIva ? campoCampoIva.value : 0) || 0;
             const vIva = (vUnitario * cantidad) * (pctIva / 100);
             const vTotal = (vUnitario * cantidad);
 
-const campoCodigo = fila.querySelector('.codigo-producto');
+            const campoCodigo = fila.querySelector('.codigo-producto');
             const idProducto = campoCodigo && campoCodigo.dataset.idProducto
                 ? parseInt(campoCodigo.dataset.idProducto)
                 : null;
+
+            const campoPresentacionSel = fila.querySelector('.presentacion-producto');
+            const presentacionSel = campoPresentacionSel ? campoPresentacionSel.value : '';
+
+            const campoDescripcion = fila.querySelector('.descripcion-producto');
+            const descripcion = campoDescripcion ? campoDescripcion.value : '';
 
             ordenDTO.detalles.push({
                 idProducto: idProducto,
                 cantidad: cantidad,
                 codigoInventario: codigo,
-                descripcion: inputs[2].value || 'Sin descripción',
-                presentacion: inputs[3].value || 'Unidad',
+                descripcion: descripcion,
+                presentacion: presentacionSel,
                 valorUnitario: vUnitario,
                 ivaProducto: pctIva,
                 valorIva: vIva,
@@ -803,7 +910,7 @@ const campoCodigo = fila.querySelector('.codigo-producto');
         }
     });
 
-if (ordenDTO.detalles.length === 0) {
+    if (ordenDTO.detalles.length === 0) {
         mostrarToast("Debes agregar al menos un producto con código y cantidad válida.", 'error');
         return;
     }
@@ -824,7 +931,7 @@ if (ordenDTO.detalles.length === 0) {
             body: JSON.stringify(ordenDTO)
         });
 
-if (response.ok) {
+        if (response.ok) {
             mostrarToast('Orden guardada exitosamente.', 'success');
             if (typeof cerrarModal === 'function') {
                 cerrarModal();
@@ -888,7 +995,7 @@ document.addEventListener("click", async function (e) {
             throw new Error(mensaje);
         }
 
-mostrarToast("Orden aprobada correctamente", 'success');
+        mostrarToast("Orden aprobada correctamente", 'success');
 
         // Recargar después de que el toast se haya ocultado (3s)
         setTimeout(() => location.reload(), 1200);
@@ -930,7 +1037,7 @@ document.addEventListener("click", async function (e) {
             method: "DELETE"
         });
 
-if (!response.ok) {
+        if (!response.ok) {
             const mensaje = await response.text();
             throw new Error(mensaje || "No se pudo eliminar la orden.");
         }
@@ -976,7 +1083,7 @@ document.addEventListener("click", async function (e) {
         a.remove();
         window.URL.revokeObjectURL(url);
 
-} catch (err) {
+    } catch (err) {
         console.error(err);
         mostrarToast(err.message || 'Error descargando PDF', 'error');
     }
@@ -1057,7 +1164,7 @@ document
         // VALIDACIONES
         // ========================
 
-if (!numeroFactura) {
+        if (!numeroFactura) {
 
             mostrarToast(
                 "Debes ingresar el número de factura.",
@@ -1103,7 +1210,7 @@ if (!numeroFactura) {
 
         const confirmar = confirm(
 
-`Confirme los datos de recepción:
+            `Confirme los datos de recepción:
 
 Factura:
 ${numeroFactura}
@@ -1157,7 +1264,7 @@ La orden cambiará al estado RECIBIDA.
                 throw new Error(mensaje);
             }
 
-mostrarToast(
+            mostrarToast(
                 "Recepción registrada correctamente.",
                 'success'
             );
@@ -1371,7 +1478,7 @@ function cargarOrdenEnModal(
                     </td>
                 `;
 
-const campoIvaTotal = fila.querySelector('.iva-total');
+                const campoIvaTotal = fila.querySelector('.iva-total');
                 const campoValorTotal = fila.querySelector('.valor-total');
                 if (campoIvaTotal) {
                     campoIvaTotal.dataset.valor = Number(detalle.valorIva || 0);

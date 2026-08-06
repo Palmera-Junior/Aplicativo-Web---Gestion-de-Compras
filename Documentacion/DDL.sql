@@ -14,8 +14,19 @@ CREATE TABLE producto (
     id_producto SERIAL PRIMARY KEY,
     codigo_inventario VARCHAR(50) NOT NULL UNIQUE,
     nombre VARCHAR(150) NOT NULL,
-    presentacion VARCHAR(100),
     categoria TEXT
+);
+
+-- Tabla de presentaciones de producto (independizada de producto)
+-- cantidad es NULL cuando la presentación equivale a "1 unidad" (evita redundancia)
+CREATE TABLE presentacion_producto (
+    id_presentacion SERIAL PRIMARY KEY,
+    presentacion VARCHAR(150) NOT NULL,
+    cantidad INT, -- NULLable: se guarda NULL cuando la cantidad es 1
+    unidad VARCHAR(20) NOT NULL,
+    precio DECIMAL(10,2) NOT NULL,
+    id_producto INT NOT NULL,
+    CONSTRAINT fk_presentacion_producto FOREIGN KEY (id_producto) REFERENCES producto (id_producto) ON DELETE CASCADE
 );
 
 -- 3. Creación de tablas con dependencias simples (Nivel 1)

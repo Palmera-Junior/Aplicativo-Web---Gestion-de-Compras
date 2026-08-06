@@ -1,5 +1,6 @@
 ﻿package com.palmera_junior.gestion_compras.controller;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -18,15 +19,18 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.palmera_junior.gestion_compras.entity.CentroCosto;
+import com.palmera_junior.gestion_compras.entity.PresentacionProducto;
 import com.palmera_junior.gestion_compras.entity.Producto;
 import com.palmera_junior.gestion_compras.entity.Proveedor;
 import com.palmera_junior.gestion_compras.entity.Rol;
 import com.palmera_junior.gestion_compras.entity.Sede;
 import com.palmera_junior.gestion_compras.entity.Usuario;
 import com.palmera_junior.gestion_compras.repository.CentroCostoRepository;
+import com.palmera_junior.gestion_compras.repository.PresentacionProductoRepository;
 import com.palmera_junior.gestion_compras.repository.ProductoRepository;
 import com.palmera_junior.gestion_compras.repository.ProveedorRepository;
 import com.palmera_junior.gestion_compras.repository.SedeRepository;
@@ -43,6 +47,9 @@ public class AdminController {
 
     @Autowired
     private ProductoRepository productoRepository;
+
+    @Autowired
+    private PresentacionProductoRepository presentacionProductoRepository;
 
     @Autowired
     private SedeRepository sedeRepository;
@@ -196,7 +203,8 @@ public class AdminController {
                 || apellidoTrim == null || apellidoTrim.isBlank()
                 || nombreUsuarioTrim == null || nombreUsuarioTrim.isBlank()
                 || sedeId == null) {
-            redirectAttributes.addAttribute("error", "Todos los campos del usuario son obligatorios, excepto la contraseña al editar.");
+            redirectAttributes.addAttribute("error",
+                    "Todos los campos del usuario son obligatorios, excepto la contraseña al editar.");
             return "redirect:/admin";
         }
 
@@ -275,12 +283,15 @@ public class AdminController {
 
     @PostMapping("/admin/productos")
     @PreAuthorize("hasRole('ADMINISTRADOR')")
-public String guardarProducto(@RequestParam(required = false) Integer idProducto,
+    public String guardarProducto(@RequestParam(required = false) Integer idProducto,
             @RequestParam String codigoInventario,
             @RequestParam String nombre,
-            @RequestParam(required = false) String presentacion,
             @RequestParam(required = false) String categoria,
-            RedirectAttributes redirectAttributes) {
+            RedirectAttributes redirectAttributes,
+            @RequestParam(required = false) List<String> presentacionNombres,
+            @RequestParam(required = false) List<Integer> presentacionCantidades,
+            @RequestParam(required = false) List<String> presentacionUnidades,
+            @RequestParam(required = false) List<BigDecimal> presentacionPrecios) {
 
         codigoInventario = codigoInventario == null ? null : codigoInventario.trim();
         nombre = nombre == null ? null : nombre.trim();
@@ -290,7 +301,7 @@ public String guardarProducto(@RequestParam(required = false) Integer idProducto
             return "redirect:/admin";
         }
 
-try {
+        try {
             if (idProducto == null) {
                 if (productoRepository.findByCodigoInventario(codigoInventario).isPresent()) {
                     redirectAttributes.addAttribute("error", "Ya existe un producto con ese código de inventario.");
@@ -299,8 +310,10 @@ try {
                 Producto producto = new Producto();
                 producto.setCodigoInventario(codigoInventario);
                 producto.setNombre(nombre);
-                producto.setPresentacion(presentacion);
                 producto.setCategoria(categoria);
+                productoRepository.save(producto);
+                aplicarPresentaciones(producto, presentacionNombres, presentacionCantidades, presentacionUnidades,
+                        presentacionPrecios);
                 productoRepository.save(producto);
                 redirectAttributes.addAttribute("success", "Producto creado correctamente.");
                 return "redirect:/admin";
@@ -319,19 +332,96 @@ try {
             Producto producto = opt.get();
             producto.setCodigoInventario(codigoInventario);
             producto.setNombre(nombre);
-            producto.setPresentacion(presentacion);
             producto.setCategoria(categoria);
+            producto.getPresentaciones().clear();
+            aplicarPresentaciones(producto, presentacionNombres, presentacionCantidades, presentacionUnidades,
+                    presentacionPrecios);
             productoRepository.save(producto);
             redirectAttributes.addAttribute("success", "Producto actualizado correctamente.");
             return "redirect:/admin";
-        } catch (DataAccessException e) {
+} catch (DataAccessException e) {
+            // Incluir la causa real para poder diagnosticar el problema (p. ej.
+            // tabla 'presentacion_producto' inexistente en la base de datos).
+            String causa = e.getMostSpecificCause() != null && e.getMostSpecificCause().getMessage() != null
+                    ? e.getMostSpecificCause().getMessage()
+                    : e.getMessage();
             redirectAttributes.addAttribute("error",
-                    "No se pudo guardar el producto. Verifica que el código de inventario no esté duplicado y que la base de datos tenga la columna 'categoria' en la tabla 'producto'.");
+                    "No se pudo guardar el producto. Detalle: " + causa);
             return "redirect:/admin";
         } catch (Exception e) {
             redirectAttributes.addAttribute("error",
                     "Ocurrió un error inesperado al guardar el producto: " + e.getMessage());
             return "redirect:/admin";
+        }
+    }
+
+private void aplicarPresentaciones(Producto producto,
+            List<String> nombres,
+            List<Integer> cantidades,
+            List<String> unidades,
+            List<BigDecimal> precios) {
+
+        // Determinar la mayor cantidad de filas entre todas las listas para
+        // no perder filas que solo tengan cantidad, unidad o precio (sin nombre).
+        int maxFilas = 0;
+        if (nombres != null) maxFilas = Math.max(maxFilas, nombres.size());
+        if (cantidades != null) maxFilas = Math.max(maxFilas, cantidades.size());
+        if (unidades != null) maxFilas = Math.max(maxFilas, unidades.size());
+        if (precios != null) maxFilas = Math.max(maxFilas, precios.size());
+
+        boolean hayAlgunaFilaConDatos = false;
+
+        for (int i = 0; i < maxFilas; i++) {
+            String nombrePres = nombres != null && i < nombres.size() && nombres.get(i) != null
+                    ? nombres.get(i).trim() : null;
+            String unidadPres = unidades != null && i < unidades.size() && unidades.get(i) != null
+                    ? unidades.get(i).trim() : null;
+            Integer cantidadPres = cantidades != null && i < cantidades.size() && cantidades.get(i) != null
+                    ? cantidades.get(i) : null;
+            BigDecimal precioPres = precios != null && i < precios.size() && precios.get(i) != null
+                    ? precios.get(i) : null;
+
+            // Guardar la fila si CUALQUIERA de los 4 campos está diligenciado
+            boolean tieneDatos = (nombrePres != null && !nombrePres.isBlank())
+                    || (unidadPres != null && !unidadPres.isBlank())
+                    || cantidadPres != null
+                    || precioPres != null;
+            if (!tieneDatos) {
+                continue;
+            }
+            hayAlgunaFilaConDatos = true;
+
+            // El nombre de la presentación se toma, en orden de prioridad:
+            // 1) el campo "presentación" (si está diligenciado),
+            // 2) el campo "unidad" (cuando solo se llenó la unidad, ej. "Kg"),
+            // 3) "Unidad" por defecto.
+            String nombreFinal;
+            if (nombrePres != null && !nombrePres.isBlank()) {
+                nombreFinal = nombrePres;;
+            } else {
+                nombreFinal = "";
+            }
+
+            PresentacionProducto pres = new PresentacionProducto();
+            pres.setPresentacion(nombreFinal);
+            // Si la cantidad es 1 o está vacía, se guarda null para evitar la
+            // redundancia de registrar "1 unidad".
+        
+            pres.setCantidad(cantidadPres != null && cantidadPres != 1 ? cantidadPres : null);
+            pres.setUnidad(unidadPres != null && !unidadPres.isBlank() ? unidadPres : "Und");
+            pres.setPrecio(precioPres != null ? precioPres : BigDecimal.ZERO);
+            producto.addPresentacion(pres);
+        }
+
+        // Si el usuario NO llenó NINGÚN campo de presentaciones, se crea por
+        // defecto una presentación "Unidad" (en vez de "Sin presentación").
+        if (!hayAlgunaFilaConDatos) {
+            PresentacionProducto pres = new PresentacionProducto();
+            pres.setPresentacion("");
+            pres.setCantidad(null);
+            pres.setUnidad("Und");
+            pres.setPrecio(BigDecimal.ZERO);
+            producto.addPresentacion(pres);
         }
     }
 
@@ -394,7 +484,7 @@ try {
         return "redirect:/admin";
     }
 
-@PostMapping("/admin/centros-costo")
+    @PostMapping("/admin/centros-costo")
     @PreAuthorize("hasRole('ADMINISTRADOR')")
     public String guardarCentroCosto(@RequestParam(required = false) Integer idCentroCosto,
             @RequestParam String nombre,
@@ -416,7 +506,7 @@ try {
             return "redirect:/admin";
         }
 
-if (idCentroCosto == null) {
+        if (idCentroCosto == null) {
             if (centroCostoRepository.existsByNombreIgnoreCaseAndSedeIdSede(nombre, sedeId)) {
                 redirectAttributes.addAttribute("error",
                         "Ya existe un centro de costo con ese nombre en la sede seleccionada.");
@@ -443,7 +533,7 @@ if (idCentroCosto == null) {
             redirectAttributes.addAttribute("error", "Centro de costo no encontrado para actualizar.");
             return "redirect:/admin";
         }
-CentroCosto existing = opt.get();
+        CentroCosto existing = opt.get();
         if (centroCostoRepository.existsByNombreIgnoreCaseAndSedeIdSede(nombre, sedeId)
                 && !(existing.getNombre().equalsIgnoreCase(nombre) && existing.getSede().getIdSede().equals(sedeId))) {
             redirectAttributes.addAttribute("error",
@@ -468,12 +558,22 @@ CentroCosto existing = opt.get();
 
     @PostMapping("/admin/productos/delete/{id}")
     @PreAuthorize("hasRole('ADMINISTRADOR')")
+    @org.springframework.transaction.annotation.Transactional
     public ResponseEntity<?> deleteProducto(@PathVariable Integer id) {
         if (!productoRepository.existsById(id)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Producto no encontrado"));
         }
+        presentacionProductoRepository.deleteByProductoIdProducto(id);
         productoRepository.deleteById(id);
         return ResponseEntity.ok(Map.of("success", "Producto eliminado"));
+    }
+
+    // Endpoint para cargar las presentaciones de un producto al editar en admin
+    @GetMapping("/admin/producto/{id}/presentaciones")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    @ResponseBody
+    public List<PresentacionProducto> obtenerPresentacionesProducto(@PathVariable Integer id) {
+        return presentacionProductoRepository.findByProductoIdProducto(id);
     }
 
     @PostMapping("/admin/centros-costo/delete/{id}")

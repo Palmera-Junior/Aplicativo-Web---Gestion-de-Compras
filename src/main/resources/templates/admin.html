@@ -421,7 +421,7 @@
                     </div>
                 </div>
 
-                <div class="form-card">
+<div class="form-card">
                     <h3 class="form-card-title">Nuevo producto</h3>
                     <form th:action="@{/admin/productos}" method="post" id="productForm">
                         <input type="hidden" id="idProducto" name="idProducto">
@@ -434,15 +434,45 @@
                                 <label>Nombre</label>
                                 <input type="text" id="nombreProducto" class="input-control" name="nombre" required>
                             </div>
-                            <div class="form-group">
-                                <label>Presentación</label>
-                                <input type="text" id="presentacion" class="input-control" name="presentacion">
-                            </div>
-<div class="form-group full-width">
+                            <div class="form-group full-width">
                                 <label>Categoría</label>
                                 <textarea id="categoria" class="input-control" rows="3" name="categoria"></textarea>
                             </div>
                         </div>
+
+                        <div class="form-group full-width">
+                            <label>Presentaciones del producto</label>
+                            <div class="table-responsive">
+                                <table class="data-table admin-table" id="presentacionesTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Presentación</th>
+                                            <th>Cantidad</th>
+                                            <th>Unidad</th>
+                                            <th>Precio</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="presentacionesTbody">
+                                        <tr class="presentacion-row">
+                                            <td><input type="text" name="presentacionNombres" class="input-control pres-nombre" placeholder="Ej: Bolsa"></td>
+                                            <td><input type="number" name="presentacionCantidades" class="input-control pres-cant" min="0"></td>
+                                            <td><input type="text" name="presentacionUnidades" class="input-control pres-unidad" placeholder="Ej: g"></td>
+                                            <td><input type="number" step="0.01" name="presentacionPrecios" class="input-control pres-precio" min="0"></td>
+                                            <td>
+                                                <button type="button" class="btn-icon delete pres-delete" title="Eliminar presentación">
+                                                    <span class="material-symbols">delete</span>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <button type="button" id="btn-agregar-presentacion" class="btn-secondary add-row-btn">
+                                <span class="material-symbols">add</span> Agregar presentación
+                            </button>
+                        </div>
+
                         <div class="form-actions">
                             <button type="button" class="btn-cancel" onclick="resetForm('producto')">Cancelar</button>
                             <button type="submit" id="productSubmitButton" class="btn-primary">
@@ -457,25 +487,30 @@
                     <div class="tabla-card">
                         <div class="table-responsive">
                             <table class="data-table admin-table">
-                                <thead>
+<thead>
                                     <tr>
                                         <th>Código</th>
                                         <th>Nombre</th>
-                                        <th>Presentación</th>
+                                        <th>Presentaciones</th>
                                         <th>Categoría</th>  
                                         <th>Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr th:each="producto : ${productosPage.content}"
+<tr th:each="producto : ${productosPage.content}"
                                         th:data-id="${producto.idProducto}"
                                         th:data-codigo="${producto.codigoInventario}"
                                         th:data-nombre="${producto.nombre}"
-                                        th:data-presentacion="${producto.presentacion}"
                                         th:data-categoria="${producto.categoria}">
                                         <td class="mono" th:text="${producto.codigoInventario}"></td>
                                         <td th:text="${producto.nombre}"></td>
-                                        <td th:text="${producto.presentacion}"></td>
+                                        <td>
+<span th:if="${producto.presentaciones.isEmpty()}" class="text-muted">Sin presentaciones</span>
+                                            <span th:if="${!producto.presentaciones.isEmpty()}">
+                                                <span th:each="pres, presStat : ${producto.presentaciones}"
+                                                    th:text="${pres.cantidad != null ? pres.presentacion + ' (' + pres.cantidad + ' ' + pres.unidad + ')' : pres.presentacion + ' (' + pres.unidad + ')'} + ' ($' + ${#numbers.formatDecimal(pres.precio, 1, 'COMMA', 0, 'POINT')} + ')' + ( !presStat.last ? ';<br/>' : '' )"></span>
+                                            </span>
+                                        </td>
                                         <td th:text="${producto.categoria}"></td>
                                         <td class="actions">
                                             <button type="button" class="btn-icon edit" title="Editar"

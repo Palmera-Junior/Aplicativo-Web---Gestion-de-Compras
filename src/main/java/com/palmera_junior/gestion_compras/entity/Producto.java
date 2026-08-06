@@ -1,5 +1,8 @@
 package com.palmera_junior.gestion_compras.entity;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -23,11 +26,22 @@ public class Producto {
     @Column(nullable = false, length = 150)
     private String nombre;
 
-    @Column(length = 100)
-    private String presentacion;
-
     @Column(columnDefinition = "TEXT")
     private String categoria;
+
+    @OneToMany(mappedBy = "producto", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
+    private List<PresentacionProducto> presentaciones = new ArrayList<>();
+
+    public void addPresentacion(PresentacionProducto presentacion) {
+        presentaciones.add(presentacion);
+        presentacion.setProducto(this);
+    }
+
+    public void removePresentacion(PresentacionProducto presentacion) {
+        presentaciones.remove(presentacion);
+        presentacion.setProducto(null);
+    }
 
     @Override
     public boolean equals(Object o) {

@@ -21,13 +21,36 @@ document.addEventListener('DOMContentLoaded',()=>{
         });
     });
 
-    // Botón refrescar página
+// Botón refrescar página
     const btnRefrescar = document.getElementById('btn-refrescar');
     if(btnRefrescar){
         btnRefrescar.addEventListener('click',()=>{
             window.location.reload();
         });
     }
+
+    // Agregar presentación
+    const btnAgregarPres = document.getElementById('btn-agregar-presentacion');
+    if(btnAgregarPres){
+        btnAgregarPres.addEventListener('click',()=>{
+            crearFilaPresentacion();
+        });
+    }
+
+    // Eliminar presentación (delegación)
+    document.addEventListener('click',(e)=>{
+        const btn = e.target.closest('.pres-delete');
+        if(!btn) return;
+        const tbody = document.getElementById('presentacionesTbody');
+        if(!tbody) return;
+        const fila = btn.closest('tr');
+        if(tbody.rows.length > 1){
+            fila.remove();
+        } else {
+            crearFilaPresentacion();
+            limpiarTablaPresentaciones();
+        }
+    });
 
     // Auto-ocultar alertas de éxito/error a los 3 segundos
     const alertas = document.querySelectorAll('.alert-success, .alert-error');
@@ -57,13 +80,39 @@ function setButtonLabel(buttonId, iconName, label){
     button.innerHTML = `<span class="material-symbols">${iconName}</span> ${label}`;
 }
 
+function crearFilaPresentacion(nombre, cantidad, unidad, precio){
+    const tbody = document.getElementById('presentacionesTbody');
+    if(!tbody) return;
+    const tr = document.createElement('tr');
+    tr.className = 'presentacion-row';
+    tr.innerHTML = `
+        <td><input type="text" name="presentacionNombres" class="input-control pres-nombre" placeholder="Ej: Caja" value="${nombre || ''}"></td>
+        <td><input type="number" name="presentacionCantidades" class="input-control pres-cant" min="0" value="${cantidad != null ? cantidad : ''}"></td>
+        <td><input type="text" name="presentacionUnidades" class="input-control pres-unidad" placeholder="Ej: g" value="${unidad || ''}"></td>
+        <td><input type="number" step="0.01" name="presentacionPrecios" class="input-control pres-precio" min="0" value="${precio != null ? precio : ''}"></td>
+        <td>
+            <button type="button" class="btn-icon delete pres-delete" title="Eliminar presentación">
+                <span class="material-symbols">delete</span>
+            </button>
+        </td>
+    `;
+    tbody.appendChild(tr);
+}
+
+function limpiarTablaPresentaciones(){
+    const tbody = document.getElementById('presentacionesTbody');
+    if(!tbody) return;
+    tbody.innerHTML = '';
+    crearFilaPresentacion();
+}
+
 function resetForm(entity){
 if(entity === 'producto'){
         document.getElementById('idProducto').value = '';
         document.getElementById('codigoInventario').value = '';
         document.getElementById('nombreProducto').value = '';
-        document.getElementById('presentacion').value = '';
         document.getElementById('categoria').value = '';
+        limpiarTablaPresentaciones();
         setButtonLabel('productSubmitButton', 'add', 'Crear producto');
     }
 if(entity === 'centro'){
@@ -107,6 +156,26 @@ if(entity === 'centro'){
     }
 }
 
+async function cargarPresentacionesEnFormulario(idProducto){
+    limpiarTablaPresentaciones();
+    if(!idProducto) return;
+    try{
+        const res = await fetch('/admin/producto/' + idProducto + '/presentaciones');
+        if(!res.ok) return;
+        const presentaciones = await res.json();
+        if(!presentaciones || presentaciones.length === 0){
+            return;
+        }
+        const tbody = document.getElementById('presentacionesTbody');
+        if(tbody) tbody.innerHTML = '';
+        presentaciones.forEach(pres => {
+            crearFilaPresentacion(pres.presentacion, pres.cantidad, pres.unidad, pres.precio);
+        });
+    }catch(e){
+        console.error('Error cargando presentaciones:', e);
+    }
+}
+
 function editEntity(entity, element){
     const row = element.closest('tr');
     if(!row) return;
@@ -115,9 +184,9 @@ function editEntity(entity, element){
         document.getElementById('idProducto').value = row.dataset.id || '';
         document.getElementById('codigoInventario').value = row.dataset.codigo || '';
         document.getElementById('nombreProducto').value = row.dataset.nombre || '';
-        document.getElementById('presentacion').value = row.dataset.presentacion || '';
         document.getElementById('categoria').value = row.dataset.categoria || '';
         setButtonLabel('productSubmitButton', 'save', 'Guardar cambios');
+        cargarPresentacionesEnFormulario(row.dataset.id);
         return;
     }
 if(entity==='centro'){
