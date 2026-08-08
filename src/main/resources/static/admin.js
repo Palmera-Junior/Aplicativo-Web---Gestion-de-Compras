@@ -21,7 +21,30 @@ document.addEventListener('DOMContentLoaded',()=>{
         });
     });
 
-// Botón refrescar página
+    // Paginación AJAX de productos (sin recargar la página)
+    document.addEventListener('click', async (e) => {
+        const link = e.target.closest('.js-pagina-productos');
+        if(!link || link.classList.contains('disabled')) return;
+        e.preventDefault();
+        const target = document.getElementById('productosTablaCard');
+        if(!target) return;
+        try{
+            const res = await fetch(link.href);
+            if(!res.ok) return;
+            const htmlTexto = await res.text();
+            const doc = new DOMParser().parseFromString(htmlTexto, 'text/html');
+            const nuevoFragmento = doc.getElementById('productosTablaCard');
+            if(nuevoFragmento){
+                target.innerHTML = nuevoFragmento.innerHTML;
+            }
+            // Mantener la sección de productos abierta y visible
+            showSection('section-productos');
+        }catch(err){
+            console.error('Error cargando página de productos:', err);
+        }
+    });
+
+    // Botón refrescar página
     const btnRefrescar = document.getElementById('btn-refrescar');
     if(btnRefrescar){
         btnRefrescar.addEventListener('click',()=>{

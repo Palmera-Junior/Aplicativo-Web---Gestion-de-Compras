@@ -110,6 +110,22 @@ public class AdminController {
         return "admin";
     }
 
+    // Endpoint AJAX para paginar la tabla de productos sin recargar la página
+    @GetMapping("/admin/productos/pagina")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    public String paginaProductos(Model model,
+            @RequestParam(defaultValue = "0") int pageProductos,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Page<Producto> productosPage = productoRepository.findAll(PageRequest.of(pageProductos, size));
+
+        model.addAttribute("productosPage", productosPage);
+        model.addAttribute("pageProductos", pageProductos);
+        model.addAttribute("size", size);
+
+        return "admin :: productosFragment";
+    }
+
     @PostMapping("/admin/proveedores")
     @PreAuthorize("hasRole('ADMINISTRADOR')")
     public String guardarProveedor(@RequestParam(required = false) Integer idProv,
