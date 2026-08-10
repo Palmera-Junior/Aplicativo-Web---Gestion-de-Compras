@@ -3,11 +3,30 @@
            (mismo verde institucional del navbar +
            acentos sutiles diferenciados por sección)
         ========================================== */
-        .accent-blue   { --accent: #1c64f2; --accent-bg: #e7f1ff; }
-        .accent-green  { --accent: #198754; --accent-bg: #e6f6ec; }
-        .accent-amber  { --accent: #d97706; --accent-bg: #fdf1e7; }
-        .accent-teal   { --accent: #0891b2; --accent-bg: #e0f7fa; }
-        .accent-purple { --accent: #7c3aed; --accent-bg: #f1e9fe; }
+        .accent-blue {
+            --accent: #1c64f2;
+            --accent-bg: #e7f1ff;
+        }
+
+        .accent-green {
+            --accent: #198754;
+            --accent-bg: #e6f6ec;
+        }
+
+        .accent-amber {
+            --accent: #d97706;
+            --accent-bg: #fdf1e7;
+        }
+
+        .accent-teal {
+            --accent: #0891b2;
+            --accent-bg: #e0f7fa;
+        }
+
+        .accent-purple {
+            --accent: #7c3aed;
+            --accent-bg: #f1e9fe;
+        }
 
         .mono {
             font-family: 'JetBrains Mono', monospace;
@@ -18,7 +37,8 @@
         /* ==========================================
            ALERTAS
         ========================================== */
-        .alert-success, .alert-error {
+        .alert-success,
+        .alert-error {
             display: flex;
             align-items: center;
             gap: 10px;
@@ -27,9 +47,23 @@
             margin-bottom: 18px;
             font-size: 14px;
         }
-        .alert-success { background: #e6f6ec; color: #157347; border: 1px solid #b7e4c7; }
-        .alert-error   { background: #fdeeec; color: #c9432f; border: 1px solid #f3c6bd; }
-        .alert-success p, .alert-error p { margin: 0; }
+
+        .alert-success {
+            background: #e6f6ec;
+            color: #157347;
+            border: 1px solid #b7e4c7;
+        }
+
+        .alert-error {
+            background: #fdeeec;
+            color: #c9432f;
+            border: 1px solid #f3c6bd;
+        }
+
+        .alert-success p,
+        .alert-error p {
+            margin: 0;
+        }
 
         /* ==========================================
            TARJETAS DE MÓDULOS (grandes, con indicador)
@@ -44,7 +78,7 @@
         .module-card {
             background: #fff;
             border: 1px solid #e9ecef;
-            border-top: 4px solid var(--accent); 
+            border-top: 4px solid var(--accent);
             border-radius: 12px;
             padding: 22px;
             cursor: pointer;
@@ -210,7 +244,7 @@
             color: #495057;
         }
 
-/* ==========================================
+        /* ==========================================
            BOTONES DE ACCIÓN DEL FORMULARIO
         ========================================== */
         .form-actions {
@@ -221,7 +255,7 @@
             margin-top: 14px;
         }
 
-.btn-cancel {
+        .btn-cancel {
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -317,7 +351,7 @@
             white-space: nowrap;
         }
 
-        
+
 
         .admin-table tbody td {
             padding: 13px 16px;
@@ -334,7 +368,7 @@
             border-bottom: none;
         }
 
-td.actions {
+        td.actions {
             white-space: nowrap;
             text-align: center;
         }
@@ -364,11 +398,21 @@ td.actions {
             background: #f1f3f5;
         }
 
-        .btn-icon.edit .material-symbols { color: #495057; }
-        .btn-icon.edit:hover { background: #e9ecef; }
+        .btn-icon.edit .material-symbols {
+            color: #495057;
+        }
 
-        .btn-icon.delete .material-symbols { color: #c9432f; }
-        .btn-icon.delete:hover { background: #fdeeec; }
+        .btn-icon.edit:hover {
+            background: #e9ecef;
+        }
+
+        .btn-icon.delete .material-symbols {
+            color: #c9432f;
+        }
+
+        .btn-icon.delete:hover {
+            background: #fdeeec;
+        }
 
         /* ==========================================
            BADGES DE ROL (usuarios)
@@ -396,20 +440,42 @@ td.actions {
             flex-shrink: 0;
         }
 
-        .badge-rol.administrador { background: #fdf1e7; color: #b45309; }
-        .badge-rol.administrador::before { background: #d97706; }
+        .badge-rol.administrador {
+            background: #fdf1e7;
+            color: #b45309;
+        }
 
-        .badge-rol.aprobador { background: #e7f1ff; color: #1c64f2; }
-        .badge-rol.aprobador::before { background: #1c64f2; }
+        .badge-rol.administrador::before {
+            background: #d97706;
+        }
 
-        .badge-rol.solicitante { background: #e6f6ec; color: #198754; }
-        .badge-rol.solicitante::before { background: #198754; }
+        .badge-rol.aprobador {
+            background: #e7f1ff;
+            color: #1c64f2;
+        }
+
+        .badge-rol.aprobador::before {
+            background: #1c64f2;
+        }
+
+        .badge-rol.solicitante {
+            background: #e6f6ec;
+            color: #198754;
+        }
+
+        .badge-rol.solicitante::before {
+            background: #198754;
+        }
 
         /* ==========================================
            RESPONSIVE
         ========================================== */
         @media (max-width: 800px) {
-            .modules-grid { grid-template-columns: 1fr; }
-            .form-grid-2 { grid-template-columns: 1fr; }
+            .modules-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-grid-2 {
+                grid-template-columns: 1fr;
+            }
         }
- 

@@ -88,14 +88,17 @@ body{
     margin-bottom: 12px;
     text-align: center;
     font-weight: 300;
+    font-family: 'JetBrains Mono', monospace;
 }
 
 .alert-error{
     color: #ff6b6b;
+   
 }
 
 .alert-success{
     color: #c8e9cbb0;
+  
 }
 
 .input-group label{

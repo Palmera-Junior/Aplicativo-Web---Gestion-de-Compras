@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Órdenes de Compra</title>
-<link rel="stylesheet" th:href="@{/index.css(v=3)}">
+    <link rel="stylesheet" th:href="@{/index.css(v=3)}">
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap">
     <link rel="stylesheet"
@@ -21,7 +21,8 @@
         <div class="user-info">
             <span class="material-symbols">account_circle</span>
             <span
-                th:text="${#authentication.principal.usuario.nombre} + ' ' + ${#authentication.principal.usuario.apellido}">Nombre Apellido</span>
+                th:text="${#authentication.principal.usuario.nombre} + ' ' + ${#authentication.principal.usuario.apellido}">Nombre
+                Apellido</span>
             |<span th:text="${#authentication.principal.usuario.sede.nombre}">Cargando...</span>
             <form th:action="@{/logout}" method="POST" style="display: inline; margin: 0;">
                 <button title="Cerrar Sesión" type="submit" class="btn-logout">
@@ -46,15 +47,19 @@
             <span class="filtro-icon" title="Filtros">
                 <span class="material-symbols-outlined">filter_alt</span>
             </span>
-            <input type="text" name="q" placeholder="Buscar por número o proveedor..." class="input-control buscar-input" th:value="${q}">
+            <input type="text" name="q" placeholder="Buscar por número o proveedor..."
+                class="input-control buscar-input" th:value="${q}">
             <label class="sr-only" for="fechaDesde">Desde</label>
-            <input type="date" id="fechaDesde" name="fechaDesde" class="input-control fecha-input" th:value="${fechaDesde}">
+            <input type="date" id="fechaDesde" name="fechaDesde" class="input-control fecha-input"
+                th:value="${fechaDesde}">
             <label class="sr-only" for="fechaHasta">Hasta</label>
-            <input type="date" id="fechaHasta" name="fechaHasta" class="input-control fecha-input" th:value="${fechaHasta}">
+            <input type="date" id="fechaHasta" name="fechaHasta" class="input-control fecha-input"
+                th:value="${fechaHasta}">
             <button title="Buscar.." type="submit" class="btn-secondary btn-buscar">
-                <span class="material-symbols-outlined">search</span>
+                <span class="material-symbols-outlined ">search</span>
             </button>
-            <a title="Limpiar Filtros" aria-label="Limpiar Filtros" th:href="@{/dashboard}" class="btn-secondary btn-limpiar">
+            <a title="Limpiar Filtros" aria-label="Limpiar Filtros" th:href="@{/dashboard}"
+                class="btn-secondary btn-limpiar">
                 <span class="material-symbols-outlined">close</span>
             </a>
         </form>
@@ -78,11 +83,15 @@
                         <td th:text="${orden.fecha}">2023-10-01</td>
                         <td th:text="${orden.proveedor != null ? orden.proveedor.nombre : ''}">Proveedor S.A.</td>
                         <td th:text="${orden.sede.nombre}">Sede Principal</td>
-                        <td style="text-align: right;" th:text="'$ ' + ${#numbers.formatDecimal(orden.total, 1, 'COMMA', 0, 'POINT')}"></td>
+                        <td style="text-align: right;"
+                            th:text="'$ ' + ${#numbers.formatDecimal(orden.total, 1, 'COMMA', 0, 'POINT')}"></td>
                         <td class="estado-cell">
-                            <span th:if="${orden.estado.name() == 'BORRADOR'}" class="badge-estado borrador">BORRADOR</span>
-                            <span th:if="${orden.estado.name() == 'APROBADA'}" class="badge-estado aprobada">APROBADA</span>
-                            <span th:if="${orden.estado.name() == 'RECIBIDA'}" class="badge-estado recibida">RECIBIDA</span>
+                            <span th:if="${orden.estado.name() == 'BORRADOR'}"
+                                class="badge-estado borrador">BORRADOR</span>
+                            <span th:if="${orden.estado.name() == 'APROBADA'}"
+                                class="badge-estado aprobada">APROBADA</span>
+                            <span th:if="${orden.estado.name() == 'RECIBIDA'}"
+                                class="badge-estado recibida">RECIBIDA</span>
                         </td>
                         <td>
                             <button title="Ver Orden de Compra" class="btn-icon view" th:data-id="${orden.idOrden}">
@@ -97,8 +106,7 @@
                                 class="btn-icon receive" th:data-id="${orden.idOrden}"
                                 th:data-numero-orden="${orden.numeroOrden}"
                                 th:data-proveedor="${orden.proveedor != null ? orden.proveedor.nombre : ''}"
-                                th:data-paga-flete="${orden.pagaFlete}"
-                                th:data-valor-flete="${orden.valorFlete}">
+                                th:data-paga-flete="${orden.pagaFlete}" th:data-valor-flete="${orden.valorFlete}">
                                 <span class="material-symbols">inventory_2</span>
                             </button>
                             <button title="Eliminar Orden de Compra" th:if="${orden.estado.name() == 'BORRADOR'}"
@@ -134,18 +142,20 @@
                             <label>Recibido Por *</label>
                             <input type="text" id="recepcion-recibido-por">
                         </div>
-<div class="recepcion-form-group" id="recepcion-flete-group" style="display: none;">
+                        <div class="recepcion-form-group" id="recepcion-flete-group" style="display: none;">
                             <label>Valor del Flete *</label>
                             <input type="text" id="recepcion-valor-flete" inputmode="numeric" placeholder="$ 0">
                         </div>
                         <div class="recepcion-form-group">
                             <label>Observación Recepción</label>
-                            <textarea id="recepcion-observacion" rows="4" placeholder="Observaciones sobre la recepción del pedido"></textarea>
+                            <textarea id="recepcion-observacion" rows="4"
+                                placeholder="Observaciones sobre la recepción del pedido"></textarea>
                         </div>
                     </div>
                     <div class="modal-recibir-oc-footer">
                         <button title="Cerrar" type="button" id="btn-cancelar-recepcion">Cancelar</button>
-                        <button title="Registrar.." type="button" id="btn-confirmar-recepcion">Registrar Recepción</button>
+                        <button title="Registrar.." type="button" id="btn-confirmar-recepcion">Registrar
+                            Recepción</button>
                     </div>
                 </div>
             </div>
@@ -179,12 +189,13 @@
         </div>
     </main>
 
-<!-- Modal para crear nueva orden de compra -->
+    <!-- Modal para crear nueva orden de compra -->
     <div id="modal-orden" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
                 <h2 id="modal-orden-title">Crear Nueva Orden de Compra</h2>
-                <button title="Cerrar Orden" id="btn-cerrar-modal" class="btn-close" type="button" aria-label="Cerrar modal">
+                <button title="Cerrar Orden" id="btn-cerrar-modal" class="btn-close" type="button"
+                    aria-label="Cerrar modal">
                     <span class="material-symbols">close</span>
                 </button>
             </div>
@@ -254,7 +265,7 @@
                         </div>
                     </div>
 
-<h3 class="section-title">Detalle de Productos</h3>
+                    <h3 class="section-title">Detalle de Productos</h3>
                     <div class="table-responsive tabla-productos">
                         <table class="table-productos">
                             <thead>
@@ -272,29 +283,34 @@
                             </thead>
                             <tbody id="tbody-productos">
                                 <tr>
-                                    <td><input type="number" class="cantidad input-control td-input" value="1" min="0"></td>
+                                    <td><input type="number" class="cantidad input-control td-input" value="1" min="0">
+                                    </td>
                                     <td><input type="text" class="codigo-producto input-control td-input"></td>
-<td>
+                                    <td>
                                         <div class="autocomplete-container">
-                                            <input type="text" class="descripcion-producto input-control td-input" placeholder="Escriba el producto...">
+                                            <input type="text" class="descripcion-producto input-control td-input"
+                                                placeholder="Escriba el producto...">
                                             <div class="autocomplete-dropdown"></div>
                                         </div>
                                     </td>
-<td>
-<input type="text" class="presentacion-producto input-control td-input" placeholder="Seleccione o escriba...">
+                                    <td>
+                                        <input type="text" class="presentacion-producto input-control td-input"
+                                            placeholder="Seleccione o escriba...">
                                     </td>
                                     <td><input type="number" class="valor-unitario input-control td-input" min="0"></td>
                                     <td><input type="number" class="iva-producto input-control td-input" min="0"></td>
                                     <td><input type="text" class="iva-total input-control td-input" disabled></td>
                                     <td><input type="text" class="valor-total input-control td-input" disabled></td>
-                                    <td><button title="Eliminar producto" type="button" class="btn-icon delete" aria-label="Eliminar fila">
-                                        <span class="material-symbols">delete</span>
-                                    </button></td>
+                                    <td><button title="Eliminar producto" type="button" class="btn-icon delete"
+                                            aria-label="Eliminar fila">
+                                            <span class="material-symbols">delete</span>
+                                        </button></td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
-                    <button title="Agregar Nueva Fila" type="button" id="btn-agregar-fila" class="btn-secondary add-row-btn">
+                    <button title="Agregar Nueva Fila" type="button" id="btn-agregar-fila"
+                        class="btn-secondary add-row-btn">
                         <i class="fas fa-plus"></i> Agregar Fila
                     </button>
 
@@ -303,10 +319,12 @@
                             <label>Observaciones</label>
                             <textarea class="input-control" rows="4"></textarea>
                             <p class="nota-institucional">Toda factura debe llegar al correo
-                                <strong>recepcionfacturas@palmerajunior.com</strong> de lo contrario no será aceptada.</p>
+                                <strong>recepcionfacturas@palmerajunior.com</strong> de lo contrario no será aceptada.
+                            </p>
                         </div>
                         <div class="totales-section">
-                            <div class="total-row"><span>Subtotal:</span> <strong id="subtotal-general">$ 0.00</strong></div>
+                            <div class="total-row"><span>Subtotal:</span> <strong id="subtotal-general">$ 0.00</strong>
+                            </div>
                             <div class="total-row"><span>IVA:</span> <strong id="iva-general">$ 0.00</strong></div>
                             <div class="total-row">
                                 <label class="total-check">
@@ -315,7 +333,8 @@
                                 </label>
                                 <span id="contenedor-descuento">
                                     <strong id="descuento-general"></strong>
-                                    <input type="number" id="input-descuento" class="input-control total-input" value="0" min="0">
+                                    <input type="number" id="input-descuento" class="input-control total-input"
+                                        value="0" min="0">
                                 </span>
                             </div>
                             <div class="total-row">
@@ -325,10 +344,12 @@
                                 </label>
                                 <span id="contenedor-flete">
                                     <strong id="flete-general"></strong>
-                                    <input type="number" id="input-flete" class="input-control total-input" value="0" min="0">
+                                    <input type="number" id="input-flete" class="input-control total-input" value="0"
+                                        min="0">
                                 </span>
                             </div>
-                            <div class="total-row highlight"><span>TOTAL:</span> <strong id="total-general">$ 0.00</strong></div>
+                            <div class="total-row highlight"><span>TOTAL:</span> <strong id="total-general">$
+                                    0.00</strong></div>
                         </div>
                     </div>
 
@@ -355,14 +376,15 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button title="Guardar Orden de Compra" type="button" class="btn-modal-secundario" id="btn-cancelar">Cancelar</button>
+                <button title="Guardar Orden de Compra" type="button" class="btn-modal-secundario"
+                    id="btn-cancelar">Cancelar</button>
                 <button title="Cancelar y Salir" type="button" class="btn-modal-primario" id="btn-guardar-pdf">
                     <i class="fas fa-save"></i> Guardar
                 </button>
             </div>
         </div>
     </div>
-<script th:src="@{/dashboard.js(v=2)}"></script>
+    <script th:src="@{/dashboard.js(v=2)}"></script>
 
 </body>
 
