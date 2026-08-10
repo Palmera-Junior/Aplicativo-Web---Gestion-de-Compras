@@ -44,6 +44,54 @@ document.addEventListener('DOMContentLoaded',()=>{
         }
     });
 
+    // Paginación AJAX de proveedores (sin recargar la página)
+    document.addEventListener('click', async (e) => {
+        const link = e.target.closest('.js-pagina-proveedores');
+        if(!link || link.classList.contains('disabled')) return;
+        e.preventDefault();
+        const target = document.getElementById('proveedoresTablaCard');
+        if(!target) return;
+        try{
+            const res = await fetch(link.href);
+            if(!res.ok) return;
+            const htmlTexto = await res.text();
+            const doc = new DOMParser().parseFromString(htmlTexto, 'text/html');
+            const nuevoFragmento = doc.getElementById('proveedoresTablaCard');
+            if(nuevoFragmento){
+                target.innerHTML = nuevoFragmento.innerHTML;
+            }
+            // Mantener la sección de proveedores abierta y visible
+            showSection('section-proveedores');
+        }catch(err){
+            console.error('Error cargando página de proveedores:', err);
+        }
+    });
+
+    // Paginación AJAX de usuarios (sin recargar la página)
+    document.addEventListener('click', async (e) => {
+        const link = e.target.closest('.js-pagina-usuarios');
+        if(!link || link.classList.contains('disabled')) return;
+        e.preventDefault();
+        const target = document.getElementById('usuariosTablaCard');
+        if(!target) return;
+        try{
+            const res = await fetch(link.href);
+            if(!res.ok) return;
+            const htmlTexto = await res.text();
+            const doc = new DOMParser().parseFromString(htmlTexto, 'text/html');
+            const nuevoFragmento = doc.getElementById('usuariosTablaCard');
+            if(nuevoFragmento){
+                target.innerHTML = nuevoFragmento.innerHTML;
+            }
+            // Mantener la sección de usuarios abierta y visible
+            showSection('section-usuarios');
+        }catch(err){
+            console.error('Error cargando página de usuarios:', err);
+        }
+    });
+
+
+
     // Botón refrescar página
     const btnRefrescar = document.getElementById('btn-refrescar');
     if(btnRefrescar){

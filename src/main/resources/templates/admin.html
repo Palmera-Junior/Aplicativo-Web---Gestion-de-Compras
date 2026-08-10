@@ -201,7 +201,7 @@
                 <div class="admin-list">
                     <h2 class="list-title"><span class="material-symbols">chevron_right</span> Proveedores existentes
                     </h2>
-                    <div class="tabla-card">
+                    <div class="tabla-card" id="proveedoresTablaCard" th:fragment="proveedoresFragment">
                         <div class="table-responsive">
                             <table class="data-table admin-table">
                                 <thead>
@@ -254,14 +254,14 @@
                             </div>
                             <div class="controles">
                                 <a title="Página anterior" aria-label="Página anterior"
-                                    th:href="@{/admin(pageProveedores=${pageProveedores - 1}, pageUsuarios=${pageUsuarios}, pageProductos=${pageProductos}, pageSedes=${pageSedes}, pageCentros=${pageCentros}, size=${size})}"
-                                    th:class="${proveedoresPage.number == 0} ? 'btn-pagina disabled' : 'btn-pagina'">
+                                    th:href="@{/admin(pageProveedores=${pageProveedores - 1}, size=${size})}"
+                                    th:class="${proveedoresPage.number == 0} ? 'btn-pagina disabled js-pagina-proveedores' : 'btn-pagina js-pagina-proveedores'">
                                     <span class="material-symbols">chevron_left</span>
                                 </a>
                                 <span class="pagina-actual" th:text="${proveedoresPage.number + 1}">1</span>
                                 <a title="Siguiente página" aria-label="Siguiente página"
-                                    th:href="@{/admin(pageProveedores=${pageProveedores + 1}, pageUsuarios=${pageUsuarios}, pageProductos=${pageProductos}, pageSedes=${pageSedes}, pageCentros=${pageCentros}, size=${size})}"
-                                    th:class="${proveedoresPage.number >= proveedoresPage.totalPages - 1} ? 'btn-pagina disabled' : 'btn-pagina'">
+                                    th:href="@{/admin(pageProveedores=${pageProveedores + 1}, size=${size})}"
+                                    th:class="${proveedoresPage.number >= proveedoresPage.totalPages - 1} ? 'btn-pagina disabled js-pagina-proveedores' : 'btn-pagina js-pagina-proveedores'">
                                     <span class="material-symbols">chevron_right</span>
                                 </a>
                             </div>
@@ -336,7 +336,7 @@
 
                 <div class="admin-list">
                     <h2 class="list-title"><span class="material-symbols">chevron_right</span> Usuarios existentes</h2>
-                    <div class="tabla-card">
+                    <div class="tabla-card"  id="usuariosTablaCard" th:fragment="usuariosFragment">
                         <div class="table-responsive">
                             <table class="data-table admin-table">
                                 <thead>
@@ -391,14 +391,14 @@
                             </div>
                             <div class="controles">
                                 <a title="Página anterior" aria-label="Página anterior"
-                                    th:href="@{/admin(pageProveedores=${pageProveedores}, pageUsuarios=${pageUsuarios - 1}, pageProductos=${pageProductos}, pageSedes=${pageSedes}, pageCentros=${pageCentros}, size=${size})}"
-                                    th:class="${usuariosPage.number == 0} ? 'btn-pagina disabled' : 'btn-pagina'">
+                                    th:href="@{/admin(pageProveedores=${pageProveedores}, pageUsuarios=${pageUsuarios - 1}, size=${size})}"
+                                    th:class="${usuariosPage.number == 0} ? 'btn-pagina disabled js-pagina-usuarios' : 'btn-pagina js-pagina-usuarios'">
                                     <span class="material-symbols">chevron_left</span>
                                 </a>
                                 <span class="pagina-actual" th:text="${usuariosPage.number + 1}">1</span>
                                 <a title="Siguiente página" aria-label="Siguiente página"
-                                    th:href="@{/admin(pageProveedores=${pageProveedores}, pageUsuarios=${pageUsuarios + 1}, pageProductos=${pageProductos}, pageSedes=${pageSedes}, pageCentros=${pageCentros}, size=${size})}"
-                                    th:class="${usuariosPage.number >= usuariosPage.totalPages - 1} ? 'btn-pagina disabled' : 'btn-pagina'">
+                                    th:href="@{/admin(pageProveedores=${pageProveedores}, pageUsuarios=${pageUsuarios + 1}, size=${size})}"
+                                    th:class="${usuariosPage.number >= usuariosPage.totalPages - 1} ? 'btn-pagina disabled js-pagina-usuarios' : 'btn-pagina js-pagina-usuarios'">
                                     <span class="material-symbols">chevron_right</span>
                                 </a>
                             </div>
@@ -453,7 +453,7 @@
                                     <tbody id="presentacionesTbody">
                                         <tr class="presentacion-row">
                                             <td><input type="text" name="presentacionNombres"
-                                                    class="input-control pres-nombre" placeholder="Ej: Bolsa"></td>
+                                                    class="input-control pres-nombre" placeholder="Ej: Caja"></td>
                                             <td><input type="number" name="presentacionCantidades"
                                                     class="input-control pres-cant" min="0"></td>
                                             <td><input type="text" name="presentacionUnidades"
