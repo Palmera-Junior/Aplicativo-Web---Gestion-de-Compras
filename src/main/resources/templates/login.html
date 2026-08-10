@@ -1,66 +1,68 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Iniciar Sesión - Palmera Junior</title>
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap">
     <link rel="stylesheet" th:href="@{/login.css}">
-    <link rel="stylesheet" href="../static/login.css">
-    
 </head>
+
 <body>
 
-<div class="login-container" th:classappend="${param.error != null} ? ' login-error' : ''">
+    <div class="login-container" th:classappend="${param.error != null} ? ' login-error' : ''">
 
-    <div class="logo">       
-        <img th:src="@{/imgs/circulo-de-usuario.png}" alt="Logo">
-        <h1>Palmera Junior</h1>
-        <p>Gestión de Compras</p>
-    </div>
-    <br>
+        <div class="login-accent"></div>
 
-    <div th:if="${param.error}" class="alert-error">
-        Usuario o contraseña incorrectos.
-    </div>
-
-    <div th:if="${param.logout}" class="alert-success" >
-        Sesión cerrada correctamente.
-    </div> 
-
-    <form th:action="@{/login}" method="POST">
-        
-        <div class="input-group">
-            <label for="username"></label>
-            <input
-                    type="text"
-                    id="username"
-                    name="username"
-                    placeholder="Ingrese su usuario"
-                    required>
+        <div class="logo">
+            <img th:src="@{/imgs/user.png}" alt="Logo Palmera Junior">
+            <h1>Palmera Junior</h1>
+            <p>Gestión de Compras</p>
         </div>
 
-        <div class="input-group">
-            <label for="password"></label>
-            <input
-                    type="password"
-                    id="password"
-                    name="password"
-                    placeholder="Ingrese su contraseña"
-                    required>
+        <div th:if="${param.error}" class="alert-error">
+            <span class="material-symbols-outlined">error</span>
+            <span>Usuario o contraseña incorrectos.</span>
         </div>
-        <br><br><br>
 
-        <button type="submit" class="btn-login">
-            Iniciar Sesión
-        </button>
+        <div th:if="${param.logout}" class="alert-success">
+            <span class="material-symbols-outlined">check_circle</span>
+            <span>Sesión cerrada correctamente.</span>
+        </div>
 
-    </form>
+        <form th:action="@{/login}" method="POST">
 
-    <div class="register">
-        <p></p>
+            <div class="input-group">
+                <label for="username">Usuario</label>
+                <input type="text" id="username" name="username" placeholder="Ingrese su usuario" required autofocus>
+            </div>
+
+            <div class="input-group">
+                <label for="password">Contraseña</label>
+                <input type="password" id="password" name="password" placeholder="Ingrese su contraseña" required>
+            </div>
+
+            <button type="submit" class="btn-login">
+                Iniciar Sesión
+            </button>
+
+            <div class="divider">
+                <span>o continúa con</span>
+            </div>
+
+            <a href="/oauth2/authorization/google" class="btn-google">
+                <img th:src="@{/imgs/google.png}" alt="Google" class="google-icon">
+                <span>Continuar con Google</span>
+            </a>
+
+        </form>
+
     </div>
-
-</div>
 
 </body>
+
 </html>

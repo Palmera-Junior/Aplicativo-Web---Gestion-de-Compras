@@ -17,6 +17,8 @@ import com.palmera_junior.gestion_compras.dto.OrdenCompraDTO;
 import com.palmera_junior.gestion_compras.entity.CentroCosto;
 import com.palmera_junior.gestion_compras.entity.OrdenCompra;
 import com.palmera_junior.gestion_compras.entity.Producto;
+import com.palmera_junior.gestion_compras.entity.Usuario;
+import com.palmera_junior.gestion_compras.security.CustomOAuth2User;
 import com.palmera_junior.gestion_compras.security.UsuarioPrincipal;
 import com.palmera_junior.gestion_compras.service.CentroCostoService;
 import com.palmera_junior.gestion_compras.service.OrdenCompraService;
@@ -50,12 +52,30 @@ public class DashboardController {
             Model model,
             Authentication authentication) {
 
-        UsuarioPrincipal usuarioPrincipal = (UsuarioPrincipal) authentication.getPrincipal();
-        Integer idSede = usuarioPrincipal.getSedeId();
+        Object principal = authentication.getPrincipal();
 
-        boolean esNacional = usuarioPrincipal.getUsuario() != null
-                && usuarioPrincipal.getUsuario().getSede() != null
-                && "Sede Nacional".equalsIgnoreCase(usuarioPrincipal.getUsuario().getSede().getNombre());
+        Usuario usuario;
+
+        if (principal instanceof UsuarioPrincipal up) {
+
+            usuario = up.getUsuario();
+
+        } else if (principal instanceof CustomOAuth2User cu) {
+
+            usuario = cu.getUsuario();
+
+        } else {
+
+            throw new RuntimeException(
+                    "Tipo de usuario no soportado");
+        }
+        Integer idSede = usuario.getSede() != null
+                ? usuario.getSede().getIdSede()
+                : null;
+
+        boolean esNacional = usuario.getSede() != null
+                && "Sede Nacional".equalsIgnoreCase(
+                        usuario.getSede().getNombre());
 
         if ((fechaDesde == null || fechaDesde.isBlank()) && (fechaHasta == null || fechaHasta.isBlank())) {
             LocalDate now = LocalDate.now();
@@ -63,14 +83,16 @@ public class DashboardController {
             fechaHasta = now.withDayOfMonth(now.lengthOfMonth()).toString();
         }
 
-        Page<OrdenCompra> ordenesCompra = ordenCompraService.ordenesDeCompraPaginadas(PageRequest.of(page, size), q, fechaDesde, fechaHasta, idSede, esNacional);
+        Page<OrdenCompra> ordenesCompra = ordenCompraService.ordenesDeCompraPaginadas(PageRequest.of(page, size), q,
+                fechaDesde, fechaHasta, idSede, esNacional);
 
         // Obtener centros de costo asociados a la sede del usuario autenticado
         List<CentroCosto> centroCostos;
-        // Si la sede del usuario es la sede "Nacional", listar todos los centros de costo
-        if (usuarioPrincipal.getUsuario() != null
-                && usuarioPrincipal.getUsuario().getSede() != null
-                && "Sede Nacional".equalsIgnoreCase(usuarioPrincipal.getUsuario().getSede().getNombre())) {
+        // Si la sede del usuario es la sede "Nacional", listar todos los centros de
+        // costo
+        if (usuario.getSede() != null
+                && "Sede Nacional".equalsIgnoreCase(
+                        usuario.getSede().getNombre())) {
             centroCostos = centroCostoService.getAllCentroCostos();
         } else {
             centroCostos = centroCostoService.listarPorSede(idSede);
@@ -80,37 +102,36 @@ public class DashboardController {
         model.addAttribute("productos", productoService.getAllProductos());
         model.addAttribute("paginaActual", page);
         model.addAttribute("ordenesCompra", ordenesCompra);
-        model.addAttribute("proveedores", esNacional ? proveedorService.getAllProveedores() : proveedorService.listarPorSede(idSede));
+        model.addAttribute("proveedores",
+                esNacional ? proveedorService.getAllProveedores() : proveedorService.listarPorSede(idSede));
         model.addAttribute("q", q);
         model.addAttribute("fechaDesde", fechaDesde);
         model.addAttribute("fechaHasta", fechaHasta);
         return "dashboard";
     }
 
-   
-@GetMapping("/dashboard/producto")
-@ResponseBody
-public Producto buscarProducto(@RequestParam(required = false) String codigo) {
-    if (codigo == null || codigo.isBlank()) {
-        return null;
+    @GetMapping("/dashboard/producto")
+    @ResponseBody
+    public Producto buscarProducto(@RequestParam(required = false) String codigo) {
+        if (codigo == null || codigo.isBlank()) {
+            return null;
+        }
+        return productoService.buscarPorCodigo(codigo);
     }
-    return productoService.buscarPorCodigo(codigo);
-}
 
-@GetMapping("/dashboard/productos/buscar")
-@ResponseBody
-public java.util.List<Producto> buscarProductosPorTermino(
-        @RequestParam(required = false) String query) {
-    return productoService.buscarPorTermino(query);
-}
+    @GetMapping("/dashboard/productos/buscar")
+    @ResponseBody
+    public java.util.List<Producto> buscarProductosPorTermino(
+            @RequestParam(required = false) String query) {
+        return productoService.buscarPorTermino(query);
+    }
 
-@GetMapping("/orden-compra/{id}")
-@ResponseBody
-public OrdenCompraDTO obtenerOrden(
-        @PathVariable Integer id) {
+    @GetMapping("/orden-compra/{id}")
+    @ResponseBody
+    public OrdenCompraDTO obtenerOrden(
+            @PathVariable Integer id) {
 
-    return ordenCompraService.obtenerOrdenDTO(id);
-}
-
+        return ordenCompraService.obtenerOrdenDTO(id);
+    }
 
 }

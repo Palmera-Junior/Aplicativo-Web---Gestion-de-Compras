@@ -733,7 +733,7 @@ function recalcularTotalesGenerales() {
         totalIva += valorIva;
     });
 
-let descuento = 0;
+    let descuento = 0;
 
     if (chkDescuento.checked) {
         descuento = parseFloat(inputDescuento.value) || 0;
@@ -913,7 +913,7 @@ async function guardarYGenerarPdf() {
         //  CORRECCIÓN 2: Acotar el textarea al modal
         observaciones: document.querySelector('#modal-orden textarea')?.value || '',
 
-subTotal: parsearMoneda('subtotal-general'),
+        subTotal: parsearMoneda('subtotal-general'),
         ivaTotal: parsearMoneda('iva-general'),
         descuento: parsearMoneda('descuento-general'),
         total: parsearMoneda('total-general'),
@@ -1172,11 +1172,11 @@ document.addEventListener("click", function (e) {
         "recepcion-proveedor"
     ).textContent = boton.dataset.proveedor;
 
-document.getElementById(
+    document.getElementById(
         "recepcion-observacion"
     ).textContent = boton.dataset.observacionRecepcion;
 
-// Flete: mostrar el campo solo si la orden tiene pagaFlete
+    // Flete: mostrar el campo solo si la orden tiene pagaFlete
     const pagaFlete = boton.dataset.pagaFlete === 'true';
     const fleteGroup = document.getElementById('recepcion-flete-group');
     const fleteInput = document.getElementById('recepcion-valor-flete');
@@ -1227,7 +1227,7 @@ document
             .value
             .trim();
 
-const observacion = document
+        const observacion = document
             .getElementById("recepcion-observacion")
             .value
             .trim();
@@ -1280,7 +1280,7 @@ const observacion = document
             return;
         }
 
-if (recibidoPor.length < 3) {
+        if (recibidoPor.length < 3) {
 
             mostrarToast(
                 "El nombre del receptor es demasiado corto.",
@@ -1345,7 +1345,7 @@ La orden cambiará al estado RECIBIDA.
                     headers: {
                         "Content-Type": "application/json"
                     },
-body: JSON.stringify({
+                    body: JSON.stringify({
                         numeroFactura,
                         recibidoPor,
                         observacionRecepcion: observacion,
@@ -1415,7 +1415,7 @@ function limpiarFormularioRecepcion() {
         "recepcion-numero-orden"
     ).textContent = "";
 
-document.getElementById(
+    document.getElementById(
         "recepcion-proveedor"
     ).textContent = "";
 
@@ -1607,7 +1607,7 @@ function cargarOrdenEnModal(
         }
     }
 
-document.getElementById('subtotal-general').textContent = formatearPesos(Number(orden.subTotal || 0));
+    document.getElementById('subtotal-general').textContent = formatearPesos(Number(orden.subTotal || 0));
     document.getElementById('iva-general').textContent = formatearPesos(Number(orden.ivaTotal || 0));
     document.getElementById('descuento-general').textContent = formatearPesos(Number(orden.descuento || 0));
     document.getElementById('flete-general').textContent = formatearPesos(Number(orden.valorFlete || 0));

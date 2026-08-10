@@ -23,28 +23,32 @@ public class OrdenCompraController {
     private com.palmera_junior.gestion_compras.service.PdfService pdfService;
 
     @PostMapping
-    public ResponseEntity<OrdenCompra> guardarOrden(
+    public ResponseEntity<String> guardarOrden(
             @RequestBody OrdenCompraDTO dto) {
 
         if (dto.getIdCentroCosto() == null) {
-            return ResponseEntity.badRequest().body(null);
+            return ResponseEntity.badRequest()
+                    .body("Centro de costo requerido");
         }
 
-        OrdenCompra ordenGuardada = ordenCompraService.guardarOrdenDesdeDTO(dto);
+        ordenCompraService.guardarOrdenDesdeDTO(dto);
 
-        return ResponseEntity.ok(ordenGuardada);
+        return ResponseEntity.ok("Orden guardada correctamente");
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<OrdenCompra> actualizarOrden(
+    public ResponseEntity<String> actualizarOrden(
             @PathVariable Integer id,
             @RequestBody OrdenCompraDTO dto) {
+
         if (dto.getIdCentroCosto() == null) {
-            return ResponseEntity.badRequest().body(null);
+            return ResponseEntity.badRequest()
+                    .body("Centro de costo requerido");
         }
 
-        OrdenCompra ordenActualizada = ordenCompraService.actualizarOrdenDesdeDTO(id, dto);
-        return ResponseEntity.ok(ordenActualizada);
+        ordenCompraService.actualizarOrdenDesdeDTO(id, dto);
+
+        return ResponseEntity.ok("Orden actualizada correctamente");
     }
 
     @PutMapping("/{id}/aprobar")
@@ -53,9 +57,10 @@ public class OrdenCompraController {
 
         try {
 
-            OrdenCompra orden = ordenCompraService.aprobarOrden(id);
+            ordenCompraService.aprobarOrden(id);
 
-            return ResponseEntity.ok(orden);
+            return ResponseEntity.ok(
+                    "Orden aprobada correctamente");
 
         } catch (RuntimeException e) {
 

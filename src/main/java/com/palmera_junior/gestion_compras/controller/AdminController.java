@@ -68,7 +68,7 @@ public class AdminController {
             @RequestParam(defaultValue = "0") int pageProductos,
             @RequestParam(defaultValue = "0") int pageSedes,
             @RequestParam(defaultValue = "0") int pageCentros,
-            @RequestParam(defaultValue = "3") int size,
+            @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String success,
             @RequestParam(required = false) String error) {
 
@@ -115,7 +115,7 @@ public class AdminController {
     @PreAuthorize("hasRole('ADMINISTRADOR')")
     public String paginaProductos(Model model,
             @RequestParam(defaultValue = "0") int pageProductos,
-            @RequestParam(defaultValue = "3") int size) {
+            @RequestParam(defaultValue = "10") int size) {
 
         Page<Producto> productosPage = productoRepository.findAll(PageRequest.of(pageProductos, size));
 
@@ -132,7 +132,7 @@ public class AdminController {
     @PreAuthorize("hasRole('ADMINISTRADOR')")
     public String paginaProveedores(Model model,
             @RequestParam(defaultValue = "0") int pageProveedores,
-            @RequestParam(defaultValue = "3") int size) {
+            @RequestParam(defaultValue = "10") int size) {
         Page<Proveedor> proveedoresPage = proveedorRepository.findAll(PageRequest.of(pageProveedores, size));
         model.addAttribute("proveedoresPage", proveedoresPage);
         model.addAttribute("pageProveedores", pageProveedores);
@@ -145,7 +145,7 @@ public class AdminController {
     @PreAuthorize("hasRole('ADMINISTRADOR')")
     public String paginaUsuarios(Model model,
             @RequestParam(defaultValue = "0") int pageUsuarios,
-            @RequestParam(defaultValue = "3") int size) {
+            @RequestParam(defaultValue = "10") int size) {
         Page<Usuario> usuariosPage = usuarioRepository.findAll(PageRequest.of(pageUsuarios, size));
         model.addAttribute("usuariosPage", usuariosPage);
         model.addAttribute("pageUsuarios", pageUsuarios);

@@ -1,5 +1,6 @@
 package com.palmera_junior.gestion_compras.security;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -9,49 +10,61 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity // Nos permite proteger métodos individuales con anotaciones como @PreAuthorize
+@EnableMethodSecurity
 public class SecurityConfig {
+
+    @Autowired
+    private CustomOAuth2UserService customOAuth2UserService;
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    // Bean para encriptar contraseñas usando el estándar seguro BCrypt
+    // Handler compartido: garantiza que el login por formulario Y por Google
+    // redirijan siguiendo la MISMA regla de roles
+    @Bean
+    public AuthenticationSuccessHandler successHandler() {
+        return (request, response, authentication) -> {
+            boolean isAdmin = authentication.getAuthorities().stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .anyMatch(authRole -> authRole.equals("ROLE_ADMINISTRADOR"));
+            response.sendRedirect(isAdmin ? "/admin" : "/dashboard");
+        };
+    }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // Permitimos acceso público al login y a recursos estáticos
-                        .requestMatchers("/login", "/login.css", "/imgs/**", "/static/**").permitAll()
+                        .requestMatchers(
+                                "/login", "/login.css", "/imgs/**", "/static/**",
+                                "/oauth2/**", "/login/oauth2/**" // rutas del flujo de Google
+                        ).permitAll()
 
-                        // Solo ADMIN puede acceder a /admin/**
                         .requestMatchers("/admin/**").hasRole("ADMINISTRADOR")
 
-                        // Dashboard y APIs/paths de órdenes solo para SOLICITANTE y APROBADOR
                         .requestMatchers("/dashboard", "/dashboard/**", "/ordenes/**", "/orden_compra/**", "/api/orden_compra/**", "/api/ordenes/**")
                         .hasAnyRole("SOLICITANTE", "APROBADOR")
 
-                        // Cualquier otra ruta autenticada por defecto
                         .anyRequest().authenticated())
                 .formLogin(form -> form
-                        // Especificamos que la ruta de nuestra vista de login es /login
                         .loginPage("/login")
-                        // Redirección de acuerdo al rol del usuario
-                        .successHandler((request, response, authentication) -> {
-                            boolean isAdmin = authentication.getAuthorities().stream()
-                                    .map(GrantedAuthority::getAuthority)
-                                    .anyMatch(authRole -> authRole.equals("ROLE_ADMINISTRADOR"));
-                            response.sendRedirect(isAdmin ? "/admin" : "/dashboard");
-                        })
+                        .successHandler(successHandler())
                         .permitAll())
+                .oauth2Login(oauth2 -> oauth2
+                        .loginPage("/login")
+                        .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
+                        .successHandler(successHandler())
+                        .failureUrl("/login?error") // mismo comportamiento que un login fallido normal
+                )
                 .logout(logout -> logout
                         .logoutUrl("/logout")
-                        // Al salir, redirigimos al login enviando el parámetro ?logout
                         .logoutSuccessUrl("/login?logout")
                         .permitAll());
 

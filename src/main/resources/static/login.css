@@ -1,28 +1,17 @@
------------------------------------------------------------------
-LOGIN
-----------------------------------------------------------------
-
-
-*{
+* {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Inter', 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
-    font-weight: 300;
+    font-family: 'Inter', -apple-system, sans-serif;
 }
 
-body{
+body {
     min-height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
-    background: linear-gradient(
-        135deg,
-        #000000,
-        #0a0a0a,
-        #032515,
-        #198754
-    );
+    background: #eef1f0;
+    padding: 20px;
 }
 
 @keyframes shake {
@@ -33,149 +22,213 @@ body{
     80% { transform: translateX(6px); }
 }
 
-.login-container{
-    width: 400px;
-    padding: 40px;
-    border-radius: 20px;
-    background: rgba(255,255,255,0.08);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.15);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+/* ============================================
+   TARJETA DE LOGIN
+   ============================================ */
+.login-container {
+    width: 100%;
+    max-width: 400px;
+    padding: 40px 36px 32px;
+    border-radius: 14px;
+    background: #ffffff;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 20px 45px -15px rgba(11, 61, 36, 0.25);
     position: relative;
     overflow: hidden;
 }
 
-.logo{
-    text-align: center;
-    margin-bottom: 30px;
-    font-family: 'Inter', 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
-    font-weight: 300;
-}
-
-.logo img{
-    width: 110px;
-    height: 110px;
-    margin-bottom: 5px;
-    position: relative
-    
-}
-
-.logo h1{
-    color: #198754;
-    font-size: 2.2rem;
-    margin-bottom: 5px;
-}
-
-.logo p{
-    color: #ffffff;
-}
-
-.input-group{
-    margin-bottom: 20px;
-    
-}
-
 .login-container.login-error {
-    animation: shake 0.2s ease-in-out;
+    animation: shake 0.35s ease-in-out;
 }
 
-.alert-error,
-.alert-success{
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    padding: 0 0 12px;
-    margin-bottom: 12px;
+/* Acento superior: mismo degradado verde institucional del navbar */
+.login-accent {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, #0b3d24, #14532d 55%, #198754);
+}
+
+/* ============================================
+   LOGO / ENCABEZADO
+   ============================================ */
+.logo {
     text-align: center;
-    font-weight: 300;
-    font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 28px;
 }
 
-.alert-error{
-    color: #ff6b6b;
+.logo img {
+    width: 84px;
+    height: 84px;
    
-}
-
-.alert-success{
-    color: #c8e9cbb0;
+    object-fit: cover;
+    margin-bottom: 14px;
   
 }
 
-.input-group label{
-    display: block;
-    color: #ffffff;
-    margin-bottom: 8px;
-    font-size: 14px;
-    
-}
-
-.input-group input{
-    width: 100%;
-    padding: 14px;
-    border: none;
-    outline: none;
-    border-radius: 10px;
-    font-size: 15px;
-    background: #ffffff;
-    box-sizing: border-box;
-    border: 2px solid #1d1c1c
-}
-
-.input-group input:focus{
-    border: 2px solid #4CAF50;
-}
-
-.options{
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 25px;
-    color: white;
-    font-size: 14px;
-}
-
-.options a{
-    text-decoration: none;
+.logo h1 {
     color: #198754;
-    font-weight: 300;
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-bottom: 4px;
 }
 
-.options a:hover{
-    text-decoration: underline;
+.logo p {
+    color: #6c757d;
+    font-size: 13.5px;
 }
 
-.btn-login{
+/* ============================================
+   ALERTAS
+   ============================================ */
+.alert-error,
+.alert-success {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin-bottom: 18px;
+    font-size: 13.5px;
+    font-weight: 500;
+}
+
+.alert-error {
+    background: #fdeeec;
+    color: #c9432f;
+    border: 1px solid #f3c6bd;
+}
+
+.alert-success {
+    background: #e6f6ec;
+    color: #157347;
+    border: 1px solid #b7e4c7;
+}
+
+.alert-error .material-symbols-outlined,
+.alert-success .material-symbols-outlined {
+    font-size: 18px;
+}
+
+/* ============================================
+   CAMPOS DE FORMULARIO
+   ============================================ */
+.input-group {
+    margin-bottom: 18px;
+}
+
+.input-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 6px;
+}
+
+.input-group input {
     width: 100%;
-    padding: 14px;
+    padding: 12px 14px;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    outline: none;
+    font-size: 14.5px;
+    color: #212529;
+    background: #fff;
+    transition: all .15s ease;
+}
+
+.input-group input::placeholder {
+    color: #adb5bd;
+}
+
+.input-group input:focus {
+    border-color: #198754;
+    box-shadow: 0 0 0 3px rgba(25, 135, 84, 0.15);
+}
+
+/* ============================================
+   BOTÓN PRINCIPAL
+   ============================================ */
+.btn-login {
+    width: 100%;
+    padding: 13px;
     border: none;
-    border-radius: 10px;
+    border-radius: 8px;
     cursor: pointer;
-    background: #198754;
-    color: white;
-    font-size: 16px;
-    font-weight: 300;
-    transition: 0.3s;
-    border: 2px solid #1d1c1c;
+    background: linear-gradient(135deg,
+            
+            #0a2b17,
+            #175c32,
+            #198754,
+            #0a2b17);
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(25, 135, 84, 0.25);
+    transition: all .2s ease;
+    margin-top: 4px;
 }
 
-.btn-login:hover{
-    background: #94d8b0;
-    transform: translateY(-2px);
+.btn-login:hover {
+  
+    box-shadow: 0 4px 10px rgba(25, 135, 84, 0.3);
+    transform: translateY(-1px);
 }
 
-.register{
+/* ============================================
+   DIVISOR "o continúa con"
+   ============================================ */
+.divider {
+    display: flex;
+    align-items: center;
     text-align: center;
-    margin-top: 20px;
-    color: white;
+    margin: 22px 0 16px;
+    color: #adb5bd;
+    font-size: 12.5px;
 }
 
-.register a{
-    color: #4CAF50;
+.divider::before,
+.divider::after {
+    content: "";
+    flex: 1;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.divider span {
+    padding: 0 12px;
+}
+
+/* ============================================
+   BOTÓN DE GOOGLE
+   ============================================ */
+.btn-google {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 11px 16px;
+    background: #ffffff;
+    color: #3c4043;
+    border: 1px solid #dadce0;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
     text-decoration: none;
-    font-weight: 300;
+    cursor: pointer;
+    transition: all .2s ease;
 }
 
-.register a:hover{
-    text-decoration: underline;
+.btn-google:hover {
+    background: #e4e6e8;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
+.btn-google .google-icon {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+}

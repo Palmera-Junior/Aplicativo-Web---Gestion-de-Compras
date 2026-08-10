@@ -30,6 +30,15 @@ public class Usuario {
     @Column(nullable = false, length = 100)
     private String apellido;
 
+    @Column(name = "email", length = 100, unique = true)
+    private String email;
+
+    @Column (length = 100)
+    private String proveedor;
+
+    @Column(length = 100)
+    private String proveedorId;
+
     @Column(length = 100)
     private String cargo;
 
@@ -45,7 +54,7 @@ public class Usuario {
     @Column(nullable = false)
     private Rol rol;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_sede", nullable = false)
     @ToString.Exclude
     private Sede sede;
