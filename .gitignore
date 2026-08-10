@@ -45,3 +45,6 @@ target/
 *.log
 
 .DS_Store
+
+## guia de tareas
+.TODO.md
