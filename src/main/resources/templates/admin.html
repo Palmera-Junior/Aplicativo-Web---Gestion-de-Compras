@@ -314,6 +314,7 @@
                             <div class="form-group">
                                 <label>Rol</label>
                                 <select id="rol" class="input-control" name="rol" required>
+                                    <option value="" disabled selected>Seleccionar rol</option>
                                     <option th:each="rol : ${roles}" th:value="${rol}" th:text="${rol}"></option>
                                 </select>
                             </div>
@@ -436,10 +437,15 @@
                                 <label>Nombre</label>
                                 <input type="text" id="nombreProducto" class="input-control" name="nombre" required>
                             </div>
-                            <div class="form-group full-width">
+                            <div class="form-group">
                                 <label>Categoría</label>
-                                <textarea id="categoria" class="input-control" rows="3" name="categoria"></textarea>
+                                <select id="categoria" class="input-control" name="categoria" required>
+                                    <option value="" disabled selected>Seleccionar categoría</option>
+                                    <option th:each="categoria : ${categorias}" th:value="${categoria}" 
+                                        th:text="${categoria}"></option>
+                                </select>
                             </div>
+
                         </div>
 
                         <div class="form-group full-width">

@@ -26,8 +26,9 @@ public class Producto {
     @Column(nullable = false, length = 150)
     private String nombre;
 
-    @Column(columnDefinition = "TEXT")
-    private String categoria;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Categoria categoria;
 
     @OneToMany(mappedBy = "producto", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude

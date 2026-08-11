@@ -12,6 +12,7 @@ import org.springframework.util.StringUtils;
 import com.palmera_junior.gestion_compras.entity.PresentacionProducto;
 import com.palmera_junior.gestion_compras.entity.Producto;
 import com.palmera_junior.gestion_compras.repository.ProductoRepository;
+import com.palmera_junior.gestion_compras.entity.Categoria;
 
 @Service
 public class ProductoService {
@@ -62,7 +63,7 @@ public class ProductoService {
            Producto producto = new Producto();
            producto.setCodigoInventario(codigoInventario);
            producto.setNombre(nombre);
-           producto.setCategoria(categoria);
+           producto.setCategoria(categoria != null ? Categoria.valueOf(categoria) : null);
            productoRepository.save(producto);
            aplicarPresentaciones(producto, presentacionNombres, presentacionCantidades, presentacionUnidades,
                    presentacionPrecios);
@@ -77,7 +78,7 @@ public class ProductoService {
        }
        producto.setCodigoInventario(codigoInventario);
        producto.setNombre(nombre);
-       producto.setCategoria(categoria);
+       producto.setCategoria(categoria != null ? Categoria.valueOf(categoria) : null);
        producto.getPresentaciones().clear();
        aplicarPresentaciones(producto, presentacionNombres, presentacionCantidades, presentacionUnidades,
                presentacionPrecios);

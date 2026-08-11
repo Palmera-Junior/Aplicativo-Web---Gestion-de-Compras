@@ -48,7 +48,6 @@ public class OrdenCompra {
     @ToString.Exclude
     private CentroCosto centroCosto;
 
-
     @Column(columnDefinition = "TEXT")
     private String observaciones;
 
@@ -58,7 +57,7 @@ public class OrdenCompra {
     @Column(name = "iva_total", nullable = false, precision = 10, scale = 2)
     private BigDecimal ivaTotal;
 
-@Column(precision = 10, scale = 2)
+    @Column(precision = 10, scale = 2)
     private BigDecimal descuento;
 
     @Column(name = "paga_flete", nullable = false)

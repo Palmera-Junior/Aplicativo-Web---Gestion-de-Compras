@@ -23,6 +23,7 @@ import com.palmera_junior.gestion_compras.entity.PresentacionProducto;
 import com.palmera_junior.gestion_compras.entity.Producto;
 import com.palmera_junior.gestion_compras.entity.Proveedor;
 import com.palmera_junior.gestion_compras.entity.Rol;
+import com.palmera_junior.gestion_compras.entity.Categoria;
 import com.palmera_junior.gestion_compras.entity.Sede;
 import com.palmera_junior.gestion_compras.entity.Usuario;
 import com.palmera_junior.gestion_compras.service.CentroCostoService;
@@ -91,6 +92,7 @@ public class AdminController {
         model.addAttribute("pageCentros", pageCentros);
         model.addAttribute("size", size);
         model.addAttribute("roles", Arrays.asList(Rol.values()));
+        model.addAttribute("categorias", Arrays.asList(Categoria.values()));
         model.addAttribute("successMessage", success);
         model.addAttribute("errorMessage", error);
 
