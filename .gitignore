@@ -44,6 +44,10 @@ target/
 
 *.log
 
+.env
+.env.*
+!.env.example
+
 .DS_Store
 
 ## guia de tareas

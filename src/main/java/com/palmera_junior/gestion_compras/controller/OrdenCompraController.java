@@ -1,26 +1,35 @@
 package com.palmera_junior.gestion_compras.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.palmera_junior.gestion_compras.dto.OrdenCompraDTO;
 import com.palmera_junior.gestion_compras.dto.RecibirOrdenDTO;
 import com.palmera_junior.gestion_compras.entity.OrdenCompra;
 import com.palmera_junior.gestion_compras.service.OrdenCompraService;
+import com.palmera_junior.gestion_compras.service.PdfService;
 
 @RestController
 @RequestMapping("/orden-compra")
 public class OrdenCompraController {
 
-    @Autowired
-    private OrdenCompraService ordenCompraService;
+    private final OrdenCompraService ordenCompraService;
+    private final PdfService pdfService;
 
-    @Autowired
-    private com.palmera_junior.gestion_compras.service.PdfService pdfService;
+    public OrdenCompraController(OrdenCompraService ordenCompraService, PdfService pdfService) {
+        this.ordenCompraService = ordenCompraService;
+        this.pdfService = pdfService;
+    }
 
     @PostMapping
     public ResponseEntity<String> guardarOrden(

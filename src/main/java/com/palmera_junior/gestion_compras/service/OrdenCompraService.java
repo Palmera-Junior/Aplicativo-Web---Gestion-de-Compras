@@ -9,15 +9,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,45 +29,28 @@ import com.palmera_junior.gestion_compras.entity.Producto;
 import com.palmera_junior.gestion_compras.entity.Rol;
 import com.palmera_junior.gestion_compras.entity.Sede;
 import com.palmera_junior.gestion_compras.entity.Usuario;
+import com.palmera_junior.gestion_compras.entity.Proveedor;
 import com.palmera_junior.gestion_compras.repository.OrdenCompraRepository;
 import com.palmera_junior.gestion_compras.repository.ProductoRepository;
 import com.palmera_junior.gestion_compras.repository.ProveedorRepository;
-import com.palmera_junior.gestion_compras.security.CustomOAuth2User;
-import com.palmera_junior.gestion_compras.security.UsuarioPrincipal;
-import com.palmera_junior.gestion_compras.entity.Proveedor;
 
 @Service
 public class OrdenCompraService {
 
+    private final OrdenCompraRepository ordenCompraRepository;
+    private final ProductoRepository productoRepository;
+    private final ProveedorRepository proveedorRepository;
+    private final CentroCostoService centroCostoService;
+    private final UsuarioService usuarioService;
 
-    @Autowired
-    private OrdenCompraRepository ordenCompraRepository;
-
-    @Autowired
-    private ProductoRepository productoRepository;
-
-    @Autowired
-    private ProveedorRepository proveedorRepository;
-
-    @Autowired
-    private CentroCostoService centroCostoService;
-
-    private Usuario obtenerUsuarioAutenticado() {
-
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
-        Object principal = auth.getPrincipal();
-
-        if (principal instanceof UsuarioPrincipal up) {
-            return up.getUsuario();
-        }
-
-        if (principal instanceof CustomOAuth2User cu) {
-            return cu.getUsuario();
-        }
-
-        throw new RuntimeException(
-                "Tipo de autenticación no soportado");
+    public OrdenCompraService(OrdenCompraRepository ordenCompraRepository, ProductoRepository productoRepository,
+            ProveedorRepository proveedorRepository, CentroCostoService centroCostoService,
+            UsuarioService usuarioService) {
+        this.ordenCompraRepository = ordenCompraRepository;
+        this.productoRepository = productoRepository;
+        this.proveedorRepository = proveedorRepository;
+        this.centroCostoService = centroCostoService;
+        this.usuarioService = usuarioService;
     }
 
     // Método para listar órdenes paginadas en el Dashboard
@@ -173,7 +153,7 @@ public class OrdenCompraService {
 
         // 3. obtener sede
 
-        Usuario usuarioLogueado = obtenerUsuarioAutenticado();
+        Usuario usuarioLogueado = usuarioService.obtenerUsuarioAutenticado();
 
         // Asignar o crear proveedor asociado
         Proveedor proveedorAsignado = obtenerProveedorParaOrden(dto, usuarioLogueado);
@@ -324,7 +304,7 @@ public class OrdenCompraService {
         LocalDate fechaAnterior = orden.getFecha();
         LocalDate fechaNueva = fechaAnterior;
 
-        Usuario usuarioLogueado = obtenerUsuarioAutenticado();
+        Usuario usuarioLogueado = usuarioService.obtenerUsuarioAutenticado();
 
         Proveedor proveedorAsignado = obtenerProveedorParaOrden(dto, usuarioLogueado);
         orden.setProveedor(proveedorAsignado);
@@ -446,7 +426,7 @@ public class OrdenCompraService {
                     "Solo las órdenes en BORRADOR pueden aprobarse");
         }
 
-        Usuario usuarioAprobador = obtenerUsuarioAutenticado();
+        Usuario usuarioAprobador = usuarioService.obtenerUsuarioAutenticado();
 
         if (!orden.getSede().getIdSede()
                 .equals(usuarioAprobador.getSede().getIdSede())) {
@@ -481,7 +461,7 @@ public class OrdenCompraService {
         }
 
         Usuario usuarioLogueado =
-        obtenerUsuarioAutenticado();
+        usuarioService.obtenerUsuarioAutenticado();
 
         if (orden.getUsuario() == null
                 || !orden.getUsuario().getIdUsuario().equals(usuarioLogueado.getIdUsuario())) {

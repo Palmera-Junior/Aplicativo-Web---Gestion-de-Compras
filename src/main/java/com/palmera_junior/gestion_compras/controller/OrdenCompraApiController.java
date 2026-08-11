@@ -1,6 +1,5 @@
 package com.palmera_junior.gestion_compras.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -19,11 +18,13 @@ import com.palmera_junior.gestion_compras.service.PdfService;
 @RequestMapping("/api/ordenes")
 public class OrdenCompraApiController {
 
-    @Autowired
-    private OrdenCompraService ordenCompraService;
+    private final OrdenCompraService ordenCompraService;
+    private final PdfService pdfService;
 
-    @Autowired
-    private PdfService pdfService;
+    public OrdenCompraApiController(OrdenCompraService ordenCompraService, PdfService pdfService) {
+        this.ordenCompraService = ordenCompraService;
+        this.pdfService = pdfService;
+    }
 
     @PostMapping("/guardar")
     public ResponseEntity<?> guardarYGenerarPdf(@RequestBody OrdenCompraDTO ordenCompraDTO) {
