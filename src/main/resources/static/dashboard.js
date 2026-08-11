@@ -1615,12 +1615,29 @@ function cargarOrdenEnModal(
 
     const chkDescuento = document.getElementById('activar-descuento');
     const inputDescuento = document.getElementById('input-descuento');
-    if (chkDescuento && inputDescuento) {
+    const lblDescuento = document.getElementById('descuento-general');
+
+    if (chkDescuento && inputDescuento && lblDescuento) {
         const valorDescuento = Number(orden.descuento || 0);
         chkDescuento.checked = valorDescuento > 0;
-        inputDescuento.value = valorDescuento;
-        inputDescuento.style.display = esVista ? 'none' : (valorDescuento > 0 ? 'inline-block' : 'none');
         chkDescuento.disabled = esVista;
+        inputDescuento.value = valorDescuento;
+
+        if (esVista) {
+            inputDescuento.style.display = 'none';
+            lblDescuento.style.display = 'inline';
+            lblDescuento.textContent = formatearPesos(valorDescuento);
+
+        } else {
+            if (valorDescuento > 0) {
+                lblDescuento.style.display = 'none';
+                inputDescuento.style.display = 'inline-block';
+
+            } else {
+                inputDescuento.style.display = 'none';
+                lblDescuento.style.display = 'inline';
+            }
+        }
     }
 
     const chkFlete = document.getElementById('activar-flete');
