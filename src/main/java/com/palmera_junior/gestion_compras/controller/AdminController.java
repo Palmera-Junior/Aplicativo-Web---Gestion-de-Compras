@@ -228,7 +228,8 @@ public class AdminController {
             @RequestParam String apellido,
             @RequestParam(required = false) String cargo,
             @RequestParam String nombreUsuario,
-            @RequestParam(required = false) String contrasena,
+            @RequestParam(required = false) String contrasena, 
+            @RequestParam() String email,
             @RequestParam Rol rol,
             @RequestParam Integer sedeId,
             RedirectAttributes redirectAttributes) {
@@ -238,6 +239,7 @@ public class AdminController {
         final String nombreTrim = nombre == null ? null : nombre.trim();
         final String apellidoTrim = apellido == null ? null : apellido.trim();
         final String nombreUsuarioTrim = nombreUsuario == null ? null : nombreUsuario.trim();
+        final String emailTrim = email == null ? null : email.trim();    
         final String contrasenaTrim = contrasena == null ? null : contrasena.trim();
 
         // Validación de campos obligatorios (la contraseña puede omitirse en edición)
@@ -245,6 +247,7 @@ public class AdminController {
                 || nombreTrim == null || nombreTrim.isBlank()
                 || apellidoTrim == null || apellidoTrim.isBlank()
                 || nombreUsuarioTrim == null || nombreUsuarioTrim.isBlank()
+                || emailTrim == null || emailTrim.isBlank()
                 || sedeId == null) {
             redirectAttributes.addAttribute("error",
                     "Todos los campos del usuario son obligatorios, excepto la contraseña al editar.");
@@ -253,6 +256,12 @@ public class AdminController {
 
         if (usuarioRepository.findByCedula(cedulaTrim).filter(u -> !u.getIdUsuario().equals(idUsuario)).isPresent()) {
             redirectAttributes.addAttribute("error", "Ya existe un usuario registrado con esa cédula.");
+            return "redirect:/admin";
+        }
+
+
+        if (usuarioRepository.findByEmail(emailTrim).filter(u -> !u.getIdUsuario().equals(idUsuario)).isPresent()) {
+            redirectAttributes.addAttribute("error", "El correo electrónico ya está en uso.");
             return "redirect:/admin";
         }
 
@@ -281,6 +290,7 @@ public class AdminController {
             usuario.setApellido(apellidoTrim);
             usuario.setCargo(cargo);
             usuario.setNombreUsuario(nombreUsuarioTrim);
+            usuario.setEmail(emailTrim); 
             usuario.setContraseña(passwordEncoder.encode(contrasenaTrim));
             usuario.setRol(rol);
             usuario.setSede(sede);
@@ -309,10 +319,17 @@ public class AdminController {
             redirectAttributes.addAttribute("error", "El nombre de usuario ya está en uso.");
             return "redirect:/admin";
         }
+
+        if (usuarioRepository.findByEmail(emailTrim).filter(u -> !u.getIdUsuario().equals(idUsuario)).isPresent()) {
+            redirectAttributes.addAttribute("error", "El correo electrónico ya está en uso.");
+            return "redirect:/admin";
+        }
+
         usuario.setCedula(cedulaTrim);
         usuario.setNombre(nombreTrim);
         usuario.setApellido(apellidoTrim);
         usuario.setCargo(cargo);
+        usuario.setEmail(emailTrim);
         usuario.setNombreUsuario(nombreUsuarioTrim);
         if (contrasenaTrim != null && !contrasenaTrim.isBlank()) {
             usuario.setContraseña(passwordEncoder.encode(contrasenaTrim));
