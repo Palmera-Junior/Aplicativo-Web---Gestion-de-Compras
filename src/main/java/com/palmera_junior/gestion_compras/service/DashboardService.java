@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.ui.Model;
 
 import com.palmera_junior.gestion_compras.entity.CentroCosto;
+import com.palmera_junior.gestion_compras.entity.EstadoOrdenCompra;
 import com.palmera_junior.gestion_compras.entity.OrdenCompra;
 import com.palmera_junior.gestion_compras.entity.Usuario;
 
@@ -32,7 +33,7 @@ public class DashboardService {
     }
 
     public String prepararModeloDashboard(int page, int size, String q, String fechaDesde, String fechaHasta,
-            Model model, Authentication authentication) {
+            String estado, Model model, Authentication authentication) {
         Usuario usuario = usuarioService.obtenerUsuarioAutenticado(authentication);
 
         Integer idSede = usuario.getSede() != null ? usuario.getSede().getIdSede() : null;
@@ -51,7 +52,7 @@ public class DashboardService {
         }
 
         Page<OrdenCompra> ordenesCompra = ordenCompraService.ordenesDeCompraPaginadas(
-                PageRequest.of(page, size), q, fechaDesdeAplicada, fechaHastaAplicada, idSede, esNacional);
+                PageRequest.of(page, size), q, fechaDesdeAplicada, fechaHastaAplicada, idSede, esNacional, estado);
 
         List<CentroCosto> centroCostos;
         if (usuario.getSede() != null && "Sede Nacional".equalsIgnoreCase(usuario.getSede().getNombre())) {
@@ -60,6 +61,8 @@ public class DashboardService {
             centroCostos = centroCostoService.listarPorSede(idSede);
         }
 
+        model.addAttribute("estados", EstadoOrdenCompra.values());
+        model.addAttribute("estadoSeleccionado", estado);
         model.addAttribute("centroCostos", centroCostos);
         model.addAttribute("productos", productoService.getAllProductos());
         model.addAttribute("paginaActual", page);

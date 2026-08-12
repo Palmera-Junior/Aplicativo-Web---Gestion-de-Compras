@@ -49,19 +49,29 @@
             </span>
             <input type="text" name="q" placeholder="Buscar por número o proveedor..."
                 class="input-control buscar-input" th:value="${q}">
-            <label class="sr-only" for="fechaDesde">Desde</label>
-            <input type="date" id="fechaDesde" name="fechaDesde" class="input-control fecha-input"
-                th:value="${fechaDesde}">
-            <label class="sr-only" for="fechaHasta">Hasta</label>
-            <input type="date" id="fechaHasta" name="fechaHasta" class="input-control fecha-input"
-                th:value="${fechaHasta}">
-            <button title="Buscar.." type="submit" class="btn-secondary btn-buscar">
-                <span class="material-symbols-outlined ">search</span>
-            </button>
-            <a title="Limpiar Filtros" aria-label="Limpiar Filtros" th:href="@{/dashboard}"
-                class="btn-secondary btn-limpiar">
-                <span class="material-symbols-outlined">close</span>
-            </a>
+
+            
+            <select name="estado" class="input-control estado-select">
+                <option value="" >Todos los estados</option>
+                <option th:each="estado : ${estados}" th:value="${estado}" th:text="${estado}"
+                    th:selected="${estado.name() == estadoSeleccionado}">
+                </option>
+            </select>
+
+                
+                <label class="sr-only" for="fechaDesde">Desde</label>
+                <input type="date" id="fechaDesde" name="fechaDesde" class="input-control fecha-input"
+                    th:value="${fechaDesde}">
+                <label class="sr-only" for="fechaHasta">Hasta</label>
+                <input type="date" id="fechaHasta" name="fechaHasta" class="input-control fecha-input"
+                    th:value="${fechaHasta}">
+                <button title="Buscar.." type="submit" class="btn-secondary btn-buscar">
+                    <span class="material-symbols-outlined ">search</span>
+                </button>
+                <a title="Limpiar Filtros" aria-label="Limpiar Filtros" th:href="@{/dashboard}"
+                    class="btn-secondary btn-limpiar">
+                    <span class="material-symbols-outlined">close</span>
+                </a>
         </form>
 
         <div class="table-responsive">
@@ -79,10 +89,10 @@
                 </thead>
                 <tbody>
                     <tr th:each="orden : ${ordenesCompra.content}">
-                        <td><strong th:text="${orden.numeroOrden}">BUC070013</strong></td>
-                        <td th:text="${orden.fecha}">2023-10-01</td>
+                        <td><strong th:text="${orden.numeroOrden}">BUC-07-0013</strong></td>
+                        <td th:text="${orden.fecha}">2026-07-03</td>
                         <td th:text="${orden.proveedor != null ? orden.proveedor.nombre : ''}">Proveedor S.A.</td>
-                        <td th:text="${orden.sede.nombre}">Sede Principal</td>
+                        <td th:text="${orden.sede.nombre}">Sede Nacional</td>
                         <td style="text-align: right;"
                             th:text="'$ ' + ${#numbers.formatDecimal(orden.total, 1, 'COMMA', 0, 'POINT')}"></td>
                         <td class="estado-cell">
@@ -93,7 +103,7 @@
                             <span th:if="${orden.estado.name() == 'RECIBIDA'}"
                                 class="badge-estado recibida">RECIBIDA</span>
                         </td>
-                        <td>
+                        <td class="acciones-cell">
                             <button title="Ver Orden de Compra" class="btn-icon view" th:data-id="${orden.idOrden}">
                                 <span class="material-symbols">visibility</span>
                             </button>

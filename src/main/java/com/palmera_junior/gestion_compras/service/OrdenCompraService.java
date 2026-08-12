@@ -55,7 +55,7 @@ public class OrdenCompraService {
 
     // Método para listar órdenes paginadas en el Dashboard
     public Page<OrdenCompra> ordenesDeCompraPaginadas(Pageable pageable, String search, String fechaDesde,
-            String fechaHasta, Integer idSede, boolean esNacional) {
+            String fechaHasta, Integer idSede, boolean esNacional, String estado) {
         Specification<OrdenCompra> spec = Specification.where((root, query, cb) -> cb.conjunction());
 
         if (search != null && !search.isBlank()) {
@@ -97,6 +97,17 @@ public class OrdenCompraService {
             spec = spec.and((root, query, cb) -> cb.equal(root.get("sede").get("idSede"), idSede));
         }
 
+        // Nuevo filtro por estado
+        if (estado != null && !estado.isBlank()) {
+            try {
+                // Convertir el string de estado a su equivalente Enum (asumiendo que los nombres del enum son en mayúsculas)
+                EstadoOrdenCompra estadoEnum = EstadoOrdenCompra.valueOf(estado.toUpperCase());
+                spec = spec.and((root, query, cb) -> cb.equal(root.get("estado"), estadoEnum));
+            } catch (IllegalArgumentException ex) {
+                // Si el estado proporcionado no es válido, se puede ignorar el filtro o lanzar una excepción
+                System.err.println("Valor de estado de orden de compra inválido: " + estado);
+            }
+        }
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
                 Sort.by(Sort.Direction.DESC, "fecha"));
         Page<OrdenCompra> resultado = ordenCompraRepository.findAll(spec, sortedPageable);
@@ -110,10 +121,6 @@ public class OrdenCompraService {
         return resultado;
     }
 
-    // Método para obtener todas las órdenes
-    public List<OrdenCompra> getAllOrdenes() {
-        return ordenCompraRepository.findAll();
-    }
 
     // Método para buscar una orden por ID
     public OrdenCompra obtenerPorId(Integer idOrden) {

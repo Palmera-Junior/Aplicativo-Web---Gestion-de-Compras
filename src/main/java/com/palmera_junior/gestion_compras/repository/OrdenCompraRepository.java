@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
+
 import com.palmera_junior.gestion_compras.entity.OrdenCompra;
 
 public interface OrdenCompraRepository extends JpaRepository<OrdenCompra, Integer>, JpaSpecificationExecutor<OrdenCompra> {
@@ -20,11 +21,4 @@ public interface OrdenCompraRepository extends JpaRepository<OrdenCompra, Intege
     Optional<OrdenCompra> findById(Integer idOrden);
 
     Page<OrdenCompra> findAllByOrderByIdOrdenDesc(
-        Pageable pageable);
-
-    
-
-
-
-    
-}
+        Pageable pageable); }

@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.palmera_junior.gestion_compras.dto.OrdenCompraDTO;
+import com.palmera_junior.gestion_compras.entity.EstadoOrdenCompra;
 import com.palmera_junior.gestion_compras.entity.Producto;
 import com.palmera_junior.gestion_compras.service.DashboardService;
 import com.palmera_junior.gestion_compras.service.OrdenCompraService;
@@ -35,9 +36,12 @@ public class DashboardController {
             @RequestParam(defaultValue = "") String q,
             @RequestParam(defaultValue = "") String fechaDesde,
             @RequestParam(defaultValue = "") String fechaHasta,
+            @RequestParam(required = false) String estado,
             Model model,
             Authentication authentication) {
-        return dashboardService.prepararModeloDashboard(page, size, q, fechaDesde, fechaHasta, model, authentication);
+        model.addAttribute("estados", EstadoOrdenCompra.values());
+        model.addAttribute("estadoSeleccionado", estado);
+        return dashboardService.prepararModeloDashboard(page, size, q, fechaDesde, fechaHasta, estado, model, authentication);
     }
 
     @GetMapping("/dashboard/producto")
