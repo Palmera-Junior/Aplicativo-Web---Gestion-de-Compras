@@ -205,7 +205,7 @@
                         <span class="material-symbols-outlined">filter_list</span>
                     </span>
 
-                    <input type="text" name="search" class="input-control filtro-busqueda"
+                    <input type="text" name="search" class="input-control filtro-busqueda" th:value="${searchProveedores}"
                         placeholder="Buscar por nombre o NIT...">
 
                     <button type="button" class="btn-secondary btn-limpiar-filtro" data-entity="proveedor"
@@ -361,18 +361,17 @@
                         <span class="material-symbols-outlined">filter_list</span>
                     </span>
 
-                    <input type="text" name="search" class="input-control filtro-busqueda"
+                    <input type="text" name="search" class="input-control filtro-busqueda" th:value="${searchUsuarios}"
                         placeholder="Buscar por nombre, cédula o usuario...">
 
                     <select name="rol" class="input-control filtro-select">
-                        <option value="">Todos los roles</option>
-                        <option th:each="rol : ${roles}" th:value="${rol}" th:text="${rol}"></option>
-                        
-                    </select>
+                                            <option value="">Todos los roles</option>
+                                            <option th:each="rol : ${roles}" th:value="${rol}" th:text="${rol}" th:selected="${rolUsuario != null and rol.toString().equals(rolUsuario)}"></option>
+                                        </select>
 
                     <select name="sedeId" class="input-control filtro-select">
                         <option value="">Todas las sedes</option>
-                        <option th:each="sede : ${sedes}" th:value="${sede.idSede}" th:text="${sede.nombre}"></option>
+                                            <option th:each="sede : ${sedes}" th:value="${sede.idSede}" th:text="${sede.nombre}" th:selected="${sedeIdUsuario != null and sede.idSede == sedeIdUsuario}"></option>
                     </select>
 
                     <button type="button" class="btn-secondary btn-limpiar-filtro" data-entity="usuario" title="Limpiar filtros">
@@ -550,13 +549,13 @@
                             <span class="material-symbols-outlined">filter_list</span>
                         </span>
 
-                        <input type="text" name="search" class="input-control filtro-busqueda"
+                        <input type="text" name="search" class="input-control filtro-busqueda" th:value="${searchProductos}"
                             placeholder="Buscar por nombre o código...">
 
                         <select name="categoria" class="input-control filtro-select">
                             <option value="">Todas las categorías</option>
                             <!-- Aquí Thymeleaf cargaría las categorías únicas desde el backend -->
-                            <option th:each="cat : ${categoriasUnicas}" th:value="${cat}" th:text="${cat}"></option>
+                                                    <option th:each="cat : ${categoriasUnicas}" th:value="${cat}" th:text="${cat}" th:selected="${categoriaProducto != null and cat.equals(categoriaProducto)}"></option>
                         </select>
 
                         <button type="button" class="btn-secondary btn-limpiar-filtro" data-entity="producto"

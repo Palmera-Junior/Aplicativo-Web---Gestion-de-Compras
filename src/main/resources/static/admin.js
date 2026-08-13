@@ -135,6 +135,107 @@ document.addEventListener('DOMContentLoaded',()=>{
             }, 500);
         }, 3000);
     });
+
+    // -----------------------
+    // Filtros dinámicos (búsqueda y selects)
+    // -----------------------
+    function debounce(fn, wait){
+        let t;
+        return function(...args){
+            clearTimeout(t);
+            t = setTimeout(()=> fn.apply(this, args), wait);
+        };
+    }
+
+    function collectFilters(){
+        const data = {};
+        const provSection = document.getElementById('filtros-proveedores');
+        if(provSection){
+            const s = provSection.querySelector('input[name="search"]');
+            if(s && s.value.trim()) data.searchProveedores = s.value.trim();
+        }
+        const usuariosSection = document.getElementById('filtros-usuarios');
+        if(usuariosSection){
+            const s = usuariosSection.querySelector('input[name="search"]');
+            if(s && s.value.trim()) data.searchUsuarios = s.value.trim();
+            const rol = usuariosSection.querySelector('select[name="rol"]');
+            if(rol && rol.value) data.rolUsuario = rol.value;
+            const sede = usuariosSection.querySelector('select[name="sedeId"]');
+            if(sede && sede.value) data.sedeIdUsuario = sede.value;
+        }
+        const prodSection = document.getElementById('filtros-productos');
+        if(prodSection){
+            const s = prodSection.querySelector('input[name="search"]');
+            if(s && s.value.trim()) data.searchProductos = s.value.trim();
+            const cat = prodSection.querySelector('select[name="categoria"]');
+            if(cat && cat.value) data.categoriaProducto = cat.value;
+        }
+        return data;
+    }
+
+    const pageParamMap = { proveedor: 'pageProveedores', usuario: 'pageUsuarios', producto: 'pageProductos' };
+    const fragmentMap = { proveedor: 'proveedoresTablaCard', usuario: 'usuariosTablaCard', producto: 'productosTablaCard' };
+
+    async function applyFilters(entity){
+        const params = collectFilters();
+        // reset the page for this entity to 0 when applying filters
+        params[pageParamMap[entity]] = 0;
+        const url = new URL('/admin', window.location.origin);
+        Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, v));
+        try{
+            const res = await fetch(url.href);
+            if(!res.ok) return;
+            const htmlTexto = await res.text();
+            const doc = new DOMParser().parseFromString(htmlTexto, 'text/html');
+            const fragId = fragmentMap[entity];
+            const nuevoFragmento = doc.getElementById(fragId);
+            if(nuevoFragmento){
+                const target = document.getElementById(fragId);
+                if(target) target.innerHTML = nuevoFragmento.innerHTML;
+            }
+            // Mantener la sección visible
+            const sectionId = 'section-' + (entity === 'proveedor' ? 'proveedores' : entity === 'usuario' ? 'usuarios' : 'productos');
+            showSection(sectionId);
+        }catch(err){
+            console.error('Error aplicando filtros:', err);
+        }
+    }
+
+    // debounce para inputs de búsqueda
+    document.querySelectorAll('.filtro-busqueda').forEach(input => {
+        const section = input.closest('.filtros-section');
+        const entity = section ? section.dataset.entity : null;
+        if(!entity) return;
+        input.addEventListener('input', debounce(()=> applyFilters(entity), 400));
+    });
+
+    // cambio en selects de filtro
+    document.querySelectorAll('.filtro-select').forEach(sel => {
+        const section = sel.closest('.filtros-section');
+        const entity = section ? section.dataset.entity : null;
+        if(!entity) return;
+        sel.addEventListener('change', ()=> applyFilters(entity));
+    });
+
+    // limpiar filtros por sección
+    document.querySelectorAll('.btn-limpiar-filtro').forEach(btn => {
+        btn.addEventListener('click', ()=>{
+            const entity = btn.getAttribute('data-entity');
+            const sectionId = 'filtros-' + (entity === 'proveedor' ? 'proveedores' : entity + 's');
+            const section = document.getElementById(sectionId);
+            if(!section) return;
+            section.querySelectorAll('input, select').forEach(el => {
+                if(el.tagName === 'INPUT'){
+                    if(el.type === 'checkbox' || el.type === 'radio') el.checked = false;
+                    else el.value = '';
+                } else if(el.tagName === 'SELECT'){
+                    el.value = '';
+                }
+            });
+            applyFilters(entity);
+        });
+    });
+
 });
 
 function showCreate(kind){
