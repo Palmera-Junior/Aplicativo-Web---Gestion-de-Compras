@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -350,10 +351,16 @@ public String guardarProducto(@RequestParam(required = false) Integer idProducto
     @PostMapping("/admin/productos/delete/{id}")
     @PreAuthorize("hasRole('ADMINISTRADOR')")
     public ResponseEntity<?> deleteProducto(@PathVariable Integer id) {
-        if (!productoService.eliminarProducto(id)) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Producto no encontrado"));
+        try {
+            if (!productoService.eliminarProducto(id)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Producto no encontrado"));
+            }
+            return ResponseEntity.ok(Map.of("success", "Producto eliminado"));
+        } catch (DataIntegrityViolationException dive) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "No se puede eliminar el producto porque está asociado a órdenes u otros registros."));
+        } catch (DataAccessException dae) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Error al eliminar producto: " + dae.getMostSpecificCause()));
         }
-        return ResponseEntity.ok(Map.of("success", "Producto eliminado"));
     }
 
     // Endpoint para cargar las presentaciones de un producto al editar en admin
@@ -367,36 +374,60 @@ public String guardarProducto(@RequestParam(required = false) Integer idProducto
     @PostMapping("/admin/centros-costo/delete/{id}")
     @PreAuthorize("hasRole('ADMINISTRADOR')")
     public ResponseEntity<?> deleteCentro(@PathVariable Integer id) {
-        if (!centroCostoService.eliminar(id)) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Centro no encontrado"));
+        try {
+            if (!centroCostoService.eliminar(id)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Centro no encontrado"));
+            }
+            return ResponseEntity.ok(Map.of("success", "Centro eliminado"));
+        } catch (DataIntegrityViolationException dive) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "No se puede eliminar el centro de costo porque está asociado a órdenes de compra u otros registros."));
+        } catch (DataAccessException dae) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Error al eliminar centro: " + dae.getMostSpecificCause()));
         }
-        return ResponseEntity.ok(Map.of("success", "Centro eliminado"));
     }
 
     @PostMapping("/admin/usuarios/delete/{id}")
     @PreAuthorize("hasRole('ADMINISTRADOR')")
     public ResponseEntity<?> deleteUsuario(@PathVariable Integer id) {
-        if (!usuarioService.eliminar(id)) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Usuario no encontrado"));
+        try {
+            if (!usuarioService.eliminar(id)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Usuario no encontrado"));
+            }
+            return ResponseEntity.ok(Map.of("success", "Usuario eliminado"));
+        } catch (DataIntegrityViolationException dive) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "No se puede eliminar el usuario porque está asociado a órdenes de compra u otros registros."));
+        } catch (DataAccessException dae) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Error al eliminar usuario: " + dae.getMostSpecificCause()));
         }
-        return ResponseEntity.ok(Map.of("success", "Usuario eliminado"));
     }
 
     @PostMapping("/admin/proveedores/delete/{id}")
     @PreAuthorize("hasRole('ADMINISTRADOR')")
     public ResponseEntity<?> deleteProveedor(@PathVariable Integer id) {
-        if (!proveedorService.eliminar(id)) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Proveedor no encontrado"));
+        try {
+            if (!proveedorService.eliminar(id)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Proveedor no encontrado"));
+            }
+            return ResponseEntity.ok(Map.of("success", "Proveedor eliminado"));
+        } catch (DataIntegrityViolationException dive) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "No se puede eliminar el proveedor porque está asociado a órdenes de compra u otros registros."));
+        } catch (DataAccessException dae) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Error al eliminar proveedor: " + dae.getMostSpecificCause()));
         }
-        return ResponseEntity.ok(Map.of("success", "Proveedor eliminado"));
     }
 
     @PostMapping("/admin/sedes/delete/{id}")
     @PreAuthorize("hasRole('ADMINISTRADOR')")
     public ResponseEntity<?> deleteSede(@PathVariable Integer id) {
-        if (!sedeService.eliminar(id)) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Sede no encontrada"));
+        try {
+            if (!sedeService.eliminar(id)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Sede no encontrada"));
+            }
+            return ResponseEntity.ok(Map.of("success", "Sede eliminada"));
+        } catch (DataIntegrityViolationException dive) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "No se puede eliminar la sede porque tiene centros, órdenes o recursos asociados."));
+        } catch (DataAccessException dae) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Error al eliminar sede: " + dae.getMostSpecificCause()));
         }
-        return ResponseEntity.ok(Map.of("success", "Sede eliminada"));
     }
 }
