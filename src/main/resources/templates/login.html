@@ -16,13 +16,17 @@
 
     <div class="login-container" th:classappend="${param.error != null} ? ' login-error' : ''">
 
-        <div class="login-accent"></div>
+    <div class="login-accent"></div>
 
-        <div class="logo">
-            <img th:src="@{/imgs/user.png}" alt="Logo Palmera Junior">
-            <h1>Palmera Junior</h1>
-            <p>Gestión de Compras</p>
+    <div class="logo">
+        <div class="logos">
+            <img th:src="@{/imgs/logo1.png}" alt="Logo 1" id="logo1">
+            <span class="separador"></span>
+            <img th:src="@{/imgs/logoAnticimex.png}" alt="Logo-2" id="logo2">
         </div>
+        <br>
+        <p>Gestión de Compras</p>
+    </div>
 
         <div th:if="${param.error}" class="alert-error">
             <span class="material-symbols-outlined">error</span>
