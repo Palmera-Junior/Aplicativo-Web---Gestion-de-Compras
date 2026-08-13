@@ -33,6 +33,24 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // Aplicar filtro por estado al hacer click/seleccionar una opción
+    // (antes había que seleccionar y luego hacer click en la lupa)
+    const estadoSelect = document.querySelector('.estado-select');
+    if (estadoSelect) {
+        estadoSelect.addEventListener('change', () => {
+            const form = estadoSelect.closest('form');
+            if (form) {
+                // Enviar formulario para aplicar filtros (GET)
+                form.submit();
+            }
+        });
+        // También permitir aplicar si se hace click en la opción (algunos navegadores no disparan change hasta blur)
+        estadoSelect.addEventListener('click', (e) => {
+            // No forzar submit en cada click en el control desplegable, solo cuando cambia el valor
+            // The change handler above is sufficient for value changes.
+        });
+    }
+
     const modal = document.getElementById("modal-orden");
     const btnCerrar = document.getElementById("btn-cerrar-modal");
     const btnAbrir = document.getElementById("btn-nueva-orden");
