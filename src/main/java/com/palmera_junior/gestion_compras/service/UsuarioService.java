@@ -23,7 +23,7 @@ import com.palmera_junior.gestion_compras.security.CustomOAuth2User;
 import com.palmera_junior.gestion_compras.security.UsuarioPrincipal;
 
 @Service
-public class UsuarioService {
+public class UsuarioService implements IUsuarioService {
 
    private final UsuarioRepository usuarioRepository;
    private final SedeRepository sedeRepository;

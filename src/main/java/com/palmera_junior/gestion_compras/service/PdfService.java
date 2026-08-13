@@ -14,7 +14,7 @@ import java.text.DecimalFormat;
 
 @Service
 
-public class PdfService {
+public class PdfService implements IPdfService {
 
     // ==========================================
     // PALETA DE COLORES (misma línea visual que

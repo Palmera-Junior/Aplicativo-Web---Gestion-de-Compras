@@ -13,7 +13,7 @@ import com.palmera_junior.gestion_compras.repository.ProveedorRepository;
 import com.palmera_junior.gestion_compras.repository.SedeRepository;
 
 @Service
-public class ProveedorService {
+public class ProveedorService implements IProveedorService {
 
     private final ProveedorRepository proveedorRepository;
     private final SedeRepository sedeRepository;

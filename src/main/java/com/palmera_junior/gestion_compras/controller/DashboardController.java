@@ -11,19 +11,19 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.palmera_junior.gestion_compras.dto.OrdenCompraDTO;
 import com.palmera_junior.gestion_compras.entity.EstadoOrdenCompra;
 import com.palmera_junior.gestion_compras.entity.Producto;
-import com.palmera_junior.gestion_compras.service.DashboardService;
-import com.palmera_junior.gestion_compras.service.OrdenCompraService;
-import com.palmera_junior.gestion_compras.service.ProductoService;
+import com.palmera_junior.gestion_compras.service.IDashboardService;
+import com.palmera_junior.gestion_compras.service.IOrdenCompraService;
+import com.palmera_junior.gestion_compras.service.IProductoService;
 
 @Controller
 public class DashboardController {
 
-    private final DashboardService dashboardService;
-    private final OrdenCompraService ordenCompraService;
-    private final ProductoService productoService;
+    private final IDashboardService dashboardService;
+    private final IOrdenCompraService ordenCompraService;
+    private final IProductoService productoService;
 
-    public DashboardController(DashboardService dashboardService, OrdenCompraService ordenCompraService,
-            ProductoService productoService) {
+    public DashboardController(IDashboardService dashboardService, IOrdenCompraService ordenCompraService,
+            IProductoService productoService) {
         this.dashboardService = dashboardService;
         this.ordenCompraService = ordenCompraService;
         this.productoService = productoService;

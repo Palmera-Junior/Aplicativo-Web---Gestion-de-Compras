@@ -30,23 +30,23 @@ import com.palmera_junior.gestion_compras.entity.Rol;
 import com.palmera_junior.gestion_compras.entity.Categoria;
 import com.palmera_junior.gestion_compras.entity.Sede;
 import com.palmera_junior.gestion_compras.entity.Usuario;
-import com.palmera_junior.gestion_compras.service.CentroCostoService;
-import com.palmera_junior.gestion_compras.service.ProductoService;
-import com.palmera_junior.gestion_compras.service.ProveedorService;
-import com.palmera_junior.gestion_compras.service.SedeService;
-import com.palmera_junior.gestion_compras.service.UsuarioService;
+import com.palmera_junior.gestion_compras.service.ICentroCostoService;
+import com.palmera_junior.gestion_compras.service.IProductoService;
+import com.palmera_junior.gestion_compras.service.IProveedorService;
+import com.palmera_junior.gestion_compras.service.ISedeService;
+import com.palmera_junior.gestion_compras.service.IUsuarioService;
 
 @Controller
 public class AdminController {
 
-    private final ProveedorService proveedorService;
-    private final UsuarioService usuarioService;
-    private final ProductoService productoService;
-    private final SedeService sedeService;
-    private final CentroCostoService centroCostoService;
+    private final IProveedorService proveedorService;
+    private final IUsuarioService usuarioService;
+    private final IProductoService productoService;
+    private final ISedeService sedeService;
+    private final ICentroCostoService centroCostoService;
 
-    public AdminController(ProveedorService proveedorService, UsuarioService usuarioService,
-            ProductoService productoService, SedeService sedeService, CentroCostoService centroCostoService) {
+    public AdminController(IProveedorService proveedorService, IUsuarioService usuarioService,
+            IProductoService productoService, ISedeService sedeService, ICentroCostoService centroCostoService) {
         this.proveedorService = proveedorService;
         this.usuarioService = usuarioService;
         this.productoService = productoService;

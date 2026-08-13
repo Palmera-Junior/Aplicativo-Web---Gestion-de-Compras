@@ -3,7 +3,7 @@ package com.palmera_junior.gestion_compras.security;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
@@ -14,13 +14,16 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import com.palmera_junior.gestion_compras.entity.Usuario;
-import com.palmera_junior.gestion_compras.service.UsuarioService;
+import com.palmera_junior.gestion_compras.service.IUsuarioService;
 
 @Service
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
-    @Autowired
-    private UsuarioService usuarioService;
+    private final IUsuarioService usuarioService;
+
+    public CustomOAuth2UserService(IUsuarioService usuarioService) {
+        this.usuarioService = usuarioService;
+    }
 
     @Override
     public OAuth2User loadUser(

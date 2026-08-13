@@ -12,7 +12,7 @@ import com.palmera_junior.gestion_compras.entity.Sede;
 import com.palmera_junior.gestion_compras.repository.SedeRepository;
 
 @Service
-public class SedeService {
+public class SedeService implements ISedeService {
 
     private final SedeRepository sedeRepository;
 

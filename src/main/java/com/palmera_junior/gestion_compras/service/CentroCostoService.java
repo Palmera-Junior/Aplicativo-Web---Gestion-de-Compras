@@ -14,7 +14,7 @@ import com.palmera_junior.gestion_compras.repository.CentroCostoRepository;
 import com.palmera_junior.gestion_compras.repository.SedeRepository;
 
 @Service
-public class CentroCostoService {
+public class CentroCostoService implements ICentroCostoService {
 
    private final CentroCostoRepository centroCostoRepository;
    private final SedeRepository sedeRepository;

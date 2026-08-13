@@ -11,17 +11,17 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.palmera_junior.gestion_compras.dto.OrdenCompraDTO;
 import com.palmera_junior.gestion_compras.entity.OrdenCompra;
-import com.palmera_junior.gestion_compras.service.OrdenCompraService;
-import com.palmera_junior.gestion_compras.service.PdfService;
+import com.palmera_junior.gestion_compras.service.IOrdenCompraService;
+import com.palmera_junior.gestion_compras.service.IPdfService;
 
 @RestController
 @RequestMapping("/api/ordenes")
 public class OrdenCompraApiController {
 
-    private final OrdenCompraService ordenCompraService;
-    private final PdfService pdfService;
+    private final IOrdenCompraService ordenCompraService;
+    private final IPdfService pdfService;
 
-    public OrdenCompraApiController(OrdenCompraService ordenCompraService, PdfService pdfService) {
+    public OrdenCompraApiController(IOrdenCompraService ordenCompraService, IPdfService pdfService) {
         this.ordenCompraService = ordenCompraService;
         this.pdfService = pdfService;
     }

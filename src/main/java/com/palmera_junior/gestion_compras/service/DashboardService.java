@@ -15,16 +15,16 @@ import com.palmera_junior.gestion_compras.entity.OrdenCompra;
 import com.palmera_junior.gestion_compras.entity.Usuario;
 
 @Service
-public class DashboardService {
+public class DashboardService implements IDashboardService {
 
-    private final OrdenCompraService ordenCompraService;
-    private final ProveedorService proveedorService;
-    private final ProductoService productoService;
-    private final CentroCostoService centroCostoService;
-    private final UsuarioService usuarioService;
+    private final IOrdenCompraService ordenCompraService;
+    private final IProveedorService proveedorService;
+    private final IProductoService productoService;
+    private final ICentroCostoService centroCostoService;
+    private final IUsuarioService usuarioService;
 
-    public DashboardService(OrdenCompraService ordenCompraService, ProveedorService proveedorService,
-            ProductoService productoService, CentroCostoService centroCostoService, UsuarioService usuarioService) {
+    public DashboardService(IOrdenCompraService ordenCompraService, IProveedorService proveedorService,
+            IProductoService productoService, ICentroCostoService centroCostoService, IUsuarioService usuarioService) {
         this.ordenCompraService = ordenCompraService;
         this.proveedorService = proveedorService;
         this.productoService = productoService;

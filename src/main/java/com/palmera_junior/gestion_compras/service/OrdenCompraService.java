@@ -35,17 +35,17 @@ import com.palmera_junior.gestion_compras.repository.ProductoRepository;
 import com.palmera_junior.gestion_compras.repository.ProveedorRepository;
 
 @Service
-public class OrdenCompraService {
+public class OrdenCompraService implements IOrdenCompraService {
 
     private final OrdenCompraRepository ordenCompraRepository;
     private final ProductoRepository productoRepository;
     private final ProveedorRepository proveedorRepository;
-    private final CentroCostoService centroCostoService;
-    private final UsuarioService usuarioService;
+    private final ICentroCostoService centroCostoService;
+    private final IUsuarioService usuarioService;
 
     public OrdenCompraService(OrdenCompraRepository ordenCompraRepository, ProductoRepository productoRepository,
-            ProveedorRepository proveedorRepository, CentroCostoService centroCostoService,
-            UsuarioService usuarioService) {
+            ProveedorRepository proveedorRepository, ICentroCostoService centroCostoService,
+            IUsuarioService usuarioService) {
         this.ordenCompraRepository = ordenCompraRepository;
         this.productoRepository = productoRepository;
         this.proveedorRepository = proveedorRepository;
@@ -201,8 +201,6 @@ public class OrdenCompraService {
                 detalle.setIvaProducto(dDto.getIvaProducto());
                 detalle.setValorIva(dDto.getValorIva());
                 detalle.setValorTotalLinea(dDto.getValorTotalLinea());
-
-                // (Misma regla de arriba para la FK de idProducto)
 
                 // Relación bidireccional (asignar el padre al hijo)
                 detalle.setOrdenCompra(orden);

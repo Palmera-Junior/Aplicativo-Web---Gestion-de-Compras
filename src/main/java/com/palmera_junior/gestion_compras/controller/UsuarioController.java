@@ -6,14 +6,14 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.palmera_junior.gestion_compras.service.UsuarioService;
+import com.palmera_junior.gestion_compras.service.IUsuarioService;
 
 @RestController
 public class UsuarioController {
 
-    private final UsuarioService usuarioService;
+    private final IUsuarioService usuarioService;
 
-    public UsuarioController(UsuarioService usuarioService) {
+    public UsuarioController(IUsuarioService usuarioService) {
         this.usuarioService = usuarioService;
     }
 

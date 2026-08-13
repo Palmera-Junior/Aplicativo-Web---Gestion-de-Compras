@@ -9,7 +9,7 @@ import com.palmera_junior.gestion_compras.entity.PresentacionProducto;
 import com.palmera_junior.gestion_compras.repository.PresentacionProductoRepository;
 
 @Service
-public class PresentacionProductoService {
+public class PresentacionProductoService implements IPresentacionProductoService {
 
     private final PresentacionProductoRepository presentacionProductoRepository;
 
