@@ -6,8 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Órdenes de Compra</title>
     <link rel="stylesheet" th:href="@{/index.css(v=3)}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap">
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=block">
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap">
 </head>
@@ -50,28 +52,28 @@
             <input type="text" name="q" placeholder="Buscar por número o proveedor..."
                 class="input-control buscar-input" th:value="${q}">
 
-            
+
             <select name="estado" class="input-control estado-select">
-                <option value="" >Todos los estados</option>
+                <option value="">Todos los estados</option>
                 <option th:each="estado : ${estados}" th:value="${estado}" th:text="${estado}"
                     th:selected="${estado.name() == estadoSeleccionado}">
                 </option>
             </select>
 
-                
-                <label class="sr-only" for="fechaDesde">Desde</label>
-                <input type="date" id="fechaDesde" name="fechaDesde" class="input-control fecha-input"
-                    th:value="${fechaDesde}">
-                <label class="sr-only" for="fechaHasta">Hasta</label>
-                <input type="date" id="fechaHasta" name="fechaHasta" class="input-control fecha-input"
-                    th:value="${fechaHasta}">
-                <button title="Buscar.." type="submit" class="btn-secondary btn-buscar">
-                    <span class="material-symbols-outlined ">search</span>
-                </button>
-                <a title="Limpiar Filtros" aria-label="Limpiar Filtros" th:href="@{/dashboard}"
-                    class="btn-secondary btn-limpiar">
-                    <span class="material-symbols-outlined">close</span>
-                </a>
+
+            <label class="sr-only" for="fechaDesde">Desde</label>
+            <input type="date" id="fechaDesde" name="fechaDesde" class="input-control fecha-input"
+                th:value="${fechaDesde}">
+            <label class="sr-only" for="fechaHasta">Hasta</label>
+            <input type="date" id="fechaHasta" name="fechaHasta" class="input-control fecha-input"
+                th:value="${fechaHasta}">
+            <button title="Buscar.." type="submit" class="btn-secondary btn-buscar">
+                <span class="material-symbols-outlined ">search</span>
+            </button>
+            <a title="Limpiar Filtros" aria-label="Limpiar Filtros" th:href="@{/dashboard}"
+                class="btn-secondary btn-limpiar">
+                <span class="material-symbols-outlined">close</span>
+            </a>
         </form>
 
         <div class="table-responsive">

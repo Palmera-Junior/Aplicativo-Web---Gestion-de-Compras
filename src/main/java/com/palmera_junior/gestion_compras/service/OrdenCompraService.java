@@ -109,7 +109,7 @@ public class OrdenCompraService implements IOrdenCompraService {
             }
         }
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
-                Sort.by(Sort.Direction.DESC, "fecha"));
+                Sort.by(Sort.Direction.DESC, "idOrden"));
         Page<OrdenCompra> resultado = ordenCompraRepository.findAll(spec, sortedPageable);
 
         resultado.getContent().forEach(orden -> {

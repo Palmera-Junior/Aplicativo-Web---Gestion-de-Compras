@@ -5,7 +5,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
@@ -26,7 +25,7 @@ public class SecurityConfig {
     public AuthenticationSuccessHandler successHandler() {
         return (request, response, authentication) -> {
             boolean isAdmin = authentication.getAuthorities().stream()
-                    .map(GrantedAuthority::getAuthority)
+                    .map(auth -> auth.getAuthority())
                     .anyMatch(authRole -> authRole.equals("ROLE_ADMINISTRADOR"));
             response.sendRedirect(isAdmin ? "/admin" : "/dashboard");
         };
