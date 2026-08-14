@@ -1,4 +1,11 @@
 ﻿// Maneja la visibilidad de secciones de administrador
+// showSection(id)
+// - Qué hace: Muestra la sección administrativa cuyo id se pasa (p.ej. 'section-productos'),
+//   oculta las demás secciones listadas, marca la tarjeta de módulo correspondiente como
+//   'selected' y desplaza la vista a la sección visible (scroll suave).
+// - Interacciones DOM: elementos con ids 'section-usuarios','section-proveedores',
+//   'section-productos','section-sedes','section-centros', y elementos '.module-card'.
+// - Endpoints: Ninguno (solo manipulación del DOM).
 function showSection(id){
     const sections = ['section-usuarios','section-proveedores','section-productos','section-sedes','section-centros'];
     sections.forEach(s => {
@@ -139,7 +146,12 @@ document.addEventListener('DOMContentLoaded',()=>{
     // -----------------------
     // Filtros dinámicos (búsqueda y selects)
     // -----------------------
-    function debounce(fn, wait){
+    // debounce(fn, wait)
+// - Qué hace: Devuelve una versión con debounce de la función `fn`, retrasando su ejecución
+//   hasta que hayan pasado `wait` ms sin nuevas invocaciones. Utilizada para evitar llamadas
+//   frecuentes mientras el usuario escribe en inputs de filtro.
+// - Endpoints: Ninguno (utilidad cliente).
+function debounce(fn, wait){
         let t;
         return function(...args){
             clearTimeout(t);
@@ -147,7 +159,13 @@ document.addEventListener('DOMContentLoaded',()=>{
         };
     }
 
-    function collectFilters(){
+    // collectFilters()
+// - Qué hace: Recolecta los valores actuales de los filtros visibles en las secciones de
+//   proveedores, usuarios y productos (inputs y selects) y devuelve un objeto con los
+//   parámetros listos para incluir en la query string cuando se aplican filtros.
+// - Uso: Llamada por applyFilters(entity).
+// - Endpoints: Ninguno (prepara parámetros para peticiones GET hacia /admin).
+function collectFilters(){
         const data = {};
         const provSection = document.getElementById('filtros-proveedores');
         if(provSection){
@@ -176,7 +194,15 @@ document.addEventListener('DOMContentLoaded',()=>{
     const pageParamMap = { proveedor: 'pageProveedores', usuario: 'pageUsuarios', producto: 'pageProductos' };
     const fragmentMap = { proveedor: 'proveedoresTablaCard', usuario: 'usuariosTablaCard', producto: 'productosTablaCard' };
 
-    async function applyFilters(entity){
+    // applyFilters(entity)
+// - Qué hace: Construye una URL a /admin con los parámetros devueltos por collectFilters(),
+//   fuerza la página a la página 0 para la entidad indicada y realiza fetch() (GET) para
+//   obtener el fragmento HTML actualizado. Reemplaza el fragmento correspondiente en DOM y
+//   mantiene visible la sección relacionada.
+// - Parámetro: entity ∈ { 'proveedor', 'usuario', 'producto' } — determina qué fragmento
+//   actualizar (proveedoresTablaCard, usuariosTablaCard, productosTablaCard).
+// - Endpoints: GET /admin?{params}
+async function applyFilters(entity){
         const params = collectFilters();
         // reset the page for this entity to 0 when applying filters
         params[pageParamMap[entity]] = 0;
@@ -238,6 +264,11 @@ document.addEventListener('DOMContentLoaded',()=>{
 
 });
 
+// showCreate(kind)
+// - Qué hace: Atajo para abrir la sección de creación correspondiente según el `kind`:
+//   'usuario'|'proveedor'|'producto'|'sede'|'centro'. Internamente llama a showSection().
+// - Uso: enlazado desde botones/acciones que ponen al usuario en el formulario de creación.
+// - Endpoints: Ninguno (manipulación del DOM).
 function showCreate(kind){
     if(kind==='usuario') showSection('section-usuarios');
     if(kind==='proveedor') showSection('section-proveedores');
@@ -246,12 +277,21 @@ function showCreate(kind){
     if(kind==='centro') showSection('section-centros');
 }
 
+// setButtonLabel(buttonId, iconName, label)
+// - Qué hace: Actualiza el contenido HTML de un botón (por id) con un icono y una etiqueta.
+// - Uso: usado para cambiar la etiqueta de botones submit entre 'Crear ...' y 'Guardar cambios'.
+// - Endpoints: Ninguno (manipulación del DOM).
 function setButtonLabel(buttonId, iconName, label){
     const button = document.getElementById(buttonId);
     if(!button) return;
     button.innerHTML = `<span class="material-symbols">${iconName}</span> ${label}`;
 }
 
+// crearFilaPresentacion(nombre, cantidad, unidad, precio)
+// - Qué hace: Crea y añade una fila en el tbody 'presentacionesTbody' con inputs para
+//   presentacion (nombre), cantidad, unidad y precio. Si se pasan valores los inserta.
+// - Uso: utilizado en el formulario de producto para gestionar varias presentaciones.
+// - Endpoints: Ninguno (manipulación del DOM).
 function crearFilaPresentacion(nombre, cantidad, unidad, precio){
     const tbody = document.getElementById('presentacionesTbody');
     if(!tbody) return;
@@ -271,6 +311,10 @@ function crearFilaPresentacion(nombre, cantidad, unidad, precio){
     tbody.appendChild(tr);
 }
 
+// limpiarTablaPresentaciones()
+// - Qué hace: Vacía el tbody 'presentacionesTbody' y agrega una fila vacía (crearFilaPresentacion).
+// - Uso: limpiar/reiniciar el conjunto de presentaciones en el formulario de producto.
+// - Endpoints: Ninguno (manipulación del DOM).
 function limpiarTablaPresentaciones(){
     const tbody = document.getElementById('presentacionesTbody');
     if(!tbody) return;
@@ -278,6 +322,13 @@ function limpiarTablaPresentaciones(){
     crearFilaPresentacion();
 }
 
+// resetForm(entity)
+// - Qué hace: Resetea los campos del formulario correspondiente a la entidad indicada
+//   ('producto','centro','usuario','proveedor','sede'), restablece valores por defecto y
+//   actualiza la etiqueta del botón de envío. También ajusta 'required' en campos como
+//   la contraseña cuando corresponde.
+// - Uso: se llama al crear o limpiar formularios antes de usar el editor.
+// - Endpoints: Ninguno (manipulación del DOM).
 function resetForm(entity){
 if(entity === 'producto'){
         document.getElementById('idProducto').value = '';
@@ -328,6 +379,11 @@ if(entity === 'centro'){
     }
 }
 
+// cargarPresentacionesEnFormulario(idProducto)
+// - Qué hace: Limpia la tabla de presentaciones y, si se proporciona idProducto,
+//   realiza un GET a '/admin/producto/{idProducto}/presentaciones' para recibir JSON
+//   con las presentaciones del producto y las inserta en el formulario.
+// - Endpoint: GET /admin/producto/{idProducto}/presentaciones  (retorna JSON: array de presentaciones)
 async function cargarPresentacionesEnFormulario(idProducto){
     limpiarTablaPresentaciones();
     if(!idProducto) return;
@@ -348,6 +404,13 @@ async function cargarPresentacionesEnFormulario(idProducto){
     }
 }
 
+// editEntity(entity, element)
+// - Qué hace: Carga los datos de la fila (element.closest('tr')) en el formulario de edición
+//   según la entidad (producto, centro, usuario, proveedor, sede). Actualiza la vista para
+//   mostrar el formulario correspondiente y cambia la etiqueta del botón a 'Guardar cambios'.
+// - Uso: invocado al clicar el botón de editar en tablas de listado.
+// - Endpoints: llama a cargarPresentacionesEnFormulario() para productos (que a su vez hace
+//   una petición GET a /admin/producto/{id}/presentaciones).
 function editEntity(entity, element){
     const row = element.closest('tr');
     if(!row) return;
@@ -416,6 +479,17 @@ if(entity==='centro'){
     }
 }
 
+// deleteEntity(entity, id)
+// - Qué hace: Pide confirmación al usuario y realiza la petición adecuada para eliminar
+//   la entidad indicada. Mapea entidades a rutas de eliminación y ejecuta POST a la ruta
+//   correspondiente (según convención del backend). Muestra alertas según la respuesta
+//   y recarga la página al completar.
+// - Endpoints:
+//     producto -> POST /admin/productos/delete/{id}
+//     centro   -> POST /admin/centros-costo/delete/{id}
+//     usuario  -> POST /admin/usuarios/delete/{id}
+//     proveedor-> POST /admin/proveedores/delete/{id}
+//     sede     -> POST /admin/sedes/delete/{id}
 async function deleteEntity(entity, id){
     if(!id){ alert('ID inválido'); return; }
     if(!confirm('¿Eliminar ' + entity + ' con id=' + id + '? Esta acción no se puede revertir.')) return;

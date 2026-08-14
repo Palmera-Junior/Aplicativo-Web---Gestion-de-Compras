@@ -15,7 +15,7 @@ import com.palmera_junior.gestion_compras.repository.ProductoRepository;
 import com.palmera_junior.gestion_compras.entity.Categoria;
 
 @Service
-public class ProductoService {
+public class ProductoService implements IProductoService {
 
    private final ProductoRepository productoRepository;
    private final PresentacionProductoService presentacionProductoService;
@@ -44,6 +44,20 @@ public class ProductoService {
        }
        return productoRepository
                .findByNombreContainingIgnoreCaseOrCodigoInventarioContainingIgnoreCase(termino.trim(), termino.trim());
+   }
+
+   @Override
+   public Page<Producto> buscarConFiltros(String termino, String categoria, Boolean deleted, int page, int size) {
+       // Implementación conservadora: si viene un término, buscar por nombre o código; si no, devolver paginado
+       if (termino != null && !termino.isBlank()) {
+           List<Producto> resultados = productoRepository
+                   .findByNombreContainingIgnoreCaseOrCodigoInventarioContainingIgnoreCase(termino.trim(), termino.trim());
+           // Convertir a Page de forma simple
+           int start = Math.min(page * size, resultados.size());
+           int end = Math.min(start + size, resultados.size());
+           return new org.springframework.data.domain.PageImpl<>(resultados.subList(start, end), PageRequest.of(page, size), resultados.size());
+       }
+       return productoRepository.findAll(PageRequest.of(page, size));
    }
 
    @Transactional

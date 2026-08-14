@@ -560,6 +560,11 @@ body {
     color: #717880d0;
     
 }
+
+.material-symbols:hover {
+
+    transform: scale(0.90);
+}
 /* Ensure table cells with estado have consistent sizing */
 .estado-cell {
     width: 160px;

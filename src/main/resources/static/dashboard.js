@@ -3,6 +3,11 @@
 // ==========================================
 // TOAST (mensaje temporal auto-ocultable)
 // ==========================================
+// mostrarToast(mensaje, tipo)
+// - Qué hace: Muestra un mensaje tipo toast en pantalla (temporal) con estilo según `tipo`
+//   ('success' por defecto). El toast se oculta automáticamente a los ~3 segundos.
+// - Uso: usado en múltiples acciones para dar feedback al usuario (éxito/error/info).
+// - Endpoints: Ninguno (UI cliente).
 function mostrarToast(mensaje, tipo) {
     tipo = tipo || 'success';
     let toast = document.getElementById('toast-root');
@@ -34,7 +39,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Aplicar filtro por estado al hacer click/seleccionar una opción
-    // (antes había que seleccionar y luego hacer click en la lupa)
     const estadoSelect = document.querySelector('.estado-select');
     if (estadoSelect) {
         estadoSelect.addEventListener('change', () => {
@@ -47,7 +51,6 @@ document.addEventListener("DOMContentLoaded", () => {
         // También permitir aplicar si se hace click en la opción (algunos navegadores no disparan change hasta blur)
         estadoSelect.addEventListener('click', (e) => {
             // No forzar submit en cada click en el control desplegable, solo cuando cambia el valor
-            // The change handler above is sufficient for value changes.
         });
     }
 
@@ -91,7 +94,14 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    function cerrarModal() {
+    // cerrarModal()
+// - Qué hace: Cierra el modal de creación/edición de ordenes, restaura el overflow del body
+//   y resetea el identificador `ordenIdActual`.
+// - Contexto: Declarada dentro del DOMContentLoaded; es usada por los handlers locales para
+//   cerrar el modal. Nota: no es global (está en el scope del listener DOMContentLoaded),
+//   por lo que llamadas externas deben comprobar su existencia.
+// - Endpoints: Ninguno (UI cliente).
+function cerrarModal() {
         modal.classList.remove("active");
         modal.style.display = "none";
         document.body.style.overflow = "auto";
@@ -101,6 +111,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
 let ordenIdActual = null;
 
+// resetFormularioOrden()
+// - Qué hace: Resetea todos los campos del modal de orden (fecha, centro de costo, datos
+//   de proveedor, observaciones, tabla de productos y totales). Si `ordenIdActual` es null
+//   añade una fila inicial. También restablece controles de descuento y flete.
+// - Uso: invocado al abrir un nuevo modal y antes de cargar una orden para edición.
+// - Endpoints: Ninguno (manipulación del DOM).
 function resetFormularioOrden() {
     const fechaInput = document.getElementById('fecha-orden');
     if (fechaInput) {
@@ -197,6 +213,13 @@ function resetFormularioOrden() {
     setModalOrdenModoVista(false);
 }
 
+// setModalOrdenModoVista(esVista)
+// - Qué hace: Activa o desactiva (modo vista) los controles del modal de orden. Si
+//   esVista === true, deshabilita inputs y botones de edición (oculta botones de agregar
+//   fila y guardar), dejando el modal en modo lectura.
+// - Uso: llamado desde cargarOrdenEnModal() para bloquear la edición cuando la orden no
+//   está en estado BORRADOR.
+// - Endpoints: Ninguno (interacción de UI).
 function setModalOrdenModoVista(esVista) {
     const controles = document.querySelectorAll('#modal-orden input, #modal-orden textarea, #modal-orden select');
     controles.forEach(control => {
@@ -361,6 +384,11 @@ document.addEventListener("change", async function (e) {
 // Rellena el datalist de la fila con las presentaciones del producto seleccionado.
 // Cada fila tiene su propio datalist, por lo que solo se sugieren las presentaciones
 // de SU producto (no las de los demás productos del modal).
+// poblarDatalistPresentaciones(datalist, presentaciones)
+// - Qué hace: Llena el <datalist> de una fila con las presentaciones del producto
+//   (cada fila tiene su propio datalist para sugerencias de presentación).
+// - Uso: llamado por poblarPresentacionEnFila() tras obtener presentaciones del backend.
+// - Endpoints: Ninguno (manipulación del DOM con datos ya obtenidos).
 function poblarDatalistPresentaciones(datalist, presentaciones) {
     if (!datalist || !presentaciones) return;
     datalist.innerHTML = "";
@@ -373,16 +401,30 @@ function poblarDatalistPresentaciones(datalist, presentaciones) {
 
 // Formatea el texto visible de una presentación (coincide con el option del datalist).
 // Si la cantidad es null (1 unidad por defecto), no se muestra "1".
+// textoPresentacion(pres)
+// - Qué hace: Retorna el texto legible que representa una presentación (p.ej. 'Caja (10 g)'
+//   o 'Caja (Unidad)'). Esta representación se usa en opciones del datalist y para
+//   comparar la entrada del usuario con presentaciones conocidas.
+// - Uso: usado por poblarDatalistPresentaciones(), poblarPresentacionEnFila() y por el
+//   comparador cuando el usuario selecciona una presentación.
+// - Endpoints: Ninguno.
 function textoPresentacion(pres) {
     if (pres.cantidad != null && pres.unidad) {
         return pres.presentacion + " (" + pres.cantidad + " " + pres.unidad + ")";
     }
-    return pres.presentacion + " (" + (pres.unidad || "Unidad") + ")";
+    return pres.presentacion + " (" + (pres.unidad || "Und") + ")";
 }
 
 // Rellena el input editable de presentación y autocompleta el valor unitario
 // si el producto tiene una única presentación. Además guarda las presentaciones
 // del producto en el input para poder cargar el precio al seleccionar una.
+// poblarPresentacionEnFila(campoPresentacion, presentaciones, campoValorUnitario, fila)
+// - Qué hace: Guarda las presentaciones del producto en el input de presentación de la fila,
+//   limpia el valor si no fue escrito manualmente, pobla el datalist asociado a la fila y,
+//   si existe una única presentación, la selecciona automáticamente y coloca el precio
+//   correspondiente en el campo de valor unitario. Finalmente recalcula el total de la fila.
+// - Uso: llamado después de obtener datos de producto (por código o desde el autocomplete).
+// - Endpoints: Ninguno (trabaja con datos ya obtenidos del servidor).
 function poblarPresentacionEnFila(campoPresentacion, presentaciones, campoValorUnitario, fila) {
     if (!campoPresentacion) return;
     // Guardar las presentaciones del producto en el input para reconocer el precio
@@ -427,6 +469,12 @@ document.addEventListener("change", function (e) {
 
 // Genera un id único para el datalist de cada fila
 let contadorDatalist = 0;
+// crearDatalistFila()
+// - Qué hace: Genera un id único para el <datalist> de cada fila de la tabla de productos,
+//   crea el datalist en <body> si no existe y devuelve el id para asignarlo al atributo
+//   list del input de presentación de la fila.
+// - Uso: cada vez que se agrega una nueva fila con agregarFila().
+// - Endpoints: Ninguno.
 function crearDatalistFila() {
     contadorDatalist++;
     const id = "datalist-presentaciones-" + contadorDatalist;
@@ -458,6 +506,12 @@ document.addEventListener("input", function (e) {
 let autocompleteTimer = null;
 
 // Asegura que la fila tenga su dropdown
+// obtenerDropdown(input)
+// - Qué hace: Asegura que la fila contenga su contenedor .autocomplete-container y que
+//   exista (o se cree) el elemento .autocomplete-dropdown usado para mostrar sugerencias
+//   de autocompletado dentro de la fila. Devuelve el dropdown.
+// - Uso: utilizado por el autocompletado de descripción de producto (input .descripcion-producto).
+// - Endpoints: Ninguno.
 function obtenerDropdown(input) {
     const container = input.closest(".autocomplete-container");
     if (!container) {
@@ -588,6 +642,13 @@ const btnAgregarFila = document.getElementById("btn-agregar-fila");
 
 btnAgregarFila.addEventListener("click", agregarFila);
 
+// agregarFila()
+// - Qué hace: Crea y agrega una nueva fila a la tabla #tbody-productos con inputs para
+//   cantidad, código, descripción (autocomplete), presentación, valor unitario, IVA y totales.
+//   Asocia un datalist único a la fila y calcula el total inicial de la fila.
+// - Uso: llamado por el botón 'Agregar fila' y por resetFormularioOrden() cuando la orden
+//   está vacía.
+// - Endpoints: Ninguno (manipulación DOM).
 function agregarFila() {
 
     const tbody = document.getElementById("tbody-productos");
@@ -664,6 +725,11 @@ document.addEventListener("click", function (e) {
 });
 
 // codigo operaciones aritmeticas de cada fila #######################################
+// formatearPesos(valor)
+// - Qué hace: Formatea un número en formato de moneda COP (sin decimales) usando
+//   Intl.NumberFormat. Usado para mostrar subtotales, IVA y totales en la UI.
+// - Uso: recalcularTotalesGenerales(), calcularTotalFila(), y al renderizar ordenes.
+// - Endpoints: Ninguno.
 function formatearPesos(valor) {
     return new Intl.NumberFormat("es-CO", {
         style: "currency",
@@ -673,6 +739,12 @@ function formatearPesos(valor) {
     }).format(valor);
 }
 
+// calcularTotalFila(fila)
+// - Qué hace: Calcula el valor total y el IVA de una fila concreta usando cantidad,
+//   valor unitario e IVA porcentual. Actualiza los campos .iva-total y .valor-total (formateados)
+//   y almacena los valores numéricos en dataset.valor para uso en cálculos generales.
+// - Uso: llamado al cambiar cantidad, valor unitario o IVA en una fila, y al agregar filas.
+// - Endpoints: Ninguno.
 function calcularTotalFila(fila) {
 
     const cantidad = parseFloat(
@@ -728,6 +800,13 @@ document.addEventListener("input", function (e) {
 });
 
 // Funciones para calculos generales de la orden de compra 
+// recalcularTotalesGenerales()
+// - Qué hace: Recorre todas las filas en #tbody-productos para sumar subtotal y total de IVA
+//   (tomando los valores numéricos guardados en dataset.valor por fila), aplica descuento y
+//   flete si están activados, y actualiza los elementos DOM que muestran subtotal, IVA,
+//   descuento, flete y total general.
+// - Uso: llamado desde calcularTotalFila() y desde los controles de descuento/flete.
+// - Endpoints: Ninguno.
 function recalcularTotalesGenerales() {
 
     let subtotal = 0;
@@ -856,6 +935,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+// parsearMoneda(elementId)
+// - Qué hace: Parsea el texto de un elemento (innerText o value) que contiene una moneda
+//   con formato (p.ej. "$ 15.000") y devuelve el número float correspondiente. Devuelve 0
+//   si no puede parsear.
+// - Uso: usado antes de construir el DTO que se envía al backend para convertir textos de
+//   totales a valores numéricos.
+// - Endpoints: Ninguno.
 function parsearMoneda(elementId) {
     const el = document.getElementById(elementId);
     if (!el) return 0;
@@ -873,6 +959,16 @@ function parsearMoneda(elementId) {
     return isNaN(numero) ? 0 : numero;
 }
 
+// guardarYGenerarPdf()
+// - Qué hace: Valida el formulario del modal de orden, construye el DTO (cabecera + detalles)
+//   con subtotales, IVA, descuento y flete, y envía la petición al backend para crear o
+//   actualizar la orden. Deshabilita temporalmente el botón de guardar para evitar
+//   duplicados y, tras respuesta exitosa, cierra el modal y recarga la página.
+// - Endpoints:
+//     POST /orden-compra          (crear nueva orden)
+//     PUT  /orden-compra/{id}     (actualizar orden existente)
+// - Notas: valida que la fecha y centro de costo estén presentes y que cada fila tenga
+//   un código de inventario no vacío.
 async function guardarYGenerarPdf() {
     // ⚠️ CORRECCIÓN 1: Seleccionar la fecha ESPECÍFICAMENTE dentro del modal
     const fechaInput = document.getElementById('fecha-orden')?.value;
@@ -945,12 +1041,12 @@ async function guardarYGenerarPdf() {
     };
 
     // 2. DTO de las Líneas de Producto
-    const filas = document.querySelectorAll('#tbody-productos tr');
-    filas.forEach(fila => {
+    const filasRows = document.querySelectorAll('#tbody-productos tr');
+    filasRows.forEach(fila => {
         const completo = fila.querySelector('.cantidad');
         const cantidad = parseInt(completo ? completo.value : 0) || 0;
         const campoCodigoFila = fila.querySelector('.codigo-producto');
-        const codigo = campoCodigoFila ? (campoCodigoFila.value || '').trim() : '';
+        const codigo = campoCodigoFila ? (campoCodigoFila.value || 'N/A').trim() : '';
 
         if (codigo !== '' && cantidad > 0) {
             const campoValorUnitario = fila.querySelector('.valor-unitario');
@@ -966,7 +1062,7 @@ async function guardarYGenerarPdf() {
                 : null;
 
             const campoPresentacionSel = fila.querySelector('.presentacion-producto');
-            const presentacionSel = campoPresentacionSel ? campoPresentacionSel.value : '';
+            const presentacionSel = campoPresentacionSel ? campoPresentacionSel.value || '(Und)' : '(Und)';
 
             const campoDescripcion = fila.querySelector('.descripcion-producto');
             const descripcion = campoDescripcion ? campoDescripcion.value : '';
@@ -1415,6 +1511,11 @@ La orden cambiará al estado RECIBIDA.
 
 
 // LIMPIAR FORMULARIO
+// limpiarFormularioRecepcion()
+// - Qué hace: Limpia los campos del modal de recepción (número de factura, receptor,
+//   observación y valor de flete) y resetea la variable idOrdenSeleccionada.
+// - Uso: se llama al cancelar la recepción o tras procesarla con éxito.
+// - Endpoints: Ninguno (manipulación del DOM).
 function limpiarFormularioRecepcion() {
 
     document.getElementById(
@@ -1495,6 +1596,10 @@ document.addEventListener(
     }
 );
 
+// abrirModalOrden()
+// - Qué hace: Muestra el modal de orden estableciendo display:flex al contenedor #modal-orden.
+// - Uso: llamado después de cargar una orden en el modal (cargarOrdenEnModal) para visualizarla.
+// - Endpoints: Ninguno (UI cliente).
 function abrirModalOrden() {
 
     document.getElementById(
@@ -1503,6 +1608,13 @@ function abrirModalOrden() {
 
 }
 
+// cargarOrdenEnModal(orden)
+// - Qué hace: Recibe un objeto `orden` (JSON obtenido desde GET /orden-compra/{id}) y
+//   rellena el formulario/modal de orden con los datos de cabecera y las líneas (detalles).
+//   Determina si la orden está en modo vista (estado distinto a 'BORRADOR') para bloquear
+//   controles y ajustar la interfaz. Actualiza totales y metadatos (número, estado, fechas).
+// - Uso: invocado tras obtener la orden desde el servidor para ver/editar.
+// - Endpoints: consume el objeto orden proporcionado (obtenido con GET /orden-compra/{id}).
 function cargarOrdenEnModal(
     orden
 ) {
