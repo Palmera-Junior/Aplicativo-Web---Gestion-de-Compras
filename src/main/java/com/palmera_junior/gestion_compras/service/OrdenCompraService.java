@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -29,10 +30,13 @@ import com.palmera_junior.gestion_compras.entity.Producto;
 import com.palmera_junior.gestion_compras.entity.Rol;
 import com.palmera_junior.gestion_compras.entity.Sede;
 import com.palmera_junior.gestion_compras.entity.Usuario;
+import com.palmera_junior.gestion_compras.events.OrdenCompraAprobadaEvent;
 import com.palmera_junior.gestion_compras.entity.Proveedor;
 import com.palmera_junior.gestion_compras.repository.OrdenCompraRepository;
 import com.palmera_junior.gestion_compras.repository.ProductoRepository;
 import com.palmera_junior.gestion_compras.repository.ProveedorRepository;
+
+
 
 @Service
 public class OrdenCompraService implements IOrdenCompraService {
@@ -42,15 +46,20 @@ public class OrdenCompraService implements IOrdenCompraService {
     private final ProveedorRepository proveedorRepository;
     private final ICentroCostoService centroCostoService;
     private final IUsuarioService usuarioService;
+    private final ApplicationEventPublisher eventPublisher;
+    
+
+    
 
     public OrdenCompraService(OrdenCompraRepository ordenCompraRepository, ProductoRepository productoRepository,
             ProveedorRepository proveedorRepository, ICentroCostoService centroCostoService,
-            IUsuarioService usuarioService) {
+            IUsuarioService usuarioService, ApplicationEventPublisher eventPublisher) {
         this.ordenCompraRepository = ordenCompraRepository;
         this.productoRepository = productoRepository;
         this.proveedorRepository = proveedorRepository;
         this.centroCostoService = centroCostoService;
         this.usuarioService = usuarioService;
+        this.eventPublisher = eventPublisher;
     }
 
     // Método para listar órdenes paginadas en el Dashboard
@@ -100,11 +109,13 @@ public class OrdenCompraService implements IOrdenCompraService {
         // Nuevo filtro por estado
         if (estado != null && !estado.isBlank()) {
             try {
-                // Convertir el string de estado a su equivalente Enum (asumiendo que los nombres del enum son en mayúsculas)
+                // Convertir el string de estado a su equivalente Enum (asumiendo que los
+                // nombres del enum son en mayúsculas)
                 EstadoOrdenCompra estadoEnum = EstadoOrdenCompra.valueOf(estado.toUpperCase());
                 spec = spec.and((root, query, cb) -> cb.equal(root.get("estado"), estadoEnum));
             } catch (IllegalArgumentException ex) {
-                // Si el estado proporcionado no es válido, se puede ignorar el filtro o lanzar una excepción
+                // Si el estado proporcionado no es válido, se puede ignorar el filtro o lanzar
+                // una excepción
                 System.err.println("Valor de estado de orden de compra inválido: " + estado);
             }
         }
@@ -120,7 +131,6 @@ public class OrdenCompraService implements IOrdenCompraService {
 
         return resultado;
     }
-
 
     // Método para buscar una orden por ID
     public OrdenCompra obtenerPorId(Integer idOrden) {
@@ -452,7 +462,11 @@ public class OrdenCompraService implements IOrdenCompraService {
 
         orden.setFechaAprobacion(LocalDate.now());
 
-        return ordenCompraRepository.save(orden);
+        OrdenCompra ordenGuardada = ordenCompraRepository.save(orden);
+
+        eventPublisher.publishEvent(new OrdenCompraAprobadaEvent(ordenGuardada.getIdOrden()));
+        
+        return ordenGuardada;
     }
 
     @Transactional
@@ -465,8 +479,7 @@ public class OrdenCompraService implements IOrdenCompraService {
             throw new RuntimeException("Solo las órdenes en BORRADOR pueden eliminarse");
         }
 
-        Usuario usuarioLogueado =
-        usuarioService.obtenerUsuarioAutenticado();
+        Usuario usuarioLogueado = usuarioService.obtenerUsuarioAutenticado();
 
         if (orden.getUsuario() == null
                 || !orden.getUsuario().getIdUsuario().equals(usuarioLogueado.getIdUsuario())) {
