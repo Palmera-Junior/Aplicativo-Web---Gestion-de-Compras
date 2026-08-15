@@ -53,10 +53,6 @@ public class OrdenCompraAprobadaListener {
                     pdf
             );
 
-            System.out.println(
-                    "Correo enviado al proveedor: "
-                            + orden.getProveedor().getCorreo()
-            );
 
         } catch (Exception e) {
 

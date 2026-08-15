@@ -30,8 +30,8 @@ public class EmailTemplateService {
         );
 
         context.setVariable(
-                "sede",
-                orden.getSede().getNombre()
+                "direccionEntrega",
+                orden.getCentroCosto().getDireccion()
         );
 
         context.setVariable(

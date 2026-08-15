@@ -1,6 +1,5 @@
 package com.palmera_junior.gestion_compras.service;
 
-
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,51 +12,39 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class IEmailService implements EmailService {
 
-    private final JavaMailSender mailSender;
+        private final JavaMailSender mailSender;
 
-    @Value("${spring.mail.username}")
-    private String remitente;
+        @Value("${spring.mail.username}")
+        private String remitente;
 
-    @Override
-    public void enviarOrdenAprobada(
-            String destinatario,
-            String html,
-            byte[] pdf
-    ) throws Exception {
+        @Override
+        public void enviarOrdenAprobada(
+                        String destinatario,
+                        String html,
+                        byte[] pdf) throws Exception {
 
-        MimeMessage message =
-                mailSender.createMimeMessage();
+                MimeMessage message = mailSender.createMimeMessage();
 
-        MimeMessageHelper helper =
-                new MimeMessageHelper(
-                        message,
-                        true,
-                        "UTF-8"
-                );
+                MimeMessageHelper helper = new MimeMessageHelper(
+                                message,
+                                true,
+                                "UTF-8");
 
-        helper.setFrom(remitente);
+                helper.setFrom(remitente);
 
-        helper.setTo(destinatario);
+                helper.setTo(destinatario);
 
-        helper.setSubject(
-                "Orden de Compra Aprobada"
-        );
+                helper.setSubject(
+                                "Nueva Orden de Compra Aprobada");
 
-        helper.setText(
-                html,
-                true
-        );
+                helper.setText(
+                                html,
+                                true);
 
-        helper.addAttachment(
-                "Orden_Compra.pdf",
-                new ByteArrayResource(pdf)
-        );
+                helper.addAttachment(
+                                "Orden_Compra.pdf",
+                                new ByteArrayResource(pdf));
 
-        mailSender.send(message);
-
-        System.out.println(
-                "Correo enviado correctamente a: "
-                        + destinatario
-        );
-    }
+                mailSender.send(message);
+        }
 }
