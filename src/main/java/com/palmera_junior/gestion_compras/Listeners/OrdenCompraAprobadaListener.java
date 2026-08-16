@@ -1,11 +1,7 @@
 package com.palmera_junior.gestion_compras.Listeners;
 
-import com.palmera_junior.gestion_compras.entity.OrdenCompra;
 import com.palmera_junior.gestion_compras.events.OrdenCompraAprobadaEvent;
-import com.palmera_junior.gestion_compras.repository.OrdenCompraRepository;
-import com.palmera_junior.gestion_compras.service.EmailService;
-import com.palmera_junior.gestion_compras.service.EmailTemplateService;
-import com.palmera_junior.gestion_compras.service.PdfService;
+import com.palmera_junior.gestion_compras.service.CorreoOrdenAsyncProcessor;
 
 import lombok.RequiredArgsConstructor;
 
@@ -17,10 +13,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @RequiredArgsConstructor
 public class OrdenCompraAprobadaListener {
 
-    private final OrdenCompraRepository ordenCompraRepository;
-    private final PdfService pdfService;
-    private final EmailService emailService;
-    private final EmailTemplateService emailTemplateService;
+    private final CorreoOrdenAsyncProcessor correoOrdenAsyncProcessor;
 
     @TransactionalEventListener(
             phase = TransactionPhase.AFTER_COMMIT
@@ -29,35 +22,6 @@ public class OrdenCompraAprobadaListener {
             OrdenCompraAprobadaEvent event
     ) {
 
-        try {
-
-            OrdenCompra orden =
-                    ordenCompraRepository
-                            .findById(event.idOrden())
-                            .orElseThrow();
-
-            byte[] pdf =
-                    pdfService.generarPdfOrdenCompra(
-                            orden
-                    );
-
-            String html =
-                    emailTemplateService
-                            .generarCorreoOrdenAprobada(
-                                    orden
-                            );
-
-            emailService.enviarOrdenAprobada(
-                    orden.getProveedor().getCorreo(),
-                    html,
-                    pdf
-            );
-
-
-        } catch (Exception e) {
-
-            e.printStackTrace();
-
-        }
+        correoOrdenAsyncProcessor.procesar(event.idAuditoria());
     }
 }

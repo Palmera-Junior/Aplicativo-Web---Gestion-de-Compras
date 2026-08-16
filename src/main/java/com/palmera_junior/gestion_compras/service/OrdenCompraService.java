@@ -47,19 +47,22 @@ public class OrdenCompraService implements IOrdenCompraService {
     private final ICentroCostoService centroCostoService;
     private final IUsuarioService usuarioService;
     private final ApplicationEventPublisher eventPublisher;
+    private final CorreoOrdenOutboxService correoOrdenOutboxService;
     
 
     
 
     public OrdenCompraService(OrdenCompraRepository ordenCompraRepository, ProductoRepository productoRepository,
             ProveedorRepository proveedorRepository, ICentroCostoService centroCostoService,
-            IUsuarioService usuarioService, ApplicationEventPublisher eventPublisher) {
+            IUsuarioService usuarioService, ApplicationEventPublisher eventPublisher,
+            CorreoOrdenOutboxService correoOrdenOutboxService) {
         this.ordenCompraRepository = ordenCompraRepository;
         this.productoRepository = productoRepository;
         this.proveedorRepository = proveedorRepository;
         this.centroCostoService = centroCostoService;
         this.usuarioService = usuarioService;
         this.eventPublisher = eventPublisher;
+        this.correoOrdenOutboxService = correoOrdenOutboxService;
     }
 
     // Método para listar órdenes paginadas en el Dashboard
@@ -464,7 +467,8 @@ public class OrdenCompraService implements IOrdenCompraService {
 
         OrdenCompra ordenGuardada = ordenCompraRepository.save(orden);
 
-        eventPublisher.publishEvent(new OrdenCompraAprobadaEvent(ordenGuardada.getIdOrden()));
+        Long idAuditoria = correoOrdenOutboxService.registrarPendiente(ordenGuardada);
+        eventPublisher.publishEvent(new OrdenCompraAprobadaEvent(idAuditoria));
         
         return ordenGuardada;
     }
