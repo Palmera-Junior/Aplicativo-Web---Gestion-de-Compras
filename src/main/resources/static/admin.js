@@ -503,7 +503,7 @@ async function deleteEntity(entity, id){
     const url = routes[entity];
     if(!url){ alert('Entidad no soportada: ' + entity); return; }
     try{
-        const res = await fetch(url + id, { method: 'POST' });
+        const res = await csrfFetch(url + id, { method: 'POST' });
         const json = await res.json().catch(()=>({error:'Respuesta no válida'}));
         if(!res.ok){ alert(json.error || 'Error al eliminar'); return; }
         alert(json.success || 'Eliminado');

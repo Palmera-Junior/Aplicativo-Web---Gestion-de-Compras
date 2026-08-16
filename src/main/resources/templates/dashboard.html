@@ -4,6 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
     <title>Gestión de Órdenes de Compra</title>
     <link rel="stylesheet" th:href="@{/index.css(v=3)}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -395,6 +397,7 @@
             </div>
         </div>
     </div>
+    <script th:src="@{/security.js(v=1)}"></script>
     <script th:src="@{/dashboard.js(v=2)}"></script>
 
 </body>

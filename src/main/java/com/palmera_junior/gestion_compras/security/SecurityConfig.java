@@ -34,19 +34,24 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/login", "/login.css", "/imgs/**", "/static/**",
                                 "/oauth2/**", "/login/oauth2/**" // rutas del flujo de Google
                         ).permitAll()
 
+                        .requestMatchers("/actuator/health", "/actuator/info").permitAll()
+                        .requestMatchers("/actuator/**").denyAll()
+
                         .requestMatchers("/admin/**").hasRole("ADMINISTRADOR")
 
-                        .requestMatchers("/dashboard", "/dashboard/**", "/ordenes/**", "/orden_compra/**", "/api/orden_compra/**", "/api/ordenes/**")
+                        .requestMatchers("/dashboard", "/dashboard/**", "/ordenes/**", "/orden-compra/**", "/api/ordenes/**", "/api/usuario/**")
                         .hasAnyRole("SOLICITANTE", "APROBADOR")
 
-                        .anyRequest().authenticated())
+                        .requestMatchers("/dashboard.js", "/index.css", "/admin.css", "/admin.js", "/security.js")
+                        .authenticated()
+
+                        .anyRequest().denyAll())
                 .formLogin(form -> form
                         .loginPage("/login")
                         .successHandler(successHandler())
@@ -60,7 +65,9 @@ public class SecurityConfig {
                 .logout(logout -> logout
                         .logoutUrl("/logout")
                         .logoutSuccessUrl("/login?logout")
-                        .permitAll());
+                        .permitAll())
+                .sessionManagement(session -> session
+                        .sessionFixation(fixation -> fixation.changeSessionId()));
 
         return http.build();
     }

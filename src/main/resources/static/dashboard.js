@@ -1096,7 +1096,7 @@ async function guardarYGenerarPdf() {
     // 3. Envío al Backend
     try {
         const url = ordenIdActual ? `/orden-compra/${ordenIdActual}` : '/orden-compra';
-        const response = await fetch(url, {
+        const response = await csrfFetch(url, {
             method: ordenIdActual ? 'PUT' : 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(ordenDTO)
@@ -1151,7 +1151,7 @@ document.addEventListener("click", async function (e) {
 
     try {
 
-        const response = await fetch(
+        const response = await csrfFetch(
             `/orden-compra/${idOrden}/aprobar`,
             {
                 method: "PUT"
@@ -1204,7 +1204,7 @@ document.addEventListener("click", async function (e) {
     }
 
     try {
-        const response = await fetch(`/orden-compra/${idOrden}`, {
+        const response = await csrfFetch(`/orden-compra/${idOrden}`, {
             method: "DELETE"
         });
 
@@ -1452,7 +1452,7 @@ La orden cambiará al estado RECIBIDA.
             btn.innerHTML =
                 '<i class="fas fa-spinner fa-spin"></i> Procesando...';
 
-            const response = await fetch(
+            const response = await csrfFetch(
                 `/orden-compra/${idOrdenSeleccionada}/recibir`,
                 {
                     method: "PUT",
