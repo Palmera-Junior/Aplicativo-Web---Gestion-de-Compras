@@ -2,6 +2,7 @@ package com.palmera_junior.gestion_compras.service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -11,6 +12,7 @@ import org.springframework.ui.Model;
 
 import com.palmera_junior.gestion_compras.entity.CentroCosto;
 import com.palmera_junior.gestion_compras.entity.EstadoOrdenCompra;
+import com.palmera_junior.gestion_compras.entity.EstadoEnvioCorreo;
 import com.palmera_junior.gestion_compras.entity.OrdenCompra;
 import com.palmera_junior.gestion_compras.entity.Usuario;
 
@@ -22,14 +24,17 @@ public class DashboardService implements IDashboardService {
     private final IProductoService productoService;
     private final ICentroCostoService centroCostoService;
     private final IUsuarioService usuarioService;
+    private final CorreoOrdenOutboxService correoOrdenOutboxService;
 
     public DashboardService(IOrdenCompraService ordenCompraService, IProveedorService proveedorService,
-            IProductoService productoService, ICentroCostoService centroCostoService, IUsuarioService usuarioService) {
+            IProductoService productoService, ICentroCostoService centroCostoService, IUsuarioService usuarioService,
+            CorreoOrdenOutboxService correoOrdenOutboxService) {
         this.ordenCompraService = ordenCompraService;
         this.proveedorService = proveedorService;
         this.productoService = productoService;
         this.centroCostoService = centroCostoService;
         this.usuarioService = usuarioService;
+        this.correoOrdenOutboxService = correoOrdenOutboxService;
     }
 
     public String prepararModeloDashboard(int page, int size, String q, String fechaDesde, String fechaHasta,
@@ -54,6 +59,11 @@ public class DashboardService implements IDashboardService {
         Page<OrdenCompra> ordenesCompra = ordenCompraService.ordenesDeCompraPaginadas(
                 PageRequest.of(page, size), q, fechaDesdeAplicada, fechaHastaAplicada, idSede, esNacional, estado);
 
+        List<Integer> idsOrdenes = ordenesCompra.getContent().stream()
+                .map(OrdenCompra::getIdOrden)
+                .toList();
+        Map<Integer, EstadoEnvioCorreo> estadosCorreo = correoOrdenOutboxService.obtenerEstadosPorOrdenes(idsOrdenes);
+
         List<CentroCosto> centroCostos;
         if (usuario.getSede() != null && "Sede Nacional".equalsIgnoreCase(usuario.getSede().getNombre())) {
             centroCostos = centroCostoService.getAllCentroCostos();
@@ -67,6 +77,7 @@ public class DashboardService implements IDashboardService {
         model.addAttribute("productos", productoService.getAllProductos());
         model.addAttribute("paginaActual", page);
         model.addAttribute("ordenesCompra", ordenesCompra);
+        model.addAttribute("estadosCorreo", estadosCorreo);
         model.addAttribute("proveedores",
                 esNacional ? proveedorService.getAllProveedores() : proveedorService.listarPorSede(idSede));
         model.addAttribute("q", q);

@@ -1553,6 +1553,131 @@ function limpiarFormularioRecepcion() {
     idOrdenSeleccionada = null;
 }
 
+// ==========================================
+// MARCAR CORREO FALLIDO COMO ENVIADO MANUALMENTE
+// ==========================================
+
+let idOrdenCorreoSeleccionada = null;
+
+// ABRIR MODAL (clic sobre el ícono ❌ de correo FALLIDO)
+document.addEventListener("click", function (e) {
+
+    const boton = e.target.closest(".correo-marcar-enviado");
+
+    if (!boton) {
+        return;
+    }
+
+    idOrdenCorreoSeleccionada = boton.dataset.id;
+
+    document.getElementById(
+        "correo-fallido-numero-orden"
+    ).textContent = boton.dataset.numeroOrden || idOrdenCorreoSeleccionada;
+
+    document.getElementById(
+        "modal-correo-fallido"
+    ).style.display = "flex";
+
+});
+
+// CANCELAR
+document
+    .getElementById("btn-cancelar-correo-fallido")
+    ?.addEventListener("click", function () {
+
+        document.getElementById(
+            "modal-correo-fallido"
+        ).style.display = "none";
+
+        limpiarFormularioCorreoFallido();
+
+    });
+
+// CONFIRMAR: envía la descripción del fallo y marca el correo como ENVIADO
+document
+    .getElementById("btn-confirmar-correo-fallido")
+    ?.addEventListener("click", async function () {
+
+        const descripcion = document
+            .getElementById("correo-fallido-descripcion")
+            .value
+            .trim();
+
+        if (!descripcion) {
+            mostrarToast("Debes ingresar una descripción del fallo.", 'error');
+            return;
+        }
+
+        if (descripcion.length < 5) {
+            mostrarToast("La descripción es demasiado corta.", 'error');
+            return;
+        }
+
+        const btn = document.getElementById("btn-confirmar-correo-fallido");
+
+        try {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+
+            const response = await csrfFetch(
+                `/orden-compra/${idOrdenCorreoSeleccionada}/correo/marcar-enviado`,
+                {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ descripcion })
+                }
+            );
+
+            if (!response.ok) {
+                const mensaje = await response.text();
+                throw new Error(mensaje);
+            }
+
+            mostrarToast("Correo marcado como enviado correctamente.", 'success');
+
+            limpiarFormularioCorreoFallido();
+
+            document.getElementById(
+                "modal-correo-fallido"
+            ).style.display = "none";
+
+            setTimeout(() => location.reload(), 1200);
+
+        } catch (error) {
+
+            reportClientError('Error al marcar el correo como enviado.', error);
+
+            mostrarToast(
+                error.message || "No fue posible marcar el correo como enviado.",
+                'error'
+            );
+
+        } finally {
+
+            btn.disabled = false;
+            btn.innerHTML = "Marcar como Enviado";
+
+        }
+
+    });
+
+// limpiarFormularioCorreoFallido()
+// - Qué hace: Limpia el textarea de descripción y resetea la orden seleccionada del
+//   modal de "marcar correo como enviado".
+// - Uso: se llama al cancelar o tras confirmar exitosamente la acción.
+// - Endpoints: Ninguno (manipulación del DOM).
+function limpiarFormularioCorreoFallido() {
+
+    const descripcionInput = document.getElementById("correo-fallido-descripcion");
+    if (descripcionInput) {
+        descripcionInput.value = "";
+    }
+
+    document.getElementById("correo-fallido-numero-orden").textContent = "";
+
+    idOrdenCorreoSeleccionada = null;
+}
+
 // LISTENER BOTN VIEW 
 document.addEventListener(
     "click",

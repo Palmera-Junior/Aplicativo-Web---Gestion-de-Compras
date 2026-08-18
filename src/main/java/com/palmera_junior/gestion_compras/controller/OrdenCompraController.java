@@ -15,7 +15,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.palmera_junior.gestion_compras.dto.OrdenCompraDTO;
 import com.palmera_junior.gestion_compras.dto.RecibirOrdenDTO;
+import com.palmera_junior.gestion_compras.dto.MarcarCorreoEnviadoDTO;
 import com.palmera_junior.gestion_compras.entity.OrdenCompra;
+import com.palmera_junior.gestion_compras.service.CorreoOrdenOutboxService;
 import com.palmera_junior.gestion_compras.service.IOrdenCompraService;
 import com.palmera_junior.gestion_compras.service.IPdfService;
 
@@ -25,10 +27,13 @@ public class OrdenCompraController {
 
     private final IOrdenCompraService ordenCompraService;
     private final IPdfService pdfService;
+    private final CorreoOrdenOutboxService correoOrdenOutboxService;
 
-    public OrdenCompraController(IOrdenCompraService ordenCompraService, IPdfService pdfService) {
+    public OrdenCompraController(IOrdenCompraService ordenCompraService, IPdfService pdfService,
+            CorreoOrdenOutboxService correoOrdenOutboxService) {
         this.ordenCompraService = ordenCompraService;
         this.pdfService = pdfService;
+        this.correoOrdenOutboxService = correoOrdenOutboxService;
     }
 
     @PostMapping
@@ -109,6 +114,25 @@ public class OrdenCompraController {
                     "Orden eliminada correctamente");
 
         } catch (RuntimeException e) {
+
+            return ResponseEntity.badRequest()
+                    .body(e.getMessage());
+        }
+    }
+
+    @PutMapping("/{id}/correo/marcar-enviado")
+    public ResponseEntity<?> marcarCorreoEnviadoManualmente(
+            @PathVariable Integer id,
+            @RequestBody MarcarCorreoEnviadoDTO dto) {
+
+        try {
+
+            correoOrdenOutboxService.marcarEnviadoManualmente(id, dto.getDescripcion());
+
+            return ResponseEntity.ok(
+                    "Correo marcado como enviado correctamente");
+
+        } catch (IllegalArgumentException | IllegalStateException e) {
 
             return ResponseEntity.badRequest()
                     .body(e.getMessage());

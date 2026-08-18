@@ -89,6 +89,7 @@
                         <th>Sede</th>
                         <th>Valor Total</th>
                         <th>Estado</th>
+                        <th>Correo</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -108,6 +109,25 @@
                             <span th:if="${orden.estado.name() == 'RECIBIDA'}"
                                 class="badge-estado recibida">RECIBIDA</span>
                         </td>
+                        <td class="correo-cell" th:with="estadoCorreo=${estadosCorreo.get(orden.idOrden)}">
+                            <span th:if="${estadoCorreo == null}" class="correo-estado-icon sin-envio"
+                                title="No se ha generado un envío de correo para esta orden">—</span>
+                            <span th:if="${estadoCorreo != null and estadoCorreo.name() == 'ENVIADO'}"
+                                class="correo-estado-icon enviado" title="Correo enviado correctamente al proveedor">
+                                <span class="material-symbols">check</span>
+                            </span>
+                            <button th:if="${estadoCorreo != null and estadoCorreo.name() == 'FALLIDO'}"
+                                type="button" class="correo-estado-icon fallido correo-marcar-enviado"
+                                th:data-id="${orden.idOrden}" th:data-numero-orden="${orden.numeroOrden}"
+                                title="El correo al proveedor no pudo enviarse. Haga clic para marcarlo como enviado manualmente.">
+                                <span class="material-symbols">close</span>
+                            </button>
+                            <span
+                                th:if="${estadoCorreo != null and (estadoCorreo.name() == 'PENDIENTE' or estadoCorreo.name() == 'PROCESANDO' or estadoCorreo.name() == 'REINTENTAR')}"
+                                class="correo-estado-icon pendiente" title="El correo al proveedor está en proceso de envío">
+                                <span class="material-symbols">schedule</span>
+                            </span>
+                        </td>
                         <td class="acciones-cell">
                             <button title="Ver Orden de Compra" class="btn-icon view" th:data-id="${orden.idOrden}">
                                 <span class="material-symbols">visibility</span>
@@ -115,24 +135,25 @@
                             <button title="Aprobar Orden de Compra" sec:authorize="hasRole('APROBADOR')"
                                 th:if="${orden.estado.name() == 'BORRADOR'}" class="btn-icon approve"
                                 th:data-id="${orden.idOrden}">
-                                <span class="material-symbols">task_alt</span>
+                                <span class="material-symbols">person_check</span>
+                            </button>
+                            <button title="Descargar Orden de Compra" class="btn-icon pdf" th:data-id="${orden.idOrden}"
+                                th:if="${orden.estado.name() == 'APROBADA' or orden.estado.name() == 'RECIBIDA'}">
+                                <span class="material-symbols">download</span>
                             </button>
                             <button title="Recibir Orden de Compra" th:if="${orden.estado.name() == 'APROBADA'}"
                                 class="btn-icon receive" th:data-id="${orden.idOrden}"
                                 th:data-numero-orden="${orden.numeroOrden}"
                                 th:data-proveedor="${orden.proveedor != null ? orden.proveedor.nombre : ''}"
                                 th:data-paga-flete="${orden.pagaFlete}" th:data-valor-flete="${orden.valorFlete}">
-                                <span class="material-symbols">inventory_2</span>
+                                <span class="material-symbols">package_2</span>
                             </button>
                             <button title="Eliminar Orden de Compra" th:if="${orden.estado.name() == 'BORRADOR'}"
                                 class="btn-icon delete-orden" th:data-id="${orden.idOrden}"
                                 th:data-numero-orden="${orden.numeroOrden}">
                                 <span class="material-symbols">delete</span>
                             </button>
-                            <button title="Descargar Orden de Compra" class="btn-icon pdf" th:data-id="${orden.idOrden}"
-                                th:if="${orden.estado.name() == 'APROBADA' or orden.estado.name() == 'RECIBIDA'}">
-                                <span class="material-symbols">download</span>
-                            </button>
+                            
                         </td>
                     </tr>
                 </tbody>
@@ -171,6 +192,31 @@
                         <button title="Cerrar" type="button" id="btn-cancelar-recepcion">Cancelar</button>
                         <button title="Registrar.." type="button" id="btn-confirmar-recepcion">Registrar
                             Recepción</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODAL MARCAR CORREO COMO ENVIADO MANUALMENTE -->
+            <div id="modal-correo-fallido" class="modal-recibir-oc-overlay">
+                <div class="modal-recibir-oc-content">
+                    <div class="modal-recibir-oc-header">
+                        <h2>Marcar Correo como Enviado</h2>
+                    </div>
+                    <div class="modal-recibir-oc-body">
+                        <div class="recepcion-resumen">
+                            <div><strong>Orden:</strong> <span id="correo-fallido-numero-orden"></span></div>
+                        </div>
+                        <div class="recepcion-form-group">
+                            <label>Descripción del fallo *</label>
+                            <textarea id="correo-fallido-descripcion" rows="4"
+                                placeholder="Describa por qué falló el envío automático y confirme que el correo fue enviado manualmente al proveedor"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-recibir-oc-footer">
+                        <button title="Cerrar" type="button" id="btn-cancelar-correo-fallido"
+                            class="btn-modal-secundario">Cancelar</button>
+                        <button title="Confirmar.." type="button" id="btn-confirmar-correo-fallido"
+                            class="btn-modal-primario">Marcar como Enviado</button>
                     </div>
                 </div>
             </div>

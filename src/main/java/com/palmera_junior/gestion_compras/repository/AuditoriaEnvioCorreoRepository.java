@@ -17,6 +17,12 @@ public interface AuditoriaEnvioCorreoRepository extends JpaRepository<AuditoriaE
     List<AuditoriaEnvioCorreo> findTop50ByEstadoInAndProximoIntentoLessThanEqualOrderByCreadoEnAsc(
             Collection<EstadoEnvioCorreo> estados, LocalDateTime ahora);
 
+    // Ordenado por id descendente para poder quedarnos con el intento más reciente por orden
+    List<AuditoriaEnvioCorreo> findByOrdenCompra_IdOrdenInOrderByIdDesc(Collection<Integer> idsOrdenes);
+
+    // Último intento de envío de una orden puntual (para la acción manual de marcar como enviado)
+    java.util.Optional<AuditoriaEnvioCorreo> findFirstByOrdenCompra_IdOrdenOrderByIdDesc(Integer idOrden);
+
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
             update AuditoriaEnvioCorreo a
