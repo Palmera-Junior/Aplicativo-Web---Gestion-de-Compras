@@ -28,6 +28,7 @@
             |
             <span th:text="${#authentication.principal.usuario.sede.nombre}">Sede</span>
             <form th:action="@{/logout}" method="POST" style="display: inline; margin: 0;">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                 <button title="Cerrar Sesión" type="submit" class="btn-logout">
                     <span class="material-symbols">logout</span> Salir
                 </button>
@@ -156,6 +157,7 @@
                 <div class="form-card">
                     <h3 class="form-card-title">Nuevo proveedor</h3>
                     <form th:action="@{/admin/proveedores}" method="post" id="proveedorForm">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                         <input type="hidden" id="idProv" name="idProv">
                         <div class="form-grid-2">
                             <div class="form-group">
@@ -301,6 +303,7 @@
                 <div class="form-card">
                     <h3 class="form-card-title">Nuevo usuario</h3>
                     <form th:action="@{/admin/usuarios}" method="post" id="usuarioForm">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                         <input type="hidden" id="idUsuario" name="idUsuario">
                         <div class="form-grid-2">
                             <div class="form-group">
@@ -474,6 +477,7 @@
                     <div class="form-card">
                         <h3 class="form-card-title">Nuevo producto</h3>
                         <form th:action="@{/admin/productos}" method="post" id="productForm">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                             <input type="hidden" id="idProducto" name="idProducto">
                             <div class="form-grid-2">
                                 <div class="form-group">
@@ -658,7 +662,8 @@
                     <div class="form-card">
                         <h3 class="form-card-title">Nueva sede</h3>
                         <form th:action="@{/admin/sedes}" method="post" id="sedeForm">
-                            <input type="hidden" id="idSede" name="idSede">
+                           <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                           <input type="hidden" id="idSede" name="idSede">
                             <div class="form-grid-2">
                                 <div class="form-group">
                                     <label>Nombre</label>
@@ -761,7 +766,8 @@
                     <div class="form-card">
                         <h3 class="form-card-title">Nuevo centro de costo</h3>
                         <form th:action="@{/admin/centros-costo}" method="post" id="centroForm">
-                            <input type="hidden" id="idCentroCosto" name="idCentroCosto">
+                           <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                           <input type="hidden" id="idCentroCosto" name="idCentroCosto">
                             <div class="form-grid-2">
                                 <div class="form-group">
                                     <label>Nombre</label>

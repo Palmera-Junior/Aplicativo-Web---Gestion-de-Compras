@@ -35,6 +35,7 @@ import com.palmera_junior.gestion_compras.entity.Proveedor;
 import com.palmera_junior.gestion_compras.repository.OrdenCompraRepository;
 import com.palmera_junior.gestion_compras.repository.ProductoRepository;
 import com.palmera_junior.gestion_compras.repository.ProveedorRepository;
+import com.palmera_junior.gestion_compras.security.TotalesValidationService;
 
 
 
@@ -48,6 +49,7 @@ public class OrdenCompraService implements IOrdenCompraService {
     private final IUsuarioService usuarioService;
     private final ApplicationEventPublisher eventPublisher;
     private final CorreoOrdenOutboxService correoOrdenOutboxService;
+    private final TotalesValidationService totalesValidationService;
     
 
     
@@ -55,7 +57,7 @@ public class OrdenCompraService implements IOrdenCompraService {
     public OrdenCompraService(OrdenCompraRepository ordenCompraRepository, ProductoRepository productoRepository,
             ProveedorRepository proveedorRepository, ICentroCostoService centroCostoService,
             IUsuarioService usuarioService, ApplicationEventPublisher eventPublisher,
-            CorreoOrdenOutboxService correoOrdenOutboxService) {
+            CorreoOrdenOutboxService correoOrdenOutboxService, TotalesValidationService totalesValidationService) {
         this.ordenCompraRepository = ordenCompraRepository;
         this.productoRepository = productoRepository;
         this.proveedorRepository = proveedorRepository;
@@ -63,6 +65,7 @@ public class OrdenCompraService implements IOrdenCompraService {
         this.usuarioService = usuarioService;
         this.eventPublisher = eventPublisher;
         this.correoOrdenOutboxService = correoOrdenOutboxService;
+        this.totalesValidationService = totalesValidationService;
     }
 
     // Método para listar órdenes paginadas en el Dashboard
@@ -147,6 +150,10 @@ public class OrdenCompraService implements IOrdenCompraService {
     // Guardar orden de compra desde el DTO del formulario
     @Transactional
     public OrdenCompra guardarOrdenDesdeDTO(OrdenCompraDTO dto) {
+        // SEC-05: Validar y recalcular todos los totales en el servidor
+        // No confiar en los valores enviados por el cliente
+        totalesValidationService.validarYRecalcularTotalesOrden(dto);
+
         OrdenCompra orden = new OrdenCompra();
 
         // 2. Totales y fecha
@@ -157,6 +164,7 @@ public class OrdenCompraService implements IOrdenCompraService {
         } else {
             orden.setFecha(LocalDate.now());
         }
+        // Los totales ahora vienen validados y recalculados del servicio
         orden.setDescuento(dto.getDescuento());
         orden.setSubTotal(dto.getSubTotal());
         orden.setIvaTotal(dto.getIvaTotal());
@@ -203,12 +211,12 @@ public class OrdenCompraService implements IOrdenCompraService {
                     detalle.setProducto(null); // Producto nuevo, no hay llave foránea
                 }
 
-                // Datos snapshot del producto
+                // Datos snapshot del producto (ya validados y recalculados)
                 detalle.setCodigoInventario(dDto.getCodigoInventario());
                 detalle.setPresentacion(dDto.getPresentacion());
                 detalle.setDescripcion(dDto.getDescripcion());
 
-                // Valores numéricos de la línea
+                // Valores numéricos de la línea (ya validados y recalculados)
                 detalle.setCantidad(dDto.getCantidad());
                 detalle.setValorUnitario(dDto.getValorUnitario());
                 detalle.setIvaProducto(dDto.getIvaProducto());
@@ -319,6 +327,10 @@ public class OrdenCompraService implements IOrdenCompraService {
             throw new RuntimeException("Solo las órdenes en BORRADOR pueden editarse");
         }
 
+        // SEC-05: Validar y recalcular todos los totales en el servidor
+        // No confiar en los valores enviados por el cliente
+        totalesValidationService.validarYRecalcularTotalesOrden(dto);
+
         LocalDate fechaAnterior = orden.getFecha();
         LocalDate fechaNueva = fechaAnterior;
 
@@ -332,6 +344,7 @@ public class OrdenCompraService implements IOrdenCompraService {
             fechaNueva = LocalDate.parse(dto.getFecha(), DateTimeFormatter.ISO_LOCAL_DATE);
             orden.setFecha(fechaNueva);
         }
+        // Los totales ahora vienen validados y recalculados del servicio
         orden.setDescuento(dto.getDescuento());
         orden.setSubTotal(dto.getSubTotal());
         orden.setIvaTotal(dto.getIvaTotal());
@@ -361,6 +374,7 @@ public class OrdenCompraService implements IOrdenCompraService {
                 } else {
                     detalle.setProducto(null);
                 }
+                // Usar valores validados y recalculados
                 detalle.setCodigoInventario(dDto.getCodigoInventario());
                 detalle.setPresentacion(dDto.getPresentacion());
                 detalle.setDescripcion(dDto.getDescripcion());

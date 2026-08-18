@@ -29,6 +29,7 @@
                 Apellido</span>
             |<span th:text="${#authentication.principal.usuario.sede.nombre}">Cargando...</span>
             <form th:action="@{/logout}" method="POST" style="display: inline; margin: 0;">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                 <button title="Cerrar Sesión" type="submit" class="btn-logout">
                     <span class="material-symbols">logout</span> Salir
                 </button>

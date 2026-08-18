@@ -52,6 +52,9 @@ public class SecurityConfig {
                         .authenticated()
 
                         .anyRequest().denyAll())
+                .csrf(csrf -> csrf
+                        .csrfTokenRepository(org.springframework.security.web.csrf.CookieCsrfTokenRepository.withHttpOnlyFalse())
+                )
                 .formLogin(form -> form
                         .loginPage("/login")
                         .successHandler(successHandler())

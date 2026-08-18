@@ -8,6 +8,13 @@
 //   ('success' por defecto). El toast se oculta automáticamente a los ~3 segundos.
 // - Uso: usado en múltiples acciones para dar feedback al usuario (éxito/error/info).
 // - Endpoints: Ninguno (UI cliente).
+function reportClientError(mensaje, detalle) {
+    // No se exponen datos ni lógica del negocio en la consola del navegador.
+    // Los errores se manejan en la UI con toasts y mensajes amigables.
+    void mensaje;
+    void detalle;
+}
+
 function mostrarToast(mensaje, tipo) {
     tipo = tipo || 'success';
     let toast = document.getElementById('toast-root');
@@ -371,7 +378,7 @@ document.addEventListener("change", async function (e) {
 
     } catch (error) {
 
-        console.error(error);
+        reportClientError('Error al buscar el producto.', error);
 
         campoDescripcion.value = "";
         if (campoPresentacion) campoPresentacion.value = "";
@@ -615,7 +622,7 @@ document.addEventListener("input", function (e) {
             });
 
         } catch (error) {
-            console.error(error);
+            reportClientError('Error al cargar sugerencias de producto.', error);
             if (dropdown) {
                 dropdown.innerHTML = "";
                 dropdown.style.display = "none";
@@ -1113,11 +1120,11 @@ async function guardarYGenerarPdf() {
             setTimeout(() => location.reload(), 1200);
         } else {
             const errText = await response.text();
-            console.error("Error servidor:", errText);
+            reportClientError('Error al guardar la orden de compra.', errText);
             mostrarToast(errText || 'Error al guardar la orden de compra.', 'error');
         }
     } catch (error) {
-        console.error('Error de red/servidor:', error);
+        reportClientError('Error de red/servidor.', error);
         mostrarToast('Ocurrió un error al conectar con el servidor.', 'error');
     } finally {
         // Reactivar el botón al finalizar la operación
@@ -1173,7 +1180,7 @@ document.addEventListener("click", async function (e) {
 
     } catch (error) {
 
-        console.error(error);
+        reportClientError('Error al aprobar la orden.', error);
 
         mostrarToast(error.message || 'No fue posible aprobar la orden.', 'error');
     }
@@ -1216,7 +1223,7 @@ document.addEventListener("click", async function (e) {
         mostrarToast("Orden eliminada correctamente.", 'success');
         setTimeout(() => location.reload(), 1200);
     } catch (error) {
-        console.error(error);
+        reportClientError('Error al eliminar la orden.', error);
         mostrarToast(error.message, 'error');
     }
 });
@@ -1255,7 +1262,7 @@ document.addEventListener("click", async function (e) {
         window.URL.revokeObjectURL(url);
 
     } catch (err) {
-        console.error(err);
+        reportClientError('Error descargando PDF.', err);
         mostrarToast(err.message || 'Error descargando PDF', 'error');
     }
 });
@@ -1491,7 +1498,7 @@ La orden cambiará al estado RECIBIDA.
 
         } catch (error) {
 
-            console.error(error);
+            reportClientError('Error al registrar la recepción.', error);
 
             mostrarToast(
                 error.message ||
@@ -1588,7 +1595,7 @@ document.addEventListener(
 
         } catch (error) {
 
-            console.error(error);
+            reportClientError('Error al cargar la orden.', error);
 
             alert(error.message);
 

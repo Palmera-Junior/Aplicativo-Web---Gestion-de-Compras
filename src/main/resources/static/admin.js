@@ -1,4 +1,10 @@
-﻿// Maneja la visibilidad de secciones de administrador
+﻿function reportClientError(mensaje, detalle) {
+    // Se evita exponer información sensible o la lógica del negocio en la consola del navegador.
+    void mensaje;
+    void detalle;
+}
+
+// Maneja la visibilidad de secciones de administrador
 // showSection(id)
 // - Qué hace: Muestra la sección administrativa cuyo id se pasa (p.ej. 'section-productos'),
 //   oculta las demás secciones listadas, marca la tarjeta de módulo correspondiente como
@@ -47,7 +53,7 @@ document.addEventListener('DOMContentLoaded',()=>{
             // Mantener la sección de productos abierta y visible
             showSection('section-productos');
         }catch(err){
-            console.error('Error cargando página de productos:', err);
+            reportClientError('Error cargando página de productos.', err);
         }
     });
 
@@ -70,7 +76,7 @@ document.addEventListener('DOMContentLoaded',()=>{
             // Mantener la sección de proveedores abierta y visible
             showSection('section-proveedores');
         }catch(err){
-            console.error('Error cargando página de proveedores:', err);
+            reportClientError('Error cargando página de proveedores.', err);
         }
     });
 
@@ -93,7 +99,7 @@ document.addEventListener('DOMContentLoaded',()=>{
             // Mantener la sección de usuarios abierta y visible
             showSection('section-usuarios');
         }catch(err){
-            console.error('Error cargando página de usuarios:', err);
+            reportClientError('Error cargando página de usuarios.', err);
         }
     });
 
@@ -223,7 +229,7 @@ async function applyFilters(entity){
             const sectionId = 'section-' + (entity === 'proveedor' ? 'proveedores' : entity === 'usuario' ? 'usuarios' : 'productos');
             showSection(sectionId);
         }catch(err){
-            console.error('Error aplicando filtros:', err);
+            reportClientError('Error aplicando filtros.', err);
         }
     }
 
@@ -400,7 +406,7 @@ async function cargarPresentacionesEnFormulario(idProducto){
             crearFilaPresentacion(pres.presentacion, pres.cantidad, pres.unidad, pres.precio);
         });
     }catch(e){
-        console.error('Error cargando presentaciones:', e);
+        reportClientError('Error cargando presentaciones.', e);
     }
 }
 
