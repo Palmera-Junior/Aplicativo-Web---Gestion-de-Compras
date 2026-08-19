@@ -45,7 +45,7 @@ public class SecurityConfig {
 
                         .requestMatchers("/admin/**").hasRole("ADMINISTRADOR")
 
-                        .requestMatchers("/dashboard", "/dashboard/**", "/ordenes/**", "/orden-compra/**", "/api/ordenes/**", "/api/usuario/**")
+                        .requestMatchers("/dashboard", "/dashboard/**", "/ordenes/**", "/orden-compra/**", "/api/usuario/**")
                         .hasAnyRole("SOLICITANTE", "APROBADOR")
 
                         .requestMatchers("/dashboard.js", "/index.css", "/admin.css", "/admin.js", "/security.js")

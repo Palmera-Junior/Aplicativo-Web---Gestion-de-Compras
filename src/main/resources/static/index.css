@@ -301,6 +301,7 @@ body {
 
 .btn-limpiar {
     background: transparent;
+    color: #685c5c;
 }
 
 .btn-limpiar:hover {
@@ -552,7 +553,7 @@ body {
 .correo-estado-icon.sin-envio {
     color: #adb5bd;
     font-size: 18px;
-    font-weight: 600;
+    font-weight: 500;
 }
 
 /* Correo enviado: verde (éxito) */
@@ -563,7 +564,7 @@ body {
 /* Correo fallido: rojo (error definitivo). Es clicable para que el usuario
    pueda marcarlo manualmente como enviado. */
 .correo-estado-icon.fallido {
-    cursor: pointer;
+    cursor: pointer; 
 }
 
 .correo-estado-icon.fallido .material-symbols {
@@ -1152,13 +1153,13 @@ body {
 }
 
 #recepcion-numero-orden {
-    color: #1c64f2;
-    font-weight: 700;
+    
+    font-weight: 500;
 }
 
 #recepcion-proveedor {
     color: var(--primary-color);
-    font-weight: 600;
+    font-weight: 500;
 }
 
 /* ==========================================

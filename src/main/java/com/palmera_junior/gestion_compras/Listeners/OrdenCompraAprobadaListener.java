@@ -1,7 +1,7 @@
 package com.palmera_junior.gestion_compras.Listeners;
 
 import com.palmera_junior.gestion_compras.events.OrdenCompraAprobadaEvent;
-import com.palmera_junior.gestion_compras.service.CorreoOrdenAsyncProcessor;
+import com.palmera_junior.gestion_compras.service.correo.CorreoOrdenAsyncProcessor;
 
 import lombok.RequiredArgsConstructor;
 

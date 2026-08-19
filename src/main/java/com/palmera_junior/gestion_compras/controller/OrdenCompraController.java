@@ -17,9 +17,9 @@ import com.palmera_junior.gestion_compras.dto.OrdenCompraDTO;
 import com.palmera_junior.gestion_compras.dto.RecibirOrdenDTO;
 import com.palmera_junior.gestion_compras.dto.MarcarCorreoEnviadoDTO;
 import com.palmera_junior.gestion_compras.entity.OrdenCompra;
-import com.palmera_junior.gestion_compras.service.CorreoOrdenOutboxService;
-import com.palmera_junior.gestion_compras.service.IOrdenCompraService;
-import com.palmera_junior.gestion_compras.service.IPdfService;
+import com.palmera_junior.gestion_compras.service.correo.CorreoOrdenOutboxService;
+import com.palmera_junior.gestion_compras.service.orden.IOrdenCompraService;
+import com.palmera_junior.gestion_compras.service.orden.IPdfService;
 
 @RestController
 @RequestMapping("/orden-compra")

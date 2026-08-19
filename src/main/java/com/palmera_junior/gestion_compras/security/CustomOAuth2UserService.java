@@ -14,7 +14,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import com.palmera_junior.gestion_compras.entity.Usuario;
-import com.palmera_junior.gestion_compras.service.IUsuarioService;
+import com.palmera_junior.gestion_compras.service.usuario.IUsuarioService;
 
 @Service
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {

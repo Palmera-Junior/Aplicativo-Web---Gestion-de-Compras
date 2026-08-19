@@ -11,9 +11,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.palmera_junior.gestion_compras.dto.OrdenCompraDTO;
 import com.palmera_junior.gestion_compras.entity.EstadoOrdenCompra;
 import com.palmera_junior.gestion_compras.entity.Producto;
-import com.palmera_junior.gestion_compras.service.IDashboardService;
-import com.palmera_junior.gestion_compras.service.IOrdenCompraService;
-import com.palmera_junior.gestion_compras.service.IProductoService;
+import com.palmera_junior.gestion_compras.service.catalogo.IProductoService;
+import com.palmera_junior.gestion_compras.service.dashboard.IDashboardService;
+import com.palmera_junior.gestion_compras.service.orden.IOrdenCompraService;
 
 @Controller
 public class DashboardController {
