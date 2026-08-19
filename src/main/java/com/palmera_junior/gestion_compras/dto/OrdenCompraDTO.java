@@ -27,6 +27,7 @@ public class OrdenCompraDTO {
     private String recibidoPor;
     private String fechaRecepcion;
     private String numeroFactura;
+    private String fotoRecepcion;
 
 // Totales
     private BigDecimal descuento;
@@ -111,6 +112,9 @@ public class OrdenCompraDTO {
 
     public String getNumeroFactura() { return numeroFactura; }
     public void setNumeroFactura(String numeroFactura) { this.numeroFactura = numeroFactura; }
+
+    public String getFotoRecepcion() { return fotoRecepcion; }
+    public void setFotoRecepcion(String fotoRecepcion) { this.fotoRecepcion = fotoRecepcion; }
 
     public List<DetalleCompraDTO> getDetalles() { return detalles; }
     public void setDetalles(List<DetalleCompraDTO> detalles) { this.detalles = detalles; }

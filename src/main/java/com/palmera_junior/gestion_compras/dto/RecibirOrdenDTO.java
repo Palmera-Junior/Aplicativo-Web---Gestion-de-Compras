@@ -14,6 +14,8 @@ public class RecibirOrdenDTO {
 
     private BigDecimal valorFlete;
 
+    private String fotoRecepcion;
+
     public Integer getIdOrden() {
         return idOrden;
     }
@@ -52,5 +54,13 @@ public class RecibirOrdenDTO {
 
     public void setValorFlete(BigDecimal valorFlete) {
         this.valorFlete = valorFlete;
+    }
+
+    public String getFotoRecepcion() {
+        return fotoRecepcion;
+    }
+
+    public void setFotoRecepcion(String fotoRecepcion) {
+        this.fotoRecepcion = fotoRecepcion;
     }
 }

@@ -11,6 +11,7 @@ import java.awt.Color;
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
+import java.util.function.Consumer;
 
 @Service
 
@@ -52,7 +53,6 @@ public class PdfService implements IPdfService {
         PdfPCell logoCell1 = new PdfPCell();
         logoCell1.setFixedHeight(25f);
         logoCell1.setBorderColor(Color.BLACK);
-        
 
         try (java.io.InputStream isLogo1 = getClass().getResourceAsStream("/static/imgs/logoAnticimex.png")) {
             if (isLogo1 != null) {
@@ -260,13 +260,14 @@ public class PdfService implements IPdfService {
      * Se usa tanto para medir el alto real del contenido (Opción B) como
      * para generarlo definitivamente sobre la página "oversized".
      */
-    private void construirContenidoOrden(Document document, OrdenCompra orden) throws Exception {
-        Font fontTitulo = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, COLOR_TEXTO);
-        Font fontSub = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, COLOR_PRIMARY);
-        Font fontTexto = FontFactory.getFont(FontFactory.HELVETICA, 10, COLOR_TEXTO);
-        Font fontalert = FontFactory.getFont(FontFactory.HELVETICA_OBLIQUE, 9, COLOR_TEXTO_MUTED);
-        Font fontHeaderTabla = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8, Color.WHITE);
-        Font fontInfoEncabezado = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, COLOR_TEXTO);
+    Font fontTitulo = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, COLOR_TEXTO);
+    Font fontSub = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, COLOR_PRIMARY);
+    Font fontTexto = FontFactory.getFont(FontFactory.HELVETICA, 10, COLOR_TEXTO);
+    Font fontalert = FontFactory.getFont(FontFactory.HELVETICA_OBLIQUE, 9, COLOR_TEXTO_MUTED);
+    Font fontHeaderTabla = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8, Color.WHITE);
+    Font fontInfoEncabezado = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, COLOR_TEXTO);
+
+    private void construirBloqueSuperior(Document document, OrdenCompra orden) throws Exception {
 
         document.add(construirEncabezado(fontTitulo, fontInfoEncabezado));
 
@@ -414,6 +415,7 @@ public class PdfService implements IPdfService {
 
         document.add(tablaDetalles);
 
+        document.add(new Paragraph(" ", fontEspaciador));
         PdfPTable obsTotalesTable = new PdfPTable(2);
         obsTotalesTable.setWidthPercentage(100);
         obsTotalesTable.setWidths(new float[] { 65f, 35f });
@@ -439,11 +441,12 @@ public class PdfService implements IPdfService {
         totalesTable.addCell(crearCelda(df.format(orden.getSubTotal()), fontTexto));
         totalesTable.addCell(crearCelda("IVA Total:", fontSub));
         totalesTable.addCell(crearCelda(df.format(orden.getIvaTotal()), fontTexto));
-totalesTable.addCell(crearCelda("Descuento:", fontSub));
+        totalesTable.addCell(crearCelda("Descuento:", fontSub));
         totalesTable.addCell(crearCelda(df.format(orden.getDescuento()), fontTexto));
         if (Boolean.TRUE.equals(orden.getPagaFlete())) {
             totalesTable.addCell(crearCelda("Flete:", fontSub));
-            totalesTable.addCell(crearCelda(df.format(orden.getValorFlete() != null ? orden.getValorFlete() : BigDecimal.ZERO), fontTexto));
+            totalesTable.addCell(crearCelda(
+                    df.format(orden.getValorFlete() != null ? orden.getValorFlete() : BigDecimal.ZERO), fontTexto));
         }
         totalesTable.addCell(crearCelda("TOTAL:", fontSub));
         totalesTable.addCell(crearCelda(df.format(orden.getTotal()), fontSub));
@@ -453,8 +456,13 @@ totalesTable.addCell(crearCelda("Descuento:", fontSub));
         totalesCell.addElement(totalesTable);
         obsTotalesTable.addCell(totalesCell);
         document.add(obsTotalesTable);
-        agregarSeparador(document);
+        
 
+    }
+
+    private void construirBloqueInferior(Document document, OrdenCompra orden) throws Exception {
+
+        agregarSeparador(document);
         document.add(crearSeccion("AUDITORÍA", fontSub));
         PdfPTable auditoriaTable = new PdfPTable(3);
         auditoriaTable.setWidthPercentage(100);
@@ -544,6 +552,63 @@ totalesTable.addCell(crearCelda("Descuento:", fontSub));
         footerCell.setBorderColor(COLOR_PRIMARY);
         footer.addCell(footerCell);
         document.add(footer);
+
+    }
+
+    // Metodo para medir altura de un bloque
+
+    private float medirAlturaBloque(float anchoPagina, float altoTemporal, float margen, Consumer<Document> renderer)
+            throws Exception {
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+        Document doc = new Document(
+                new Rectangle(
+                        anchoPagina,
+                        altoTemporal),
+                margen,
+                margen,
+                margen,
+                margen);
+
+        PdfWriter writer = PdfWriter.getInstance(doc, baos);
+
+        doc.open();
+
+        renderer.accept(doc);
+
+        float top = doc.top();
+
+        float bottom = writer.getVerticalPosition(true);
+
+        doc.close();
+
+        return top - bottom;
+    }
+
+    private byte[] generarBloque(float anchoPagina, float altoTemporal, float margen, Consumer<Document> renderer)
+            throws Exception {
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+        Document doc = new Document(
+                new Rectangle(
+                        anchoPagina,
+                        altoTemporal),
+                margen,
+                margen,
+                margen,
+                margen);
+
+        PdfWriter.getInstance(doc, baos);
+
+        doc.open();
+
+        renderer.accept(doc);
+
+        doc.close();
+
+        return baos.toByteArray();
     }
 
     /**
@@ -552,56 +617,222 @@ totalesTable.addCell(crearCelda("Descuento:", fontSub));
      * de una hoja Carta normal, garantizando SIEMPRE una sola página sin
      * importar cuántas filas tenga la tabla de detalles.
      */
-    public byte[] generarPdfOrdenCompra(OrdenCompra orden) throws Exception {
-        float anchoCarta = PageSize.LETTER.getWidth();
+    @Override
+    public byte[] generarPdfOrdenCompra(
+            OrdenCompra orden)
+            throws Exception {
+
         float margen = 26f;
 
-        // Alto "oversized": suficientemente grande para cualquier cantidad
-        // de filas razonable (hasta ~80-100 productos sin problema).
-        float altoOversize = 4000f;
-        Rectangle pageSizeOversize = new Rectangle(anchoCarta, altoOversize);
+        float anchoCarta = PageSize.LETTER.getWidth();
 
-        // ---- 1. Generar el contenido completo en la página oversized ----
-        ByteArrayOutputStream baosTemp = new ByteArrayOutputStream();
-        Document tempDocument = new Document(pageSizeOversize, margen, margen, margen, margen);
-        PdfWriter tempWriter = PdfWriter.getInstance(tempDocument, baosTemp);
-        tempDocument.open();
+        float altoCarta = PageSize.LETTER.getHeight();
 
-        construirContenidoOrden(tempDocument, orden);
+        float altoTemporal = 4000f;
 
-        float tempTopY = tempDocument.top();
-        float finalY = tempWriter.getVerticalPosition(true);
-        float alturaContenido = tempTopY - finalY;
+        // =====================================================
+        // MEDIR BLOQUE SUPERIOR
+        // =====================================================
 
-        tempDocument.close();
+        float alturaSuperior = medirAlturaBloque(
+                anchoCarta,
+                altoTemporal,
+                margen,
+                doc -> {
+                    try {
+                        construirBloqueSuperior(
+                                doc,
+                                orden);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
 
-        // ---- 2. Calcular la escala necesaria para que quepa en Carta ----
-        float altoDisponibleCarta = PageSize.LETTER.getHeight() - (margen * 2);
-        float escala = alturaContenido > altoDisponibleCarta
-                ? (altoDisponibleCarta / alturaContenido)
-                : 1f;
+        // =====================================================
+        // MEDIR BLOQUE INFERIOR
+        // =====================================================
 
-        // ---- 3. Reimportar el contenido como plantilla escalada dentro
-        // de una hoja Carta normal ----
+        float alturaInferior = medirAlturaBloque(
+                anchoCarta,
+                altoTemporal,
+                margen,
+                doc -> {
+                    try {
+                        construirBloqueInferior(
+                                doc,
+                                orden);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+
+        // =====================================================
+        // GENERAR PDF TEMPORAL SUPERIOR
+        // =====================================================
+
+        byte[] bloqueSuperiorPdf = generarBloque(
+                anchoCarta,
+                altoTemporal,
+                margen,
+                doc -> {
+                    try {
+                        construirBloqueSuperior(
+                                doc,
+                                orden);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+
+        // =====================================================
+        // GENERAR PDF TEMPORAL INFERIOR
+        // =====================================================
+
+        byte[] bloqueInferiorPdf = generarBloque(
+                anchoCarta,
+                altoTemporal,
+                margen,
+                doc -> {
+                    try {
+                        construirBloqueInferior(
+                                doc,
+                                orden);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+
+        // =====================================================
+        // PDF FINAL
+        // =====================================================
+
         ByteArrayOutputStream baosFinal = new ByteArrayOutputStream();
-        Document finalDocument = new Document(PageSize.LETTER, margen, margen, margen, margen);
-        PdfWriter finalWriter = PdfWriter.getInstance(finalDocument, baosFinal);
+
+        Document finalDocument = new Document(
+                PageSize.LETTER,
+                margen,
+                margen,
+                margen,
+                margen);
+
+        PdfWriter finalWriter = PdfWriter.getInstance(
+                finalDocument,
+                baosFinal);
+
         finalDocument.open();
 
-        PdfReader reader = new PdfReader(baosTemp.toByteArray());
-        PdfImportedPage paginaImportada = finalWriter.getImportedPage(reader, 1);
         PdfContentByte cb = finalWriter.getDirectContent();
 
-        // Centrado horizontal + anclado al margen superior
-        float tx = (anchoCarta - anchoCarta * escala) / 2f;
-        float ty = finalDocument.top() - (escala * tempTopY);
+        float areaDisponible = altoCarta - (margen * 2);
 
-        cb.addTemplate(paginaImportada, escala, 0, 0, escala, tx, ty);
+        float alturaTotal = alturaSuperior + alturaInferior;
+
+        float escala = alturaTotal > areaDisponible
+                ? areaDisponible / alturaTotal
+                : 1f;
+
+        // =====================================================
+        // BLOQUE SUPERIOR
+        // =====================================================
+
+        PdfReader readerTop = new PdfReader(
+                bloqueSuperiorPdf);
+
+        PdfImportedPage topPage = finalWriter.getImportedPage(
+                readerTop,
+                1);
+
+        float yTop = finalDocument.top()
+                - (escala * (altoTemporal - margen));
+
+        cb.addTemplate(
+                topPage,
+                escala,
+                0,
+                0,
+                escala,
+                0,
+                yTop);
+
+        // =====================================================
+        // BLOQUE INFERIOR
+        // =====================================================
+
+        PdfReader readerBottom = new PdfReader(
+                bloqueInferiorPdf);
+
+        PdfImportedPage bottomPage = finalWriter.getImportedPage(
+                readerBottom,
+                1);
+        
+        float margenInferior = 20f;        
+        float yBottom = finalDocument.bottomMargin() + margenInferior
+                - (escala * (altoTemporal - alturaInferior));
+
+        cb.addTemplate(
+                bottomPage,
+                escala,
+                0,
+                0,
+                escala,
+                0,
+                yBottom);
+
+        readerTop.close();
+        readerBottom.close();
+
+        // =====================================================
+        // FOTO RECEPCIÓN
+        // =====================================================
+
+        if (orden.getFotoRecepcion() != null
+                && !orden.getFotoRecepcion().isBlank()) {
+
+            adjuntarPaginaFotoRecepcion(
+                    finalDocument,
+                    orden);
+        }
 
         finalDocument.close();
-        reader.close();
 
         return baosFinal.toByteArray();
+    }
+
+    private void adjuntarPaginaFotoRecepcion(Document document, OrdenCompra orden) {
+        try {
+            document.newPage();
+            // Sección: Evidencia de Recepción
+            document.add(crearSeccion("EVIDENCIA DE FACTURA PROVEEDOR", fontSub));
+
+            agregarSeparador(document);
+            // Decodficar y agregar imagen
+            String rawFoto = orden.getFotoRecepcion();
+            if (rawFoto.contains(",")) {
+                rawFoto = rawFoto.substring(rawFoto.indexOf(",") + 1);
+            }
+            byte[] fotoBytes = java.util.Base64.getDecoder().decode(rawFoto.trim());
+
+            Image foto = Image.getInstance(fotoBytes);
+            foto.setAlignment(Element.ALIGN_CENTER);
+
+            // Escalar para que quepa dentro del área imprimible de la página Carta
+            foto.scaleToFit(530f, 490f);
+
+            PdfPTable fotoTable = new PdfPTable(1);
+            fotoTable.setWidthPercentage(100);
+            PdfPCell fotoCell = new PdfPCell();
+            fotoCell.setBorder(Rectangle.NO_BORDER);
+            fotoCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            fotoCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+            fotoCell.setPaddingTop(8f);
+            fotoCell.addElement(foto);
+            fotoTable.addCell(fotoCell);
+
+            document.add(fotoTable);
+
+        } catch (Exception e) {
+            System.err.println("Error al adjuntar foto de recepción en el PDF: " + e.getMessage());
+        }
     }
 
     @Deprecated
@@ -891,6 +1122,10 @@ totalesTable.addCell(crearCelda("Descuento:", fontSub));
 
         document.add(envioTable);
         document.add(new Paragraph(" "));
+
+        if (orden.getFotoRecepcion() != null && !orden.getFotoRecepcion().isBlank()) {
+            adjuntarPaginaFotoRecepcion(document, orden);
+        }
 
         document.close();
         return baos.toByteArray();

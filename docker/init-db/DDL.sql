@@ -82,6 +82,13 @@ iva_total DECIMAL(10,2) NOT NULL,
     valor_flete DECIMAL(10,2) NULL, -- Valor del flete (nullable)
     total DECIMAL(10,2) NOT NULL,
     
+    -- Recepción
+    numero_factura VARCHAR(100),
+    recibido_por VARCHAR(150),
+    fecha_recepcion DATE,
+    observacion_recepcion TEXT,
+    foto_recepcion TEXT,
+    
     CONSTRAINT fk_orden_proveedor FOREIGN KEY (id_prov) REFERENCES proveedor (id_prov) ON DELETE SET NULL,
     CONSTRAINT fk_orden_sede FOREIGN KEY (id_sede) REFERENCES sede (id_sede),
     CONSTRAINT fk_orden_usuario FOREIGN KEY (id_usuario) REFERENCES usuario (id_usuario)

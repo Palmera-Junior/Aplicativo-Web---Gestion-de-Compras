@@ -1272,6 +1272,96 @@ document.addEventListener("click", async function (e) {
 // ==========================================
 
 let idOrdenSeleccionada = null;
+let fotoRecepcionBase64 = null;
+
+// Manejo de captura / subida de foto de recepción
+document.addEventListener("DOMContentLoaded", () => {
+    const inputFoto = document.getElementById("recepcion-foto-input");
+    const btnTomarFoto = document.getElementById("btn-tomar-foto");
+    const btnEliminarFoto = document.getElementById("btn-eliminar-foto");
+    const previewContainer = document.getElementById("recepcion-foto-preview-container");
+    const imgPreview = document.getElementById("recepcion-foto-preview");
+
+    if (btnTomarFoto && inputFoto) {
+        btnTomarFoto.addEventListener("click", () => {
+            inputFoto.click();
+        });
+    }
+
+    if (inputFoto) {
+        inputFoto.addEventListener("change", function (e) {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+
+            if (!file.type.startsWith("image/")) {
+                mostrarToast("El archivo seleccionado debe ser una imagen.", "error");
+                inputFoto.value = "";
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (readerEvent) {
+                const img = new Image();
+                img.onload = function () {
+                    // Redimensionar para optimizar tamaño manteniendo buena calidad
+                    const maxDim = 1600;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > maxDim || height > maxDim) {
+                        if (width > height) {
+                            height = Math.round((height * maxDim) / width);
+                            width = maxDim;
+                        } else {
+                            width = Math.round((width * maxDim) / height);
+                            height = maxDim;
+                        }
+                    }
+
+                    const canvas = document.createElement("canvas");
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext("2d");
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+                    fotoRecepcionBase64 = dataUrl;
+
+                    if (imgPreview) {
+                        imgPreview.src = dataUrl;
+                    }
+                    if (previewContainer) {
+                        previewContainer.style.display = "flex";
+                    }
+                    if (btnEliminarFoto) {
+                        btnEliminarFoto.style.display = "inline-flex";
+                    }
+                };
+                img.src = readerEvent.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    if (btnEliminarFoto) {
+        btnEliminarFoto.addEventListener("click", function () {
+            limpiarFotoRecepcion();
+        });
+    }
+});
+
+function limpiarFotoRecepcion() {
+    fotoRecepcionBase64 = null;
+    const inputFoto = document.getElementById("recepcion-foto-input");
+    const imgPreview = document.getElementById("recepcion-foto-preview");
+    const previewContainer = document.getElementById("recepcion-foto-preview-container");
+    const btnEliminarFoto = document.getElementById("btn-eliminar-foto");
+
+    if (inputFoto) inputFoto.value = "";
+    if (imgPreview) imgPreview.src = "";
+    if (previewContainer) previewContainer.style.display = "none";
+    if (btnEliminarFoto) btnEliminarFoto.style.display = "none";
+}
 
 
 // ABRIR MODAL
@@ -1470,7 +1560,8 @@ La orden cambiará al estado RECIBIDA.
                         numeroFactura,
                         recibidoPor,
                         observacionRecepcion: observacion,
-                        valorFlete
+                        valorFlete,
+                        fotoRecepcion: fotoRecepcionBase64
                     })
                 }
             );
@@ -1549,6 +1640,8 @@ function limpiarFormularioRecepcion() {
     if (fleteInput) {
         fleteInput.value = "";
     }
+
+    limpiarFotoRecepcion();
 
     idOrdenSeleccionada = null;
 }

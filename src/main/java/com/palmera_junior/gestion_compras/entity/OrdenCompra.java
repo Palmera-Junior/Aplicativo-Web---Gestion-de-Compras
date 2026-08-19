@@ -94,6 +94,9 @@ public class OrdenCompra {
     @Column(name = "observacion_recepcion")
     private String observacionRecepcion;
 
+    @Column(name = "foto_recepcion", columnDefinition = "TEXT")
+    private String fotoRecepcion;
+
     @OneToMany(mappedBy = "ordenCompra", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     private List<DetalleCompra> detalles = new ArrayList<>();

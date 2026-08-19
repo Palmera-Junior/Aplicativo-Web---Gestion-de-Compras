@@ -549,6 +549,9 @@ public class OrdenCompraService implements IOrdenCompraService {
         orden.setObservacionRecepcion(
                 dto.getObservacionRecepcion());
 
+        orden.setFotoRecepcion(
+                dto.getFotoRecepcion());
+
         // Recalcular el total incluyendo el flete (si aplica)
         orden.setTotal(calcularTotal(orden));
 
@@ -645,6 +648,7 @@ public class OrdenCompraService implements IOrdenCompraService {
         dto.setRecibidoPor(orden.getRecibidoPor() != null ? orden.getRecibidoPor() : null);
         dto.setFechaRecepcion(orden.getFechaRecepcion() != null ? (orden.getFechaRecepcion().toString()) : null);
         dto.setNumeroFactura(orden.getNumeroFactura() != null ? orden.getNumeroFactura() : null);
+        dto.setFotoRecepcion(orden.getFotoRecepcion());
 
         dto.setIdCentroCosto(
                 orden.getCentroCosto() != null ? orden.getCentroCosto().getIdCentroCosto().longValue() : null);
