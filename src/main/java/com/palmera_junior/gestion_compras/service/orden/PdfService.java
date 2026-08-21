@@ -790,6 +790,7 @@ public class PdfService implements IPdfService {
 
             adjuntarPaginaFotoRecepcion(
                     finalDocument,
+                    finalWriter,
                     orden);
         }
 
@@ -798,40 +799,77 @@ public class PdfService implements IPdfService {
         return baosFinal.toByteArray();
     }
 
-    private void adjuntarPaginaFotoRecepcion(Document document, OrdenCompra orden) {
+    private void adjuntarPaginaFotoRecepcion(Document document, PdfWriter writer, OrdenCompra orden) {
         try {
-            document.newPage();
-            // Sección: Evidencia de Recepción
-            document.add(crearSeccion("EVIDENCIA DE FACTURA PROVEEDOR", fontSub));
-
-            agregarSeparador(document);
-            // Decodficar y agregar imagen
             String rawFoto = orden.getFotoRecepcion();
             if (rawFoto.contains(",")) {
                 rawFoto = rawFoto.substring(rawFoto.indexOf(",") + 1);
             }
             byte[] fotoBytes = java.util.Base64.getDecoder().decode(rawFoto.trim());
 
-            Image foto = Image.getInstance(fotoBytes);
-            foto.setAlignment(Element.ALIGN_CENTER);
+            // Detectar si el contenido adjunto es un PDF (cabecera %PDF)
+            boolean esPdf = fotoBytes.length > 4
+                    && fotoBytes[0] == 0x25
+                    && fotoBytes[1] == 0x50
+                    && fotoBytes[2] == 0x44
+                    && fotoBytes[3] == 0x46;
 
-            // Escalar para que quepa dentro del área imprimible de la página Carta
-            foto.scaleToFit(530f, 490f);
+            if (esPdf) {
+                // Importar cada página del PDF adjunto como páginas nuevas en el documento final
+                PdfReader reader = new PdfReader(fotoBytes);
+                PdfContentByte cb = writer.getDirectContent();
+                int paginas = reader.getNumberOfPages();
+                for (int i = 1; i <= paginas; i++) {
+                    document.newPage();
+                    // Título / cabecera de la sección (solo se muestra al inicio de la primera página)
+                    if (i == 1) {
+                        document.add(crearSeccion("EVIDENCIA DE FACTURA PROVEEDOR", fontSub));
+                        agregarSeparador(document);
+                    }
 
-            PdfPTable fotoTable = new PdfPTable(1);
-            fotoTable.setWidthPercentage(100);
-            PdfPCell fotoCell = new PdfPCell();
-            fotoCell.setBorder(Rectangle.NO_BORDER);
-            fotoCell.setHorizontalAlignment(Element.ALIGN_CENTER);
-            fotoCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
-            fotoCell.setPaddingTop(8f);
-            fotoCell.addElement(foto);
-            fotoTable.addCell(fotoCell);
+                    PdfImportedPage page = writer.getImportedPage(reader, i);
 
-            document.add(fotoTable);
+                    com.lowagie.text.Rectangle pageSize = reader.getPageSizeWithRotation(i);
+                    float rw = pageSize.getWidth();
+                    float rh = pageSize.getHeight();
+
+                    float availableW = document.getPageSize().getWidth() - document.leftMargin() - document.rightMargin();
+                    float availableH = document.getPageSize().getHeight() - document.topMargin() - document.bottomMargin();
+
+                    float scale = Math.min(availableW / rw, availableH / rh);
+
+                    float offsetX = (document.getPageSize().getWidth() - (rw * scale)) / 2f;
+                    float offsetY = (document.getPageSize().getHeight() - (rh * scale)) / 2f;
+
+                    cb.addTemplate(page, scale, 0, 0, scale, offsetX, offsetY);
+                }
+                reader.close();
+
+            } else {
+                // Es una imagen (png/jpg/jpeg/...)
+                document.newPage();
+                document.add(crearSeccion("EVIDENCIA DE FACTURA PROVEEDOR", fontSub));
+                agregarSeparador(document);
+
+                Image foto = Image.getInstance(fotoBytes);
+                foto.setAlignment(Element.ALIGN_CENTER);
+                foto.scaleToFit(530f, 490f);
+
+                PdfPTable fotoTable = new PdfPTable(1);
+                fotoTable.setWidthPercentage(100);
+                PdfPCell fotoCell = new PdfPCell();
+                fotoCell.setBorder(Rectangle.NO_BORDER);
+                fotoCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                fotoCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                fotoCell.setPaddingTop(8f);
+                fotoCell.addElement(foto);
+                fotoTable.addCell(fotoCell);
+
+                document.add(fotoTable);
+            }
 
         } catch (Exception e) {
-            System.err.println("Error al adjuntar foto de recepción en el PDF: " + e.getMessage());
+            System.err.println("Error al adjuntar evidencia de recepción en el PDF: " + e.getMessage());
         }
     }
 

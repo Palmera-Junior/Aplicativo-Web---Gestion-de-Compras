@@ -1186,7 +1186,163 @@ document.addEventListener("click", async function (e) {
     }
 });
 
-// ELIMINAR ORDEN (solo para BORRADOR y creador)
+function abrirModalFactura(boton) {
+    idOrdenSeleccionada = boton.dataset.id;
+    const numeroOrden = boton.dataset.numeroOrden || idOrdenSeleccionada;
+    const proveedor = boton.dataset.proveedor || '';
+
+    limpiarFormularioFactura();
+    document.getElementById('factura-numero-orden').textContent = numeroOrden;
+    document.getElementById('factura-proveedor').textContent = proveedor;
+    document.getElementById('modal-facturar-oc').style.display = 'flex';
+    document.getElementById('factura-numero-factura').focus();
+}
+
+function limpiarFormularioFactura() {
+    const inputFactura = document.getElementById('factura-numero-factura');
+    if (inputFactura) inputFactura.value = '';
+
+    const infoFactura = document.getElementById('factura-file-info');
+    if (infoFactura) {
+        infoFactura.textContent = '';
+        infoFactura.style.display = 'none';
+    }
+
+    const previewFactura = document.getElementById('factura-preview-image');
+    if (previewFactura) previewFactura.src = '';
+
+    const previewContainerFactura = document.getElementById('factura-preview-container');
+    if (previewContainerFactura) previewContainerFactura.style.display = 'none';
+
+    const inputFileFactura = document.getElementById('factura-foto-input');
+    if (inputFileFactura) inputFileFactura.value = '';
+
+    const btnEliminarFactura = document.getElementById('btn-eliminar-factura');
+    if (btnEliminarFactura) btnEliminarFactura.style.display = 'none';
+
+    facturaDocumentoBase64 = null;
+    facturaDocumentoNombre = '';
+}
+
+function handleAdjuntoArchivo(file, { previewContainer, previewImage, infoElement, setDataUrl, label, inputFile }) {
+    if (!file) return;
+
+    const valido = file.type.startsWith('image/') || file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
+    if (!valido) {
+        mostrarToast(label + ' debe ser una imagen o un PDF.', 'error');
+        if (inputFile) inputFile.value = '';
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function (event) {
+        const result = event.target.result;
+
+        if (file.type.startsWith('image/')) {
+            const img = new Image();
+            img.onload = function () {
+                const maxDim = 1600;
+                let width = img.width;
+                let height = img.height;
+
+                if (width > maxDim || height > maxDim) {
+                    if (width > height) {
+                        height = Math.round((height * maxDim) / width);
+                        width = maxDim;
+                    } else {
+                        width = Math.round((width * maxDim) / height);
+                        height = maxDim;
+                    }
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+                if (setDataUrl) setDataUrl(dataUrl, file.name);
+                if (previewContainer) previewContainer.style.display = 'flex';
+                if (previewImage) previewImage.src = dataUrl;
+                if (infoElement) {
+                    infoElement.textContent = file.name;
+                    infoElement.style.display = 'flex';
+                }
+            };
+            img.src = result;
+            return;
+        }
+
+        if (setDataUrl) setDataUrl(result, file.name);
+        if (previewContainer) previewContainer.style.display = 'none';
+        if (previewImage) previewImage.src = '';
+        if (infoElement) {
+            infoElement.textContent = file.name;
+            infoElement.style.display = 'flex';
+        }
+    };
+
+    reader.readAsDataURL(file);
+}
+
+document.addEventListener("click", function (e) {
+    const boton = e.target.closest(".facturar");
+    if (!boton) return;
+    abrirModalFactura(boton);
+});
+
+document.getElementById('btn-cancelar-factura')?.addEventListener('click', function () {
+    document.getElementById('modal-facturar-oc').style.display = 'none';
+    limpiarFormularioFactura();
+    idOrdenSeleccionada = null;
+});
+
+document.getElementById('btn-confirmar-factura')?.addEventListener('click', async function () {
+    const numeroFactura = document.getElementById('factura-numero-factura')?.value.trim();
+    if (!numeroFactura) {
+        mostrarToast('Debes ingresar el número de factura.', 'error');
+        return;
+    }
+    if (!facturaDocumentoBase64) {
+        mostrarToast('Debes adjuntar la evidencia de la factura.', 'error');
+        return;
+    }
+
+    const btn = document.getElementById('btn-confirmar-factura');
+    btn.disabled = true;
+    btn.textContent = 'Procesando...';
+
+    try {
+        const response = await csrfFetch(`/orden-compra/${idOrdenSeleccionada}/facturar`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                numeroFactura,
+                fotoRecepcion: facturaDocumentoBase64
+            })
+        });
+
+        if (!response.ok) {
+            const mensaje = await response.text();
+            throw new Error(mensaje || 'No se pudo registrar la factura.');
+        }
+
+        mostrarToast('Factura registrada correctamente.', 'success');
+        document.getElementById('modal-facturar-oc').style.display = 'none';
+        limpiarFormularioFactura();
+        idOrdenSeleccionada = null;
+        setTimeout(() => location.reload(), 1200);
+    } catch (error) {
+        reportClientError('Error al registrar la factura.', error);
+        mostrarToast(error.message || 'No fue posible registrar la factura.', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Registrar Factura';
+    }
+});
+
+// ANULAR ORDEN (lógica de anulación, no eliminación física)
 document.addEventListener("click", async function (e) {
     const boton = e.target.closest(".delete-orden");
     if (!boton) return;
@@ -1195,15 +1351,14 @@ document.addEventListener("click", async function (e) {
     const numeroOrden = boton.dataset.numeroOrden || "";
 
     if (!idOrden) {
-        mostrarToast('ID de orden no disponible para eliminarla.', 'error');
+        mostrarToast('ID de orden no disponible para anularla.', 'error');
         return;
     }
 
     const confirmar = confirm(
-        "¿Está seguro de eliminar esta Orden de Compra?\n\n" +
+        "¿Está seguro de anular esta Orden de Compra?\n\n" +
         "N° Orden: " + (numeroOrden || idOrden) + "\n\n" +
-        "Solo podrá eliminar una orden en estado BORRADOR y únicamente si usted fue quien la creó.\n\n" +
-        "Esta acción no se puede deshacer."
+        "Esta acción cambiará la orden a estado ANULADA y no se eliminará de la base de datos."
     );
 
     if (!confirmar) {
@@ -1211,24 +1366,24 @@ document.addEventListener("click", async function (e) {
     }
 
     try {
-        const response = await csrfFetch(`/orden-compra/${idOrden}`, {
-            method: "DELETE"
+        const response = await csrfFetch(`/orden-compra/${idOrden}/anular`, {
+            method: "PUT"
         });
 
         if (!response.ok) {
             const mensaje = await response.text();
-            throw new Error(mensaje || "No se pudo eliminar la orden.");
+            throw new Error(mensaje || "No se pudo anular la orden.");
         }
 
-        mostrarToast("Orden eliminada correctamente.", 'success');
+        mostrarToast("Orden anulada correctamente.", 'success');
         setTimeout(() => location.reload(), 1200);
     } catch (error) {
-        reportClientError('Error al eliminar la orden.', error);
+        reportClientError('Error al anular la orden.', error);
         mostrarToast(error.message, 'error');
     }
 });
 
-// DESCARGAR PDF (solo para APROBADA/RECIBIDA)
+// DESCARGAR PDF (solo para APROBADA)
 document.addEventListener("click", async function (e) {
     const boton = e.target.closest(".pdf");
     if (!boton) return;
@@ -1273,81 +1428,107 @@ document.addEventListener("click", async function (e) {
 
 let idOrdenSeleccionada = null;
 let fotoRecepcionBase64 = null;
+let facturaDocumentoBase64 = null;
+let facturaDocumentoNombre = '';
 
-// Manejo de captura / subida de foto de recepción
+// Manejo de captura / subida de foto y archivo para facturación y recepción
 document.addEventListener("DOMContentLoaded", () => {
-    const inputFoto = document.getElementById("recepcion-foto-input");
-    const btnTomarFoto = document.getElementById("btn-tomar-foto");
-    const btnEliminarFoto = document.getElementById("btn-eliminar-foto");
-    const previewContainer = document.getElementById("recepcion-foto-preview-container");
-    const imgPreview = document.getElementById("recepcion-foto-preview");
+    const setupEvidenceUploader = ({
+        inputId,
+        buttonTomarId,
+        buttonAdjuntarId,
+        buttonEliminarId,
+        previewContainerId,
+        previewImageId,
+        infoId,
+        onFileReady,
+        clearOnRemove,
+        typeLabel
+    }) => {
+        const inputFile = document.getElementById(inputId);
+        const btnTomar = document.getElementById(buttonTomarId);
+        const btnAdjuntar = document.getElementById(buttonAdjuntarId);
+        const btnEliminar = document.getElementById(buttonEliminarId);
+        const previewContainer = document.getElementById(previewContainerId);
+        const imgPreview = document.getElementById(previewImageId);
+        const infoElement = document.getElementById(infoId);
 
-    if (btnTomarFoto && inputFoto) {
-        btnTomarFoto.addEventListener("click", () => {
-            inputFoto.click();
-        });
-    }
+        if (btnTomar && inputFile) {
+            btnTomar.addEventListener("click", () => inputFile.click());
+        }
 
-    if (inputFoto) {
-        inputFoto.addEventListener("change", function (e) {
-            const file = e.target.files && e.target.files[0];
-            if (!file) return;
+        if (btnAdjuntar && inputFile) {
+            btnAdjuntar.addEventListener("click", () => inputFile.click());
+        }
 
-            if (!file.type.startsWith("image/")) {
-                mostrarToast("El archivo seleccionado debe ser una imagen.", "error");
-                inputFoto.value = "";
-                return;
-            }
+        if (inputFile) {
+            inputFile.addEventListener("change", function (e) {
+                const file = e.target.files && e.target.files[0];
+                if (!file) return;
 
-            const reader = new FileReader();
-            reader.onload = function (readerEvent) {
-                const img = new Image();
-                img.onload = function () {
-                    // Redimensionar para optimizar tamaño manteniendo buena calidad
-                    const maxDim = 1600;
-                    let width = img.width;
-                    let height = img.height;
+                handleAdjuntoArchivo(file, {
+                    previewContainer,
+                    previewImage: imgPreview,
+                    infoElement,
+                    label: typeLabel,
+                    setDataUrl: onFileReady,
+                    inputFile
+                });
+            });
+        }
 
-                    if (width > maxDim || height > maxDim) {
-                        if (width > height) {
-                            height = Math.round((height * maxDim) / width);
-                            width = maxDim;
-                        } else {
-                            width = Math.round((width * maxDim) / height);
-                            height = maxDim;
-                        }
-                    }
+        if (btnEliminar) {
+            btnEliminar.addEventListener("click", function () {
+                if (clearOnRemove) clearOnRemove();
+                if (inputFile) inputFile.value = "";
+                if (imgPreview) imgPreview.src = "";
+                if (previewContainer) previewContainer.style.display = "none";
+                if (infoElement) {
+                    infoElement.textContent = "";
+                    infoElement.style.display = "none";
+                }
+                btnEliminar.style.display = "none";
+            });
+        }
+    };
 
-                    const canvas = document.createElement("canvas");
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext("2d");
-                    ctx.drawImage(img, 0, 0, width, height);
+    setupEvidenceUploader({
+        inputId: 'factura-foto-input',
+        buttonTomarId: 'btn-tomar-foto-factura',
+        buttonAdjuntarId: 'btn-adjuntar-factura',
+        buttonEliminarId: 'btn-eliminar-factura',
+        previewContainerId: 'factura-preview-container',
+        previewImageId: 'factura-preview-image',
+        infoId: 'factura-file-info',
+        typeLabel: 'La evidencia',
+        onFileReady: (dataUrl, fileName) => {
+            facturaDocumentoBase64 = dataUrl;
+            facturaDocumentoNombre = fileName;
+            document.getElementById('btn-eliminar-factura').style.display = 'inline-flex';
+        },
+        clearOnRemove: () => {
+            facturaDocumentoBase64 = null;
+            facturaDocumentoNombre = '';
+        }
+    });
 
-                    const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
-                    fotoRecepcionBase64 = dataUrl;
-
-                    if (imgPreview) {
-                        imgPreview.src = dataUrl;
-                    }
-                    if (previewContainer) {
-                        previewContainer.style.display = "flex";
-                    }
-                    if (btnEliminarFoto) {
-                        btnEliminarFoto.style.display = "inline-flex";
-                    }
-                };
-                img.src = readerEvent.target.result;
-            };
-            reader.readAsDataURL(file);
-        });
-    }
-
-    if (btnEliminarFoto) {
-        btnEliminarFoto.addEventListener("click", function () {
-            limpiarFotoRecepcion();
-        });
-    }
+    setupEvidenceUploader({
+        inputId: 'recepcion-foto-input',
+        buttonTomarId: 'btn-tomar-foto-recepcion',
+        buttonAdjuntarId: 'btn-adjuntar-foto-recepcion',
+        buttonEliminarId: 'btn-eliminar-foto',
+        previewContainerId: 'recepcion-foto-preview-container',
+        previewImageId: 'recepcion-foto-preview',
+        infoId: 'recepcion-file-info',
+        typeLabel: 'La evidencia',
+        onFileReady: (dataUrl, fileName) => {
+            fotoRecepcionBase64 = dataUrl;
+            document.getElementById('btn-eliminar-foto').style.display = 'inline-flex';
+        },
+        clearOnRemove: () => {
+            fotoRecepcionBase64 = null;
+        }
+    });
 });
 
 function limpiarFotoRecepcion() {
@@ -1356,11 +1537,31 @@ function limpiarFotoRecepcion() {
     const imgPreview = document.getElementById("recepcion-foto-preview");
     const previewContainer = document.getElementById("recepcion-foto-preview-container");
     const btnEliminarFoto = document.getElementById("btn-eliminar-foto");
+    const infoElement = document.getElementById("recepcion-file-info");
 
     if (inputFoto) inputFoto.value = "";
     if (imgPreview) imgPreview.src = "";
     if (previewContainer) previewContainer.style.display = "none";
     if (btnEliminarFoto) btnEliminarFoto.style.display = "none";
+    if (infoElement) {
+        infoElement.textContent = "";
+        infoElement.style.display = "none";
+    }
+}
+
+function limpiarFotoFactura() {
+    facturaDocumentoBase64 = null;
+    facturaDocumentoNombre = '';
+    const inputFile = document.getElementById('factura-foto-input');
+    const btnEliminar = document.getElementById('btn-eliminar-factura');
+    const infoElement = document.getElementById('factura-file-info');
+
+    if (inputFile) inputFile.value = '';
+    if (btnEliminar) btnEliminar.style.display = 'none';
+    if (infoElement) {
+        infoElement.textContent = '';
+        infoElement.style.display = 'none';
+    }
 }
 
 
@@ -1374,6 +1575,7 @@ document.addEventListener("click", function (e) {
     }
 
     idOrdenSeleccionada = boton.dataset.id;
+    limpiarFormularioRecepcion();
 
     document.getElementById(
         "recepcion-numero-orden"
@@ -1419,6 +1621,7 @@ document
         ).style.display = "none";
 
         limpiarFormularioRecepcion();
+        idOrdenSeleccionada = null;
 
     });
 
@@ -1427,11 +1630,6 @@ document
 document
     .getElementById("btn-confirmar-recepcion")
     ?.addEventListener("click", async function () {
-
-        const numeroFactura = document
-            .getElementById("recepcion-numero-factura")
-            .value
-            .trim();
 
         const recibidoPor = document
             .getElementById("recepcion-recibido-por")
@@ -1460,26 +1658,6 @@ document
         // ========================
         // VALIDACIONES
         // ========================
-
-        if (!numeroFactura) {
-
-            mostrarToast(
-                "Debes ingresar el número de factura.",
-                'error'
-            );
-
-            return;
-        }
-
-        if (numeroFactura.length < 3) {
-
-            mostrarToast(
-                "El número de factura parece inválido.",
-                'error'
-            );
-
-            return;
-        }
 
         if (!recibidoPor) {
 
@@ -1512,6 +1690,9 @@ document
             return;
         }
 
+        // Evidencia de recepción opcional: no es obligatorio adjuntar foto/PDF.
+        // Si existe, se enviará en fotoRecepcion; si no, se enviará null.
+
         // ========================
         // CONFIRMACIÓN
         // ========================
@@ -1519,9 +1700,6 @@ document
         const confirmar = confirm(
 
             `Confirme los datos de recepción:
-
-Factura:
-${numeroFactura}
 
 Recibido por:
 ${recibidoPor}
@@ -1557,7 +1735,6 @@ La orden cambiará al estado RECIBIDA.
                         "Content-Type": "application/json"
                     },
                     body: JSON.stringify({
-                        numeroFactura,
                         recibidoPor,
                         observacionRecepcion: observacion,
                         valorFlete,
@@ -1580,6 +1757,7 @@ La orden cambiará al estado RECIBIDA.
             );
 
             limpiarFormularioRecepcion();
+            idOrdenSeleccionada = null;
 
             document.getElementById(
                 "modal-recibir-oc"
@@ -1616,25 +1794,17 @@ La orden cambiará al estado RECIBIDA.
 // - Endpoints: Ninguno (manipulación del DOM).
 function limpiarFormularioRecepcion() {
 
-    document.getElementById(
-        "recepcion-numero-factura"
-    ).value = "";
+    const recibidoPor = document.getElementById("recepcion-recibido-por");
+    if (recibidoPor) recibidoPor.value = "";
 
-    document.getElementById(
-        "recepcion-recibido-por"
-    ).value = "";
+    const observacion = document.getElementById("recepcion-observacion");
+    if (observacion) observacion.value = "";
 
-    document.getElementById(
-        "recepcion-observacion"
-    ).value = "";
+    const numeroOrden = document.getElementById("recepcion-numero-orden");
+    if (numeroOrden) numeroOrden.textContent = "";
 
-    document.getElementById(
-        "recepcion-numero-orden"
-    ).textContent = "";
-
-    document.getElementById(
-        "recepcion-proveedor"
-    ).textContent = "";
+    const proveedor = document.getElementById("recepcion-proveedor");
+    if (proveedor) proveedor.textContent = "";
 
     const fleteInput = document.getElementById('recepcion-valor-flete');
     if (fleteInput) {
@@ -1642,8 +1812,6 @@ function limpiarFormularioRecepcion() {
     }
 
     limpiarFotoRecepcion();
-
-    idOrdenSeleccionada = null;
 }
 
 // ==========================================
