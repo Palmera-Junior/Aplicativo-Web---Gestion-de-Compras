@@ -113,7 +113,7 @@ body {
 .dashboard-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-end; /* antes: center — con el breadcrumb arriba, alinea mejor abajo con las acciones */
     padding-bottom: 20px;
     margin-bottom: 20px;
     border-bottom: 1px solid #eef0f2;
@@ -132,6 +132,34 @@ body {
     margin: 2px 0 0 0;
 }
 
+/* Breadcrumb de administrador, sobre el h1 */
+.breadcrumb-admin {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 15px;
+    color: #868e96;
+    margin-bottom: 6px;
+    max-width: 1400px;
+    margin: 24px auto;
+    padding: 5px;
+}
+
+.breadcrumb-admin a {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #198754; /* mismo verde de acento que btn-refrescar:active */
+    text-decoration: none;
+}
+
+.breadcrumb-admin a:hover {
+    transform: scale(1.03);
+}
+
+.breadcrumb-admin a .material-symbols {
+    font-size: 18px;
+}
 
 /* Acciones del encabezado (botón refrescar + botón crear) */
 .dashboard-header-actions {
@@ -171,7 +199,6 @@ body {
     border-color: #198754;
     color: #198754;
 }
-
 /* ============================================
    AUTO-OCULTADO DE ALERTAS (success/error)
    ============================================ */
@@ -275,14 +302,40 @@ body {
 }
 
 .btn-secondary {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 42px;
+    gap: 8px;
+    min-width: 42px;
     height: 38px;
+    padding: 0 12px;
     border-radius: 6px;
     cursor: pointer;
     border: none;
+    text-decoration: none;
+    font-weight: 600;
+    line-height: 1;
+    transition: all .2s ease;
+}
+
+.dashboard-header a.btn-secondary {
+    background: #e6f6ec;
+    color: #0a8240;
+    border: 1px solid #bfe8cf;
+    padding: 0 16px;
+    min-width: auto;
+    width: auto;
+    text-decoration: none;
+}
+
+.dashboard-header a.btn-secondary:hover {
+    background: #d5f1e1;
+    color: #065d2f;
+    transform: translateY(-1px);
+}
+
+.dashboard-header a.btn-secondary .material-symbols {
+    font-size: 20px;
 }
 
 .btn-secondary .material-symbols-outlined {

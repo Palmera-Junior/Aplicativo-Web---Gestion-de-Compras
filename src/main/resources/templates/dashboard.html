@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
 <head>
     <meta charset="UTF-8">
@@ -38,15 +38,23 @@
         </div>
     </header>
 
+    <nav sec:authorize="hasRole('ADMINISTRADOR')" class="breadcrumb-admin" aria-label="breadcrumb">
+        <a th:href="@{/admin}" title="Volver a panel administrador">
+            <span class="material-symbols">admin_panel_settings</span> Panel de administración <span class ="material-symbols">chevron_right</span>
+        </a>
+    </nav>
+
     <main class="dashboard-container">
         <div class="dashboard-header">
             <div>
                 <h1>Órdenes de Compra</h1>
                 <p>Gestión y consulta de documentos</p>
             </div>
-            <button title="Crear Orden de Compra" type="button" id="btn-nueva-orden" class="btn-primary">
-                <span class="material-symbols">add</span> Nueva Orden
-            </button>
+            <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+                <button title="Crear Orden de Compra" type="button" id="btn-nueva-orden" class="btn-primary">
+                    <span class="material-symbols">add</span> Nueva Orden
+                </button>
+            </div>
         </div>
 
         <form class="filtros-section" method="GET" th:action="@{/dashboard}">
@@ -117,15 +125,16 @@
                                 class="correo-estado-icon enviado" title="Correo enviado correctamente al proveedor">
                                 <span class="material-symbols">check</span>
                             </span>
-                            <button th:if="${estadoCorreo != null and estadoCorreo.name() == 'FALLIDO'}"
-                                type="button" class="correo-estado-icon fallido correo-marcar-enviado"
-                                th:data-id="${orden.idOrden}" th:data-numero-orden="${orden.numeroOrden}"
+                            <button th:if="${estadoCorreo != null and estadoCorreo.name() == 'FALLIDO'}" type="button"
+                                class="correo-estado-icon fallido correo-marcar-enviado" th:data-id="${orden.idOrden}"
+                                th:data-numero-orden="${orden.numeroOrden}"
                                 title="El correo al proveedor no pudo enviarse. Haga clic para marcarlo como enviado manualmente.">
                                 <span class="material-symbols">close</span>
                             </button>
                             <span
                                 th:if="${estadoCorreo != null and (estadoCorreo.name() == 'PENDIENTE' or estadoCorreo.name() == 'PROCESANDO' or estadoCorreo.name() == 'REINTENTAR')}"
-                                class="correo-estado-icon pendiente" title="El correo al proveedor está en proceso de envío">
+                                class="correo-estado-icon pendiente"
+                                title="El correo al proveedor está en proceso de envío">
                                 <span class="material-symbols">schedule</span>
                             </span>
                         </td>
@@ -133,7 +142,8 @@
                             <button title="Ver Orden de Compra" class="btn-icon view" th:data-id="${orden.idOrden}">
                                 <span class="material-symbols">visibility</span>
                             </button>
-                            <button title="Aprobar Orden de Compra" sec:authorize="hasRole('APROBADOR')"
+                            <button title="Aprobar Orden de Compra"
+                                sec:authorize="hasRole('APROBADOR') or hasRole('ADMINISTRADOR')"
                                 th:if="${orden.estado.name() == 'BORRADOR'}" class="btn-icon approve"
                                 th:data-id="${orden.idOrden}">
                                 <span class="material-symbols">person_check</span>
@@ -154,7 +164,7 @@
                                 th:data-numero-orden="${orden.numeroOrden}">
                                 <span class="material-symbols">delete</span>
                             </button>
-                            
+
                         </td>
                     </tr>
                 </tbody>
@@ -191,17 +201,21 @@
                         <div class="recepcion-form-group">
                             <label>Foto de Factura Proveedor*</label>
                             <div class="recepcion-foto-wrapper">
-                                <input type="file" id="recepcion-foto-input" accept="image/*" capture="environment" style="display: none;">
+                                <input type="file" id="recepcion-foto-input" accept="image/*" capture="environment"
+                                    style="display: none;">
                                 <div class="recepcion-foto-acciones">
                                     <button type="button" id="btn-tomar-foto" class="btn-foto-accion">
                                         <span class="material-symbols">photo_camera</span> Tomar o Adjuntar Foto
                                     </button>
-                                    <button type="button" id="btn-eliminar-foto" class="btn-foto-eliminar" style="display: none;" title="Quitar foto">
+                                    <button type="button" id="btn-eliminar-foto" class="btn-foto-eliminar"
+                                        style="display: none;" title="Quitar foto">
                                         <span class="material-symbols">delete</span> Quitar Foto
                                     </button>
                                 </div>
-                                <div id="recepcion-foto-preview-container" class="recepcion-foto-preview-container" style="display: none;">
-                                    <img id="recepcion-foto-preview" src="" alt="Vista previa de la evidencia" class="recepcion-foto-preview">
+                                <div id="recepcion-foto-preview-container" class="recepcion-foto-preview-container"
+                                    style="display: none;">
+                                    <img id="recepcion-foto-preview" src="" alt="Vista previa de la evidencia"
+                                        class="recepcion-foto-preview">
                                 </div>
                             </div>
                         </div>

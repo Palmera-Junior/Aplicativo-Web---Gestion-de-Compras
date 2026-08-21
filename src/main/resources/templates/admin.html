@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="_csrf" th:content="${_csrf.token}">
     <meta name="_csrf_header" th:content="${_csrf.headerName}">
-    
+
     <title>Administración - Gestión de Compras</title>
     <link rel="icon" type="image/png" th:href="@{/imgs/logo1.png}">
     <link rel="stylesheet" th:href="@{/index.css}">
@@ -62,8 +62,103 @@
         </div>
 
         <!-- ============================================
-             TARJETAS DE MÓDULOS
+             ÓRDENES DE COMPRA — tarjeta destacada con estados
+             (separada del resto porque es transaccional, no un catálogo)
+
+             NOTA: el conteo por estado usa una expresión de selección de
+             Thymeleaf/SpEL (`.?[condicion]`) directamente sobre la lista
+             `ordenesCompra`, así no hace falta tocar el Controller.
+             Ajusta el nombre del campo `estado` y los valores del enum
+             (BORRADOR / APROBADA / FACTURADA / RECIBIDA / ANULADA) a los
+             de tu entidad real. Si prefieres, esto también se puede
+             calcular en el Controller y pasar como atributos al modelo —
+             es más eficiente si la lista es grande.
              ============================================ -->
+        <section class="orders-summary"
+            th:with="ordenesBorrador=${ordenesCompra.?[estado.name() == 'BORRADOR'].size()},
+                      ordenesAprobadas=${ordenesCompra.?[estado.name() == 'APROBADA'].size()},
+                      ordenesFacturadas=${ordenesCompra.?[estado.name() == 'FACTURADA'].size()},
+                      ordenesRecibidas=${ordenesCompra.?[estado.name() == 'RECIBIDA'].size()},
+                      ordenesAnuladas=${ordenesCompra.?[estado.name() == 'ANULADA'].size()}">
+
+            <a th:href="@{/dashboard}" class="order-status-card js-page-transition">
+                <div class="order-status-main">
+                    <div class="order-status-icon">
+                        <span class="material-symbols stacks">stacks</span>
+                    </div>
+                    <div class="order-status-body">
+                        <h2>Órdenes de compra</h2>
+                        <p>Flujo completo: creación, aprobación y seguimiento.</p>
+                    </div>
+                </div>
+
+                <div class="order-status-stats">
+                    <div class="order-stat order-stat-total">
+                        <div class="order-stat-text">
+                            <span class="order-stat-value total" th:text="${ordenesCompra.size()}">0</span>
+                            <span class="order-stat-label">total</span>
+                        </div>
+                    </div>
+
+                    <div class="order-stat accent-gray">
+                        <span class="order-stat-icon-wrap">
+                            <span class="material-symbols order-stat-icon">draft_orders</span>
+                        </span>
+                        <div class="order-stat-text">
+                            <span class="order-stat-value" th:text="${ordenesBorrador}">0</span>
+                            <span class="order-stat-label">borradores</span>
+                        </div>
+                    </div>
+
+                    <div class="order-stat accent-green">
+                        <span class="order-stat-icon-wrap">
+                            <span class="material-symbols order-stat-icon">check_circle</span>
+                        </span>
+                        <div class="order-stat-text">
+                            <span class="order-stat-value" th:text="${ordenesAprobadas}">0</span>
+                            <span class="order-stat-label">aprobadas</span>
+                        </div>
+                    </div>
+
+                    <div class="order-stat accent-amber">
+                        <span class="order-stat-icon-wrap">
+                            <span class="material-symbols order-stat-icon">receipt_long</span>
+                        </span>
+                        <div class="order-stat-text">
+                            <span class="order-stat-value" th:text="${ordenesFacturadas}">0</span>
+                            <span class="order-stat-label">facturadas</span>
+                        </div>
+                    </div>
+
+                    <div class="order-stat accent-teal">
+                        <span class="order-stat-icon-wrap">
+                            <span class="material-symbols order-stat-icon">inventory</span>
+                        </span>
+                        <div class="order-stat-text">
+                            <span class="order-stat-value" th:text="${ordenesRecibidas}">0</span>
+                            <span class="order-stat-label">recibidas</span>
+                        </div>
+                    </div>
+
+                    <div class="order-stat accent-red">
+                        <span class="order-stat-icon-wrap">
+                            <span class="material-symbols order-stat-icon">block</span>
+                        </span>
+                        <div class="order-stat-text">
+                            <span class="order-stat-value" th:text="${ordenesAnuladas}">0</span>
+                            <span class="order-stat-label">anuladas</span>
+                        </div>
+                    </div>
+
+                    <span class="material-symbols order-status-arrow">arrow_forward</span>
+                </div>
+            </a>
+        </section>
+
+        <!-- ============================================
+             TARJETAS DE CATÁLOGO
+             ============================================ -->
+        <h3 class="catalog-label">Catálogos</h3>
         <section class="modules-grid">
             <div class="module-card accent-blue" data-target="section-usuarios">
                 <div class="module-icon-wrap">
@@ -211,8 +306,8 @@
                         <span class="material-symbols-outlined">filter_list</span>
                     </span>
 
-                    <input type="text" name="search" class="input-control filtro-busqueda" th:value="${searchProveedores}"
-                        placeholder="Buscar por nombre o NIT...">
+                    <input type="text" name="search" class="input-control filtro-busqueda"
+                        th:value="${searchProveedores}" placeholder="Buscar por nombre o NIT...">
 
                     <button type="button" class="btn-secondary btn-limpiar-filtro" data-entity="proveedor"
                         title="Limpiar filtros">
@@ -372,248 +467,163 @@
                         placeholder="Buscar por nombre, cédula o usuario...">
 
                     <select name="rol" class="input-control filtro-select">
-                                            <option value="">Todos los roles</option>
-                                            <option th:each="rol : ${roles}" th:value="${rol}" th:text="${rol}" th:selected="${rolUsuario != null and rol.toString().equals(rolUsuario)}"></option>
-                                        </select>
+                        <option value="">Todos los roles</option>
+                        <option th:each="rol : ${roles}" th:value="${rol}" th:text="${rol}"
+                            th:selected="${rolUsuario != null and rol.toString().equals(rolUsuario)}"></option>
+                    </select>
 
                     <select name="sedeId" class="input-control filtro-select">
                         <option value="">Todas las sedes</option>
-                                            <option th:each="sede : ${sedes}" th:value="${sede.idSede}" th:text="${sede.nombre}" th:selected="${sedeIdUsuario != null and sede.idSede == sedeIdUsuario}"></option>
+                        <option th:each="sede : ${sedes}" th:value="${sede.idSede}" th:text="${sede.nombre}"
+                            th:selected="${sedeIdUsuario != null and sede.idSede == sedeIdUsuario}"></option>
                     </select>
 
-                    <button type="button" class="btn-secondary btn-limpiar-filtro" data-entity="usuario" title="Limpiar filtros">
+                    <button type="button" class="btn-secondary btn-limpiar-filtro" data-entity="usuario"
+                        title="Limpiar filtros">
                         <span class="material-symbols-outlined">clear</span>
 
                     </button>
-                
+
                 </div>
 
 
-                        <div class=" admin-list">
-                            <h2 class="list-title"><span class="material-symbols">chevron_right</span> Usuarios
-                                existentes
-                            </h2>
-                            <div class="tabla-card" id="usuariosTablaCard" th:fragment="usuariosFragment">
-                                <div class="table-responsive">
-                                    <table class="data-table admin-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Cédula</th>
-                                                <th>Nombre</th>
-                                                <th>Rol</th>
-                                                <th>Sede</th>
-                                                <th>Acciones</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr th:each="usuario : ${usuariosPage.content}"
-                                                th:data-id="${usuario.idUsuario}" th:data-cedula="${usuario.cedula}"
-                                                th:data-nombre="${usuario.nombre}"
-                                                th:data-apellido="${usuario.apellido}" th:data-cargo="${usuario.cargo}"
-                                                th:data-nombre-usuario="${usuario.nombreUsuario}"
-                                                th:data-rol="${usuario.rol}"
-                                                th:data-sede-id="${usuario.sede != null ? usuario.sede.idSede : ''}">
-                                                <td class="mono" th:text="${usuario.cedula}"></td>
-                                                <td th:text="${usuario.nombre + ' ' + usuario.apellido}"></td>
-                                                <td>
-                                                    <span class="badge-rol"
-                                                        th:classappend="${usuario.rol.toString().toLowerCase()}"
-                                                        th:text="${usuario.rol}"></span>
-                                                </td>
-                                                <td th:text="${usuario.sede != null ? usuario.sede.nombre : ''}"></td>
-                                                <td class="actions">
-                                                    <button type="button" class="btn-icon edit" title="Editar"
-                                                        onclick="editEntity('usuario', this)">
-                                                        <span class="material-symbols">edit</span>
-                                                    </button>
-                                                    <button type="button" class="btn-icon delete" title="Eliminar"
-                                                        th:attr="data-id=${usuario.idUsuario}"
-                                                        onclick="deleteEntity('usuario', this.getAttribute('data-id'))">
-                                                        <span class="material-symbols">delete</span>
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                                <div class="paginacion">
-                                    <div class="info-pagina">
-                                        <span class="material-symbols">group</span>
-                                        Mostrando página
-                                        <strong th:text="${usuariosPage.number + 1}">1</strong>
-                                        de
-                                        <strong th:text="${usuariosPage.totalPages}">1</strong>
-                                        (
-                                        <strong th:text="${usuariosPage.totalElements}">0</strong>
-                                        usuarios
-                                        )
-                                    </div>
-                                    <div class="controles">
-                                        <a title="Página anterior" aria-label="Página anterior"
-                                            th:href="@{/admin(pageProveedores=${pageProveedores}, pageUsuarios=${pageUsuarios - 1}, size=${size})}"
-                                            th:class="${usuariosPage.number == 0} ? 'btn-pagina disabled js-pagina-usuarios' : 'btn-pagina js-pagina-usuarios'">
-                                            <span class="material-symbols">chevron_left</span>
-                                        </a>
-                                        <span class="pagina-actual" th:text="${usuariosPage.number + 1}">1</span>
-                                        <a title="Siguiente página" aria-label="Siguiente página"
-                                            th:href="@{/admin(pageProveedores=${pageProveedores}, pageUsuarios=${pageUsuarios + 1}, size=${size})}"
-                                            th:class="${usuariosPage.number >= usuariosPage.totalPages - 1} ? 'btn-pagina disabled js-pagina-usuarios' : 'btn-pagina js-pagina-usuarios'">
-                                            <span class="material-symbols">chevron_right</span>
-                                        </a>
-                                    </div>
-                                </div>
+                <div class=" admin-list">
+                    <h2 class="list-title"><span class="material-symbols">chevron_right</span> Usuarios
+                        existentes
+                    </h2>
+                    <div class="tabla-card" id="usuariosTablaCard" th:fragment="usuariosFragment">
+                        <div class="table-responsive">
+                            <table class="data-table admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Cédula</th>
+                                        <th>Nombre</th>
+                                        <th>Rol</th>
+                                        <th>Sede</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="usuario : ${usuariosPage.content}" th:data-id="${usuario.idUsuario}"
+                                        th:data-cedula="${usuario.cedula}" th:data-nombre="${usuario.nombre}"
+                                        th:data-apellido="${usuario.apellido}" th:data-cargo="${usuario.cargo}"
+                                        th:data-nombre-usuario="${usuario.nombreUsuario}" th:data-rol="${usuario.rol}"
+                                        th:data-sede-id="${usuario.sede != null ? usuario.sede.idSede : ''}">
+                                        <td class="mono" th:text="${usuario.cedula}"></td>
+                                        <td th:text="${usuario.nombre + ' ' + usuario.apellido}"></td>
+                                        <td>
+                                            <span class="badge-rol"
+                                                th:classappend="${usuario.rol.toString().toLowerCase()}"
+                                                th:text="${usuario.rol}"></span>
+                                        </td>
+                                        <td th:text="${usuario.sede != null ? usuario.sede.nombre : ''}"></td>
+                                        <td class="actions">
+                                            <button type="button" class="btn-icon edit" title="Editar"
+                                                onclick="editEntity('usuario', this)">
+                                                <span class="material-symbols">edit</span>
+                                            </button>
+                                            <button type="button" class="btn-icon delete" title="Eliminar"
+                                                th:attr="data-id=${usuario.idUsuario}"
+                                                onclick="deleteEntity('usuario', this.getAttribute('data-id'))">
+                                                <span class="material-symbols">delete</span>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="paginacion">
+                            <div class="info-pagina">
+                                <span class="material-symbols">group</span>
+                                Mostrando página
+                                <strong th:text="${usuariosPage.number + 1}">1</strong>
+                                de
+                                <strong th:text="${usuariosPage.totalPages}">1</strong>
+                                (
+                                <strong th:text="${usuariosPage.totalElements}">0</strong>
+                                usuarios
+                                )
+                            </div>
+                            <div class="controles">
+                                <a title="Página anterior" aria-label="Página anterior"
+                                    th:href="@{/admin(pageProveedores=${pageProveedores}, pageUsuarios=${pageUsuarios - 1}, size=${size})}"
+                                    th:class="${usuariosPage.number == 0} ? 'btn-pagina disabled js-pagina-usuarios' : 'btn-pagina js-pagina-usuarios'">
+                                    <span class="material-symbols">chevron_left</span>
+                                </a>
+                                <span class="pagina-actual" th:text="${usuariosPage.number + 1}">1</span>
+                                <a title="Siguiente página" aria-label="Siguiente página"
+                                    th:href="@{/admin(pageProveedores=${pageProveedores}, pageUsuarios=${pageUsuarios + 1}, size=${size})}"
+                                    th:class="${usuariosPage.number >= usuariosPage.totalPages - 1} ? 'btn-pagina disabled js-pagina-usuarios' : 'btn-pagina js-pagina-usuarios'">
+                                    <span class="material-symbols">chevron_right</span>
+                                </a>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ---------- PRODUCTOS ---------- -->
+            <div class="card admin-card" id="section-productos" style="display:none;">
+                <div class="section-panel-header accent-amber">
+                    <span class="material-symbols">inventory_2</span>
+                    <div>
+                        <h2>Productos</h2>
+                        <p>Registra productos y consulta el catálogo de inventario</p>
+                    </div>
                 </div>
 
-                <!-- ---------- PRODUCTOS ---------- -->
-                <div class="card admin-card" id="section-productos" style="display:none;">
-                    <div class="section-panel-header accent-amber">
-                        <span class="material-symbols">inventory_2</span>
-                        <div>
-                            <h2>Productos</h2>
-                            <p>Registra productos y consulta el catálogo de inventario</p>
+                <div class="form-card">
+                    <h3 class="form-card-title">Nuevo producto</h3>
+                    <form th:action="@{/admin/productos}" method="post" id="productForm">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <input type="hidden" id="idProducto" name="idProducto">
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label>Código de inventario</label>
+                                <input type="text" id="codigoInventario" class="input-control" name="codigoInventario"
+                                    required>
+                            </div>
+                            <div class="form-group">
+                                <label>Nombre</label>
+                                <input type="text" id="nombreProducto" class="input-control" name="nombre" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Categoría</label>
+                                <select id="categoria" class="input-control" name="categoria" required>
+                                    <option value="" disabled selected>Seleccionar categoría</option>
+                                    <option th:each="categoria : ${categorias}" th:value="${categoria}"
+                                        th:text="${categoria}"></option>
+                                </select>
+                            </div>
+
                         </div>
-                    </div>
 
-                    <div class="form-card">
-                        <h3 class="form-card-title">Nuevo producto</h3>
-                        <form th:action="@{/admin/productos}" method="post" id="productForm">
-                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                            <input type="hidden" id="idProducto" name="idProducto">
-                            <div class="form-grid-2">
-                                <div class="form-group">
-                                    <label>Código de inventario</label>
-                                    <input type="text" id="codigoInventario" class="input-control"
-                                        name="codigoInventario" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>Nombre</label>
-                                    <input type="text" id="nombreProducto" class="input-control" name="nombre" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>Categoría</label>
-                                    <select id="categoria" class="input-control" name="categoria" required>
-                                        <option value="" disabled selected>Seleccionar categoría</option>
-                                        <option th:each="categoria : ${categorias}" th:value="${categoria}"
-                                            th:text="${categoria}"></option>
-                                    </select>
-                                </div>
-
-                            </div>
-
-                            <div class="form-group full-width">
-                                <label>Presentaciones del producto</label>
-                                <div class="table-responsive">
-                                    <table class="data-table admin-table" id="presentacionesTable">
-                                        <thead>
-                                            <tr>
-                                                <th>Presentación</th>
-                                                <th>Cantidad</th>
-                                                <th>Unidad</th>
-                                                <th>Precio</th>
-                                                <th></th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="presentacionesTbody">
-                                            <tr class="presentacion-row">
-                                                <td><input type="text" name="presentacionNombres"
-                                                        class="input-control pres-nombre" placeholder="Ej: Caja"></td>
-                                                <td><input type="number" name="presentacionCantidades"
-                                                        class="input-control pres-cant" min="0"></td>
-                                                <td><input type="text" name="presentacionUnidades"
-                                                        class="input-control pres-unidad" placeholder="Ej: g"></td>
-                                                <td><input type="number" step="0.01" name="presentacionPrecios"
-                                                        class="input-control pres-precio" min="0"></td>
-                                                <td>
-                                                    <button type="button" class="btn-icon delete pres-delete"
-                                                        title="Eliminar presentación">
-                                                        <span class="material-symbols">delete</span>
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                                <button type="button" id="btn-agregar-presentacion" class="btn-secondary add-row-btn">
-                                    <span class="material-symbols">add</span> Agregar presentación
-                                </button>
-                            </div>
-
-                            <div class="form-actions">
-                                <button type="button" class="btn-cancel"
-                                    onclick="resetForm('producto')">Cancelar</button>
-                                <button type="submit" id="productSubmitButton" class="btn-primary">
-                                    <span class="material-symbols">add</span> Crear producto
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-
-
-                    <!-- ================= FILTROS PRODUCTOS ================= -->
-                    <div id="filtros-productos" class="filtros-section" data-entity="producto">
-                        <span class="filtro-icon">
-                            <span class="material-symbols-outlined">filter_list</span>
-                        </span>
-
-                        <input type="text" name="search" class="input-control filtro-busqueda" th:value="${searchProductos}"
-                            placeholder="Buscar por nombre o código...">
-
-                        <select name="categoria" class="input-control filtro-select">
-                            <option value="">Todas las categorías</option>
-                            <!-- Aquí Thymeleaf cargaría las categorías únicas desde el backend -->
-                                                    <option th:each="cat : ${categoriasUnicas}" th:value="${cat}" th:text="${cat}" th:selected="${categoriaProducto != null and cat.equals(categoriaProducto)}"></option>
-                        </select>
-
-                        <button type="button" class="btn-secondary btn-limpiar-filtro" data-entity="producto"
-                            title="Limpiar filtros">
-                            <span class="material-symbols-outlined">clear</span>
-                        </button>
-                    </div>
-
-
-                    <div class="admin-list">
-                        <h2 class="list-title"><span class="material-symbols">chevron_right</span> Productos existentes
-                        </h2>
-                        <div class="tabla-card" id="productosTablaCard" th:fragment="productosFragment">
+                        <div class="form-group full-width">
+                            <label>Presentaciones del producto</label>
                             <div class="table-responsive">
-                                <table class="data-table admin-table">
+                                <table class="data-table admin-table" id="presentacionesTable">
                                     <thead>
                                         <tr>
-                                            <th>Código</th>
-                                            <th>Nombre</th>
-                                            <th>Presentaciones</th>
-                                            <th>Categoría</th>
-                                            <th>Acciones</th>
+                                            <th>Presentación</th>
+                                            <th>Cantidad</th>
+                                            <th>Unidad</th>
+                                            <th>Precio</th>
+                                            <th></th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                                        <tr th:each="producto : ${productosPage.content}"
-                                            th:data-id="${producto.idProducto}"
-                                            th:data-codigo="${producto.codigoInventario}"
-                                            th:data-nombre="${producto.nombre}"
-                                            th:data-categoria="${producto.categoria}">
-                                            <td class="mono" th:text="${producto.codigoInventario}"></td>
-                                            <td th:text="${producto.nombre}"></td>
+                                    <tbody id="presentacionesTbody">
+                                        <tr class="presentacion-row">
+                                            <td><input type="text" name="presentacionNombres"
+                                                    class="input-control pres-nombre" placeholder="Ej: Caja"></td>
+                                            <td><input type="number" name="presentacionCantidades"
+                                                    class="input-control pres-cant" min="0"></td>
+                                            <td><input type="text" name="presentacionUnidades"
+                                                    class="input-control pres-unidad" placeholder="Ej: g"></td>
+                                            <td><input type="number" step="0.01" name="presentacionPrecios"
+                                                    class="input-control pres-precio" min="0"></td>
                                             <td>
-                                                <span th:if="${producto.presentaciones.isEmpty()}"
-                                                    class="text-muted">Sin
-                                                    presentaciones</span>
-                                                <span th:if="${!producto.presentaciones.isEmpty()}">
-                                                    <span th:each="pres, presStat : ${producto.presentaciones}"
-                                                        th:text="${pres.cantidad != null ? pres.presentacion + ' (' + pres.cantidad + ' ' + pres.unidad + ')' : pres.presentacion + ' (' + pres.unidad + ')'} + '  |  ' + ( !presStat.last ? ';<br/>' : '' )"></span>
-                                                </span>
-                                            </td>
-                                            <td th:text="${producto.categoria}"></td>
-                                            <td class="actions">
-                                                <button type="button" class="btn-icon edit" title="Editar"
-                                                    onclick="editEntity('producto', this)">
-                                                    <span class="material-symbols">edit</span>
-                                                </button>
-                                                <button type="button" class="btn-icon delete" title="Eliminar"
-                                                    th:attr="data-id=${producto.idProducto}"
-                                                    onclick="deleteEntity('producto', this.getAttribute('data-id'))">
+                                                <button type="button" class="btn-icon delete pres-delete"
+                                                    title="Eliminar presentación">
                                                     <span class="material-symbols">delete</span>
                                                 </button>
                                             </td>
@@ -621,260 +631,369 @@
                                     </tbody>
                                 </table>
                             </div>
-                            <div class="paginacion">
-                                <div class="info-pagina">
-                                    <span class="material-symbols">inventory_2</span>
-                                    Mostrando página
-                                    <strong th:text="${productosPage.number + 1}">1</strong>
-                                    de
-                                    <strong th:text="${productosPage.totalPages}">1</strong>
-                                    (
-                                    <strong th:text="${productosPage.totalElements}">0</strong>
-                                    productos
-                                    )
-                                </div>
-                                <div class="controles">
-                                    <a title="Página anterior" aria-label="Página anterior"
-                                        th:href="@{/admin/productos/pagina(pageProductos=${pageProductos - 1}, size=${size})}"
-                                        th:class="${productosPage.number == 0} ? 'btn-pagina disabled js-pagina-productos' : 'btn-pagina js-pagina-productos'">
-                                        <span class="material-symbols">chevron_left</span>
-                                    </a>
-                                    <span class="pagina-actual" th:text="${productosPage.number + 1}">1</span>
-                                    <a title="Siguiente página" aria-label="Siguiente página"
-                                        th:href="@{/admin/productos/pagina(pageProductos=${pageProductos + 1}, size=${size})}"
-                                        th:class="${productosPage.number >= productosPage.totalPages - 1} ? 'btn-pagina disabled js-pagina-productos' : 'btn-pagina js-pagina-productos'">
-                                        <span class="material-symbols">chevron_right</span>
-                                    </a>
-                                </div>
+                            <button type="button" id="btn-agregar-presentacion" class="btn-secondary add-row-btn">
+                                <span class="material-symbols">add</span> Agregar presentación
+                            </button>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="button" class="btn-cancel" onclick="resetForm('producto')">Cancelar</button>
+                            <button type="submit" id="productSubmitButton" class="btn-primary">
+                                <span class="material-symbols">add</span> Crear producto
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+
+                <!-- ================= FILTROS PRODUCTOS ================= -->
+                <div id="filtros-productos" class="filtros-section" data-entity="producto">
+                    <span class="filtro-icon">
+                        <span class="material-symbols-outlined">filter_list</span>
+                    </span>
+
+                    <input type="text" name="search" class="input-control filtro-busqueda" th:value="${searchProductos}"
+                        placeholder="Buscar por nombre o código...">
+
+                    <select name="categoria" class="input-control filtro-select">
+                        <option value="">Todas las categorías</option>
+                        <!-- Aquí Thymeleaf cargaría las categorías únicas desde el backend -->
+                        <option th:each="cat : ${categoriasUnicas}" th:value="${cat}" th:text="${cat}"
+                            th:selected="${categoriaProducto != null and cat.equals(categoriaProducto)}"></option>
+                    </select>
+
+                    <button type="button" class="btn-secondary btn-limpiar-filtro" data-entity="producto"
+                        title="Limpiar filtros">
+                        <span class="material-symbols-outlined">clear</span>
+                    </button>
+                </div>
+
+
+                <div class="admin-list">
+                    <h2 class="list-title"><span class="material-symbols">chevron_right</span> Productos existentes
+                    </h2>
+                    <div class="tabla-card" id="productosTablaCard" th:fragment="productosFragment">
+                        <div class="table-responsive">
+                            <table class="data-table admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Código</th>
+                                        <th>Nombre</th>
+                                        <th>Presentaciones</th>
+                                        <th>Categoría</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="producto : ${productosPage.content}"
+                                        th:data-id="${producto.idProducto}"
+                                        th:data-codigo="${producto.codigoInventario}"
+                                        th:data-nombre="${producto.nombre}" th:data-categoria="${producto.categoria}">
+                                        <td class="mono" th:text="${producto.codigoInventario}"></td>
+                                        <td th:text="${producto.nombre}"></td>
+                                        <td>
+                                            <span th:if="${producto.presentaciones.isEmpty()}" class="text-muted">Sin
+                                                presentaciones</span>
+                                            <span th:if="${!producto.presentaciones.isEmpty()}">
+                                                <span th:each="pres, presStat : ${producto.presentaciones}"
+                                                    th:text="${pres.cantidad != null ? pres.presentacion + ' (' + pres.cantidad + ' ' + pres.unidad + ')' : pres.presentacion + ' (' + pres.unidad + ')'} + '  |  ' + ( !presStat.last ? ';<br/>' : '' )"></span>
+                                            </span>
+                                        </td>
+                                        <td th:text="${producto.categoria}"></td>
+                                        <td class="actions">
+                                            <button type="button" class="btn-icon edit" title="Editar"
+                                                onclick="editEntity('producto', this)">
+                                                <span class="material-symbols">edit</span>
+                                            </button>
+                                            <button type="button" class="btn-icon delete" title="Eliminar"
+                                                th:attr="data-id=${producto.idProducto}"
+                                                onclick="deleteEntity('producto', this.getAttribute('data-id'))">
+                                                <span class="material-symbols">delete</span>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="paginacion">
+                            <div class="info-pagina">
+                                <span class="material-symbols">inventory_2</span>
+                                Mostrando página
+                                <strong th:text="${productosPage.number + 1}">1</strong>
+                                de
+                                <strong th:text="${productosPage.totalPages}">1</strong>
+                                (
+                                <strong th:text="${productosPage.totalElements}">0</strong>
+                                productos
+                                )
+                            </div>
+                            <div class="controles">
+                                <a title="Página anterior" aria-label="Página anterior"
+                                    th:href="@{/admin/productos/pagina(pageProductos=${pageProductos - 1}, size=${size})}"
+                                    th:class="${productosPage.number == 0} ? 'btn-pagina disabled js-pagina-productos' : 'btn-pagina js-pagina-productos'">
+                                    <span class="material-symbols">chevron_left</span>
+                                </a>
+                                <span class="pagina-actual" th:text="${productosPage.number + 1}">1</span>
+                                <a title="Siguiente página" aria-label="Siguiente página"
+                                    th:href="@{/admin/productos/pagina(pageProductos=${pageProductos + 1}, size=${size})}"
+                                    th:class="${productosPage.number >= productosPage.totalPages - 1} ? 'btn-pagina disabled js-pagina-productos' : 'btn-pagina js-pagina-productos'">
+                                    <span class="material-symbols">chevron_right</span>
+                                </a>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- ---------- SEDES ---------- -->
-                <div class="card admin-card" id="section-sedes" style="display:none;">
-                    <div class="section-panel-header accent-teal">
-                        <span class="material-symbols">store</span>
-                        <div>
-                            <h2>Sedes</h2>
-                            <p>Registra las sedes de la compañía</p>
+            <!-- ---------- SEDES ---------- -->
+            <div class="card admin-card" id="section-sedes" style="display:none;">
+                <div class="section-panel-header accent-teal">
+                    <span class="material-symbols">store</span>
+                    <div>
+                        <h2>Sedes</h2>
+                        <p>Registra las sedes de la compañía</p>
+                    </div>
+                </div>
+
+                <div class="form-card">
+                    <h3 class="form-card-title">Nueva sede</h3>
+                    <form th:action="@{/admin/sedes}" method="post" id="sedeForm">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <input type="hidden" id="idSede" name="idSede">
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label>Nombre</label>
+                                <input type="text" id="nombreSede" class="input-control" name="nombre" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Prefijo ciudad</label>
+                                <input type="text" id="prefijoCiudad" class="input-control" name="prefijoCiudad"
+                                    required>
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Dirección</label>
+                                <input type="text" id="direccionSede" class="input-control" name="direccion">
+                            </div>
                         </div>
-                    </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn-cancel" onclick="resetForm('sede')">Cancelar</button>
+                            <button type="submit" id="sedeSubmitButton" class="btn-primary">
+                                <span class="material-symbols">add</span> Crear sede
+                            </button>
+                        </div>
+                    </form>
+                </div>
 
-                    <div class="form-card">
-                        <h3 class="form-card-title">Nueva sede</h3>
-                        <form th:action="@{/admin/sedes}" method="post" id="sedeForm">
-                           <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                           <input type="hidden" id="idSede" name="idSede">
-                            <div class="form-grid-2">
-                                <div class="form-group">
-                                    <label>Nombre</label>
-                                    <input type="text" id="nombreSede" class="input-control" name="nombre" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>Prefijo ciudad</label>
-                                    <input type="text" id="prefijoCiudad" class="input-control" name="prefijoCiudad"
-                                        required>
-                                </div>
-                                <div class="form-group full-width">
-                                    <label>Dirección</label>
-                                    <input type="text" id="direccionSede" class="input-control" name="direccion">
-                                </div>
+                <div class="admin-list">
+                    <h2 class="list-title"><span class="material-symbols">chevron_right</span> Sedes existentes</h2>
+                    <div class="tabla-card">
+                        <div class="table-responsive">
+                            <table class="data-table admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th>Prefijo</th>
+                                        <th>Dirección</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="sede : ${sedesPage.content}" th:data-id="${sede.idSede}"
+                                        th:data-nombre="${sede.nombre}" th:data-prefijo="${sede.prefijoCiudad}"
+                                        th:data-direccion="${sede.direccion}">
+                                        <td th:text="${sede.nombre}"></td>
+                                        <td class="mono" th:text="${sede.prefijoCiudad}"></td>
+                                        <td th:text="${sede.direccion}"></td>
+                                        <td class="actions">
+                                            <button type="button" class="btn-icon edit" title="Editar"
+                                                onclick="editEntity('sede', this)">
+                                                <span class="material-symbols">edit</span>
+                                            </button>
+                                            <button type="button" class="btn-icon delete" title="Eliminar"
+                                                th:attr="data-id=${sede.idSede}"
+                                                onclick="deleteEntity('sede', this.getAttribute('data-id'))">
+                                                <span class="material-symbols">delete</span>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="paginacion">
+                            <div class="info-pagina">
+                                <span class="material-symbols">store</span>
+                                Mostrando página
+                                <strong th:text="${sedesPage.number + 1}">1</strong>
+                                de
+                                <strong th:text="${sedesPage.totalPages}">1</strong>
+                                (
+                                <strong th:text="${sedesPage.totalElements}">0</strong>
+                                sedes
+                                )
                             </div>
-                            <div class="form-actions">
-                                <button type="button" class="btn-cancel" onclick="resetForm('sede')">Cancelar</button>
-                                <button type="submit" id="sedeSubmitButton" class="btn-primary">
-                                    <span class="material-symbols">add</span> Crear sede
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-
-                    <div class="admin-list">
-                        <h2 class="list-title"><span class="material-symbols">chevron_right</span> Sedes existentes</h2>
-                        <div class="tabla-card">
-                            <div class="table-responsive">
-                                <table class="data-table admin-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Nombre</th>
-                                            <th>Prefijo</th>
-                                            <th>Dirección</th>
-                                            <th>Acciones</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr th:each="sede : ${sedesPage.content}" th:data-id="${sede.idSede}"
-                                            th:data-nombre="${sede.nombre}" th:data-prefijo="${sede.prefijoCiudad}"
-                                            th:data-direccion="${sede.direccion}">
-                                            <td th:text="${sede.nombre}"></td>
-                                            <td class="mono" th:text="${sede.prefijoCiudad}"></td>
-                                            <td th:text="${sede.direccion}"></td>
-                                            <td class="actions">
-                                                <button type="button" class="btn-icon edit" title="Editar"
-                                                    onclick="editEntity('sede', this)">
-                                                    <span class="material-symbols">edit</span>
-                                                </button>
-                                                <button type="button" class="btn-icon delete" title="Eliminar"
-                                                    th:attr="data-id=${sede.idSede}"
-                                                    onclick="deleteEntity('sede', this.getAttribute('data-id'))">
-                                                    <span class="material-symbols">delete</span>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div class="paginacion">
-                                <div class="info-pagina">
-                                    <span class="material-symbols">store</span>
-                                    Mostrando página
-                                    <strong th:text="${sedesPage.number + 1}">1</strong>
-                                    de
-                                    <strong th:text="${sedesPage.totalPages}">1</strong>
-                                    (
-                                    <strong th:text="${sedesPage.totalElements}">0</strong>
-                                    sedes
-                                    )
-                                </div>
-                                <div class="controles">
-                                    <a title="Página anterior" aria-label="Página anterior"
-                                        th:href="@{/admin(pageProveedores=${pageProveedores}, pageUsuarios=${pageUsuarios}, pageProductos=${pageProductos}, pageSedes=${pageSedes - 1}, pageCentros=${pageCentros}, size=${size})}"
-                                        th:class="${sedesPage.number == 0} ? 'btn-pagina disabled' : 'btn-pagina'">
-                                        <span class="material-symbols">chevron_left</span>
-                                    </a>
-                                    <span class="pagina-actual" th:text="${sedesPage.number + 1}">1</span>
-                                    <a title="Siguiente página" aria-label="Siguiente página"
-                                        th:href="@{/admin(pageProveedores=${pageProveedores}, pageUsuarios=${pageUsuarios}, pageProductos=${pageProductos}, pageSedes=${pageSedes + 1}, pageCentros=${pageCentros}, size=${size})}"
-                                        th:class="${sedesPage.number >= sedesPage.totalPages - 1} ? 'btn-pagina disabled' : 'btn-pagina'">
-                                        <span class="material-symbols">chevron_right</span>
-                                    </a>
-                                </div>
+                            <div class="controles">
+                                <a title="Página anterior" aria-label="Página anterior"
+                                    th:href="@{/admin(pageProveedores=${pageProveedores}, pageUsuarios=${pageUsuarios}, pageProductos=${pageProductos}, pageSedes=${pageSedes - 1}, pageCentros=${pageCentros}, size=${size})}"
+                                    th:class="${sedesPage.number == 0} ? 'btn-pagina disabled' : 'btn-pagina'">
+                                    <span class="material-symbols">chevron_left</span>
+                                </a>
+                                <span class="pagina-actual" th:text="${sedesPage.number + 1}">1</span>
+                                <a title="Siguiente página" aria-label="Siguiente página"
+                                    th:href="@{/admin(pageProveedores=${pageProveedores}, pageUsuarios=${pageUsuarios}, pageProductos=${pageProductos}, pageSedes=${pageSedes + 1}, pageCentros=${pageCentros}, size=${size})}"
+                                    th:class="${sedesPage.number >= sedesPage.totalPages - 1} ? 'btn-pagina disabled' : 'btn-pagina'">
+                                    <span class="material-symbols">chevron_right</span>
+                                </a>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- ---------- CENTROS DE COSTO ---------- -->
-                <div class="card admin-card" id="section-centros" style="display:none;">
-                    <div class="section-panel-header accent-purple">
-                        <span class="material-symbols">account_tree</span>
-                        <div>
-                            <h2>Centros de costo</h2>
-                            <p>Agrupa los centros de costo dentro de cada sede</p>
+            <!-- ---------- CENTROS DE COSTO ---------- -->
+            <div class="card admin-card" id="section-centros" style="display:none;">
+                <div class="section-panel-header accent-purple">
+                    <span class="material-symbols">account_tree</span>
+                    <div>
+                        <h2>Centros de costo</h2>
+                        <p>Agrupa los centros de costo dentro de cada sede</p>
+                    </div>
+                </div>
+
+                <div class="form-card">
+                    <h3 class="form-card-title">Nuevo centro de costo</h3>
+                    <form th:action="@{/admin/centros-costo}" method="post" id="centroForm">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <input type="hidden" id="idCentroCosto" name="idCentroCosto">
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label>Nombre</label>
+                                <input type="text" id="nombreCentro" class="input-control" name="nombre" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Código</label>
+                                <input type="text" id="codigoCentro" class="input-control" name="codigo"
+                                    placeholder="Código del centro de costo">
+                            </div>
+                            <div class="form-group">
+                                <label>Sede</label>
+                                <select id="sedeCentro" class="input-control" name="sedeId" required>
+                                    <option value="" disabled selected>Seleccionar sede</option>
+                                    <option th:each="sede : ${sedes}" th:value="${sede.idSede}"
+                                        th:text="${sede.nombre}"></option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Dirección</label>
+                                <input type="text" id="direccionCentro" class="input-control" name="direccion"
+                                    placeholder="Dirección donde recibe pedidos">
+                            </div>
                         </div>
-                    </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn-cancel" onclick="resetForm('centro')">Cancelar</button>
+                            <button type="submit" id="centroSubmitButton" class="btn-primary">
+                                <span class="material-symbols">add</span> Crear centro de costo
+                            </button>
+                        </div>
+                    </form>
+                </div>
 
-                    <div class="form-card">
-                        <h3 class="form-card-title">Nuevo centro de costo</h3>
-                        <form th:action="@{/admin/centros-costo}" method="post" id="centroForm">
-                           <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                           <input type="hidden" id="idCentroCosto" name="idCentroCosto">
-                            <div class="form-grid-2">
-                                <div class="form-group">
-                                    <label>Nombre</label>
-                                    <input type="text" id="nombreCentro" class="input-control" name="nombre" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>Código</label>
-                                    <input type="text" id="codigoCentro" class="input-control" name="codigo"
-                                        placeholder="Código del centro de costo">
-                                </div>
-                                <div class="form-group">
-                                    <label>Sede</label>
-                                    <select id="sedeCentro" class="input-control" name="sedeId" required>
-                                        <option value="" disabled selected>Seleccionar sede</option>
-                                        <option th:each="sede : ${sedes}" th:value="${sede.idSede}"
-                                            th:text="${sede.nombre}"></option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label>Dirección</label>
-                                    <input type="text" id="direccionCentro" class="input-control" name="direccion"
-                                        placeholder="Dirección donde recibe pedidos">
-                                </div>
+                <div class="admin-list">
+                    <h2 class="list-title"><span class="material-symbols">chevron_right</span> Centros de costo
+                        existentes</h2>
+                    <div class="tabla-card">
+                        <div class="table-responsive">
+                            <table class="data-table admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Código</th>
+                                        <th>Nombre</th>
+                                        <th>Sede</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="centro : ${centrosCostoPage.content}"
+                                        th:data-id="${centro.idCentroCosto}" th:data-codigo="${centro.codigo}"
+                                        th:data-nombre="${centro.nombre}"
+                                        th:data-sede-id="${centro.sede != null ? centro.sede.idSede : ''}"
+                                        th:data-direccion="${centro.direccion}">
+                                        <td class="mono" th:text="${centro.codigo}"></td>
+                                        <td th:text="${centro.nombre}"></td>
+                                        <td th:text="${centro.sede != null ? centro.sede.nombre : ''}"></td>
+                                        <td class="actions">
+                                            <button type="button" class="btn-icon edit" title="Editar"
+                                                onclick="editEntity('centro', this)">
+                                                <span class="material-symbols">edit</span>
+                                            </button>
+                                            <button type="button" class="btn-icon delete" title="Eliminar"
+                                                th:attr="data-id=${centro.idCentroCosto}"
+                                                onclick="deleteEntity('centro', this.getAttribute('data-id'))">
+                                                <span class="material-symbols">delete</span>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="paginacion">
+                            <div class="info-pagina">
+                                <span class="material-symbols">account_tree</span>
+                                Mostrando página
+                                <strong th:text="${centrosCostoPage.number + 1}">1</strong>
+                                de
+                                <strong th:text="${centrosCostoPage.totalPages}">1</strong>
+                                (
+                                <strong th:text="${centrosCostoPage.totalElements}">0</strong>
+                                centros de costo
+                                )
                             </div>
-                            <div class="form-actions">
-                                <button type="button" class="btn-cancel" onclick="resetForm('centro')">Cancelar</button>
-                                <button type="submit" id="centroSubmitButton" class="btn-primary">
-                                    <span class="material-symbols">add</span> Crear centro de costo
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-
-                    <div class="admin-list">
-                        <h2 class="list-title"><span class="material-symbols">chevron_right</span> Centros de costo
-                            existentes</h2>
-                        <div class="tabla-card">
-                            <div class="table-responsive">
-                                <table class="data-table admin-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Código</th>
-                                            <th>Nombre</th>
-                                            <th>Sede</th>
-                                            <th>Acciones</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr th:each="centro : ${centrosCostoPage.content}"
-                                            th:data-id="${centro.idCentroCosto}" th:data-codigo="${centro.codigo}"
-                                            th:data-nombre="${centro.nombre}"
-                                            th:data-sede-id="${centro.sede != null ? centro.sede.idSede : ''}"
-                                            th:data-direccion="${centro.direccion}">
-                                            <td class="mono" th:text="${centro.codigo}"></td>
-                                            <td th:text="${centro.nombre}"></td>
-                                            <td th:text="${centro.sede != null ? centro.sede.nombre : ''}"></td>
-                                            <td class="actions">
-                                                <button type="button" class="btn-icon edit" title="Editar"
-                                                    onclick="editEntity('centro', this)">
-                                                    <span class="material-symbols">edit</span>
-                                                </button>
-                                                <button type="button" class="btn-icon delete" title="Eliminar"
-                                                    th:attr="data-id=${centro.idCentroCosto}"
-                                                    onclick="deleteEntity('centro', this.getAttribute('data-id'))">
-                                                    <span class="material-symbols">delete</span>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div class="paginacion">
-                                <div class="info-pagina">
-                                    <span class="material-symbols">account_tree</span>
-                                    Mostrando página
-                                    <strong th:text="${centrosCostoPage.number + 1}">1</strong>
-                                    de
-                                    <strong th:text="${centrosCostoPage.totalPages}">1</strong>
-                                    (
-                                    <strong th:text="${centrosCostoPage.totalElements}">0</strong>
-                                    centros de costo
-                                    )
-                                </div>
-                                <div class="controles">
-                                    <a title="Página anterior" aria-label="Página anterior"
-                                        th:href="@{/admin(pageProveedores=${pageProveedores}, pageUsuarios=${pageUsuarios}, pageProductos=${pageProductos}, pageSedes=${pageSedes}, pageCentros=${pageCentros - 1}, size=${size})}"
-                                        th:class="${centrosCostoPage.number == 0} ? 'btn-pagina disabled' : 'btn-pagina'">
-                                        <span class="material-symbols">chevron_left</span>
-                                    </a>
-                                    <span class="pagina-actual" th:text="${centrosCostoPage.number + 1}">1</span>
-                                    <a title="Siguiente página" aria-label="Siguiente página"
-                                        th:href="@{/admin(pageProveedores=${pageProveedores}, pageUsuarios=${pageUsuarios}, pageProductos=${pageProductos}, pageSedes=${pageSedes}, pageCentros=${pageCentros + 1}, size=${size})}"
-                                        th:class="${centrosCostoPage.number >= centrosCostoPage.totalPages - 1} ? 'btn-pagina disabled' : 'btn-pagina'">
-                                        <span class="material-symbols">chevron_right</span>
-                                    </a>
-                                </div>
+                            <div class="controles">
+                                <a title="Página anterior" aria-label="Página anterior"
+                                    th:href="@{/admin(pageProveedores=${pageProveedores}, pageUsuarios=${pageUsuarios}, pageProductos=${pageProductos}, pageSedes=${pageSedes}, pageCentros=${pageCentros - 1}, size=${size})}"
+                                    th:class="${centrosCostoPage.number == 0} ? 'btn-pagina disabled' : 'btn-pagina'">
+                                    <span class="material-symbols">chevron_left</span>
+                                </a>
+                                <span class="pagina-actual" th:text="${centrosCostoPage.number + 1}">1</span>
+                                <a title="Siguiente página" aria-label="Siguiente página"
+                                    th:href="@{/admin(pageProveedores=${pageProveedores}, pageUsuarios=${pageUsuarios}, pageProductos=${pageProductos}, pageSedes=${pageSedes}, pageCentros=${pageCentros + 1}, size=${size})}"
+                                    th:class="${centrosCostoPage.number >= centrosCostoPage.totalPages - 1} ? 'btn-pagina disabled' : 'btn-pagina'">
+                                    <span class="material-symbols">chevron_right</span>
+                                </a>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
         </section>
     </main>
 
+    <!-- ============================================
+         OVERLAY DE TRANSICIÓN DE PÁGINA
+         Se activa al hacer clic en cualquier enlace con
+         la clase "js-page-transition" (por ejemplo la
+         tarjeta de Órdenes de compra que va a /dashboard).
+         No usa preventDefault: solo se muestra al instante
+         y la navegación sigue su curso normal; si la
+         siguiente página tarda, el usuario ve el overlay
+         en vez de una pantalla congelada.
+         ============================================ -->
+    <div id="page-transition-overlay" class="page-transition-overlay" aria-hidden="true">
+        <div class="page-transition-content">
+            <span class="material-symbols">progress_activity</span>
+            <p>Cargando…</p>
+        </div>
+    </div>
+
     <script th:src="@{/security.js(v=1)}"></script>
     <script th:src="@{/admin.js}"></script>
+    <script>
+        document.querySelectorAll('.js-page-transition').forEach(function (link) {
+            link.addEventListener('click', function () {
+                var overlay = document.getElementById('page-transition-overlay');
+                if (overlay) overlay.classList.add('is-active');
+            });
+        });
+    </script>
 </body>
 
 </html>

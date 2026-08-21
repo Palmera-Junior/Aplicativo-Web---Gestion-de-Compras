@@ -1,481 +1,817 @@
-        /* ==========================================
-           PALETA DE ACENTOS POR MÓDULO
-           (mismo verde institucional del navbar +
-           acentos sutiles diferenciados por sección)
-        ========================================== */
-        .accent-blue {
-            --accent: #1c64f2;
-            --accent-bg: #e7f1ff;
-        }
-
-        .accent-green {
-            --accent: #198754;
-            --accent-bg: #e6f6ec;
-        }
-
-        .accent-amber {
-            --accent: #d97706;
-            --accent-bg: #fdf1e7;
-        }
-
-        .accent-teal {
-            --accent: #0891b2;
-            --accent-bg: #e0f7fa;
-        }
-
-        .accent-purple {
-            --accent: #7c3aed;
-            --accent-bg: #f1e9fe;
-        }
-
-        .mono {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 13px;
-            color: #495057;
-        }
-
-        /* ==========================================
-           ALERTAS
-        ========================================== */
-        .alert-success,
-        .alert-error {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 18px;
-            font-size: 14px;
-        }
-
-        .alert-success {
-            background: #e6f6ec;
-            color: #157347;
-            border: 1px solid #b7e4c7;
-        }
-
-        .alert-error {
-            background: #fdeeec;
-            color: #c9432f;
-            border: 1px solid #f3c6bd;
-        }
-
-        .alert-success p,
-        .alert-error p {
-            margin: 0;
-        }
-
-        /* ==========================================
-           TARJETAS DE MÓDULOS (grandes, con indicador)
-        ========================================== */
-        .modules-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-            gap: 18px;
-            margin: 18px 0 32px;
-        }
-
-        .module-card {
-            background: #fff;
-            border: 1px solid #e9ecef;
-            border-top: 4px solid var(--accent);
-            border-radius: 12px;
-            padding: 22px;
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-            transition: all .2s ease;
-        }
-
-        .module-card:hover {
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
-            transform: translateY(-2px);
-        }
-
-        .module-card.selected {
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
-            border-color: var(--accent);
-        }
-
-        .module-icon-wrap {
-            width: 52px;
-            height: 52px;
-            border-radius: 12px;
-            background: var(--accent-bg);
-            color: var(--accent);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .module-icon-wrap .material-symbols {
-            font-size: 28px;
-        }
-
-        .module-body h3 {
-            margin: 0 0 4px;
-            font-size: 17px;
-            font-weight: 700;
-            color: #212529;
-        }
-
-        .module-body p {
-            margin: 0;
-            font-size: 13px;
-            color: #6c757d;
-            line-height: 1.45;
-        }
-
-        .module-footer {
-            display: flex;
-            align-items: baseline;
-            gap: 6px;
-            margin-top: auto;
-            padding-top: 12px;
-            border-top: 1px solid #f1f3f5;
-        }
-
-        .module-badge {
-            font-size: 35px;
-            font-weight: 700;
-            color: var(--accent);
-        }
-
-        .module-badge-label {
-            font-size: 12px;
-            color: #adb5bd;
-            flex: 1;
-        }
-
-        .module-arrow {
-            font-size: 18px;
-            color: #ced4da;
-            transition: transform .2s ease, color .2s ease;
-        }
-
-        .module-card:hover .module-arrow {
-            color: var(--accent);
-            transform: translateX(3px);
-        }
-
-        /* ==========================================
-           SECCIONES (formulario + listado)
-        ========================================== */
-        .admin-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 18px;
-        }
-
-        .admin-card {
-            background: transparent;
-        }
-
-        .section-panel-header {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            padding: 18px 22px;
-            background: #fff;
-            border: 1px solid #e9ecef;
-            border-left: 4px solid var(--accent);
-            border-radius: 10px;
-            margin-bottom: 18px;
-        }
-
-        .section-panel-header .material-symbols {
-            font-size: 30px;
-            color: var(--accent);
-        }
-
-        .section-panel-header h2 {
-            margin: 0;
-            font-size: 19px;
-            font-weight: 700;
-            color: #212529;
-        }
-
-        .section-panel-header p {
-            margin: 2px 0 0;
-            font-size: 13px;
-            color: #868e96;
-        }
-
-        /* ==========================================
-           TARJETA DE FORMULARIO
-        ========================================== */
-        .form-card {
-            background: #fff;
-            border: 1px solid #e9ecef;
-            border-radius: 10px;
-            padding: 22px;
-            margin-bottom: 22px;
-        }
-
-        .form-card-title {
-            margin: 0 0 16px;
-            font-size: 15px;
-            font-weight: 700;
-            color: #198754;
-        }
-
-        .form-grid-2 {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 14px;
-            row-gap: 4px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            margin-bottom: 14px;
-        }
-
-        .form-group.full-width {
-            grid-column: 1 / -1;
-        }
-
-        .form-group label {
-            font-size: 13px;
-            font-weight: 600;
-            margin-bottom: 5px;
-            color: #495057;
-        }
-
-        /* ==========================================
-           BOTONES DE ACCIÓN DEL FORMULARIO
-        ========================================== */
-        .form-actions {
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            gap: 10px;
-            margin-top: 14px;
-        }
-
-        .btn-cancel {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            background: #ffffff;
-            border: 1px solid #d1d5db;
-            color: #6c757d;
-            padding: 10px 20px;
-            border-radius: 70px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-            transition: all .2s ease;
-        }
-
-        .btn-cancel:hover {
-            background: #f1f3f5;
-            border-color: #adb5bd;
-            color: #343a40;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
-            transform: translateY(-1px);
-        }
-
-        .btn-cancel:active {
-            background: #e9ecef;
-            transform: translateY(0);
-            box-shadow: none;
-        }
-
-        /* Checkbox grid de sedes asociadas */
-        .sede-checkbox-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .checkbox-chip {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 7px 12px;
-            border-radius: 20px;
-            border: 1px solid #e9ecef;
-            background: #f8f9fa;
-            font-size: 13px;
-            color: #495057;
-            cursor: pointer;
-            transition: all .15s ease;
-        }
-
-        .checkbox-chip:hover {
-            border-color: #198754;
-            background: #e6f6ec;
-        }
-
-        /* ==========================================
-           LISTADOS (tabla)
-        ========================================== */
-        .list-title {
-            font-size: 15px;
-            font-weight: 700;
-            color: #212529;
-            margin: 0 0 12px;
-        }
-
-        .tabla-card {
-            background: #fff;
-            border: 1px solid #e9ecef;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
-        .table-responsive {
-            overflow-x: auto;
-        }
-
-        .admin-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .admin-table thead th {
-            background: #f8f9fa;
-            color: #495057;
-            border-bottom: 2px solid #198754;
-            font-size: 11.5px;
-            text-transform: uppercase;
-            letter-spacing: 0.4px;
-            font-weight: 600;
-            text-align: left;
-            padding: 12px 16px;
-            white-space: nowrap;
-        }
-
-
-
-        .admin-table tbody td {
-            padding: 13px 16px;
-            font-size: 13.5px;
-            color: #343a40;
-            border-bottom: 1px solid #f1f3f5;
-        }
-
-        .admin-table tbody tr:hover {
-            background: #f8f9fa;
-        }
-
-        .admin-table tbody tr:last-child td {
-            border-bottom: none;
-        }
-
-        td.actions {
-            white-space: nowrap;
-            text-align: center;
-        }
-
-        /* ==========================================
-           BOTONES DE ACCIÓN (íconos, en vez de texto)
-        ========================================== */
-        .btn-icon {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 32px;
-            height: 32px;
-            border: none;
-            background: transparent;
-            border-radius: 6px;
-            cursor: pointer;
-            margin-left: 2px;
-            transition: background .15s ease;
-        }
-
-        .btn-icon .material-symbols {
-            font-size: 19px;
-        }
-
-        .btn-icon:hover {
-            background: #f1f3f5;
-        }
-
-        .btn-icon.edit .material-symbols {
-            color: #495057;
-        }
-
-        .btn-icon.edit:hover {
-            background: #e9ecef;
-        }
-
-        .btn-icon.delete .material-symbols {
-            color: #c9432f;
-        }
-
-        .btn-icon.delete:hover {
-            background: #fdeeec;
-        }
-
-        /* ==========================================
-           BADGES DE ROL (usuarios)
-        ========================================== */
-        .badge-rol {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 11.5px;
-            font-weight: 600;
-            letter-spacing: 0.3px;
-            white-space: nowrap;
-            background: #f1f3f5;
-            color: #6c757d;
-        }
-
-        .badge-rol::before {
-            content: "";
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: #adb5bd;
-            flex-shrink: 0;
-        }
-
-        .badge-rol.administrador {
-            background: #fdf1e7;
-            color: #b45309;
-        }
-
-        .badge-rol.administrador::before {
-            background: #d97706;
-        }
-
-        .badge-rol.aprobador {
-            background: #e7f1ff;
-            color: #1c64f2;
-        }
-
-        .badge-rol.aprobador::before {
-            background: #1c64f2;
-        }
-
-        .badge-rol.solicitante {
-            background: #e6f6ec;
-            color: #198754;
-        }
-
-        .badge-rol.solicitante::before {
-            background: #198754;
-        }
-
-        /* ==========================================
-           RESPONSIVE
-        ========================================== */
-        @media (max-width: 800px) {
-            .modules-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .form-grid-2 {
-                grid-template-columns: 1fr;
-            }
-        }
+/* ==========================================
+   BASE / COMPORTAMIENTO GLOBAL
+========================================== */
+html {
+    scroll-behavior: smooth;
+}
+
+/* ==========================================
+   PALETA DE ACENTOS POR MÓDULO
+   Paleta desaturada / profesional: el color
+   vive en el ícono (chip pequeño), nunca en
+   bloques grandes ni en el texto principal.
+========================================== */
+.accent-blue {
+    --accent: #1a7cd8;
+    --accent-bg: #eaf1f8;
+}
+
+.accent-red {
+    --accent: #b1433a;
+    --accent-bg: #faeeed;
+}
+
+.accent-green {
+    --accent: #2f7d5b;
+    --accent-bg: #eaf5ef;
+}
+
+.accent-amber {
+    --accent: #b8791f;
+    --accent-bg: #faf2e4;
+}
+
+.accent-teal {
+    --accent: #2b7a86;
+    --accent-bg: #e9f4f5;
+}
+
+.accent-purple {
+    --accent: #6b4fa0;
+    --accent-bg: #f1ecf9;
+}
+
+.accent-gray {
+    --accent: #6b7280;
+    --accent-bg: #f1f2f4;
+}
+
+.module-card-link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+}
+
+.mono {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: #495057;
+}
+
+/* ==========================================
+   ALERTAS
+========================================== */
+.alert-success,
+.alert-error {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 18px;
+    font-size: 14px;
+}
+
+.alert-success {
+    background: #eaf5ef;
+    color: #276b4c;
+    border: 1px solid #cfe8db;
+}
+
+.alert-error {
+    background: #faeeed;
+    color: #a03a32;
+    border: 1px solid #f0cfcb;
+}
+
+.alert-success p,
+.alert-error p {
+    margin: 0;
+}
+
+/* ==========================================
+   ÓRDENES DE COMPRA — TARJETA DESTACADA
+   (transaccional: se separa del resto de
+   catálogos y muestra el desglose por estado)
+========================================== */
+.orders-summary {
+    margin: 18px 0 8px;
+}
+
+.order-status-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 24px;
+    background: #fff;
+    border: 1px solid #e9ecef;
+    border-top: 3px solid transparent;
+    border-radius: 12px;
+    padding: 38px 26px;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+    border-left: 5px solid #131261;
+    border-right: 5px solid #131261;
+}
+
+.order-status-card:hover {
+    
+    box-shadow: 0 8px 20px rgba(23, 27, 33, 0.07);
+    transform: translateY(-2px);
+    border-top: 0.5px solid #131261;
+    border-bottom: 0.5px solid #131261;
+}
+
+
+.order-status-main {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-width: 240px;
+}
+
+/* Ícono principal: identidad neutra del módulo, no un estado */
+.order-status-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    background: #d6d7f2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.order-status-icon .material-symbols {
+    font-size: 28px;
+}
+
+.material-symbols.stacks {
+    font-size: 28px;
+    color: #131261;
+}
+
+.order-status-body h2 {
+    margin: 0 0 3px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #212529;
+}
+
+.order-status-body p {
+    margin: 0;
+    font-size: 13px;
+    color: #868e96;
+}
+
+.order-status-stats {
+    display: flex;
+    align-items: center;
+    gap: 26px;
+}
+
+.order-stat {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+/* Total: número más grande y sin color, es el dato ancla */
+.order-stat-total .order-stat-value {
+    font-size: 28px;
+    font-weight: 800;
+    color: #212529;
+    font-family: JetBrains Mono, monospace;
+}
+
+.order-stat-total .order-stat-label {
+    align-self: flex-end;
+    margin-bottom: 3px;
+}
+
+/* Separador entre "total" y el desglose por estado */
+.order-status-stats .order-stat:nth-child(2) {
+    padding-left: 22px;
+    border-left: 1px solid #a4a8ac;
+}
+
+/* Ícono de estado: el color vive en el símbolo mismo,
+   sin fondo ni variables — un color fijo por estado */
+.order-stat-icon-wrap {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.order-stat-icon {
+    font-size: 22px !important;
+}
+
+.order-stat.accent-gray .order-stat-icon {
+    color: #9d5a22;
+}
+
+.order-stat.accent-green .order-stat-icon {
+    color: #135bf5;
+}
+
+.order-stat.accent-amber .order-stat-icon {
+    color: #2b7a86;
+}
+
+.order-stat.accent-teal .order-stat-icon {
+    color: #23b319;
+}
+
+.order-stat.accent-red .order-stat-icon {
+    color: #d33122;
+}
+
+.order-stat-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+}
+
+.order-stat-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+    font-size: 17px;
+    color: #656a6e;
+    font-variant-numeric: tabular-nums;
+}
+
+.order-stat-label {
+    font-size: 11.5px;
+    color: #939aa3;
+}
+
+.order-status-arrow {
+    font-size: 20px;
+    color: #ced4da;
+    transition: transform .2s ease, color .2s ease;
+    margin-left: 4px;
+}
+
+.order-status-card:hover .order-status-arrow {
+    color: #495057;
+    transform: translateX(3px);
+}
+
+/* ==========================================
+   TARJETAS DE MÓDULOS (catálogo)
+========================================== */
+.catalog-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: #868e96;
+    margin: 26px 0 10px;
+}
+
+.modules-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 18px;
+    margin: 18px 0 32px;
+}
+
+.module-card {
+    background: #fff;
+    border: 1px solid #e9ecef;
+    border-top: 3px solid transparent;
+    border-radius: 12px;
+    padding: 22px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+
+.module-card:hover {
+    border-top: 5px solid var(--accent);
+    box-shadow: 0 8px 10px var(--accent-bg);
+    transform: translateY(-2px);
+}
+
+.module-card:active {
+    transform: translateY(0);
+}
+
+.module-card.selected {
+    border-top: 5px solid var(--accent);
+    box-shadow: 0 8px 10px var(--accent-bg);
+}
+
+.module-icon-wrap {
+    width: 48px;
+    height: 48px;
+    border-radius: 11px;
+    background: var(--accent-bg);
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.module-icon-wrap .material-symbols {
+    font-size: 25px;
+    color: var(--accent);
+}
+
+.module-body h2 {
+    margin: 0 0 4px;
+    font-size: 16.5px;
+    font-weight: 700;
+    color: #212529;
+}
+
+.module-body p {
+    margin: 0;
+    font-size: 13px;
+    color: #6c757d;
+    line-height: 1.45;
+}
+
+.module-footer {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    margin-top: auto;
+    padding-top: 12px;
+    border-top: 1px solid #f1f3f5;
+}
+
+.module-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 26px;
+    font-weight: 800;
+    color: #212529;
+}
+
+.module-badge-label {
+    font-size: 12px;
+    color: #adb5bd;
+    flex: 1;
+}
+
+.module-arrow {
+    font-size: 18px;
+    color: #ced4da;
+    transition: transform .2s ease, color .2s ease;
+}
+
+.module-card:hover .module-arrow {
+    color: var(--accent);
+    transform: translateX(3px);
+}
+
+/* ==========================================
+   SECCIONES (formulario + listado)
+   Entran con una animación suave cada vez que
+   el JS existente las pasa de display:none a
+   visibles — no requiere tocar admin.js, las
+   animaciones CSS se reinician solas al volver
+   a mostrarse un elemento.
+========================================== */
+.admin-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 18px;
+}
+
+.admin-card {
+    background: transparent;
+    animation: panel-in .35s cubic-bezier(.22, .61, .36, 1);
+}
+
+@keyframes panel-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.section-panel-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 18px 22px;
+    background: #fff;
+    border: 1px solid #e9ecef;
+    border-left: 3px solid var(--accent);
+    border-radius: 10px;
+    margin-bottom: 18px;
+}
+
+.section-panel-header .material-symbols {
+    font-size: 28px;
+    color: var(--accent);
+}
+
+.section-panel-header h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    color: #212529;
+}
+
+.section-panel-header p {
+    margin: 2px 0 0;
+    font-size: 13px;
+    color: #868e96;
+}
+
+/* ==========================================
+   TARJETA DE FORMULARIO
+========================================== */
+.form-card {
+    background: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: 10px;
+    padding: 22px;
+    margin-bottom: 22px;
+}
+
+.form-card-title {
+    margin: 0 0 16px;
+    font-size: 14.5px;
+    font-weight: 700;
+    color: #37414d;
+    text-transform: uppercase;
+    letter-spacing: .3px;
+}
+
+.form-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+    row-gap: 4px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 14px;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.form-group label {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: #495057;
+}
+
+/* ==========================================
+   BOTONES
+========================================== */
+.form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.btn-cancel {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    color: #6c757d;
+    padding: 10px 20px;
+    border-radius: 70px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    transition: all .2s ease;
+}
+
+.btn-cancel:hover {
+    background: #f1f3f5;
+    border-color: #adb5bd;
+    color: #343a40;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+    transform: translateY(-1px);
+}
+
+.btn-cancel:active {
+    background: #e9ecef;
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+.btn-secondary,
+.btn-primary-dark {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 18px;
+    border-radius: 70px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s ease;
+}
+
+.btn-secondary {
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    color: #495057;
+}
+
+.btn-secondary:hover {
+    background: #f1f3f5;
+    border-color: #adb5bd;
+}
+
+.btn-primary-dark {
+    background: #212529;
+    border: 1px solid #212529;
+    color: #fff;
+}
+
+.btn-primary-dark:hover {
+    background: #000;
+}
+
+.btn-primary-dark .material-symbols {
+    font-size: 17px;
+}
+
+/* Checkbox grid de sedes asociadas */
+.sede-checkbox-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.checkbox-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px;
+    border-radius: 20px;
+    border: 1px solid #e9ecef;
+    background: #f8f9fa;
+    font-size: 13px;
+    color: #495057;
+    cursor: pointer;
+    transition: all .15s ease;
+}
+
+.checkbox-chip:hover {
+    border-color: #37414d;
+    background: #f1f3f5;
+}
+
+/* ==========================================
+   LISTADOS (tabla)
+========================================== */
+.list-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #212529;
+    margin: 0 0 12px;
+}
+
+.tabla-card {
+    background: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.admin-table thead th {
+    background: #f8f9fa;
+    color: #495057;
+    border-bottom: 2px solid #e9ecef;
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    font-weight: 600;
+    text-align: left;
+    padding: 12px 16px;
+    white-space: nowrap;
+}
+
+.admin-table tbody td {
+    padding: 13px 16px;
+    font-size: 13.5px;
+    color: #343a40;
+    border-bottom: 1px solid #f1f3f5;
+}
+
+.admin-table tbody tr {
+    transition: background .15s ease;
+}
+
+.admin-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.admin-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+td.actions {
+    white-space: nowrap;
+    text-align: center;
+}
+
+/* ==========================================
+   BOTONES DE ACCIÓN (íconos, en vez de texto)
+========================================== */
+.btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-left: 2px;
+    transition: background .15s ease;
+}
+
+.btn-icon .material-symbols {
+    font-size: 19px;
+}
+
+.btn-icon:hover {
+    background: #f1f3f5;
+}
+
+.btn-icon.edit .material-symbols {
+    color: #495057;
+}
+
+.btn-icon.edit:hover {
+    background: #e9ecef;
+}
+
+.btn-icon.delete .material-symbols {
+    color: #a03a32;
+}
+
+.btn-icon.delete:hover {
+    background: #faeeed;
+}
+
+/* ==========================================
+   BADGES DE ROL (usuarios)
+========================================== */
+.badge-rol {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+    background: #f1f3f5;
+    color: #6c757d;
+}
+
+.badge-rol::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #adb5bd;
+    flex-shrink: 0;
+}
+
+.badge-rol.administrador {
+    background: #faf2e4;
+    color: #93630f;
+}
+
+.badge-rol.administrador::before {
+    background: #b8791f;
+}
+
+.badge-rol.aprobador {
+    background: #eaf1f8;
+    color: #3b6ea5;
+}
+
+.badge-rol.aprobador::before {
+    background: #3b6ea5;
+}
+
+.badge-rol.solicitante {
+    background: #eaf5ef;
+    color: #2f7d5b;
+}
+
+.badge-rol.solicitante::before {
+    background: #2f7d5b;
+}
+
+/* ==========================================
+   TRANSICIÓN DE PÁGINA (al navegar a /dashboard)
+   Overlay que se muestra al instante del clic
+   y queda visible mientras el navegador carga
+   la siguiente página, para que la espera no
+   se sienta como que la app se congeló.
+========================================== */
+.page-transition-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(2px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .18s ease;
+}
+
+.page-transition-overlay.is-active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.page-transition-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    color: #495057;
+}
+
+.page-transition-content .material-symbols {
+    font-size: 34px;
+    color: #37414d;
+    animation: spin 0.9s linear infinite;
+}
+
+.page-transition-content p {
+    margin: 0;
+    font-size: 13.5px;
+    font-weight: 600;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ==========================================
+   RESPONSIVE
+========================================== */
+@media (max-width: 800px) {
+    .modules-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-grid-2 {
+        grid-template-columns: 1fr;
+    }
+
+    .order-status-card {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .order-status-stats {
+        flex-wrap: wrap;
+        gap: 18px;
+    }
+}

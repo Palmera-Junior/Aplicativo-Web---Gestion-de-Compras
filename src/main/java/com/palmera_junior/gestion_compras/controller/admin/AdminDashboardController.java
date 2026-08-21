@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.palmera_junior.gestion_compras.entity.Categoria;
 import com.palmera_junior.gestion_compras.entity.CentroCosto;
+import com.palmera_junior.gestion_compras.entity.OrdenCompra;
 import com.palmera_junior.gestion_compras.entity.Producto;
 import com.palmera_junior.gestion_compras.entity.Proveedor;
 import com.palmera_junior.gestion_compras.entity.Rol;
@@ -22,6 +23,7 @@ import com.palmera_junior.gestion_compras.entity.Sede;
 import com.palmera_junior.gestion_compras.entity.Usuario;
 import com.palmera_junior.gestion_compras.service.catalogo.IProductoService;
 import com.palmera_junior.gestion_compras.service.catalogo.IProveedorService;
+import com.palmera_junior.gestion_compras.service.orden.IOrdenCompraService;
 import com.palmera_junior.gestion_compras.service.organizacion.ICentroCostoService;
 import com.palmera_junior.gestion_compras.service.organizacion.ISedeService;
 import com.palmera_junior.gestion_compras.service.usuario.IUsuarioService;
@@ -38,14 +40,17 @@ public class AdminDashboardController {
     private final IProductoService productoService;
     private final ISedeService sedeService;
     private final ICentroCostoService centroCostoService;
+    private final IOrdenCompraService ordenCompraService;
 
     public AdminDashboardController(IProveedorService proveedorService, IUsuarioService usuarioService,
-            IProductoService productoService, ISedeService sedeService, ICentroCostoService centroCostoService) {
+            IProductoService productoService, ISedeService sedeService, ICentroCostoService centroCostoService,
+            IOrdenCompraService ordenCompraService) {
         this.proveedorService = proveedorService;
         this.usuarioService = usuarioService;
         this.productoService = productoService;
         this.sedeService = sedeService;
         this.centroCostoService = centroCostoService;
+        this.ordenCompraService = ordenCompraService;
     }
 
     @GetMapping("/admin")
@@ -67,6 +72,7 @@ public class AdminDashboardController {
             @RequestParam(required = false) String error) {
 
         List<Proveedor> proveedores = proveedorService.listarTodos();
+        List<OrdenCompra> ordenesCompra = ordenCompraService.listarOrdenesCompra();
         List<Usuario> usuarios = usuarioService.listarTodos();
         List<Producto> productos = productoService.getAllProductos();
         List<Sede> sedes = sedeService.listarTodos();
@@ -150,6 +156,7 @@ public class AdminDashboardController {
 
         model.addAttribute("proveedores", proveedores);
         model.addAttribute("usuarios", usuarios);
+        model.addAttribute("ordenesCompra", ordenesCompra);
         model.addAttribute("productos", productos);
         model.addAttribute("sedes", sedes);
         model.addAttribute("centrosCosto", centroCostos);

@@ -40,8 +40,6 @@ import com.palmera_junior.gestion_compras.service.correo.CorreoOrdenOutboxServic
 import com.palmera_junior.gestion_compras.service.organizacion.ICentroCostoService;
 import com.palmera_junior.gestion_compras.service.usuario.IUsuarioService;
 
-
-
 @Service
 public class OrdenCompraService implements IOrdenCompraService {
 
@@ -53,9 +51,6 @@ public class OrdenCompraService implements IOrdenCompraService {
     private final ApplicationEventPublisher eventPublisher;
     private final CorreoOrdenOutboxService correoOrdenOutboxService;
     private final TotalesValidationService totalesValidationService;
-    
-
-    
 
     public OrdenCompraService(OrdenCompraRepository ordenCompraRepository, ProductoRepository productoRepository,
             ProveedorRepository proveedorRepository, ICentroCostoService centroCostoService,
@@ -71,6 +66,10 @@ public class OrdenCompraService implements IOrdenCompraService {
         this.totalesValidationService = totalesValidationService;
     }
 
+    public List<OrdenCompra> listarOrdenesCompra() {        
+            return ordenCompraRepository.findAll();
+        }
+    
     // Método para listar órdenes paginadas en el Dashboard
     public Page<OrdenCompra> ordenesDeCompraPaginadas(Pageable pageable, String search, String fechaDesde,
             String fechaHasta, Integer idSede, boolean esNacional, String estado) {
@@ -449,7 +448,7 @@ public class OrdenCompraService implements IOrdenCompraService {
         return ordenCompraRepository.saveAndFlush(ordenCompra);
     }
 
-    @PreAuthorize("hasRole('APROBADOR')")
+    @PreAuthorize("hasRole('APROBADOR') or hasRole('ADMINISTRADOR')")
     @Transactional
     public OrdenCompra aprobarOrden(Integer idOrden) {
 
@@ -458,35 +457,33 @@ public class OrdenCompraService implements IOrdenCompraService {
 
         if (orden.getEstado() != EstadoOrdenCompra.BORRADOR) {
             throw new RuntimeException(
-                    "Solo las órdenes en BORRADOR pueden aprobarse");
+                    "Solo las órdenes en estado BORRADOR pueden aprobarse");
         }
 
         Usuario usuarioAprobador = usuarioService.obtenerUsuarioAutenticado();
 
-        if (!orden.getSede().getIdSede()
-                .equals(usuarioAprobador.getSede().getIdSede())) {
+        boolean esAdministrador = usuarioAprobador.getRol() == Rol.ADMINISTRADOR;
 
+        boolean mismaSede = orden.getSede().getIdSede()
+                .equals(usuarioAprobador.getSede().getIdSede());
+
+        if (!esAdministrador && !mismaSede) {
             throw new RuntimeException(
                     "No tiene permisos para aprobar órdenes de otra sede");
         }
 
-        if (usuarioAprobador.getRol() != Rol.APROBADOR) {
-
-            throw new RuntimeException(
-                    "Solo un aprobador puede aprobar órdenes");
-        }
-
         orden.setEstado(EstadoOrdenCompra.APROBADA);
-
         orden.setUsuarioAprobacion(usuarioAprobador);
-
         orden.setFechaAprobacion(LocalDate.now());
 
         OrdenCompra ordenGuardada = ordenCompraRepository.save(orden);
 
-        Long idAuditoria = correoOrdenOutboxService.registrarPendiente(ordenGuardada);
-        eventPublisher.publishEvent(new OrdenCompraAprobadaEvent(idAuditoria));
-        
+        Long idAuditoria = correoOrdenOutboxService
+                .registrarPendiente(ordenGuardada);
+
+        eventPublisher.publishEvent(
+                new OrdenCompraAprobadaEvent(idAuditoria));
+
         return ordenGuardada;
     }
 

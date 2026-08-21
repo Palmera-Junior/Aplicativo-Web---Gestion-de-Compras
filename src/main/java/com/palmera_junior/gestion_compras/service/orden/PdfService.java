@@ -278,9 +278,9 @@ public class PdfService implements IPdfService {
 
         PdfPCell generalesLeft = new PdfPCell();
         generalesLeft.setBorder(Rectangle.NO_BORDER);
+        generalesLeft.addElement(crearParrafo("N° Orden:  " + valorTexto(orden.getNumeroOrden()), fontInfoEncabezado));
         generalesLeft.addElement(crearParrafo(
                 "Fecha:  " + valorTexto(orden.getFecha() != null ? orden.getFecha().toString() : null), fontTexto));
-        generalesLeft.addElement(crearParrafo("N° Orden:  " + valorTexto(orden.getNumeroOrden()), fontTexto));
         generalesTable.addCell(generalesLeft);
 
         PdfPCell generalesRight = new PdfPCell();
