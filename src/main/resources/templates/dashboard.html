@@ -117,6 +117,12 @@
                                 class="badge-estado aprobada">APROBADA</span>
                             <span th:if="${orden.estado.name() == 'RECIBIDA'}"
                                 class="badge-estado recibida">RECIBIDA</span>
+                            <span th:if="${orden.estado.name() == 'FACTURADA'}"
+                                class="badge-estado facturada">FACTURADA</span>
+                            <span th:if="${orden.estado.name() == 'COMPLETADA'}"
+                                class="badge-estado completada">COMPLETADA</span>
+                            <span th:if="${orden.estado.name() == 'ANULADA'}"
+                                class="badge-estado anulada">ANULADA</span>
                         </td>
                         <td class="correo-cell" th:with="estadoCorreo=${estadosCorreo.get(orden.idOrden)}">
                             <span th:if="${estadoCorreo == null}" class="correo-estado-icon sin-envio"
@@ -149,17 +155,27 @@
                                 <span class="material-symbols">person_check</span>
                             </button>
                             <button title="Descargar Orden de Compra" class="btn-icon pdf" th:data-id="${orden.idOrden}"
-                                th:if="${orden.estado.name() == 'APROBADA' or orden.estado.name() == 'RECIBIDA'}">
+                                th:if="${orden.estado.name() != 'BORRADOR' and orden.estado.name() != 'ANULADA'}">
                                 <span class="material-symbols">download</span>
                             </button>
-                            <button title="Recibir Orden de Compra" th:if="${orden.estado.name() == 'APROBADA'}"
+                            <button title="Recibir Orden de Compra" th:if="${orden.estado.name() == 'APROBADA' or orden.estado.name() == 'FACTURADA'}"
                                 class="btn-icon receive" th:data-id="${orden.idOrden}"
                                 th:data-numero-orden="${orden.numeroOrden}"
                                 th:data-proveedor="${orden.proveedor != null ? orden.proveedor.nombre : ''}"
                                 th:data-paga-flete="${orden.pagaFlete}" th:data-valor-flete="${orden.valorFlete}">
                                 <span class="material-symbols">package_2</span>
                             </button>
-                            <button title="Eliminar Orden de Compra" th:if="${orden.estado.name() == 'BORRADOR'}"
+
+                            <!-- Botón para facturar: abre modal de facturación separado -->
+                            <button title="Facturar Orden de Compra" th:if="${orden.estado.name() == 'APROBADA' or orden.estado.name() == 'RECIBIDA'}"
+                                class="btn-icon facturar" th:data-id="${orden.idOrden}"
+                                th:data-numero-orden="${orden.numeroOrden}"
+                                th:data-proveedor="${orden.proveedor != null ? orden.proveedor.nombre : ''}">
+                                <span class="material-symbols">receipt_long</span>
+                            </button>
+                            <button title="Anular Orden de Compra"
+                             sec:authorize="hasRole('APROBADOR') or hasRole('ADMINISTRADOR')"
+                             th:if="${orden.estado.name() == 'BORRADOR' or orden.estado.name() == 'APROBADA'}"
                                 class="btn-icon delete-orden" th:data-id="${orden.idOrden}"
                                 th:data-numero-orden="${orden.numeroOrden}">
                                 <span class="material-symbols">delete</span>
@@ -182,10 +198,6 @@
                             <div><strong>Proveedor:</strong> <span id="recepcion-proveedor"></span></div>
                         </div>
                         <div class="recepcion-form-group">
-                            <label>N° Factura Proveedor *</label>
-                            <input type="text" id="recepcion-numero-factura">
-                        </div>
-                        <div class="recepcion-form-group">
                             <label>Recibido Por *</label>
                             <input type="text" id="recepcion-recibido-por">
                         </div>
@@ -199,17 +211,20 @@
                                 placeholder="Observaciones sobre la recepción del pedido"></textarea>
                         </div>
                         <div class="recepcion-form-group">
-                            <label>Foto de Factura Proveedor*</label>
+                            <label>Evidencia de Recepción</label>
                             <div class="recepcion-foto-wrapper">
-                                <input type="file" id="recepcion-foto-input" accept="image/*" capture="environment"
+                                <input type="file" id="recepcion-foto-input" accept="image/*,application/pdf" capture="environment"
                                     style="display: none;">
                                 <div class="recepcion-foto-acciones">
-                                    <button type="button" id="btn-tomar-foto" class="btn-foto-accion">
-                                        <span class="material-symbols">photo_camera</span> Tomar o Adjuntar Foto
+                                    <button type="button" id="btn-tomar-foto-recepcion" class="btn-foto-accion">
+                                        <span class="material-symbols">photo_camera</span> Tomar Foto
+                                    </button>
+                                    <button type="button" id="btn-adjuntar-foto-recepcion" class="btn-foto-accion">
+                                        <span class="material-symbols">attach_file</span> Adjuntar Archivo
                                     </button>
                                     <button type="button" id="btn-eliminar-foto" class="btn-foto-eliminar"
-                                        style="display: none;" title="Quitar foto">
-                                        <span class="material-symbols">delete</span> Quitar Foto
+                                        style="display: none;" title="Quitar archivo">
+                                        <span class="material-symbols">delete</span> Quitar Archivo
                                     </button>
                                 </div>
                                 <div id="recepcion-foto-preview-container" class="recepcion-foto-preview-container"
@@ -217,6 +232,7 @@
                                     <img id="recepcion-foto-preview" src="" alt="Vista previa de la evidencia"
                                         class="recepcion-foto-preview">
                                 </div>
+                                <div id="recepcion-file-info" class="file-info" style="display: none;"></div>
                             </div>
                         </div>
                     </div>
@@ -224,6 +240,52 @@
                         <button title="Cerrar" type="button" id="btn-cancelar-recepcion">Cancelar</button>
                         <button title="Registrar.." type="button" id="btn-confirmar-recepcion">Registrar
                             Recepción</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODAL FACTURAR ORDEN -->
+            <div id="modal-facturar-oc" class="modal-recibir-oc-overlay">
+                <div class="modal-recibir-oc-content">
+                    <div class="modal-recibir-oc-header">
+                        <h2>Facturar Orden</h2>
+                    </div>
+                    <div class="modal-recibir-oc-body">
+                        <div class="recepcion-resumen">
+                            <div><strong>Orden:</strong> <span id="factura-numero-orden"></span></div>
+                            <div><strong>Proveedor:</strong> <span id="factura-proveedor"></span></div>
+                        </div>
+
+                        <div class="recepcion-form-group">
+                            <label>N° Factura Proveedor *</label>
+                            <input type="text" id="factura-numero-factura" placeholder="Ingrese número de factura">
+                        </div>
+
+                        <div class="recepcion-form-group">
+                            <label>Foto de Factura Proveedor*</label>
+                            <div class="recepcion-foto-wrapper">
+                                <input type="file" id="factura-foto-input" accept="image/*,application/pdf" capture="environment" style="display: none;">
+                                <div class="recepcion-foto-acciones">
+                                    <button type="button" id="btn-tomar-foto-factura" class="btn-foto-accion">
+                                        <span class="material-symbols">photo_camera</span> Tomar Foto
+                                    </button>
+                                    <button type="button" id="btn-adjuntar-factura" class="btn-foto-accion">
+                                        <span class="material-symbols">attach_file</span> Adjuntar Archivo
+                                    </button>
+                                    <button type="button" id="btn-eliminar-factura" class="btn-foto-eliminar" style="display: none;" title="Quitar archivo">
+                                        <span class="material-symbols">delete</span> Quitar Archivo
+                                    </button>
+                                </div>
+                                <div id="factura-preview-container" class="recepcion-foto-preview-container" style="display: none;">
+                                    <img id="factura-preview-image" src="" alt="Vista previa de la factura" class="recepcion-foto-preview">
+                                </div>
+                                <div id="factura-file-info" class="file-info" style="display: none;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-recibir-oc-footer">
+                        <button title="Cerrar" type="button" id="btn-cancelar-factura">Cancelar</button>
+                        <button title="Registrar.." type="button" id="btn-confirmar-factura">Registrar Factura</button>
                     </div>
                 </div>
             </div>

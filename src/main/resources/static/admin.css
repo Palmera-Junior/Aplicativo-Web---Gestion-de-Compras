@@ -213,19 +213,23 @@ html {
 }
 
 .order-stat.accent-gray .order-stat-icon {
-    color: #9d5a22;
+    color: #616161;
 }
 
 .order-stat.accent-green .order-stat-icon {
-    color: #135bf5;
+    color: #2c29ec;
 }
 
 .order-stat.accent-amber .order-stat-icon {
-    color: #2b7a86;
+    color: #2b7a86; 
 }
 
 .order-stat.accent-teal .order-stat-icon {
-    color: #23b319;
+    color: #e66c08;
+}
+
+.order-stat.accent-purple .order-stat-icon {
+    color: #29b320;
 }
 
 .order-stat.accent-red .order-stat-icon {

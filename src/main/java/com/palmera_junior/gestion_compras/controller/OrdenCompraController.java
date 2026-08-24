@@ -102,23 +102,33 @@ public class OrdenCompraController {
         }
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> eliminarOrden(
-            @PathVariable Integer id) {
+    @PutMapping("/{id}/facturar")
+    public ResponseEntity<?> facturarOrden(
+            @PathVariable Integer id,
+            @RequestBody com.palmera_junior.gestion_compras.dto.FacturarOrdenDTO dto) {
 
         try {
-
-            ordenCompraService.eliminarOrden(id);
-
-            return ResponseEntity.ok(
-                    "Orden eliminada correctamente");
-
+            String fotoFactura = dto.getFotoFactura() != null && !dto.getFotoFactura().isBlank()
+                    ? dto.getFotoFactura()
+                    : dto.getFotoRecepcion();
+            ordenCompraService.facturarOrden(id, dto.getNumeroFactura(), fotoFactura);
+            return ResponseEntity.ok("Orden facturada correctamente");
         } catch (RuntimeException e) {
-
-            return ResponseEntity.badRequest()
-                    .body(e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    @PutMapping("/{id}/anular")
+    public ResponseEntity<?> anularOrden(
+            @PathVariable Integer id) {
+        try {
+            ordenCompraService.anularOrden(id);
+            return ResponseEntity.ok("Orden anulada correctamente");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
 
     @PutMapping("/{id}/correo/marcar-enviado")
     public ResponseEntity<?> marcarCorreoEnviadoManualmente(
@@ -148,7 +158,9 @@ public class OrdenCompraController {
             }
 
             if (orden.getEstado() != com.palmera_junior.gestion_compras.entity.EstadoOrdenCompra.APROBADA
-                    && orden.getEstado() != com.palmera_junior.gestion_compras.entity.EstadoOrdenCompra.RECIBIDA) {
+                    && orden.getEstado() != com.palmera_junior.gestion_compras.entity.EstadoOrdenCompra.RECIBIDA
+                    && orden.getEstado() != com.palmera_junior.gestion_compras.entity.EstadoOrdenCompra.FACTURADA
+                    && orden.getEstado() != com.palmera_junior.gestion_compras.entity.EstadoOrdenCompra.COMPLETADA) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
             }
 

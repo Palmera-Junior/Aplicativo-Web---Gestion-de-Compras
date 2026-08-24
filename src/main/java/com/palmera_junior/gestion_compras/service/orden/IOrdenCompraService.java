@@ -18,7 +18,8 @@ public interface IOrdenCompraService {
     OrdenCompra actualizarOrdenDesdeDTO(Integer idOrden, OrdenCompraDTO dto);
     OrdenCompra aprobarOrden(Integer idOrden);
     OrdenCompra recibirOrden(Integer idOrden, RecibirOrdenDTO dto);
-    void eliminarOrden(Integer idOrden);
+    OrdenCompra facturarOrden(Integer idOrden, String numeroFactura, String fotoFactura);
+    OrdenCompra anularOrden(Integer idOrden);
     OrdenCompraDTO obtenerOrdenDTO(Integer id);
 
 }

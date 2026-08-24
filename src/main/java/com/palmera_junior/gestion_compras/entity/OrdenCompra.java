@@ -97,6 +97,9 @@ public class OrdenCompra {
     @Column(name = "foto_recepcion", columnDefinition = "TEXT")
     private String fotoRecepcion;
 
+    @Column(name = "foto_factura", columnDefinition = "TEXT")
+    private String fotoFactura;
+
     @Column(name = "se_recibio", nullable = false)
     private Boolean seRecibio = false;
 

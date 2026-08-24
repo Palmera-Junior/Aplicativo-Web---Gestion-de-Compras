@@ -488,26 +488,6 @@ public class OrdenCompraService implements IOrdenCompraService {
     }
 
     @Transactional
-    public void eliminarOrden(Integer idOrden) {
-
-        OrdenCompra orden = ordenCompraRepository.findById(idOrden)
-                .orElseThrow(() -> new RuntimeException("Orden no encontrada"));
-
-        if (orden.getEstado() != EstadoOrdenCompra.BORRADOR) {
-            throw new RuntimeException("Solo las órdenes en BORRADOR pueden eliminarse");
-        }
-
-        Usuario usuarioLogueado = usuarioService.obtenerUsuarioAutenticado();
-
-        if (orden.getUsuario() == null
-                || !orden.getUsuario().getIdUsuario().equals(usuarioLogueado.getIdUsuario())) {
-            throw new RuntimeException("Solo el usuario que creó la orden puede eliminarla");
-        }
-
-        ordenCompraRepository.delete(orden);
-    }
-
-    @Transactional
     public OrdenCompra recibirOrden(
             Integer idOrden,
             RecibirOrdenDTO dto) {
@@ -516,10 +496,10 @@ public class OrdenCompraService implements IOrdenCompraService {
                 .orElseThrow(() -> new RuntimeException(
                         "Orden no encontrada"));
 
-        if (orden.getEstado() != EstadoOrdenCompra.APROBADA) {
+        if (orden.getEstado() != EstadoOrdenCompra.APROBADA && orden.getEstado() != EstadoOrdenCompra.FACTURADA) {
 
             throw new RuntimeException(
-                    "Solo las órdenes APROBADAS pueden recibirse");
+                    "Solo las órdenes APROBADAS o FACTURADAS pueden recibirse");
         }
 
         // Validación de flete: solo se permite capturar el valor del flete
@@ -537,8 +517,11 @@ public class OrdenCompraService implements IOrdenCompraService {
             }
         }
 
-        orden.setNumeroFactura(
-                dto.getNumeroFactura());
+        // Si el DTO trae numero de factura al recibir, se asigna (posible flujo donde se factura y recibe a la vez)
+        if (dto.getNumeroFactura() != null && !dto.getNumeroFactura().isBlank()) {
+            orden.setNumeroFactura(dto.getNumeroFactura());
+            orden.setSeFacturo(true);
+        }
 
         orden.setRecibidoPor(
                 dto.getRecibidoPor());
@@ -555,11 +538,65 @@ public class OrdenCompraService implements IOrdenCompraService {
         orden.setFechaRecepcion(
                 LocalDate.now());
 
-        orden.setEstado(
-                EstadoOrdenCompra.RECIBIDA);
+        // Marcar recibida
+        orden.setSeRecibio(true);
+
+        // Determinar estado final: si ya estaba facturada o se facturó ahora, pasar a COMPLETADA
+        if (Boolean.TRUE.equals(orden.getSeFacturo())) {
+            orden.setEstado(EstadoOrdenCompra.COMPLETADA);
+        } else {
+            orden.setEstado(EstadoOrdenCompra.RECIBIDA);
+        }
 
         return ordenCompraRepository.save(
                 orden);
+    }
+
+    @Transactional
+    public OrdenCompra facturarOrden(Integer idOrden, String numeroFactura) {
+        return facturarOrden(idOrden, numeroFactura, null);
+    }
+
+    @Transactional
+    public OrdenCompra facturarOrden(Integer idOrden, String numeroFactura, String fotoFactura) {
+        OrdenCompra orden = ordenCompraRepository.findById(idOrden)
+                .orElseThrow(() -> new RuntimeException("Orden no encontrada"));
+
+        if (orden.getEstado() != EstadoOrdenCompra.APROBADA && orden.getEstado() != EstadoOrdenCompra.RECIBIDA) {
+            throw new RuntimeException("Solo las órdenes APROBADAS o RECIBIDAS pueden facturarse");
+        }
+
+        if (numeroFactura == null || numeroFactura.isBlank()) {
+            throw new RuntimeException("Número de factura requerido para facturar la orden");
+        }
+
+        orden.setNumeroFactura(numeroFactura);
+        if (fotoFactura != null && !fotoFactura.isBlank()) {
+            orden.setFotoFactura(fotoFactura);
+        }
+        orden.setSeFacturo(true);
+
+        // Si ya se recibió, completar; si no, marcar como FACTURADA
+        if (Boolean.TRUE.equals(orden.getSeRecibio())) {
+            orden.setEstado(EstadoOrdenCompra.COMPLETADA);
+        } else {
+            orden.setEstado(EstadoOrdenCompra.FACTURADA);
+        }
+
+        return ordenCompraRepository.save(orden);
+    }
+
+    @Transactional
+    public OrdenCompra anularOrden(Integer idOrden) {
+        OrdenCompra orden = ordenCompraRepository.findById(idOrden)
+                .orElseThrow(() -> new RuntimeException("Orden no encontrada"));
+
+        if (orden.getEstado() != EstadoOrdenCompra.BORRADOR && orden.getEstado() != EstadoOrdenCompra.APROBADA) {
+            throw new RuntimeException("Solo las órdenes en BORRADOR o APROBADA pueden anularse");
+        }
+
+        orden.setEstado(EstadoOrdenCompra.ANULADA);
+        return ordenCompraRepository.save(orden);
     }
 
     /**

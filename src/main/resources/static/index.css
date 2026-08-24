@@ -499,27 +499,50 @@ body {
 }
 
 .badge-estado.borrador {
-    background: #fdf1e7;
-    color: #b45309;
+    background: #dbdbdb;
+    color: #2f2f31;
 }
 .badge-estado.borrador::before {
-    background: #d97706;
+    background: #2f2f31;
 }
 
 .badge-estado.aprobada {
-    background: #e7f1ff;
-    color: #1c64f2;
+    background: #dfeaff;
+    color: #131261;
 }
 .badge-estado.aprobada::before {
-    background: #1c64f2;
+    background: #131261;
 }
 
 .badge-estado.recibida {
-    background: #e6f6ec;
-    color: #198754;
+    background: #fdf1e7;
+    color: #b45309;
 }
 .badge-estado.recibida::before {
-    background: #198754;
+    background: #d97706;
+}
+
+.badge-estado.facturada {
+    background: #fdf1e7;
+    color: #b45309;
+}
+.badge-estado.facturada::before {
+    background: #d97706;
+}
+.badge-estado.completada {
+   background: #eaf7ed;
+   color: #1f7a45;
+}
+.badge-estado.completada::before {
+   background: #2e9f5b;
+}
+
+.badge-estado.anulada {
+   background: #ffdede;
+   color: #e61a0c;
+}
+.badge-estado.anulada::before {
+   background: #d92d20;
 }
 
 /* ============================================
@@ -554,7 +577,16 @@ body {
 
 /* Aprobar: verde, acción positiva */
 .btn-icon.approve .material-symbols:hover {
-    color: #00fd2a;
+    color: #1fad37;
+}
+
+
+.btn-icon.facturar {
+    color: #2b7a86;
+}
+
+.btn-icon.facturar .material-symbols:hover {
+    color: #2b7a86;
 }
 
 /* Recibir: naranja, acción de flujo */
@@ -1351,6 +1383,7 @@ body {
 ========================================== */
 
 #btn-cancelar-recepcion,
+#btn-cancelar-factura,
 .btn-modal-secundario {
     background: transparent;
     border: 1px solid #ced4da;
@@ -1363,6 +1396,7 @@ body {
 }
 
 #btn-cancelar-recepcion:hover,
+#btn-cancelar-factura:hover,
 .btn-modal-secundario:hover {
     background: #f8f9fa;
     border-color: #adb5bd;
@@ -1370,6 +1404,7 @@ body {
 }
 
 #btn-confirmar-recepcion,
+#btn-confirmar-factura,
 .btn-modal-primario {
     background: var(--primary-color);
     border: none;
@@ -1382,11 +1417,13 @@ body {
 }
 
 #btn-confirmar-recepcion:hover,
+#btn-confirmar-factura,
 .btn-modal-primario:hover {
     background: var(--primary-hover);
 }
 
 #btn-confirmar-recepcion:disabled,
+#btn-confirmar-factura:disabled,
 .btn-modal-primario:disabled {
     background: #a8d5bb;
     cursor: not-allowed;

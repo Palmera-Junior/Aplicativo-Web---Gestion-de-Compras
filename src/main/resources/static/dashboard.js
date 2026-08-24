@@ -1523,7 +1523,13 @@ document.addEventListener("DOMContentLoaded", () => {
         typeLabel: 'La evidencia',
         onFileReady: (dataUrl, fileName) => {
             fotoRecepcionBase64 = dataUrl;
-            document.getElementById('btn-eliminar-foto').style.display = 'inline-flex';
+            const btnEliminar = document.getElementById('btn-eliminar-foto');
+            if (btnEliminar) btnEliminar.style.display = 'inline-flex';
+            const infoElement = document.getElementById('recepcion-file-info');
+            if (infoElement) {
+                infoElement.textContent = fileName || 'Archivo adjunto';
+                infoElement.style.display = 'flex';
+            }
         },
         clearOnRemove: () => {
             fotoRecepcionBase64 = null;

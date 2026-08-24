@@ -782,16 +782,23 @@ public class PdfService implements IPdfService {
         readerBottom.close();
 
         // =====================================================
-        // FOTO RECEPCIÓN
+        // EVIDENCIAS ADJUNTAS
         // =====================================================
 
-        if (orden.getFotoRecepcion() != null
-                && !orden.getFotoRecepcion().isBlank()) {
-
-            adjuntarPaginaFotoRecepcion(
+        if (orden.getFotoFactura() != null && !orden.getFotoFactura().isBlank()) {
+            adjuntarPaginaEvidencia(
                     finalDocument,
                     finalWriter,
-                    orden);
+                    orden.getFotoFactura(),
+                    "EVIDENCIA DE FACTURA PROVEEDOR");
+        }
+
+        if (orden.getFotoRecepcion() != null && !orden.getFotoRecepcion().isBlank()) {
+            adjuntarPaginaEvidencia(
+                    finalDocument,
+                    finalWriter,
+                    orden.getFotoRecepcion(),
+                    "EVIDENCIA DE RECEPCIÓN");
         }
 
         finalDocument.close();
@@ -799,15 +806,18 @@ public class PdfService implements IPdfService {
         return baosFinal.toByteArray();
     }
 
-    private void adjuntarPaginaFotoRecepcion(Document document, PdfWriter writer, OrdenCompra orden) {
+    private void adjuntarPaginaEvidencia(Document document, PdfWriter writer, String rawFoto, String titulo) {
         try {
-            String rawFoto = orden.getFotoRecepcion();
-            if (rawFoto.contains(",")) {
-                rawFoto = rawFoto.substring(rawFoto.indexOf(",") + 1);
+            if (rawFoto == null || rawFoto.isBlank()) {
+                return;
             }
-            byte[] fotoBytes = java.util.Base64.getDecoder().decode(rawFoto.trim());
 
-            // Detectar si el contenido adjunto es un PDF (cabecera %PDF)
+            String fotoBase64 = rawFoto;
+            if (fotoBase64.contains(",")) {
+                fotoBase64 = fotoBase64.substring(fotoBase64.indexOf(",") + 1);
+            }
+            byte[] fotoBytes = java.util.Base64.getDecoder().decode(fotoBase64.trim());
+
             boolean esPdf = fotoBytes.length > 4
                     && fotoBytes[0] == 0x25
                     && fotoBytes[1] == 0x50
@@ -815,27 +825,23 @@ public class PdfService implements IPdfService {
                     && fotoBytes[3] == 0x46;
 
             if (esPdf) {
-                // Importar cada página del PDF adjunto como páginas nuevas en el documento final
                 PdfReader reader = new PdfReader(fotoBytes);
                 PdfContentByte cb = writer.getDirectContent();
                 int paginas = reader.getNumberOfPages();
                 for (int i = 1; i <= paginas; i++) {
                     document.newPage();
-                    // Título / cabecera de la sección (solo se muestra al inicio de la primera página)
                     if (i == 1) {
-                        document.add(crearSeccion("EVIDENCIA DE FACTURA PROVEEDOR", fontSub));
+                        document.add(crearSeccion(titulo, fontSub));
                         agregarSeparador(document);
                     }
 
                     PdfImportedPage page = writer.getImportedPage(reader, i);
-
                     com.lowagie.text.Rectangle pageSize = reader.getPageSizeWithRotation(i);
                     float rw = pageSize.getWidth();
                     float rh = pageSize.getHeight();
 
                     float availableW = document.getPageSize().getWidth() - document.leftMargin() - document.rightMargin();
                     float availableH = document.getPageSize().getHeight() - document.topMargin() - document.bottomMargin();
-
                     float scale = Math.min(availableW / rw, availableH / rh);
 
                     float offsetX = (document.getPageSize().getWidth() - (rw * scale)) / 2f;
@@ -844,11 +850,9 @@ public class PdfService implements IPdfService {
                     cb.addTemplate(page, scale, 0, 0, scale, offsetX, offsetY);
                 }
                 reader.close();
-
             } else {
-                // Es una imagen (png/jpg/jpeg/...)
                 document.newPage();
-                document.add(crearSeccion("EVIDENCIA DE FACTURA PROVEEDOR", fontSub));
+                document.add(crearSeccion(titulo, fontSub));
                 agregarSeparador(document);
 
                 Image foto = Image.getInstance(fotoBytes);
@@ -869,7 +873,7 @@ public class PdfService implements IPdfService {
             }
 
         } catch (Exception e) {
-            System.err.println("Error al adjuntar evidencia de recepción en el PDF: " + e.getMessage());
+            System.err.println("Error al adjuntar evidencia del PDF: " + e.getMessage());
         }
     }
 
@@ -1161,8 +1165,12 @@ public class PdfService implements IPdfService {
         document.add(envioTable);
         document.add(new Paragraph(" "));
 
+        if (orden.getFotoFactura() != null && !orden.getFotoFactura().isBlank()) {
+            adjuntarPaginaEvidencia(document, writer, orden.getFotoFactura(), "EVIDENCIA DE FACTURA PROVEEDOR");
+        }
+
         if (orden.getFotoRecepcion() != null && !orden.getFotoRecepcion().isBlank()) {
-            adjuntarPaginaFotoRecepcion(document, writer, orden);
+            adjuntarPaginaEvidencia(document, writer, orden.getFotoRecepcion(), "EVIDENCIA DE RECEPCIÓN");
         }
 
         document.close();

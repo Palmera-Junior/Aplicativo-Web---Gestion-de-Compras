@@ -79,6 +79,7 @@
                       ordenesAprobadas=${ordenesCompra.?[estado.name() == 'APROBADA'].size()},
                       ordenesFacturadas=${ordenesCompra.?[estado.name() == 'FACTURADA'].size()},
                       ordenesRecibidas=${ordenesCompra.?[estado.name() == 'RECIBIDA'].size()},
+                      ordenesCompletadas=${ordenesCompra.?[estado.name() == 'COMPLETADA'].size()},
                       ordenesAnuladas=${ordenesCompra.?[estado.name() == 'ANULADA'].size()}">
 
             <a th:href="@{/dashboard}" class="order-status-card js-page-transition">
@@ -137,6 +138,16 @@
                         <div class="order-stat-text">
                             <span class="order-stat-value" th:text="${ordenesRecibidas}">0</span>
                             <span class="order-stat-label">recibidas</span>
+                        </div>
+                    </div>
+
+                    <div class="order-stat accent-purple">
+                        <span class="order-stat-icon-wrap">
+                            <span class="material-symbols order-stat-icon">task_alt</span>
+                        </span>
+                        <div class="order-stat-text">
+                            <span class="order-stat-value" th:text="${ordenesCompletadas}">0</span>
+                            <span class="order-stat-label">completadas</span>
                         </div>
                     </div>
 
