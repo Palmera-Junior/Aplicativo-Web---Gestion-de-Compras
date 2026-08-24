@@ -97,6 +97,12 @@ public class OrdenCompra {
     @Column(name = "foto_recepcion", columnDefinition = "TEXT")
     private String fotoRecepcion;
 
+    @Column(name = "se_recibio", nullable = false)
+    private Boolean seRecibio = false;
+
+    @Column(name = "se_facturo", nullable = false)
+    private Boolean seFacturo = false;
+
     @OneToMany(mappedBy = "ordenCompra", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     private List<DetalleCompra> detalles = new ArrayList<>();
@@ -110,6 +116,36 @@ public class OrdenCompra {
         detalles.remove(detalle);
         detalle.setOrdenCompra(null);
 
+    }
+
+    public void marcarRecibida(String recibidoPor, LocalDate fechaRecepcion, String observacion) {
+        this.recibidoPor = recibidoPor;
+        this.fechaRecepcion = fechaRecepcion;
+        this.observacionRecepcion = observacion;
+        this.seRecibio = true;
+        this.estado = EstadoOrdenCompra.RECIBIDA;
+        verificarCompletada();
+    }
+
+    public void marcarFacturada(String numeroFactura) {
+        this.numeroFactura = numeroFactura;
+        this.seFacturo = true;
+        this.estado = EstadoOrdenCompra.FACTURADA;
+        verificarCompletada();
+    }
+
+    private void verificarCompletada() {
+        if (Boolean.TRUE.equals(this.seRecibio) && Boolean.TRUE.equals(this.seFacturo)) {
+            this.estado = EstadoOrdenCompra.COMPLETADA;
+        }
+    }
+
+    public void anular() {
+        if (this.estado == EstadoOrdenCompra.BORRADOR || this.estado == EstadoOrdenCompra.APROBADA) {
+            this.estado = EstadoOrdenCompra.ANULADA;
+        } else {
+            throw new IllegalStateException("No es posible anular una orden en estado: " + this.estado);
+        }
     }
 
     @Override

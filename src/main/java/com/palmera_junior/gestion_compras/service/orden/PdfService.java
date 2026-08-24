@@ -877,7 +877,7 @@ public class PdfService implements IPdfService {
     public byte[] generarPdfOrdenCompraLegacy(OrdenCompra orden) throws Exception {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         Document document = new Document(PageSize.LETTER, 26, 26, 26, 26);
-        PdfWriter.getInstance(document, baos);
+        PdfWriter writer = PdfWriter.getInstance(document, baos);
 
         document.open();
 
@@ -1162,7 +1162,7 @@ public class PdfService implements IPdfService {
         document.add(new Paragraph(" "));
 
         if (orden.getFotoRecepcion() != null && !orden.getFotoRecepcion().isBlank()) {
-            adjuntarPaginaFotoRecepcion(document, orden);
+            adjuntarPaginaFotoRecepcion(document, writer, orden);
         }
 
         document.close();

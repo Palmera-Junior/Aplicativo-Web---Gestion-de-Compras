@@ -4,6 +4,9 @@ public enum EstadoOrdenCompra {
 
     BORRADOR,
     APROBADA,
-    RECIBIDA
+    RECIBIDA,
+    FACTURADA,
+    COMPLETADA,
+    ANULADA
 
 }
