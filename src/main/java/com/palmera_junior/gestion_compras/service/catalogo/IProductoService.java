@@ -19,6 +19,19 @@ public interface IProductoService {
     boolean eliminarProducto(Integer id);
     List<PresentacionProducto> obtenerPresentacionesProducto(Integer id);
 
-    // Advanced search with pageable filters (Specification-based)
-    org.springframework.data.domain.Page<com.palmera_junior.gestion_compras.entity.Producto> buscarConFiltros(String termino, String categoria, Boolean deleted, int page, int size);
+    /**
+     * Qué hace:
+     * Realiza una búsqueda paginada aplicando filtros opcionales de término, categoría y estado.
+     * 
+     * A dónde apunta:
+     * - Consulta tabla: producto
+     * 
+     * @param termino Texto de búsqueda.
+     * @param categoria Categoría a filtrar.
+     * @param deleted Filtro de borrado lógico.
+     * @param page Índice de página.
+     * @param size Tamaño de página.
+     * @return Página de productos filtrados.
+     */
+    Page<Producto> buscarConFiltros(String termino, String categoria, Boolean deleted, int page, int size);
 }

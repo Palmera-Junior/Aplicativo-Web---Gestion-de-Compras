@@ -22,6 +22,11 @@ import com.palmera_junior.gestion_compras.service.orden.IOrdenCompraService;
 import com.palmera_junior.gestion_compras.service.organizacion.ICentroCostoService;
 import com.palmera_junior.gestion_compras.service.usuario.IUsuarioService;
 
+/**
+ * Implementación del servicio de agregación del Dashboard.
+ * Coordina la recopilación de datos de múltiples módulos (órdenes, productos, proveedores, sedes, correos)
+ * respetando el alcance de seguridad por sede.
+ */
 @Service
 public class DashboardService implements IDashboardService {
 
@@ -32,6 +37,9 @@ public class DashboardService implements IDashboardService {
     private final IUsuarioService usuarioService;
     private final CorreoOrdenOutboxService correoOrdenOutboxService;
 
+    /**
+     * Constructor con inyección de servicios requeridos por el dashboard.
+     */
     public DashboardService(IOrdenCompraService ordenCompraService, IProveedorService proveedorService,
             IProductoService productoService, ICentroCostoService centroCostoService, IUsuarioService usuarioService,
             CorreoOrdenOutboxService correoOrdenOutboxService) {
@@ -43,8 +51,18 @@ public class DashboardService implements IDashboardService {
         this.correoOrdenOutboxService = correoOrdenOutboxService;
     }
 
+    /**
+     * Qué hace:
+     * Carga todos los catálogos y órdenes de compra correspondientes a la sede del usuario (o visión global si es Sede Nacional),
+     * aplica filtros por rango de fechas (default: mes actual), texto y estado, y asocia el estado del correo outbox.
+     * 
+     * A dónde apunta:
+     * - Servicios: {@link IOrdenCompraService#ordenesDeCompraPaginadas}, {@link CorreoOrdenOutboxService#obtenerEstadosPorOrdenes}, {@link ICentroCostoService}, {@link IProveedorService}, {@link IProductoService}
+     * - Retorno: Plantilla "dashboard".
+     */
+    @Override
     public String prepararModeloDashboard(int page, int size, String q, String fechaDesde, String fechaHasta,
-            String estado, Model model, Authentication authentication) {
+            String estado, boolean soloModificadas, Model model, Authentication authentication) {
         Usuario usuario = usuarioService.obtenerUsuarioAutenticado(authentication);
 
         Integer idSede = usuario.getSede() != null ? usuario.getSede().getIdSede() : null;
@@ -63,7 +81,8 @@ public class DashboardService implements IDashboardService {
         }
 
         Page<OrdenCompra> ordenesCompra = ordenCompraService.ordenesDeCompraPaginadas(
-                PageRequest.of(page, size), q, fechaDesdeAplicada, fechaHastaAplicada, idSede, esNacional, estado);
+                PageRequest.of(page, size), q, fechaDesdeAplicada, fechaHastaAplicada, idSede, esNacional, estado,
+                soloModificadas);
 
         List<Integer> idsOrdenes = ordenesCompra.getContent().stream()
                 .map(OrdenCompra::getIdOrden)
@@ -89,6 +108,8 @@ public class DashboardService implements IDashboardService {
         model.addAttribute("q", q);
         model.addAttribute("fechaDesde", fechaDesdeAplicada);
         model.addAttribute("fechaHasta", fechaHastaAplicada);
+        model.addAttribute("soloModificadas", soloModificadas);
         return "dashboard";
     }
 }
+

@@ -8,19 +8,27 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import com.palmera_junior.gestion_compras.entity.Usuario;
 
+/**
+ * Adaptador {@link UserDetails} para integrar la entidad {@link Usuario} local en el ecosistema de Spring Security.
+ */
 public class UsuarioPrincipal implements UserDetails {
     private final Usuario usuario;
     private final Integer sedeId;
     
+    /**
+     * Constructor que envuelve la entidad de usuario y extrae el ID de sede.
+     */
     public UsuarioPrincipal(Usuario usuario) {
         this.usuario = usuario;
         this.sedeId = usuario.getSede() != null ? usuario.getSede().getIdSede() : null;
     }
 
+    /**
+     * Retorna el rol del usuario con prefijo "ROLE_".
+     */
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_" + usuario.getRol().name()));
-
     }
 
     @Override
@@ -52,6 +60,5 @@ public class UsuarioPrincipal implements UserDetails {
 
     @Override
     public boolean isEnabled() { return true; }
-
-    
 }
+

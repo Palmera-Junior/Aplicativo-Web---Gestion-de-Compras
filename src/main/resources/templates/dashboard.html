@@ -40,7 +40,8 @@
 
     <nav sec:authorize="hasRole('ADMINISTRADOR')" class="breadcrumb-admin" aria-label="breadcrumb">
         <a th:href="@{/admin}" title="Volver a panel administrador">
-            <span class="material-symbols">admin_panel_settings</span> Panel de administración <span class ="material-symbols">chevron_right</span>
+            <span class="material-symbols">admin_panel_settings</span> Panel de administración <span
+                class="material-symbols">chevron_right</span>
         </a>
     </nav>
 
@@ -71,8 +72,16 @@
                     th:selected="${estado.name() == estadoSeleccionado}">
                 </option>
             </select>
-
-
+            <label title="Ver solo ordenes Incompletas" for="filtrar-modificadas" class="filter-switch-label">
+                <span class="switch-check">
+                    <input type="checkbox" id="filtrar-modificadas" name="soloModificadas"
+                        th:checked="${soloModificadas}">
+                    <span class="slider"></span>
+                </span>
+                <span class="filter-label-with-warning">
+                    <span class="material-symbols warning-inline">warning</span>
+                </span>
+            </label>
             <label class="sr-only" for="fechaDesde">Desde</label>
             <input type="date" id="fechaDesde" name="fechaDesde" class="input-control fecha-input"
                 th:value="${fechaDesde}">
@@ -115,12 +124,22 @@
                                 class="badge-estado borrador">BORRADOR</span>
                             <span th:if="${orden.estado.name() == 'APROBADA'}"
                                 class="badge-estado aprobada">APROBADA</span>
-                            <span th:if="${orden.estado.name() == 'RECIBIDA'}"
-                                class="badge-estado recibida">RECIBIDA</span>
+
+                            <span th:if="${orden.estado.name() == 'RECIBIDA'}" class="badge-estado recibida">RECIBIDA
+                                <button title="Cambios en recepción" type="button" class="reception-alert btn-icon"
+                                    th:data-id="${orden.idOrden}">
+                                    <span class="material-symbols">warning</span>
+                                </button>
+                            </span>
                             <span th:if="${orden.estado.name() == 'FACTURADA'}"
                                 class="badge-estado facturada">FACTURADA</span>
                             <span th:if="${orden.estado.name() == 'COMPLETADA'}"
-                                class="badge-estado completada">COMPLETADA</span>
+                                class="badge-estado completada">COMPLETADA
+                                <button title="Cambios en recepción" type="button" class="reception-alert btn-icon"
+                                    th:data-id="${orden.idOrden}">
+                                    <span class="material-symbols">warning</span>
+                                </button>
+                            </span>
                             <span th:if="${orden.estado.name() == 'ANULADA'}"
                                 class="badge-estado anulada">ANULADA</span>
                         </td>
@@ -158,24 +177,27 @@
                                 th:if="${orden.estado.name() != 'BORRADOR' and orden.estado.name() != 'ANULADA'}">
                                 <span class="material-symbols">download</span>
                             </button>
-                            <button title="Recibir Orden de Compra" th:if="${orden.estado.name() == 'APROBADA' or orden.estado.name() == 'FACTURADA'}"
+                            <button title="Recibir Orden de Compra"
+                                th:if="${orden.estado.name() == 'APROBADA' or orden.estado.name() == 'FACTURADA'}"
                                 class="btn-icon receive" th:data-id="${orden.idOrden}"
                                 th:data-numero-orden="${orden.numeroOrden}"
                                 th:data-proveedor="${orden.proveedor != null ? orden.proveedor.nombre : ''}"
-                                th:data-paga-flete="${orden.pagaFlete}" th:data-valor-flete="${orden.valorFlete}">
+                                th:data-paga-flete="${orden.pagaFlete}" th:data-valor-flete="${orden.valorFlete}"
+                                th:data-estado="${orden.estado.name()}">
                                 <span class="material-symbols">package_2</span>
                             </button>
 
                             <!-- Botón para facturar: abre modal de facturación separado -->
-                            <button title="Facturar Orden de Compra" th:if="${orden.estado.name() == 'APROBADA' or orden.estado.name() == 'RECIBIDA'}"
+                            <button title="Facturar Orden de Compra"
+                                th:if="${orden.estado.name() == 'APROBADA' or orden.estado.name() == 'RECIBIDA'}"
                                 class="btn-icon facturar" th:data-id="${orden.idOrden}"
                                 th:data-numero-orden="${orden.numeroOrden}"
                                 th:data-proveedor="${orden.proveedor != null ? orden.proveedor.nombre : ''}">
                                 <span class="material-symbols">receipt_long</span>
                             </button>
                             <button title="Anular Orden de Compra"
-                             sec:authorize="hasRole('APROBADOR') or hasRole('ADMINISTRADOR')"
-                             th:if="${orden.estado.name() == 'BORRADOR' or orden.estado.name() == 'APROBADA'}"
+                                sec:authorize="hasRole('APROBADOR') or hasRole('ADMINISTRADOR')"
+                                th:if="${orden.estado.name() == 'BORRADOR' or orden.estado.name() == 'APROBADA'}"
                                 class="btn-icon delete-orden" th:data-id="${orden.idOrden}"
                                 th:data-numero-orden="${orden.numeroOrden}">
                                 <span class="material-symbols">delete</span>
@@ -185,6 +207,38 @@
                     </tr>
                 </tbody>
             </table>
+
+            <!-- MODAL PARA MOSTRAR CAMBIOS EN RECEPCIÓN (abre desde el icono de alerta) -->
+            <div id="modal-cambios-recepcion" class="modal-recibir-oc-overlay" style="display:none;">
+                <div class="modal-recibir-oc-content">
+                    <div class="modal-recibir-oc-header">
+                        <h2>Cambios en Recepción</h2>
+                    </div>
+                    <div class="modal-recibir-oc-body">
+                        <div class="recepcion-resumen">
+                            <div><strong>Orden:</strong> <span id="cambios-recepcion-numero-orden"></span></div>
+                            <div><strong>Proveedor:</strong> <span id="cambios-recepcion-proveedor"></span></div>
+                        </div>
+                        <div class="recepcion-productos-wrapper">
+                            <table class="recepcion-productos-table" id="cambios-recepcion-table">
+                                <thead>
+                                    <tr>
+                                        <th>Producto</th>
+                                        <th>Cantidad solicitada</th>
+                                        <th>Cantidad recibida</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cambios-recepcion-body">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="modal-recibir-oc-actions"
+                        style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
+                        <button id="btn-cerrar-cambios" class="btn-secondary">Cerrar</button>
+                    </div>
+                </div>
+            </div>
 
             <!-- MODAL RECEPCIÓN ORDEN -->
             <div id="modal-recibir-oc" class="modal-recibir-oc-overlay">
@@ -211,10 +265,26 @@
                                 placeholder="Observaciones sobre la recepción del pedido"></textarea>
                         </div>
                         <div class="recepcion-form-group">
+                            <label>Productos a recibir</label>
+                            <div class="recepcion-productos-wrapper">
+                                <table class="recepcion-productos-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Producto</th>
+                                            <th>Cant. Solicitada</th>
+                                            <th>Recibido</th>
+                                            <th>Llegó</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="recepcion-productos-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="recepcion-form-group">
                             <label>Evidencia de Recepción</label>
                             <div class="recepcion-foto-wrapper">
-                                <input type="file" id="recepcion-foto-input" accept="image/*,application/pdf" capture="environment"
-                                    style="display: none;">
+                                <input type="file" id="recepcion-foto-input" accept="image/*,application/pdf"
+                                    capture="environment" style="display: none;">
                                 <div class="recepcion-foto-acciones">
                                     <button type="button" id="btn-tomar-foto-recepcion" class="btn-foto-accion">
                                         <span class="material-symbols">photo_camera</span> Tomar Foto
@@ -264,7 +334,8 @@
                         <div class="recepcion-form-group">
                             <label>Foto de Factura Proveedor*</label>
                             <div class="recepcion-foto-wrapper">
-                                <input type="file" id="factura-foto-input" accept="image/*,application/pdf" capture="environment" style="display: none;">
+                                <input type="file" id="factura-foto-input" accept="image/*,application/pdf"
+                                    capture="environment" style="display: none;">
                                 <div class="recepcion-foto-acciones">
                                     <button type="button" id="btn-tomar-foto-factura" class="btn-foto-accion">
                                         <span class="material-symbols">photo_camera</span> Tomar Foto
@@ -272,12 +343,15 @@
                                     <button type="button" id="btn-adjuntar-factura" class="btn-foto-accion">
                                         <span class="material-symbols">attach_file</span> Adjuntar Archivo
                                     </button>
-                                    <button type="button" id="btn-eliminar-factura" class="btn-foto-eliminar" style="display: none;" title="Quitar archivo">
+                                    <button type="button" id="btn-eliminar-factura" class="btn-foto-eliminar"
+                                        style="display: none;" title="Quitar archivo">
                                         <span class="material-symbols">delete</span> Quitar Archivo
                                     </button>
                                 </div>
-                                <div id="factura-preview-container" class="recepcion-foto-preview-container" style="display: none;">
-                                    <img id="factura-preview-image" src="" alt="Vista previa de la factura" class="recepcion-foto-preview">
+                                <div id="factura-preview-container" class="recepcion-foto-preview-container"
+                                    style="display: none;">
+                                    <img id="factura-preview-image" src="" alt="Vista previa de la factura"
+                                        class="recepcion-foto-preview">
                                 </div>
                                 <div id="factura-file-info" class="file-info" style="display: none;"></div>
                             </div>
@@ -328,13 +402,13 @@
                 </div>
                 <div class="controles">
                     <a title="Página anterior" aria-label="Página anterior"
-                        th:href="@{/dashboard(page=${paginaActual - 1}, q=${q}, fechaDesde=${fechaDesde}, fechaHasta=${fechaHasta})}"
+                        th:href="@{/dashboard(page=${paginaActual - 1}, q=${q}, fechaDesde=${fechaDesde}, fechaHasta=${fechaHasta}, estado=${estadoSeleccionado}, soloModificadas=${soloModificadas})}"
                         th:class="${paginaActual == 0} ? 'btn-pagina disabled' : 'btn-pagina'">
                         <span class="material-symbols">chevron_left</span>
                     </a>
                     <span class="pagina-actual" th:text="${paginaActual + 1}">1</span>
                     <a title="Siguiente página" aria-label="Siguiente página"
-                        th:href="@{/dashboard(page=${paginaActual + 1}, q=${q}, fechaDesde=${fechaDesde}, fechaHasta=${fechaHasta})}"
+                        th:href="@{/dashboard(page=${paginaActual + 1}, q=${q}, fechaDesde=${fechaDesde}, fechaHasta=${fechaHasta}, estado=${estadoSeleccionado}, soloModificadas=${soloModificadas})}"
                         th:class="${paginaActual >= ordenesCompra.totalPages - 1} ? 'btn-pagina disabled' : 'btn-pagina'">
                         <span class="material-symbols">chevron_right</span>
                     </a>
@@ -482,7 +556,10 @@
                             <div class="total-row"><span>IVA:</span> <strong id="iva-general">$ 0.00</strong></div>
                             <div class="total-row">
                                 <label class="total-check">
-                                    <input type="checkbox" id="activar-descuento">
+                                    <span class="switch-check">
+                                        <input type="checkbox" id="activar-descuento">
+                                        <span class="slider"></span>
+                                    </span>
                                     <span class="check-text">Descuento:</span>
                                 </label>
                                 <span id="contenedor-descuento">
@@ -493,7 +570,10 @@
                             </div>
                             <div class="total-row">
                                 <label class="total-check">
-                                    <input type="checkbox" id="activar-flete">
+                                    <span class="switch-check">
+                                        <input type="checkbox" id="activar-flete">
+                                        <span class="slider"></span>
+                                    </span>
                                     <span class="check-text">Flete:</span>
                                 </label>
                                 <span id="contenedor-flete">

@@ -113,7 +113,7 @@
 
                     <div class="order-stat accent-green">
                         <span class="order-stat-icon-wrap">
-                            <span class="material-symbols order-stat-icon">check_circle</span>
+                            <span class="material-symbols order-stat-icon">how_to_reg</span>
                         </span>
                         <div class="order-stat-text">
                             <span class="order-stat-value" th:text="${ordenesAprobadas}">0</span>
@@ -138,6 +138,16 @@
                         <div class="order-stat-text">
                             <span class="order-stat-value" th:text="${ordenesRecibidas}">0</span>
                             <span class="order-stat-label">recibidas</span>
+                        </div>
+                    </div>
+
+                    <div class="order-stat accent-alert">
+                        <span class="order-stat-icon-wrap">
+                            <span class="material-symbols order-stat-icon">warning</span>
+                        </span>
+                        <div class="order-stat-text">
+                            <span class="order-stat-value" th:text="${ordenesIncompletas}">0</span>
+                            <span class="order-stat-label">incompletas</span>
                         </div>
                     </div>
 
@@ -998,6 +1008,8 @@
     <script th:src="@{/security.js(v=1)}"></script>
     <script th:src="@{/admin.js}"></script>
     <script>
+        // Transición visual entre páginas: activa el overlay de carga al hacer clic en enlaces con la clase .js-page-transition
+        // A dónde apunta: Elemento DOM #page-transition-overlay
         document.querySelectorAll('.js-page-transition').forEach(function (link) {
             link.addEventListener('click', function () {
                 var overlay = document.getElementById('page-transition-overlay');
@@ -1005,6 +1017,7 @@
             });
         });
     </script>
+
 </body>
 
 </html>

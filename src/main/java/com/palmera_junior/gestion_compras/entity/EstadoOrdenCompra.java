@@ -7,6 +7,10 @@ public enum EstadoOrdenCompra {
     RECIBIDA,
     FACTURADA,
     COMPLETADA,
-    ANULADA
+    ANULADA;
+
+    public boolean equalsIgnoreCase(String other) {
+        return this.name().equalsIgnoreCase(other);
+    }
 
 }

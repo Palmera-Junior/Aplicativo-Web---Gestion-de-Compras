@@ -23,6 +23,12 @@ public class DetalleCompra {
     @Column(nullable = false)
     private Integer cantidad;
 
+    @Column(name = "cantidad_recibida")
+    private Integer cantidadRecibida = 0;
+
+    @Column(name = "recibido")
+    private Boolean recibido = false;
+
     @Column(name = "codigo_inventario", nullable = false, length = 50)
     private String codigoInventario;
 

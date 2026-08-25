@@ -21,6 +21,11 @@ import com.palmera_junior.gestion_compras.repository.UsuarioRepository;
 import com.palmera_junior.gestion_compras.security.CustomOAuth2User;
 import com.palmera_junior.gestion_compras.security.UsuarioPrincipal;
 
+/**
+ * Implementación del servicio de gestión de usuarios y autenticación.
+ * Gestiona el ciclo de vida de usuarios, validaciones de seguridad, cifrado de claves con BCrypt
+ * y mapeo de identidades OAuth2 / formularios nativos.
+ */
 @Service
 public class UsuarioService implements IUsuarioService {
 
@@ -28,6 +33,9 @@ public class UsuarioService implements IUsuarioService {
    private final SedeRepository sedeRepository;
    private final PasswordEncoder passwordEncoder;
 
+   /**
+    * Constructor con inyección de repositorios y codificador de contraseñas.
+    */
    public UsuarioService(UsuarioRepository usuarioRepository, SedeRepository sedeRepository,
            PasswordEncoder passwordEncoder) {
        this.usuarioRepository = usuarioRepository;
@@ -35,33 +43,68 @@ public class UsuarioService implements IUsuarioService {
        this.passwordEncoder = passwordEncoder;
    }
 
+   /**
+    * Qué hace: Retorna la lista total de usuarios en base de datos.
+    * A dónde apunta: {@link UsuarioRepository#findAll()} -> tabla usuario
+    */
+   @Override
    public List<Usuario> listarTodos() {
        return usuarioRepository.findAll();
    }
 
+   /**
+    * Qué hace: Retorna una página de usuarios.
+    * A dónde apunta: {@link UsuarioRepository#findAll(org.springframework.data.domain.Pageable)} -> tabla usuario
+    */
+   @Override
    public Page<Usuario> paginar(int page, int size) {
        return usuarioRepository.findAll(PageRequest.of(page, size));
    }
 
+   /**
+    * Qué hace: Busca un usuario por correo electrónico cargando con JOIN FETCH su sede.
+    * A dónde apunta: {@link UsuarioRepository#findByEmailConSede(String)} -> tabla usuario
+    */
+   @Override
    public Optional<Usuario> buscarPorEmail(String email) {
        return usuarioRepository.findByEmailConSede(email);
    }
 
+   /**
+    * Qué hace: Asigna el proveedor OAuth2 (Google) y el ID de proveedor a la cuenta.
+    * A dónde apunta: {@link UsuarioRepository#save(Object)} -> tabla usuario
+    */
+   @Override
    public Usuario vincularCuentaGoogle(Usuario usuario, String proveedorId) {
        usuario.setProveedor("google");
        usuario.setProveedorId(proveedorId);
        return usuarioRepository.save(usuario);
    }
 
+   /**
+    * Qué hace: Persiste una entidad Usuario.
+    * A dónde apunta: {@link UsuarioRepository#save(Object)} -> tabla usuario
+    */
+   @Override
    public Usuario guardar(Usuario usuario) {
        return usuarioRepository.save(usuario);
    }
 
+   /**
+    * Qué hace: Obtiene el usuario autenticado desde el contexto de Spring Security.
+    * A dónde apunta: {@link SecurityContextHolder#getContext()}
+    */
+   @Override
    public Usuario obtenerUsuarioAutenticado() {
        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
        return obtenerUsuarioAutenticado(authentication);
    }
 
+   /**
+    * Qué hace: Resuelve la entidad {@link Usuario} subyacente según el tipo de principal de seguridad.
+    * A dónde apunta: Instancia de {@link UsuarioPrincipal} o {@link CustomOAuth2User}.
+    */
+   @Override
    public Usuario obtenerUsuarioAutenticado(Authentication authentication) {
        if (authentication == null || !authentication.isAuthenticated()) {
            throw new IllegalStateException("No hay un usuario autenticado.");
@@ -78,6 +121,11 @@ public class UsuarioService implements IUsuarioService {
        throw new IllegalStateException("Tipo de autenticación no soportado.");
    }
 
+   /**
+    * Qué hace: Genera un mapa de atributos del usuario actual (nombre, correo, rol) para respuestas JSON.
+    * A dónde apunta: Sesión activa del usuario.
+    */
+   @Override
    public Map<String, Object> obtenerDatosUsuarioActual(Authentication authentication) {
        if (authentication == null || !authentication.isAuthenticated()) {
            return Map.of("autenticado", false);
@@ -107,6 +155,11 @@ public class UsuarioService implements IUsuarioService {
                "rol", rol);
    }
 
+   /**
+    * Qué hace: Retorna la vista "login" o redirige al dashboard si la sesión ya está activa.
+    * A dónde apunta: Vistas Spring MVC.
+    */
+   @Override
    public String obtenerVistaLogin(Authentication authentication) {
        if (authentication != null && authentication.isAuthenticated()) {
            return "redirect:/dashboard";
@@ -114,6 +167,11 @@ public class UsuarioService implements IUsuarioService {
        return "login";
    }
 
+   /**
+    * Qué hace: Crea o actualiza un usuario con cifrado BCrypt y chequeos de unicidad para cédula, usuario y correo.
+    * A dónde apunta: {@link UsuarioRepository}, {@link SedeRepository}, {@link PasswordEncoder}.
+    */
+   @Override
    @Transactional
    public Usuario guardarUsuario(Integer idUsuario, String cedula, String nombre, String apellido, String cargo,
            String nombreUsuario, String contrasena, String email, Rol rol, Integer sedeId) {
@@ -184,6 +242,11 @@ public class UsuarioService implements IUsuarioService {
        return usuarioRepository.save(usuario);
    }
 
+   /**
+    * Qué hace: Elimina un usuario por su ID si no tiene registros dependientes en órdenes.
+    * A dónde apunta: {@link UsuarioRepository#deleteById(Object)} -> tabla usuario
+    */
+   @Override
    @Transactional
    public boolean eliminar(Integer id) {
        if (!usuarioRepository.existsById(id)) {
@@ -192,6 +255,7 @@ public class UsuarioService implements IUsuarioService {
        usuarioRepository.deleteById(id);
        return true;
    }
+
 
    private String normalizar(String value) {
        return value == null ? null : value.trim();

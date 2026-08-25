@@ -1,8 +1,27 @@
-﻿function reportClientError(mensaje, detalle) {
+/**
+ * =============================================================================
+ * MÓDULO DE ADMINISTRACIÓN (admin.js)
+ * =============================================================================
+ * Controla la lógica de interfaz de usuario para el panel de administración (/admin):
+ * - Gestión de pestañas/secciones dinámicas (Usuarios, Proveedores, Productos, Sedes, Centros de Costo).
+ * - Paginación asíncrona mediante AJAX (DOMParser) sin recargar página completa.
+ * - Búsqueda y filtrado reactivo con debounce.
+ * - Carga, edición y reseteo de formularios para cada entidad.
+ * - Eliminación segura vía peticiones POST protegidas con CSRF.
+ * =============================================================================
+ */
+
+/**
+ * reportClientError(mensaje, detalle)
+ * - Qué hace: Manejador seguro de errores de cliente; evita fugas de información sensible o lógica en consola.
+ * - A dónde apunta: Ninguno (control interno de errores).
+ */
+function reportClientError(mensaje, detalle) {
     // Se evita exponer información sensible o la lógica del negocio en la consola del navegador.
     void mensaje;
     void detalle;
 }
+
 
 // Maneja la visibilidad de secciones de administrador
 // showSection(id)

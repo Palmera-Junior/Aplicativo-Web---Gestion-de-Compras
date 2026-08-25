@@ -11,23 +11,45 @@ import org.springframework.util.StringUtils;
 import com.palmera_junior.gestion_compras.entity.Sede;
 import com.palmera_junior.gestion_compras.repository.SedeRepository;
 
+/**
+ * Implementación del servicio de gestión de Sedes geográficas.
+ * Controla la persistencia en {@link SedeRepository} y garantiza la unicidad de prefijos de ciudad.
+ */
 @Service
 public class SedeService implements ISedeService {
 
     private final SedeRepository sedeRepository;
 
+    /**
+     * Constructor para inyección del repositorio de sedes.
+     */
     public SedeService(SedeRepository sedeRepository) {
         this.sedeRepository = sedeRepository;
     }
 
+    /**
+     * Qué hace: Retorna la lista total de sedes registradas.
+     * A dónde apunta: {@link SedeRepository#findAll()} -> tabla sede
+     */
+    @Override
     public List<Sede> listarTodos() {
         return sedeRepository.findAll();
     }
 
+    /**
+     * Qué hace: Retorna una página de sedes.
+     * A dónde apunta: {@link SedeRepository#findAll(org.springframework.data.domain.Pageable)} -> tabla sede
+     */
+    @Override
     public Page<Sede> paginar(int page, int size) {
         return sedeRepository.findAll(PageRequest.of(page, size));
     }
 
+    /**
+     * Qué hace: Crea o actualiza una sede validando que el nombre y el prefijo de ciudad sean únicos.
+     * A dónde apunta: {@link SedeRepository#save(Object)} -> tabla sede
+     */
+    @Override
     @Transactional
     public Sede guardar(Integer idSede, String nombre, String prefijoCiudad, String direccion) {
         nombre = normalizar(nombre);
@@ -68,6 +90,11 @@ public class SedeService implements ISedeService {
         return sedeRepository.save(existing);
     }
 
+    /**
+     * Qué hace: Elimina una sede si existe por su ID.
+     * A dónde apunta: {@link SedeRepository#deleteById(Object)} -> tabla sede
+     */
+    @Override
     @Transactional
     public boolean eliminar(Integer id) {
         if (!sedeRepository.existsById(id)) {
@@ -76,6 +103,7 @@ public class SedeService implements ISedeService {
         sedeRepository.deleteById(id);
         return true;
     }
+
 
     private String normalizar(String value) {
         return value == null ? null : value.trim();

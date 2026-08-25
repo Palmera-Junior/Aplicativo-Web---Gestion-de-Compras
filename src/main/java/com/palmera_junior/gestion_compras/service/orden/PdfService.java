@@ -13,9 +13,15 @@ import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.util.function.Consumer;
 
+/**
+ * Servicio encargado de la generación del documento PDF oficial para las Órdenes de Compra.
+ * Utiliza OpenPDF con un algoritmo de medición y autoescalado a página única Carta (Letter),
+ * incorporando logos institucionales, datos de control de formato (CA-F-01), tablas de ítems, totales e impuestos.
+ */
 @Service
 
 public class PdfService implements IPdfService {
+
 
     // ==========================================
     // PALETA DE COLORES (misma línea visual que

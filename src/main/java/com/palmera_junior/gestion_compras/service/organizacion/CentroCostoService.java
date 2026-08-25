@@ -13,33 +13,65 @@ import com.palmera_junior.gestion_compras.entity.Sede;
 import com.palmera_junior.gestion_compras.repository.CentroCostoRepository;
 import com.palmera_junior.gestion_compras.repository.SedeRepository;
 
+/**
+ * Implementación del servicio de Centros de Costo.
+ * Administra la persistencia en {@link CentroCostoRepository} y la integridad referencial con {@link SedeRepository}.
+ */
 @Service
 public class CentroCostoService implements ICentroCostoService {
 
    private final CentroCostoRepository centroCostoRepository;
    private final SedeRepository sedeRepository;
 
+   /**
+    * Constructor con inyección de repositorios.
+    */
    public CentroCostoService(CentroCostoRepository centroCostoRepository, SedeRepository sedeRepository) {
        this.centroCostoRepository = centroCostoRepository;
        this.sedeRepository = sedeRepository;
    }
 
+   /**
+    * Qué hace: Retorna todos los centros de costo del sistema.
+    * A dónde apunta: {@link CentroCostoRepository#findAll()}
+    */
+   @Override
    public List<CentroCosto> getAllCentroCostos() {
        return centroCostoRepository.findAll();
    }
 
+   /**
+    * Qué hace: Retorna una página de centros de costo.
+    * A dónde apunta: {@link CentroCostoRepository#findAll(org.springframework.data.domain.Pageable)}
+    */
+   @Override
    public Page<CentroCosto> paginar(int page, int size) {
        return centroCostoRepository.findAll(PageRequest.of(page, size));
    }
 
+   /**
+    * Qué hace: Retorna los centros de costo asociados a una sede ordenados alfabéticamente.
+    * A dónde apunta: {@link CentroCostoRepository#findBySedeIdSedeOrderByNombreAsc(Integer)}
+    */
+   @Override
    public List<CentroCosto> listarPorSede(Integer idSede) {
        return centroCostoRepository.findBySedeIdSedeOrderByNombreAsc(idSede);
    }
 
+   /**
+    * Qué hace: Busca un centro de costo por su ID.
+    * A dónde apunta: {@link CentroCostoRepository#findById(Object)}
+    */
+   @Override
    public CentroCosto buscarPorId(Integer id) {
        return centroCostoRepository.findById(id).orElse(null);
    }
 
+   /**
+    * Qué hace: Crea o actualiza un centro de costo asegurando unicidad de nombre en la sede y código global.
+    * A dónde apunta: {@link CentroCostoRepository#save(Object)}
+    */
+   @Override
    @Transactional
    public CentroCosto guardar(Integer idCentroCosto, String nombre, Integer sedeId, String codigo, String direccion) {
        nombre = normalizar(nombre);
@@ -84,6 +116,11 @@ public class CentroCostoService implements ICentroCostoService {
        return centroCostoRepository.save(existing);
    }
 
+   /**
+    * Qué hace: Elimina un centro de costo por ID si existe.
+    * A dónde apunta: {@link CentroCostoRepository#deleteById(Object)}
+    */
+   @Override
    @Transactional
    public boolean eliminar(Integer id) {
        if (!centroCostoRepository.existsById(id)) {
@@ -92,6 +129,7 @@ public class CentroCostoService implements ICentroCostoService {
        centroCostoRepository.deleteById(id);
        return true;
    }
+
 
    private String normalizar(String value) {
        return value == null ? null : value.trim();

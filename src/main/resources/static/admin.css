@@ -169,7 +169,7 @@ html {
 .order-status-stats {
     display: flex;
     align-items: center;
-    gap: 26px;
+    gap: 5px;
 }
 
 .order-stat {
@@ -217,7 +217,7 @@ html {
 }
 
 .order-stat.accent-green .order-stat-icon {
-    color: #2c29ec;
+    color: #110eb4;
 }
 
 .order-stat.accent-amber .order-stat-icon {
@@ -225,15 +225,19 @@ html {
 }
 
 .order-stat.accent-teal .order-stat-icon {
-    color: #e66c08;
+    color: #6b4fa0;
 }
 
 .order-stat.accent-purple .order-stat-icon {
-    color: #29b320;
+    color: #115a1c;
 }
 
 .order-stat.accent-red .order-stat-icon {
     color: #d33122;
+}
+
+.accent-alert .order-stat-icon {
+    color: #b8791f;
 }
 
 .order-stat-text {

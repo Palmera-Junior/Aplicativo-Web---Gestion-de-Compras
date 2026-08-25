@@ -7,9 +7,19 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
+/**
+ * Configuración del pool de hilos asíncronos para el envío no bloqueante de correos electrónicos.
+ */
 @Configuration
 public class EmailAsyncConfig {
 
+    /**
+     * Qué hace:
+     * Configura e inicializa el ejecutor de tareas `emailExecutor` con un tamaño base de 4 hilos,
+     * máximo 8 hilos y cola de hasta 50 tareas para procesar la mensajería en segundo plano.
+     * 
+     * @return {@link Executor} configurado para `@Async("emailExecutor")`.
+     */
     @Bean("emailExecutor")
     public Executor emailExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
@@ -24,3 +34,4 @@ public class EmailAsyncConfig {
         return executor;
     }
 }
+

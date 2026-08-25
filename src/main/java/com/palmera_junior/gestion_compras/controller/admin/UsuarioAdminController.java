@@ -20,17 +20,38 @@ import com.palmera_junior.gestion_compras.entity.Rol;
 import com.palmera_junior.gestion_compras.entity.Usuario;
 import com.palmera_junior.gestion_compras.service.usuario.IUsuarioService;
 
-// Único responsable del CRUD y la paginación de Usuarios dentro del panel de administración.
+/**
+ * Controlador administrativo para la gestión de Usuarios del sistema.
+ * Permite listar con paginación asíncrona, crear nuevos usuarios con roles y sedes,
+ * actualizar credenciales y eliminar cuentas.
+ */
 @Controller
 public class UsuarioAdminController {
 
     private final IUsuarioService usuarioService;
 
+    /**
+     * Constructor para inyección de dependencias del servicio de usuarios.
+     */
     public UsuarioAdminController(IUsuarioService usuarioService) {
         this.usuarioService = usuarioService;
     }
 
-    // Endpoint AJAX para paginar la tabla de Usuarios sin recargar la página
+    /**
+     * Qué hace:
+     * Retorna el fragmento HTML Thymeleaf correspondiente a la tabla paginada de usuarios para refresco AJAX.
+     * 
+     * A dónde apunta:
+     * - Ruta HTTP: GET /admin/usuarios/pagina
+     * - Seguridad: `@PreAuthorize("hasRole('ADMINISTRADOR')")`
+     * - Servicio delegado: {@link IUsuarioService#paginar(int, int)} -> UsuarioRepository
+     * - Fragmento: "admin :: usuariosFragment"
+     * 
+     * @param model Modelo para inyectar la página y metadatos.
+     * @param pageUsuarios Índice de página.
+     * @param size Cantidad de usuarios por página.
+     * @return Fragmento Thymeleaf `admin :: usuariosFragment`.
+     */
     @GetMapping("/admin/usuarios/pagina")
     @PreAuthorize("hasRole('ADMINISTRADOR')")
     public String paginaUsuarios(Model model,
@@ -43,6 +64,30 @@ public class UsuarioAdminController {
         return "admin :: usuariosFragment";
     }
 
+    /**
+     * Qué hace:
+     * Crea un nuevo usuario o actualiza sus datos de perfil (cédula, nombre, apellido, cargo, nombreUsuario,
+     * email, rol, sede y contraseña encriptada con BCrypt).
+     * 
+     * A dónde apunta:
+     * - Ruta HTTP: POST /admin/usuarios
+     * - Seguridad: `@PreAuthorize("hasRole('ADMINISTRADOR')")`
+     * - Servicio delegado: {@link IUsuarioService#guardarUsuario} -> UsuarioRepository, PasswordEncoder
+     * - Redirección: "redirect:/admin" con mensajes flash de éxito o error.
+     * 
+     * @param idUsuario ID del usuario si es actualización; null si es creación.
+     * @param cedula Número de identificación / cédula.
+     * @param nombre Nombres del usuario.
+     * @param apellido Apellidos del usuario.
+     * @param cargo Cargo o función en la empresa.
+     * @param nombreUsuario Nombre de usuario único para login.
+     * @param contrasena Contraseña en texto plano (se encripta si se proporciona).
+     * @param email Correo electrónico institucional.
+     * @param rol Rol del usuario (ADMINISTRADOR, COMPRADOR, etc.).
+     * @param sedeId ID de la sede a la que pertenece el usuario.
+     * @param redirectAttributes Atributos flash para mensajes temporales.
+     * @return Redirección a la vista de administración.
+     */
     @PostMapping("/admin/usuarios")
     @PreAuthorize("hasRole('ADMINISTRADOR')")
     public String guardarUsuario(@RequestParam(required = false) Integer idUsuario,
@@ -69,6 +114,19 @@ public class UsuarioAdminController {
         }
     }
 
+    /**
+     * Qué hace:
+     * Elimina una cuenta de usuario por su ID, validando que no tenga órdenes registradas o aprobadas.
+     * 
+     * A dónde apunta:
+     * - Ruta HTTP: POST /admin/usuarios/delete/{id}
+     * - Seguridad: `@PreAuthorize("hasRole('ADMINISTRADOR')")`
+     * - Servicio delegado: {@link IUsuarioService#eliminar(Integer)} -> UsuarioRepository
+     * - Retorno: JSON Map con status 200, 404, 409 o 500.
+     * 
+     * @param id Identificador numérico del usuario a eliminar.
+     * @return {@link ResponseEntity} indicando el resultado.
+     */
     @PostMapping("/admin/usuarios/delete/{id}")
     @PreAuthorize("hasRole('ADMINISTRADOR')")
     public ResponseEntity<?> deleteUsuario(@PathVariable Integer id) {
@@ -84,3 +142,4 @@ public class UsuarioAdminController {
         }
     }
 }
+

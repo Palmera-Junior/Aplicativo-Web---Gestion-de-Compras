@@ -10,7 +10,11 @@ public interface CentroCostoRepository extends JpaRepository<CentroCosto, Intege
 
     List<CentroCosto> findBySedeIdSedeOrderByNombreAsc(Integer idSede);
 
-boolean existsByNombreIgnoreCaseAndSedeIdSede(String nombre, Integer idSede);
+    /**
+     * Qué hace: Verifica si ya existe un centro de costo con el mismo nombre en una sede dada (case-insensitive).
+     * A dónde apunta: Tabla `centro_costo`.
+     */
+    boolean existsByNombreIgnoreCaseAndSedeIdSede(String nombre, Integer idSede);
 
     boolean existsByCodigoIgnoreCase(String codigo);
 }

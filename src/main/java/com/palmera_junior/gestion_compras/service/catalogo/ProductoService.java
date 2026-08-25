@@ -14,30 +14,58 @@ import com.palmera_junior.gestion_compras.entity.Producto;
 import com.palmera_junior.gestion_compras.repository.ProductoRepository;
 import com.palmera_junior.gestion_compras.entity.Categoria;
 
+/**
+ * Implementación del servicio de catálogo de Productos y Presentaciones.
+ * Coordina la persistencia en {@link ProductoRepository} y delega operaciones de presentaciones
+ * a {@link PresentacionProductoService}.
+ */
 @Service
 public class ProductoService implements IProductoService {
 
    private final ProductoRepository productoRepository;
    private final PresentacionProductoService presentacionProductoService;
 
+   /**
+    * Constructor con inyección de repositorios y servicios de catálogo.
+    */
    public ProductoService(ProductoRepository productoRepository,
            PresentacionProductoService presentacionProductoService) {
        this.productoRepository = productoRepository;
        this.presentacionProductoService = presentacionProductoService;
    }
 
+   /**
+    * Qué hace: Retorna la lista total de productos registrados en base de datos.
+    * A dónde apunta: {@link ProductoRepository#findAll()} -> tabla producto
+    */
+   @Override
    public List<Producto> getAllProductos() {
        return productoRepository.findAll();
    }
 
+   /**
+    * Qué hace: Retorna los productos paginados según página y tamaño solicitados.
+    * A dónde apunta: {@link ProductoRepository#findAll(org.springframework.data.domain.Pageable)} -> tabla producto
+    */
+   @Override
    public Page<Producto> paginar(int page, int size) {
        return productoRepository.findAll(PageRequest.of(page, size));
    }
 
+   /**
+    * Qué hace: Busca un producto por su código único de inventario.
+    * A dónde apunta: {@link ProductoRepository#findByCodigoInventario(String)} -> tabla producto
+    */
+   @Override
    public Producto buscarPorCodigo(String codigo) {
        return productoRepository.findByCodigoInventario(codigo).orElse(null);
    }
 
+   /**
+    * Qué hace: Búsqueda predictiva insensible a mayúsculas/minúsculas por coincidencia en nombre o código.
+    * A dónde apunta: {@link ProductoRepository#findByNombreContainingIgnoreCaseOrCodigoInventarioContainingIgnoreCase(String, String)}
+    */
+   @Override
    public List<Producto> buscarPorTermino(String termino) {
        if (termino == null || termino.isBlank()) {
            return java.util.Collections.emptyList();
@@ -46,6 +74,10 @@ public class ProductoService implements IProductoService {
                .findByNombreContainingIgnoreCaseOrCodigoInventarioContainingIgnoreCase(termino.trim(), termino.trim());
    }
 
+   /**
+    * Qué hace: Búsqueda paginada aplicando filtros de coincidencia en término.
+    * A dónde apunta: {@link ProductoRepository}
+    */
    @Override
    public Page<Producto> buscarConFiltros(String termino, String categoria, Boolean deleted, int page, int size) {
        // Implementación conservadora: si viene un término, buscar por nombre o código; si no, devolver paginado
@@ -60,6 +92,11 @@ public class ProductoService implements IProductoService {
        return productoRepository.findAll(PageRequest.of(page, size));
    }
 
+   /**
+    * Qué hace: Crea o actualiza un producto y sus presentaciones comerciales asociadas.
+    * A dónde apunta: {@link ProductoRepository#save(Object)} y {@link PresentacionProducto} en cascada.
+    */
+   @Override
    @Transactional
    public Producto guardarProducto(Integer idProducto, String codigoInventario, String nombre, String categoria,
            List<String> presentacionNombres, List<Integer> presentacionCantidades, List<String> presentacionUnidades,
@@ -99,6 +136,11 @@ public class ProductoService implements IProductoService {
        return productoRepository.save(producto);
    }
 
+   /**
+    * Qué hace: Elimina un producto y sus presentaciones vinculadas por ID.
+    * A dónde apunta: {@link PresentacionProductoService#eliminarPorProducto(Integer)} y {@link ProductoRepository#deleteById(Object)}
+    */
+   @Override
    @Transactional
    public boolean eliminarProducto(Integer id) {
        if (!productoRepository.existsById(id)) {
@@ -109,9 +151,15 @@ public class ProductoService implements IProductoService {
        return true;
    }
 
+   /**
+    * Qué hace: Consulta las presentaciones registradas para un producto.
+    * A dónde apunta: {@link PresentacionProductoService#listarPorProducto(Integer)}
+    */
+   @Override
    public List<PresentacionProducto> obtenerPresentacionesProducto(Integer id) {
        return presentacionProductoService.listarPorProducto(id);
    }
+
 
    private void aplicarPresentaciones(Producto producto, List<String> nombres, List<Integer> cantidades,
            List<String> unidades, List<BigDecimal> precios) {

@@ -23,17 +23,38 @@ import com.palmera_junior.gestion_compras.entity.PresentacionProducto;
 import com.palmera_junior.gestion_compras.entity.Producto;
 import com.palmera_junior.gestion_compras.service.catalogo.IProductoService;
 
-// Único responsable del CRUD y la paginación de Productos dentro del panel de administración.
+/**
+ * Controlador administrativo para la gestión del catálogo de Productos y sus Presentaciones.
+ * Gestiona operaciones CRUD, paginación dinámica por fragmentos Thymeleaf y consulta AJAX de presentaciones.
+ */
 @Controller
 public class ProductoAdminController {
 
     private final IProductoService productoService;
 
+    /**
+     * Constructor para inyección de dependencias del servicio de productos.
+     */
     public ProductoAdminController(IProductoService productoService) {
         this.productoService = productoService;
     }
 
-    // Endpoint AJAX para paginar la tabla de productos sin recargar la página
+    /**
+     * Qué hace:
+     * Retorna el fragmento HTML Thymeleaf correspondiente a la tabla de productos paginada
+     * para actualización asíncrona (AJAX) sin refrescar la página completa.
+     * 
+     * A dónde apunta:
+     * - Ruta HTTP: GET /admin/productos/pagina
+     * - Seguridad: `@PreAuthorize("hasRole('ADMINISTRADOR')")`
+     * - Servicio delegado: {@link IProductoService#paginar(int, int)} -> ProductoRepository
+     * - Vista Thymeleaf: Fragmento "admin :: productosFragment"
+     * 
+     * @param model Modelo para inyectar la página de productos y controles.
+     * @param pageProductos Índice de página a consultar.
+     * @param size Cantidad de registros por página.
+     * @return Fragmento Thymeleaf `admin :: productosFragment`.
+     */
     @GetMapping("/admin/productos/pagina")
     @PreAuthorize("hasRole('ADMINISTRADOR')")
     public String paginaProductos(Model model,
@@ -49,6 +70,28 @@ public class ProductoAdminController {
         return "admin :: productosFragment";
     }
 
+    /**
+     * Qué hace:
+     * Crea un nuevo producto o actualiza uno existente junto con su lista de presentaciones,
+     * cantidades, unidades y precios en una sola transacción.
+     * 
+     * A dónde apunta:
+     * - Ruta HTTP: POST /admin/productos
+     * - Seguridad: `@PreAuthorize("hasRole('ADMINISTRADOR')")`
+     * - Servicio delegado: {@link IProductoService#guardarProducto} -> ProductoRepository, PresentacionProductoRepository
+     * - Redirección: "redirect:/admin" con atributos de feedback (success/error).
+     * 
+     * @param idProducto ID del producto si es edición; null si es creación.
+     * @param codigoInventario Código único del producto.
+     * @param nombre Nombre del producto.
+     * @param categoria Categoría del catálogo.
+     * @param redirectAttributes Atributos para mensajes temporales.
+     * @param presentacionNombres Lista de nombres de presentaciones (p.ej. "Caja", "Galón").
+     * @param presentacionCantidades Lista de cantidades por presentación.
+     * @param presentacionUnidades Lista de unidades de medida (p.ej. "ml", "g").
+     * @param presentacionPrecios Lista de precios unitarios por presentación.
+     * @return Redirección a la vista de administración.
+     */
     @PostMapping("/admin/productos")
     @PreAuthorize("hasRole('ADMINISTRADOR')")
     public String guardarProducto(@RequestParam(required = false) Integer idProducto,
@@ -84,6 +127,19 @@ public class ProductoAdminController {
         }
     }
 
+    /**
+     * Qué hace:
+     * Elimina un producto del catálogo por su ID, validando que no tenga referencias activas en órdenes de compra.
+     * 
+     * A dónde apunta:
+     * - Ruta HTTP: POST /admin/productos/delete/{id}
+     * - Seguridad: `@PreAuthorize("hasRole('ADMINISTRADOR')")`
+     * - Servicio delegado: {@link IProductoService#eliminarProducto(Integer)} -> ProductoRepository
+     * - Retorno: JSON Map con status HTTP correspondiente (200, 404, 409 o 500).
+     * 
+     * @param id Identificador numérico del producto a eliminar.
+     * @return {@link ResponseEntity} indicando el resultado.
+     */
     @PostMapping("/admin/productos/delete/{id}")
     @PreAuthorize("hasRole('ADMINISTRADOR')")
     public ResponseEntity<?> deleteProducto(@PathVariable Integer id) {
@@ -99,7 +155,19 @@ public class ProductoAdminController {
         }
     }
 
-    // Endpoint para cargar las presentaciones de un producto al editar en admin
+    /**
+     * Qué hace:
+     * Obtiene la lista de presentaciones asociadas a un producto en formato JSON para precargarlas en el formulario de edición.
+     * 
+     * A dónde apunta:
+     * - Ruta HTTP: GET /admin/producto/{id}/presentaciones
+     * - Seguridad: `@PreAuthorize("hasRole('ADMINISTRADOR')")`
+     * - Servicio delegado: {@link IProductoService#obtenerPresentacionesProducto(Integer)} -> PresentacionProductoRepository
+     * - Retorno: Arreglo JSON de {@link PresentacionProducto}.
+     * 
+     * @param id Identificador del producto.
+     * @return Lista JSON de presentaciones.
+     */
     @GetMapping("/admin/producto/{id}/presentaciones")
     @PreAuthorize("hasRole('ADMINISTRADOR')")
     @ResponseBody
@@ -107,3 +175,4 @@ public class ProductoAdminController {
         return productoService.obtenerPresentacionesProducto(id);
     }
 }
+

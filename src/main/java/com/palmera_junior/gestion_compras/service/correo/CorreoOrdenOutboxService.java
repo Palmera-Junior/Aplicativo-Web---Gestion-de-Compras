@@ -22,6 +22,11 @@ import com.palmera_junior.gestion_compras.service.orden.PdfService;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Servicio transaccional que implementa el patrón Transactional Outbox para el envío confiable de correos electrónicos.
+ * Garantiza que ante caídas del servidor SMTP o fallos de red, los correos pendientes se reintenten automáticamente
+ * con retroceso exponencial (exponential backoff) y queden auditados en la base de datos.
+ */
 @Service
 @RequiredArgsConstructor
 public class CorreoOrdenOutboxService {
@@ -37,6 +42,18 @@ public class CorreoOrdenOutboxService {
     private final IEmailService emailService;
     private final EmailTemplateService emailTemplateService;
 
+    /**
+     * Qué hace:
+     * Registra un nuevo registro en la tabla de auditoría en estado PENDIENTE dentro de la misma transacción
+     * en que la orden de compra fue aprobada. Si el proveedor no tiene correo, lo marca como FALLIDO.
+     * 
+     * A dónde apunta:
+     * - Repositorio: {@link AuditoriaEnvioCorreoRepository#save(Object)}
+     * - Tabla: auditoria_envio_correo
+     * 
+     * @param orden Orden de compra aprobada.
+     * @return ID del registro de auditoría creado.
+     */
     @Transactional
     public Long registrarPendiente(OrdenCompra orden) {
         AuditoriaEnvioCorreo auditoria = new AuditoriaEnvioCorreo();
@@ -55,6 +72,18 @@ public class CorreoOrdenOutboxService {
         return auditoriaRepository.save(auditoria).getId();
     }
 
+    /**
+     * Qué hace:
+     * Reclama de forma exclusiva y atómica un registro outbox (bloqueo optimista/pesimista),
+     * genera el PDF de la orden, procesa la plantilla HTML y realiza el despacho vía SMTP.
+     * Si tiene éxito, transiciona el estado a ENVIADO; si falla, programa un reintento con backoff.
+     * 
+     * A dónde apunta:
+     * - Repositorios: {@link AuditoriaEnvioCorreoRepository}, {@link OrdenCompraRepository}
+     * - Servicios: {@link PdfService#generarPdfOrdenCompra}, {@link EmailTemplateService#generarCorreoOrdenAprobada}, {@link IEmailService#enviarOrdenAprobada}
+     * 
+     * @param idAuditoria Identificador del registro en auditoria_envio_correo.
+     */
     @Transactional
     public void procesar(Long idAuditoria) {
         LocalDateTime ahora = LocalDateTime.now();
@@ -83,14 +112,32 @@ public class CorreoOrdenOutboxService {
         }
     }
 
+    /**
+     * Qué hace:
+     * Consulta hasta 50 registros outbox que estén listos para procesar o reintentar (proximoIntento <= ahora).
+     * 
+     * A dónde apunta:
+     * - Repositorio: {@link AuditoriaEnvioCorreoRepository#findTop50ByEstadoInAndProximoIntentoLessThanEqualOrderByCreadoEnAsc}
+     * 
+     * @return Lista de auditorías pendientes.
+     */
     @Transactional(readOnly = true)
     public List<AuditoriaEnvioCorreo> pendientesParaProcesar() {
         return auditoriaRepository.findTop50ByEstadoInAndProximoIntentoLessThanEqualOrderByCreadoEnAsc(
                 ESTADOS_RECLAMABLES, LocalDateTime.now());
     }
 
-    // Devuelve el estado del último intento de envío por cada orden, para pintar
-    // el ícono de estado de correo en la columna Acciones del dashboard
+    /**
+     * Qué hace:
+     * Devuelve el último estado de envío de correo para un conjunto de IDs de órdenes,
+     * permitiendo mostrar el ícono de estado (PENDIENTE, ENVIADO, FALLIDO) en la tabla del dashboard.
+     * 
+     * A dónde apunta:
+     * - Repositorio: {@link AuditoriaEnvioCorreoRepository#findByOrdenCompra_IdOrdenInOrderByIdDesc}
+     * 
+     * @param idsOrdenes Colección de identificadores de órdenes visibles en la página actual.
+     * @return Mapa de [idOrden -> EstadoEnvioCorreo].
+     */
     @Transactional(readOnly = true)
     public Map<Integer, EstadoEnvioCorreo> obtenerEstadosPorOrdenes(java.util.Collection<Integer> idsOrdenes) {
         if (idsOrdenes == null || idsOrdenes.isEmpty()) {
@@ -102,17 +149,37 @@ public class CorreoOrdenOutboxService {
         return estados;
     }
 
+    /**
+     * Qué hace:
+     * Libera bloqueos de registros outbox que hayan quedado trabados por más de 15 minutos por caídas intempestivas del servidor.
+     * 
+     * A dónde apunta:
+     * - Repositorio: {@link AuditoriaEnvioCorreoRepository#liberarProcesamientosAtascados}
+     * 
+     * @return Número de registros liberados.
+     */
     @Transactional
     public int liberarProcesamientosAtascados() {
         LocalDateTime ahora = LocalDateTime.now();
         return auditoriaRepository.liberarProcesamientosAtascados(ahora.minusMinutes(15), ahora);
     }
 
-    // Permite al usuario confirmar que envió el correo manualmente (fuera del sistema)
-    // tras un fallo definitivo, dejando registrada la justificación en 'ultimoError'.
+    /**
+     * Qué hace:
+     * Permite al usuario/administrador confirmar que despachó el correo de la orden por un canal manual
+     * externo tras un fallo definitivo (FALLIDO), registrando la justificación y cambiando el estado a ENVIADO.
+     * 
+     * A dónde apunta:
+     * - Repositorio: {@link AuditoriaEnvioCorreoRepository#findFirstByOrdenCompra_IdOrdenOrderByIdDesc} y {@link AuditoriaEnvioCorreoRepository#save}
+     * 
+     * @param idOrden ID de la orden.
+     * @param descripcionFallo Justificación o detalle del envío manual.
+     * @return AuditoriaEnvioCorreo actualizada.
+     */
     @PreAuthorize("hasAnyRole('SOLICITANTE', 'APROBADOR')")
     @Transactional
     public AuditoriaEnvioCorreo marcarEnviadoManualmente(Integer idOrden, String descripcionFallo) {
+
         if (!StringUtils.hasText(descripcionFallo)) {
             throw new IllegalArgumentException("Debe ingresar una descripción del fallo.");
         }

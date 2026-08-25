@@ -24,10 +24,10 @@ public class CustomUserDetailsService implements UserDetailsService {
         Usuario usuario = usuarioRepository.findByNombreUsuario(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado con el username: " + username));
        
-                if (usuario.getSede() != null){
-                    usuario.getSede().getNombre();
-                }
-                return new UsuarioPrincipal(usuario);
+        if (usuario.getSede() != null){
+            usuario.getSede().getNombre();
+        }
+        return new UsuarioPrincipal(usuario);
     }
 
     

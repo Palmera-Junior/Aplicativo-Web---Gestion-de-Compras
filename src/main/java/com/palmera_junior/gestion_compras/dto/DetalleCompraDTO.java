@@ -13,6 +13,8 @@ public class DetalleCompraDTO {
     
     // Valores numéricos del detalle
     private Integer cantidad;
+    private Integer cantidadRecibida;
+    private Boolean recibido;
     private BigDecimal valorUnitario;
     private BigDecimal ivaProducto; // Porcentaje del IVA (ej: 19.00)
     private BigDecimal valorIva;    // Valor monetario calculado del IVA
@@ -33,6 +35,12 @@ public class DetalleCompraDTO {
 
     public Integer getCantidad() { return cantidad; }
     public void setCantidad(Integer cantidad) { this.cantidad = cantidad; }
+
+    public Integer getCantidadRecibida() { return cantidadRecibida; }
+    public void setCantidadRecibida(Integer cantidadRecibida) { this.cantidadRecibida = cantidadRecibida; }
+
+    public Boolean getRecibido() { return recibido; }
+    public void setRecibido(Boolean recibido) { this.recibido = recibido; }
 
     public BigDecimal getValorUnitario() { return valorUnitario; }
     public void setValorUnitario(BigDecimal valorUnitario) { this.valorUnitario = valorUnitario; }

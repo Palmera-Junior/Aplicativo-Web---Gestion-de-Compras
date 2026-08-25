@@ -1,19 +1,33 @@
-// codigo acciones del MODAL ##########################################################333
+/**
+ * =============================================================================
+ * MÓDULO DE DASHBOARD PRINCIPAL (dashboard.js)
+ * =============================================================================
+ * Controla la lógica de interfaz de usuario para el panel principal de compras (/dashboard):
+ * - Creación y edición de órdenes de compra con cálculo de subtotales, IVA, descuento y flete.
+ * - Autocompletado reactivo de productos y sugerencia de presentaciones por fila.
+ * - Aprobación, anulación y descarga de PDF de órdenes.
+ * - Modal de recepción de pedidos con detección de diferencias de llegada vs solicitado.
+ * - Modal de registro de facturación de proveedores con carga de evidencias (foto/PDF base64).
+ * - Modal de auditoría para marcar correos fallidos como enviados manualmente.
+ * - Endpoints consumidos: /orden-compra, /dashboard/producto, /dashboard/productos/buscar,
+ *   /orden-compra/{id}/pdf, /orden-compra/{id}/recibir, /orden-compra/{id}/facturar,
+ *   /orden-compra/{id}/aprobar, /orden-compra/{id}/anular, /orden-compra/{id}/detalles.
+ * =============================================================================
+ */
 
 // ==========================================
 // TOAST (mensaje temporal auto-ocultable)
 // ==========================================
-// mostrarToast(mensaje, tipo)
-// - Qué hace: Muestra un mensaje tipo toast en pantalla (temporal) con estilo según `tipo`
-//   ('success' por defecto). El toast se oculta automáticamente a los ~3 segundos.
-// - Uso: usado en múltiples acciones para dar feedback al usuario (éxito/error/info).
-// - Endpoints: Ninguno (UI cliente).
+// reportClientError(mensaje, detalle)
+// - Qué hace: Captura silenciosa de errores en cliente sin exponer lógica sensible en consola.
+// - A dónde apunta: Ninguno (control interno).
 function reportClientError(mensaje, detalle) {
     // No se exponen datos ni lógica del negocio en la consola del navegador.
     // Los errores se manejan en la UI con toasts y mensajes amigables.
     void mensaje;
     void detalle;
 }
+
 
 function mostrarToast(mensaje, tipo) {
     tipo = tipo || 'success';
@@ -1186,6 +1200,11 @@ document.addEventListener("click", async function (e) {
     }
 });
 
+// abrirModalFactura(boton)
+// - Qué hace: Extrae los atributos data-* del botón de facturar (id, numeroOrden, proveedor),
+//   limpia el formulario de factura, asigna los datos en el modal y lo muestra en pantalla.
+// - A dónde apunta:
+//   - DOM: #modal-facturar-oc, #factura-numero-orden, #factura-proveedor, #factura-numero-factura.
 function abrirModalFactura(boton) {
     idOrdenSeleccionada = boton.dataset.id;
     const numeroOrden = boton.dataset.numeroOrden || idOrdenSeleccionada;
@@ -1198,6 +1217,11 @@ function abrirModalFactura(boton) {
     document.getElementById('factura-numero-factura').focus();
 }
 
+// limpiarFormularioFactura()
+// - Qué hace: Restablece todos los campos del modal de factura (número, vista previa de imagen/PDF,
+//   input de archivo y variables base64).
+// - A dónde apunta:
+//   - DOM: #factura-numero-factura, #factura-file-info, #factura-preview-image, #factura-preview-container, #factura-foto-input, #btn-eliminar-factura.
 function limpiarFormularioFactura() {
     const inputFactura = document.getElementById('factura-numero-factura');
     if (inputFactura) inputFactura.value = '';
@@ -1224,7 +1248,14 @@ function limpiarFormularioFactura() {
     facturaDocumentoNombre = '';
 }
 
+// handleAdjuntoArchivo(file, options)
+// - Qué hace: Valida que el archivo adjuntado sea una imagen o PDF; si es una imagen, la redimensiona
+//   usando un canvas HTML5 (máx 1600px) y la comprime a JPEG (calidad 0.85); si es PDF, lee su data URL
+//   directamente y actualiza la vista previa y el callback setDataUrl.
+// - A dónde apunta:
+//   - FileReader y Canvas API en cliente; actualiza elementos de previsualización DOM pasados en options.
 function handleAdjuntoArchivo(file, { previewContainer, previewImage, infoElement, setDataUrl, label, inputFile }) {
+
     if (!file) return;
 
     const valido = file.type.startsWith('image/') || file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
@@ -1431,8 +1462,435 @@ let fotoRecepcionBase64 = null;
 let facturaDocumentoBase64 = null;
 let facturaDocumentoNombre = '';
 
+// Estado temporal de modificaciones locales por orden (no persistidas hasta confirmar recepción)
+// Estructura: { [ordenId]: [ { idDetalle, idProducto, descripcion, presentacion, cantidadSolicitada, cantidadRecibida, recibido } ] }
+const ordenesModificadas = {};
+
+// renderProductosRecepcion(productos, estadoOrden)
+// - Qué hace: Construye e inserta dinámicamente las filas de productos en la tabla del modal de recepción (#recepcion-productos-body).
+//   Configura el switch de recibido (checkbox), inputs de cantidad llegada y advertencias visuales de discrepancia.
+// - A dónde apunta:
+//   - DOM: #recepcion-productos-body. Interactúa con las funciones evaluarCambiosEnModal() ante cambios del usuario.
+function renderProductosRecepcion(productos = [], estadoOrden = 'APROBADA') {
+    const tbody = document.getElementById('recepcion-productos-body');
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+    if (!Array.isArray(productos) || productos.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="recepcion-productos-vacio">No hay productos asociados a esta orden.</td></tr>';
+        return;
+    }
+
+    const mostrarAdvertencia = ['RECIBIDA', 'FACTURADA', 'COMPLETADA'].includes(estadoOrden);
+
+    productos.forEach((producto) => {
+        const fila = document.createElement('tr');
+        const cantidadSolicitada = Number(producto.cantidad ?? producto.cantidadSolicitada ?? 0) || 0;
+        const idDetalle = producto.idDetalle ?? producto.id_detalle ?? null;
+        const idProducto = producto.idProducto ?? producto.id_producto ?? null;
+        const codigoInventario = producto.codigoInventario || producto.codigo_inventario || '';
+        const presentacion = producto.presentacion || '';
+        const descripcion = producto.descripcion || '';
+        const nombreProducto = [descripcion, presentacion].filter(Boolean).join(' - ').trim() || codigoInventario || 'Producto';
+        const checked = true;
+
+        fila.dataset.idDetalle = idDetalle ?? '';
+        fila.dataset.idProducto = idProducto ?? '';
+        fila.dataset.codigoInventario = codigoInventario;
+        fila.dataset.presentacion = presentacion;
+        fila.dataset.descripcion = descripcion;
+        fila.dataset.cantidad = String(cantidadSolicitada);
+        fila.dataset.estadoOrden = estadoOrden;
+
+        const html = `
+            <td>
+                <div class="recepcion-producto-nombre">${nombreProducto}</div>
+            </td>
+            <td class="recepcion-producto-cantidad">${cantidadSolicitada}</td>
+            <td class="recepcion-producto-check">
+                <label class="switch-check">
+                    <input type="checkbox" class="recepcion-producto-checkbox" checked>
+                    <span class="slider"></span>
+                </label>
+            </td>
+            <td class="recepcion-producto-llegada">
+                <div class="recepcion-cantidad-wrapper">
+                    <input type="number" min="0" step="1" value="${cantidadSolicitada}" class="recepcion-cantidad-input" disabled>
+                    <span class="recepcion-warning material-symbols" title="Cantidad modificada después de registrar la recepción." style="display: none;">warning</span>
+                </div>
+            </td>
+        `;
+
+        fila.innerHTML = html;
+
+        const checkbox = fila.querySelector('.recepcion-producto-checkbox');
+        const inputCantidad = fila.querySelector('.recepcion-cantidad-input');
+        const warningIcon = fila.querySelector('.recepcion-warning');
+
+        checkbox.checked = checked;
+        inputCantidad.value = String(cantidadSolicitada);
+        inputCantidad.disabled = true;
+
+        const actualizarWarning = () => {
+            if (!mostrarAdvertencia) {
+                warningIcon.style.display = 'none';
+                return;
+            }
+
+            const valorOriginal = Number(fila.dataset.cantidad || 0);
+            const valorActual = Number(inputCantidad.value || 0);
+            const modificado = checkbox.checked ? false : valorActual !== valorOriginal;
+                        warningIcon.style.display = modificado ? 'inline-flex' : 'none';
+            warningIcon.title = modificado
+                ? 'La cantidad fue modificada en una orden ya recibida, facturada o completada.'
+                : 'Cantidad sin ajustes';
+        };
+
+        checkbox.addEventListener('change', () => {
+            if (checkbox.checked) {
+                inputCantidad.value = String(cantidadSolicitada);
+                inputCantidad.disabled = true;
+            } else {
+                inputCantidad.disabled = false;
+                inputCantidad.value = '';
+                inputCantidad.focus();
+            }
+            actualizarWarning();
+            // evaluar cambios en modal (actualiza estado local y el icono en la lista)
+            evaluarCambiosEnModal(idOrdenSeleccionada);
+        });
+
+        inputCantidad.addEventListener('input', () => {
+            if (inputCantidad.value === '') {
+                warningIcon.style.display = mostrarAdvertencia ? 'inline-flex' : 'none';
+                evaluarCambiosEnModal(idOrdenSeleccionada);
+                return;
+            }
+            actualizarWarning();
+            evaluarCambiosEnModal(idOrdenSeleccionada);
+        });
+
+        actualizarWarning();
+        tbody.appendChild(fila);
+    });
+}
+
+// obtenerProductosRecepcion()
+// - Qué hace: Lee las filas actuales de la tabla de recepción (#recepcion-productos-body) y recopila
+//   un arreglo de objetos con cantidades solicitadas, cantidades recibidas y flags de llegada.
+// - A dónde apunta:
+//   - DOM: #recepcion-productos-body tr. Usado por el botón "Confirmar Recepción" para enviar el payload a PUT /orden-compra/{id}/recibir.
+function obtenerProductosRecepcion() {
+    const filas = document.querySelectorAll('#recepcion-productos-body tr');
+    const productos = [];
+
+    filas.forEach((fila) => {
+        if (fila.querySelector('.recepcion-productos-vacio')) {
+            return;
+        }
+
+        const checkbox = fila.querySelector('.recepcion-producto-checkbox');
+        const inputCantidad = fila.querySelector('.recepcion-cantidad-input');
+        const cantidadSolicitada = Number(fila.dataset.cantidad || 0);
+        const recibido = checkbox ? checkbox.checked : true;
+        const cantidadRecibida = recibido ? cantidadSolicitada : (inputCantidad && inputCantidad.value !== '' ? Number(inputCantidad.value) : 0);
+        const noLlego = !recibido && Number(cantidadRecibida) === 0;
+
+        productos.push({
+            idDetalle: fila.dataset.idDetalle ? Number(fila.dataset.idDetalle) : null,
+            idProducto: fila.dataset.idProducto ? Number(fila.dataset.idProducto) : null,
+            codigoInventario: fila.dataset.codigoInventario || null,
+            presentacion: fila.dataset.presentacion || null,
+            descripcion: fila.dataset.descripcion || null,
+            cantidadSolicitada,
+            cantidadRecibida,
+            recibido,
+            noLlego,
+            uniqueKey: (fila.dataset.idDetalle || '') + '||' + (fila.dataset.presentacion || '') + '||' + (fila.dataset.idProducto || '')
+        });
+    });
+
+    return productos;
+}
+
+// evaluarCambiosEnModal(ordenId)
+// - Qué hace: Evalúa si existe alguna diferencia entre las cantidades recibidas y solicitadas en el modal de recepción;
+//   actualiza el objeto en memoria `ordenesModificadas[ordenId]` y refleja el estado en el botón de alerta.
+// - A dónde apunta:
+//   - Objeto local `ordenesModificadas` y función `marcarOrdenConCambios(ordenId, anyModified)`.
+function evaluarCambiosEnModal(ordenId) {
+    if (!ordenId) return;
+    const productos = obtenerProductosRecepcion();
+    const anyModified = productos.some(p => Number(p.cantidadRecibida) !== Number(p.cantidadSolicitada));
+    if (anyModified) {
+        ordenesModificadas[ordenId] = productos;
+    } else {
+        delete ordenesModificadas[ordenId];
+    }
+    marcarOrdenConCambios(ordenId, anyModified);
+}
+
+// marcarOrdenConCambios(ordenId, hasChanges)
+// - Qué hace: Muestra u oculta el botón de alerta/advertencia (.reception-alert) en la fila correspondiente
+//   de la tabla principal de órdenes en el dashboard.
+// - A dónde apunta:
+//   - DOM: `.reception-alert[data-id="${ordenId}"]`.
+function marcarOrdenConCambios(ordenId, hasChanges) {
+    if (!ordenId) return;
+    const selector = `.reception-alert[data-id="${ordenId}"]`;
+    const btn = document.querySelector(selector);
+    if (!btn) return;
+    if (hasChanges) {
+        btn.style.display = 'inline-flex';
+        btn.title = 'Esta orden tiene cambios en la recepción';
+        btn.dataset.changed = 'true';
+    } else {
+        // Si el servidor indicó que hay diferencias persistidas, mantener visible
+        const serverFlag = btn.dataset.serverChanged === 'true';
+        if (serverFlag) {
+            btn.style.display = 'inline-flex';
+            btn.title = 'Esta orden tiene cambios persistidos en la recepción';
+            btn.dataset.changed = '';
+            return;
+        }
+        btn.style.display = 'none';
+        btn.dataset.changed = '';
+    }
+}
+
+// checkPersistedDifferencesForAllOrders()
+// - Qué hace: Consulta al backend en lote (`GET /orden-compra/has-diferencias?ids=...`) para saber cuáles órdenes
+//   tienen discrepancias registradas en base de datos entre cantidad solicitada y cantidad recibida,
+//   marcando los iconos correspondientes en la tabla del dashboard.
+// - A dónde apunta:
+//   - Backend: GET /orden-compra/has-diferencias?ids=...
+//   - DOM: elementos `.reception-alert[data-id]`.
+async function checkPersistedDifferencesForAllOrders() {
+
+    const botones = document.querySelectorAll('.reception-alert[data-id]');
+    if (!botones || botones.length === 0) return;
+
+    // Construir lista de ids
+    const ids = Array.from(botones).map(b => b.dataset.id).filter(Boolean);
+    if (ids.length === 0) return;
+
+    try {
+        const resp = await fetch(`/orden-compra/has-diferencias?ids=${encodeURIComponent(ids.join(','))}`);
+        if (!resp.ok) {
+            // No bloquear la UI por errores parciales
+            return;
+        }
+        const data = await resp.json();
+        const idsWithDiff = Array.isArray(data.ids) ? data.ids.map(x => String(x)) : [];
+
+        // Marcar botones según respuesta
+        botones.forEach(btn => {
+            const id = btn.dataset.id;
+            const has = idsWithDiff.includes(String(id));
+            btn.dataset.serverChanged = has ? 'true' : '';
+            if (has) {
+                btn.style.display = 'inline-flex';
+                btn.title = 'Esta orden tiene cambios persistidos en la recepción';
+            } else {
+                // Solo ocultar si no hay cambios locales
+                if (btn.dataset.changed !== 'true') {
+                    btn.style.display = 'none';
+                }
+            }
+        });
+
+    } catch (err) {
+        console.debug('Error comprobando diferencias persistidas en lote', err);
+    }
+}
+
+// Ejecutar la comprobación on-load para marcar los iconos de advertencia persistidos
+document.addEventListener('DOMContentLoaded', function () {
+    // Intentar comprobar diferencias persistidas tras cargar la página
+    try {
+        checkPersistedDifferencesForAllOrders();
+    } catch (err) {
+        console.debug('No fue posible verificar diferencias persistidas:', err);
+    }
+
+    // Inicializar filtro "Sólo modificadas" (si el checkbox existe)
+    const filtroCheckbox = document.getElementById('filtrar-modificadas');
+    if (filtroCheckbox) {
+        filtroCheckbox.addEventListener('change', async function () {
+            // Asegurarse de tener el state server-side actualizado antes de filtrar
+            try {
+                await checkPersistedDifferencesForAllOrders();
+            } catch (err) {
+                console.debug('Error actualizando diferencias persistidas antes de filtrar', err);
+            }
+            applyFiltroModificadas();
+        });
+    }
+
+});
+
+// abrirModalCambios(ordenId, numeroOrden, proveedor)
+// - Qué hace: Abre el modal secundario (#modal-cambios-recepcion) y muestra la lista de productos
+//   cuyas cantidades de llegada discrepan de las cantidades solicitadas (o si algún producto no llegó).
+//   Si los datos no están en memoria local, los obtiene mediante `GET /orden-compra/{ordenId}/detalles`.
+// - A dónde apunta:
+//   - Backend: GET /orden-compra/{ordenId}/detalles
+//   - DOM: #modal-cambios-recepcion, #cambios-recepcion-body, #cambios-recepcion-numero-orden, #cambios-recepcion-proveedor.
+async function abrirModalCambios(ordenId, numeroOrden = '', proveedor = '') {
+    const modal = document.getElementById('modal-cambios-recepcion');
+    const body = document.getElementById('cambios-recepcion-body');
+    const numeroSpan = document.getElementById('cambios-recepcion-numero-orden');
+    const proveedorSpan = document.getElementById('cambios-recepcion-proveedor');
+
+    if (!modal || !body) return;
+
+    body.innerHTML = '';
+    numeroSpan.textContent = numeroOrden || '';
+    proveedorSpan.textContent = proveedor || '';
+
+    let productos = ordenesModificadas[ordenId];
+    if (!Array.isArray(productos)) {
+        // intentar obtener del servidor (persisted state)
+        try {
+            const resp = await fetch(`/orden-compra/${ordenId}/detalles`);
+            if (resp.ok) {
+                const data = await resp.json();
+                productos = Array.isArray(data.detalles) ? data.detalles.map(d => {
+                    const cantidadSolicitada = d.cantidad ?? d.cantidadSolicitada ?? 0;
+                    const cantidadRecibida = d.cantidadRecibida ?? d.cantidad_recibida ?? d.cantidad ?? d.cantidadSolicitada ?? 0;
+                    return {
+                        idDetalle: d.idDetalle || d.id_detalle || null,
+                        idProducto: d.idProducto || d.productoId || d.id_producto || null,
+                        descripcion: d.descripcion || d.productoNombre || '',
+                        presentacion: d.presentacion || d.presentacionProducto || '',
+                        codigoInventario: d.codigoInventario || d.codigo_inventario || '',
+                        cantidadSolicitada: Number(cantidadSolicitada),
+                        cantidadRecibida: Number(cantidadRecibida),
+                        // clave única para distinguir productos con mismo nombre pero diferente presentación
+                        uniqueKey: (d.idDetalle || d.id_detalle || '') + '||' + (d.presentacion || d.presentacionProducto || '') + '||' + (d.idProducto || d.productoId || '')
+                    };
+                }) : [];
+            } else {
+                productos = [];
+            }
+        } catch (err) {
+            console.debug('Error cargando detalles para modal cambios', err);
+            productos = [];
+        }
+    }
+
+    // Mostrar únicamente productos cuya cantidad llegada difiere de la solicitada
+    const changed = Array.isArray(productos) ? productos.filter(p => Number(p.cantidadRecibida) !== Number(p.cantidadSolicitada)) : [];
+
+    if (!changed || changed.length === 0) {
+        body.innerHTML = '<tr><td colspan="3" style="padding:12px; color:#64748b; text-align:center;">No hay cambios en las cantidades de llegada para esta orden.</td></tr>';
+    } else {
+        changed.forEach(p => {
+            const tr = document.createElement('tr');
+            const nombre = `${p.descripcion || ''} ${p.presentacion ? '- ' + p.presentacion : ''}`.trim();
+            const cantidadRecibida = Number(p.cantidadRecibida ?? 0);
+            const cantidadSolicitada = Number(p.cantidadSolicitada ?? 0);
+            const valorRecibido = cantidadRecibida === 0 && cantidadSolicitada > 0 ? '<span class="no-llego">NO LLEGÓ</span>' : (p.cantidadRecibida ?? '');
+
+            tr.innerHTML = `
+                <td>${nombre}</td>
+                <td>${cantidadSolicitada ?? ''}</td>
+                <td>${valorRecibido}</td>
+            `;
+            body.appendChild(tr);
+        });
+    }
+
+    modal.style.display = 'flex';
+}
+
+// Cerrar modal cambios
+document.getElementById('btn-cerrar-cambios')?.addEventListener('click', () => {
+    const modal = document.getElementById('modal-cambios-recepcion');
+    if (modal) modal.style.display = 'none';
+});
+
+// applyFiltroModificadas()
+// - Qué hace: Aplica el filtro en cliente "Sólo modificadas" sobre la tabla de órdenes del dashboard,
+//   ocultando las filas que no tengan discrepancias en la recepción y mostrando las que sí.
+// - A dónde apunta:
+//   - DOM: #filtrar-modificadas y filas `tr` dentro de `.data-table tbody`.
+function applyFiltroModificadas() {
+    const checkbox = document.getElementById('filtrar-modificadas');
+    const tbody = document.querySelector('.data-table tbody');
+    if (!tbody) return;
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    const shouldFilter = checkbox && checkbox.checked;
+    rows.forEach(row => {
+        // Buscar botón de alerta dentro de la fila
+        const boton = row.querySelector('.reception-alert');
+        let isModified = false;
+        if (boton) {
+            // Si el botón está visible en el DOM o tiene flags (local/server)
+            const styleDisplay = window.getComputedStyle(boton).display;
+            const localFlag = boton.dataset.changed === 'true';
+            const serverFlag = boton.dataset.serverChanged === 'true';
+            if (localFlag || serverFlag || (styleDisplay && styleDisplay !== 'none')) {
+                isModified = true;
+            }
+        }
+        // Mostrar u ocultar la fila según el filtro
+        if (shouldFilter) {
+            row.style.display = isModified ? '' : 'none';
+        } else {
+            row.style.display = '';
+        }
+    });
+}
+
+// También exponer una función pública para que otros flujos la llamen
+window.applyFiltroModificadas = applyFiltroModificadas;
+
+// Diagnostic: informa en consola el estado de elementos clave para depuración de la UI
+document.addEventListener('DOMContentLoaded', function () {
+    try {
+        const countAlerts = document.querySelectorAll('.reception-alert').length;
+        console.debug('[dashboard.js diagnostic] Loaded. reception-alert count =', countAlerts);
+        if (countAlerts === 0) {
+            console.debug('[dashboard.js diagnostic] Aviso: no se encontraron botones .reception-alert. El template debería renderizarlos (aunque estén ocultos).');
+        }
+        // comprobar que funciones clave existen
+        console.debug('[dashboard.js diagnostic] Functions: checkPersistedDifferencesForAllOrders=', typeof checkPersistedDifferencesForAllOrders, 'applyFiltroModificadas=', typeof applyFiltroModificadas);
+    } catch (err) {
+        console.error('[dashboard.js diagnostic] Error inicializando diagnóstico:', err);
+    }
+});
+
+// cargarProductosRecepcion(idOrden, estadoOrden)
+// - Qué hace: Realiza una petición GET al endpoint `/orden-compra/{idOrden}/detalles` y procesa el JSON
+//   para renderizar la tabla interactiva de productos de la orden en el modal de recepción.
+// - A dónde apunta:
+//   - Backend: GET /orden-compra/{idOrden}/detalles
+//   - Llama a `renderProductosRecepcion(productos, estadoOrdenActual)`.
+async function cargarProductosRecepcion(idOrden, estadoOrden = 'APROBADA') {
+    try {
+        const response = await fetch(`/orden-compra/${idOrden}/detalles`);
+        if (!response.ok) {
+            throw new Error('No se pudieron cargar los productos de la orden.');
+        }
+        const data = await response.json();
+        const productos = Array.isArray(data.detalles) ? data.detalles : [];
+        const estadoOrdenActual = (data.estado || estadoOrden || 'APROBADA').toUpperCase();
+        renderProductosRecepcion(productos, estadoOrdenActual);
+    } catch (error) {
+        reportClientError('Error cargando detalles de la orden.', error);
+        renderProductosRecepcion([], estadoOrden.toUpperCase());
+        mostrarToast(error.message || 'No se pudieron cargar los productos de la orden.', 'error');
+    }
+}
+
 // Manejo de captura / subida de foto y archivo para facturación y recepción
 document.addEventListener("DOMContentLoaded", () => {
+    // setupEvidenceUploader(config)
+    // - Qué hace: Vincula los botones de cámara / adjuntar archivo / eliminar archivo con el input oculto
+    //   y gestiona el ciclo de vida de la previsualización y callbacks base64.
+    // - A dónde apunta:
+    //   - Elementos DOM especificados en el objeto de configuración (botones, preview, input file).
     const setupEvidenceUploader = ({
         inputId,
         buttonTomarId,
@@ -1537,6 +1995,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
+// limpiarFotoRecepcion()
+// - Qué hace: Resetea el input de foto/archivo de recepción, la vista previa y la variable en memoria fotoRecepcionBase64.
+// - A dónde apunta:
+//   - DOM: #recepcion-foto-input, #recepcion-foto-preview, #recepcion-foto-preview-container, #btn-eliminar-foto, #recepcion-file-info.
 function limpiarFotoRecepcion() {
     fotoRecepcionBase64 = null;
     const inputFoto = document.getElementById("recepcion-foto-input");
@@ -1555,6 +2017,10 @@ function limpiarFotoRecepcion() {
     }
 }
 
+// limpiarFotoFactura()
+// - Qué hace: Resetea el input de factura adjunta, vista previa y variables en memoria facturaDocumentoBase64 y facturaDocumentoNombre.
+// - A dónde apunta:
+//   - DOM: #factura-foto-input, #btn-eliminar-factura, #factura-file-info.
 function limpiarFotoFactura() {
     facturaDocumentoBase64 = null;
     facturaDocumentoNombre = '';
@@ -1571,48 +2037,106 @@ function limpiarFotoFactura() {
 }
 
 
-// ABRIR MODAL
-document.addEventListener("click", function (e) {
 
+// ABRIR MODAL
+document.addEventListener("click", async function (e) {
+
+    // abrir modal de recepcion
     const boton = e.target.closest(".receive");
 
-    if (!boton) {
+    if (boton) {
+        idOrdenSeleccionada = boton.dataset.id;
+        limpiarFormularioRecepcion();
+
+        document.getElementById(
+            "recepcion-numero-orden"
+        ).textContent = boton.dataset.numeroOrden;
+
+        document.getElementById(
+            "recepcion-proveedor"
+        ).textContent = boton.dataset.proveedor;
+
+        document.getElementById(
+            "recepcion-observacion"
+        ).textContent = boton.dataset.observacionRecepcion;
+
+        const estadoOrden = (boton.dataset.estado || 'APROBADA').toUpperCase();
+        const tbodyProductos = document.getElementById('recepcion-productos-body');
+        if (tbodyProductos) {
+            tbodyProductos.innerHTML = '<tr><td colspan="4" class="recepcion-productos-vacio">Cargando productos...</td></tr>';
+        }
+
+        // Flete: mostrar el campo solo si la orden tiene pagaFlete
+        const pagaFlete = boton.dataset.pagaFlete === 'true';
+        const fleteGroup = document.getElementById('recepcion-flete-group');
+        const fleteInput = document.getElementById('recepcion-valor-flete');
+        if (fleteGroup && fleteInput) {
+            if (pagaFlete) {
+                fleteGroup.style.display = 'block';
+                const valorFleteInicial = boton.dataset.valorFlete ? parseFloat(boton.dataset.valorFlete) : 0;
+                fleteInput.value = valorFleteInicial > 0 ? formatearPesos(valorFleteInicial) : '';
+            } else {
+                fleteGroup.style.display = 'none';
+                fleteInput.value = '';
+            }
+        }
+
+        try {
+            await cargarProductosRecepcion(idOrdenSeleccionada, estadoOrden);
+        } catch (error) {
+            reportClientError('No se pudo abrir la recepción.', error);
+        }
+
+        document.getElementById(
+            "modal-recibir-oc"
+        ).style.display = "flex";
+
+        // Si existen cambios locales previos para esta orden, aplicarlos en la UI
+        if (ordenesModificadas[idOrdenSeleccionada]) {
+            // recorrer filas y aplicar valores
+            const filas = document.querySelectorAll('#recepcion-productos-body tr');
+            filas.forEach(fila => {
+                const detId = fila.dataset.idDetalle ? String(fila.dataset.idDetalle) : null;
+                const prodId = fila.dataset.idProducto ? String(fila.dataset.idProducto) : null;
+                const match = ordenesModificadas[idOrdenSeleccionada].find(p => String(p.idDetalle) === detId || String(p.idProducto) === prodId);
+                if (match) {
+                    const checkbox = fila.querySelector('.recepcion-producto-checkbox');
+                    const inputCantidad = fila.querySelector('.recepcion-cantidad-input');
+                    if (checkbox && inputCantidad) {
+                        checkbox.checked = !!match.recibido;
+                        inputCantidad.value = match.cantidadRecibida != null ? String(match.cantidadRecibida) : (match.cantidadSolicitada ? String(match.cantidadSolicitada) : '');
+                        inputCantidad.disabled = !!match.recibido;
+                    }
+                    // actualizar el warning visual por fila
+                    const warningIcon = fila.querySelector('.recepcion-warning');
+                    if (warningIcon) {
+                        const valorOriginal = Number(fila.dataset.cantidad || 0);
+                        const valorActual = Number(inputCantidad.value || 0);
+                        const modificado = checkbox.checked ? false : valorActual !== valorOriginal;
+                        warningIcon.style.display = modificado ? 'inline-flex' : 'none';
+                    }
+                }
+            });
+        }
+
         return;
     }
 
-    idOrdenSeleccionada = boton.dataset.id;
-    limpiarFormularioRecepcion();
-
-    document.getElementById(
-        "recepcion-numero-orden"
-    ).textContent = boton.dataset.numeroOrden;
-
-    document.getElementById(
-        "recepcion-proveedor"
-    ).textContent = boton.dataset.proveedor;
-
-    document.getElementById(
-        "recepcion-observacion"
-    ).textContent = boton.dataset.observacionRecepcion;
-
-    // Flete: mostrar el campo solo si la orden tiene pagaFlete
-    const pagaFlete = boton.dataset.pagaFlete === 'true';
-    const fleteGroup = document.getElementById('recepcion-flete-group');
-    const fleteInput = document.getElementById('recepcion-valor-flete');
-    if (fleteGroup && fleteInput) {
-        if (pagaFlete) {
-            fleteGroup.style.display = 'block';
-            const valorFleteInicial = boton.dataset.valorFlete ? parseFloat(boton.dataset.valorFlete) : 0;
-            fleteInput.value = valorFleteInicial > 0 ? formatearPesos(valorFleteInicial) : '';
-        } else {
-            fleteGroup.style.display = 'none';
-            fleteInput.value = '';
+    // abrir modal de cambios (clic en el icono de alerta en la lista)
+    const botonAlerta = e.target.closest('.reception-alert');
+    if (botonAlerta) {
+        const ordenId = botonAlerta.dataset.id;
+        const tr = botonAlerta.closest('tr');
+        let numero = '';
+        let proveedor = '';
+        if (tr) {
+            numero = tr.querySelector('td strong') ? tr.querySelector('td strong').textContent : '';
+            const provCell = tr.querySelector('td:nth-child(3)');
+            proveedor = provCell ? provCell.textContent.trim() : '';
         }
+        abrirModalCambios(ordenId, numero, proveedor);
+        return;
     }
-
-    document.getElementById(
-        "modal-recibir-oc"
-    ).style.display = "flex";
 
 });
 
@@ -1659,6 +2183,20 @@ document
                 .trim();
             const numeroFlete = parseFloat(limpioFlete);
             valorFlete = isNaN(numeroFlete) ? null : numeroFlete;
+        }
+
+        const productos = obtenerProductosRecepcion();
+        for (const producto of productos) {
+            if (!producto.recibido && (producto.cantidadRecibida === null || Number(producto.cantidadRecibida) < 0)) {
+                mostrarToast('Cada producto sin recibir debe tener una cantidad válida.', 'error');
+                return;
+            }
+            if (producto.recibido) {
+                producto.cantidadRecibida = producto.cantidadSolicitada;
+            }
+            if (!producto.recibido && Number(producto.cantidadRecibida) === 0) {
+                producto.noLlego = true;
+            }
         }
 
         // ========================
@@ -1744,7 +2282,8 @@ La orden cambiará al estado RECIBIDA.
                         recibidoPor,
                         observacionRecepcion: observacion,
                         valorFlete,
-                        fotoRecepcion: fotoRecepcionBase64
+                        fotoRecepcion: fotoRecepcionBase64,
+                        productos
                     })
                 }
             );
@@ -1815,6 +2354,11 @@ function limpiarFormularioRecepcion() {
     const fleteInput = document.getElementById('recepcion-valor-flete');
     if (fleteInput) {
         fleteInput.value = "";
+    }
+
+    const tbodyProductos = document.getElementById('recepcion-productos-body');
+    if (tbodyProductos) {
+        tbodyProductos.innerHTML = '';
     }
 
     limpiarFotoRecepcion();

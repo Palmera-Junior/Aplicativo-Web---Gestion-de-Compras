@@ -8,6 +8,11 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
+/**
+ * Configuración central de seguridad de Spring Security.
+ * Define la cadena de filtros HTTP, políticas de autorización basadas en roles (RBAC),
+ * login híbrido (formulario local + Google OAuth2), protección CSRF con cookies y control de sesiones.
+ */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -15,12 +20,23 @@ public class SecurityConfig {
 
     private final CustomOAuth2UserService customOAuth2UserService;
 
+    /**
+     * Constructor para inyección del servicio OAuth2 personalizado.
+     */
     public SecurityConfig(CustomOAuth2UserService customOAuth2UserService) {
         this.customOAuth2UserService = customOAuth2UserService;
     }
 
-    // Handler compartido: garantiza que el login por formulario Y por Google
-    // redirijan siguiendo la MISMA regla de roles
+    /**
+     * Qué hace:
+     * Retorna un handler de éxito unificado que inspecciona las autoridades del usuario autenticado
+     * y lo redirige a /admin (si tiene rol ROLE_ADMINISTRADOR) o a /dashboard (para los demás roles).
+     * 
+     * A dónde apunta:
+     * - Redirecciones HTTP: /admin o /dashboard
+     * 
+     * @return {@link AuthenticationSuccessHandler} configurado.
+     */
     @Bean
     public AuthenticationSuccessHandler successHandler() {
         return (request, response, authentication) -> {
@@ -31,6 +47,21 @@ public class SecurityConfig {
         };
     }
 
+    /**
+     * Qué hace:
+     * Construye la cadena de filtros de seguridad HTTP, definiendo:
+     * - Recursos públicos (login, estilos css, imágenes, endpoints OAuth2, healthchecks).
+     * - Rutas restringidas a administradores (/admin/**).
+     * - Rutas de compras y dashboard (/dashboard, /orden-compra/**, /api/usuario/**).
+     * - Repositorio de tokens CSRF vía cookie accesible por JavaScript (CookieCsrfTokenRepository).
+     * - Cierre de sesión y protección de fijación de sesión (changeSessionId).
+     * 
+     * A dónde apunta:
+     * - Filtros de Spring Security para todas las peticiones HTTP entrantes.
+     * 
+     * @param http Constructor de seguridad HTTP.
+     * @return Cadena de filtros {@link SecurityFilterChain}.
+     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -75,3 +106,4 @@ public class SecurityConfig {
         return http.build();
     }
 }
+

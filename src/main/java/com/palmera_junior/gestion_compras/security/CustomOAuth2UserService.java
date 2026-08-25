@@ -3,7 +3,6 @@ package com.palmera_junior.gestion_compras.security;
 import java.util.List;
 import java.util.Optional;
 
-
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
@@ -16,19 +15,42 @@ import org.springframework.stereotype.Service;
 import com.palmera_junior.gestion_compras.entity.Usuario;
 import com.palmera_junior.gestion_compras.service.usuario.IUsuarioService;
 
+/**
+ * Servicio personalizado para la carga y mapeo de usuarios federados vía OAuth2 (Google / Microsoft).
+ * Extrae claims del token de identidad, verifica la preexistencia del usuario en base de datos por correo
+ * y vincula la cuenta de proveedor con las autoridades y roles locales del sistema.
+ */
 @Service
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private final IUsuarioService usuarioService;
 
+    /**
+     * Constructor para inyección del servicio de usuarios.
+     */
     public CustomOAuth2UserService(IUsuarioService usuarioService) {
         this.usuarioService = usuarioService;
     }
 
+    /**
+     * Qué hace:
+     * Carga el perfil OAuth2 del proveedor federado, extrae el email y el ID de usuario único (`sub`/`oid`),
+     * valida que el correo esté pre-registrado en la base de datos de Palmera Junior,
+     * vincula el proveedor si es la primera vez que inicia sesión con OAuth2, y mapea el rol local ("ROLE_...").
+     * 
+     * A dónde apunta:
+     * - Proveedores OAuth2 externos (Google Identity Platform).
+     * - Base de datos interna: {@link IUsuarioService#buscarPorEmail(String)} y {@link IUsuarioService#guardar(Usuario)}.
+     * 
+     * @param userRequest Petición de usuario de Spring OAuth2 Client.
+     * @return {@link OAuth2User} enriquecido con la entidad {@link Usuario} local.
+     * @throws OAuth2AuthenticationException Si el correo no existe en el sistema o el proveedor no coincide.
+     */
     @Override
     public OAuth2User loadUser(
             OAuth2UserRequest userRequest)
             throws OAuth2AuthenticationException {
+
 
         OAuth2User oAuth2User =
                 super.loadUser(userRequest);

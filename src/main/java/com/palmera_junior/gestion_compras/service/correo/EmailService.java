@@ -3,14 +3,16 @@ package com.palmera_junior.gestion_compras.service.correo;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 
-
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
+/**
+ * Servicio encargado del envío de correos electrónicos mediante {@link JavaMailSender}.
+ * Inyecta el remitente institucional configurado y adjunta el PDF de la orden de compra.
+ */
 @Service
 @RequiredArgsConstructor
 public class EmailService implements IEmailService {
@@ -20,6 +22,20 @@ public class EmailService implements IEmailService {
         @Value("${spring.mail.username}")
         private String remitente;
 
+        /**
+         * Qué hace:
+         * Genera un mensaje MIME UTF-8 con cuerpo HTML y el archivo PDF adjunto ("Orden_Compra.pdf"),
+         * y lo despacha a través del servidor SMTP configurado.
+         * 
+         * A dónde apunta:
+         * - Protocolo SMTP mediante {@link JavaMailSender#send(MimeMessage)}
+         * - Cuenta remitente: propiedad `spring.mail.username`
+         * 
+         * @param destinatario Dirección de correo del destinatario.
+         * @param html Plantilla HTML procesada.
+         * @param pdf Arreglo de bytes del PDF generado.
+         * @throws Exception Si falla el transporte SMTP o la creación del mensaje.
+         */
         @Override
         public void enviarOrdenAprobada(
                         String destinatario,
@@ -50,4 +66,4 @@ public class EmailService implements IEmailService {
 
                 mailSender.send(message);
         }
-}
+}
