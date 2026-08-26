@@ -167,9 +167,32 @@ html {
 }
 
 .order-status-stats {
-    display: flex;
+    display: grid;
+    grid-template-columns: auto 1px repeat(4, auto) auto;
+    grid-template-rows: auto auto;
+    gap: 15px 35px;
     align-items: center;
-    gap: 5px;
+}
+
+/* Total: ocupa las 2 filas a la izquierda */
+.order-stat-total {
+    grid-row: 1 / -1;
+}
+
+/* Separador vertical entre total y desglose */
+.order-status-stats::before {
+    content: '';
+    grid-row: 1 / -1;
+    grid-column: 2;
+    width: 1px;
+    height: 100%;
+    background: #ced4da;
+}
+
+/* Flecha: ocupa las 2 filas a la derecha */
+.order-status-stats .order-status-arrow {
+    grid-row: 1 / -1;
+    grid-column: 7;
 }
 
 .order-stat {
@@ -189,12 +212,6 @@ html {
 .order-stat-total .order-stat-label {
     align-self: flex-end;
     margin-bottom: 3px;
-}
-
-/* Separador entre "total" y el desglose por estado */
-.order-status-stats .order-stat:nth-child(2) {
-    padding-left: 22px;
-    border-left: 1px solid #a4a8ac;
 }
 
 /* Ícono de estado: el color vive en el símbolo mismo,
@@ -267,7 +284,7 @@ html {
 }
 
 .order-status-card:hover .order-status-arrow {
-    color: #495057;
+    color: #04029e;
     transform: translateX(3px);
 }
 
@@ -316,6 +333,11 @@ html {
 .module-card.selected {
     border-top: 5px solid var(--accent);
     box-shadow: 0 8px 10px var(--accent-bg);
+}
+
+.module-card.selected .module-arrow {
+    color: var(--accent);
+    transform: translateX(3px);
 }
 
 .module-icon-wrap {
@@ -819,7 +841,11 @@ td.actions {
     }
 
     .order-status-stats {
-        flex-wrap: wrap;
-        gap: 18px;
+        grid-template-columns: auto 1px repeat(2, 1fr);
+        gap: 25px 25px;
+    }
+
+    .order-status-stats .order-status-arrow {
+        grid-column: -1;
     }
 }

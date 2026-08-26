@@ -74,8 +74,7 @@
              calcular en el Controller y pasar como atributos al modelo —
              es más eficiente si la lista es grande.
              ============================================ -->
-        <section class="orders-summary"
-            th:with="ordenesBorrador=${ordenesCompra.?[estado.name() == 'BORRADOR'].size()},
+        <section class="orders-summary" th:with="ordenesBorrador=${ordenesCompra.?[estado.name() == 'BORRADOR'].size()},
                       ordenesAprobadas=${ordenesCompra.?[estado.name() == 'APROBADA'].size()},
                       ordenesFacturadas=${ordenesCompra.?[estado.name() == 'FACTURADA'].size()},
                       ordenesRecibidas=${ordenesCompra.?[estado.name() == 'RECIBIDA'].size()},
@@ -141,16 +140,6 @@
                         </div>
                     </div>
 
-                    <div class="order-stat accent-alert">
-                        <span class="order-stat-icon-wrap">
-                            <span class="material-symbols order-stat-icon">warning</span>
-                        </span>
-                        <div class="order-stat-text">
-                            <span class="order-stat-value" th:text="${ordenesIncompletas}">0</span>
-                            <span class="order-stat-label">incompletas</span>
-                        </div>
-                    </div>
-
                     <div class="order-stat accent-purple">
                         <span class="order-stat-icon-wrap">
                             <span class="material-symbols order-stat-icon">task_alt</span>
@@ -158,6 +147,16 @@
                         <div class="order-stat-text">
                             <span class="order-stat-value" th:text="${ordenesCompletadas}">0</span>
                             <span class="order-stat-label">completadas</span>
+                        </div>
+                    </div>
+
+                     <div class="order-stat accent-alert">
+                        <span class="order-stat-icon-wrap">
+                            <span class="material-symbols order-stat-icon">warning</span>
+                        </span>
+                        <div class="order-stat-text">
+                            <span class="order-stat-value" th:text="${ordenesIncompletas}">0</span>
+                            <span class="order-stat-label">Modificadas</span>
                         </div>
                     </div>
 
@@ -192,7 +191,7 @@
                 <div class="module-footer">
                     <span class="module-badge" th:text="${usuarios.size()}">0</span>
                     <span class="module-badge-label">registrados</span>
-                    <span class="material-symbols module-arrow">arrow_forward</span>
+                    <span class="material-symbols module-arrow">arrow_downward</span>
                 </div>
             </div>
 
@@ -207,7 +206,7 @@
                 <div class="module-footer">
                     <span class="module-badge" th:text="${proveedores.size()}">0</span>
                     <span class="module-badge-label">registrados</span>
-                    <span class="material-symbols module-arrow">arrow_forward</span>
+                    <span class="material-symbols module-arrow">arrow_downward</span>
                 </div>
             </div>
 
@@ -222,7 +221,7 @@
                 <div class="module-footer">
                     <span class="module-badge" th:text="${productos.size()}">0</span>
                     <span class="module-badge-label">registrados</span>
-                    <span class="material-symbols module-arrow">arrow_forward</span>
+                    <span class="material-symbols module-arrow">arrow_downward</span>
                 </div>
             </div>
 
@@ -237,7 +236,7 @@
                 <div class="module-footer">
                     <span class="module-badge" th:text="${sedes.size()}">0</span>
                     <span class="module-badge-label">registradas</span>
-                    <span class="material-symbols module-arrow">arrow_forward</span>
+                    <span class="material-symbols module-arrow">arrow_downward</span>
                 </div>
             </div>
 
@@ -252,7 +251,7 @@
                 <div class="module-footer">
                     <span class="module-badge" th:text="${centrosCosto.size()}">0</span>
                     <span class="module-badge-label">registrados</span>
-                    <span class="material-symbols module-arrow">arrow_forward</span>
+                    <span class="material-symbols module-arrow">arrow_downward</span>
                 </div>
             </div>
         </section>
