@@ -112,6 +112,15 @@
                     </tr>
                 </thead>
                 <tbody>
+                    <tr th:if="${ordenesCompra.content.isEmpty()}" class="ordenes-empty-row">
+                        <td colspan="8">
+                            <div class="ordenes-empty-state">
+                                <span class="material-symbols ordenes-empty-icon" aria-hidden="true">assignment</span>
+                                <p class="ordenes-empty-title">No hay órdenes creadas</p>
+                                <p class="ordenes-empty-hint">Haga clic en "Nueva Orden" para comenzar.</p>
+                            </div>
+                        </td>
+                    </tr>
                     <tr th:each="orden : ${ordenesCompra.content}">
                         <td><strong th:text="${orden.numeroOrden}">BUC-07-0013</strong></td>
                         <td th:text="${orden.fecha}">2026-07-03</td>

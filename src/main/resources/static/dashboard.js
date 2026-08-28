@@ -116,13 +116,13 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // cerrarModal()
-// - Qué hace: Cierra el modal de creación/edición de ordenes, restaura el overflow del body
-//   y resetea el identificador `ordenIdActual`.
-// - Contexto: Declarada dentro del DOMContentLoaded; es usada por los handlers locales para
-//   cerrar el modal. Nota: no es global (está en el scope del listener DOMContentLoaded),
-//   por lo que llamadas externas deben comprobar su existencia.
-// - Endpoints: Ninguno (UI cliente).
-function cerrarModal() {
+    // - Qué hace: Cierra el modal de creación/edición de ordenes, restaura el overflow del body
+    //   y resetea el identificador `ordenIdActual`.
+    // - Contexto: Declarada dentro del DOMContentLoaded; es usada por los handlers locales para
+    //   cerrar el modal. Nota: no es global (está en el scope del listener DOMContentLoaded),
+    //   por lo que llamadas externas deben comprobar su existencia.
+    // - Endpoints: Ninguno (UI cliente).
+    function cerrarModal() {
         modal.classList.remove("active");
         modal.style.display = "none";
         document.body.style.overflow = "auto";
@@ -1161,9 +1161,12 @@ document.addEventListener("click", async function (e) {
 
     const idOrden = boton.dataset.id;
 
-    const confirmar = confirm(
-        "¿Está seguro de aprobar esta Orden de Compra?\n\n" +
-        "Después de aprobarla no podrá modificar productos ni valores."
+    const confirmar = await mostrarConfirmacion(
+        "¿Está seguro de aprobar esta Orden de Compra? \n\n" +
+        "Después de aprobarla no podrá modificar productos ni valores.",
+        '¿Está seguro?',
+        '',
+        'info'
     );
 
     if (!confirmar) {
@@ -1386,10 +1389,10 @@ document.addEventListener("click", async function (e) {
         return;
     }
 
-    const confirmar = confirm(
+    const confirmar = await mostrarConfirmacion(
         "¿Está seguro de anular esta Orden de Compra?\n\n" +
         "N° Orden: " + (numeroOrden || idOrden) + "\n\n" +
-        "Esta acción cambiará la orden a estado ANULADA y no se eliminará de la base de datos."
+        "Este proceso no se puede deshacer."
     );
 
     if (!confirmar) {
@@ -1540,7 +1543,7 @@ function renderProductosRecepcion(productos = [], estadoOrden = 'APROBADA') {
             const valorOriginal = Number(fila.dataset.cantidad || 0);
             const valorActual = Number(inputCantidad.value || 0);
             const modificado = checkbox.checked ? false : valorActual !== valorOriginal;
-                        warningIcon.style.display = modificado ? 'inline-flex' : 'none';
+            warningIcon.style.display = modificado ? 'inline-flex' : 'none';
             warningIcon.title = modificado
                 ? 'La cantidad fue modificada en una orden ya recibida, facturada o completada.'
                 : 'Cantidad sin ajustes';
@@ -2241,19 +2244,14 @@ document
         // CONFIRMACIÓN
         // ========================
 
-        const confirmar = confirm(
+        const confirmar = await mostrarConfirmacion(
 
             `Confirme los datos de recepción:
 
-Recibido por:
-${recibidoPor}
+                Recibido por: [[RECIBIDO_POR]]
 
-${observacion ? "Observación:\n" + observacion : ""}
-
-La orden cambiará al estado RECIBIDA.
-
-¿Desea continuar?`
-
+                ${observacion ? "Observación:\n" + observacion : "Sin observaciones."}`,
+            '¿Está seguro?', recibidoPor, 'info'
         );
 
         if (!confirmar) {

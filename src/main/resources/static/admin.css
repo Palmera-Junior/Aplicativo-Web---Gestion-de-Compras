@@ -288,17 +288,33 @@ html {
     transform: translateX(3px);
 }
 
+/* Division para separar ordenes con catalogos */
+
+.divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 22px 0 16px;
+    color: #adb5bd;
+    font-size: 12.5px;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.divider::before,
+.divider::after {
+    content: "";
+    flex: 1;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.divider span {
+    padding: 0 12px;
+}
+
+
 /* ==========================================
    TARJETAS DE MÓDULOS (catálogo)
 ========================================== */
-.catalog-label {
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
-    color: #868e96;
-    margin: 26px 0 10px;
-}
 
 .modules-grid {
     display: grid;
@@ -475,13 +491,53 @@ html {
     margin-bottom: 22px;
 }
 
+.form-card > summary {
+    list-style: none;
+    cursor: pointer;
+}
+
+.form-card > summary::-webkit-details-marker {
+    display: none;
+}
+
 .form-card-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
     margin: 0 0 16px;
-    font-size: 14.5px;
+    font-size: 15px;
     font-weight: 700;
-    color: #37414d;
-    text-transform: uppercase;
-    letter-spacing: .3px;
+    color: #212529;
+}
+
+.form-card-title-content {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.form-card-title-content .material-symbols {
+    font-size: 18px;
+}
+
+.form-card-toggle {
+    color: #adb5bd;
+    font-size: 22px;
+    transition: transform .2s ease, color .2s ease;
+}
+
+.form-card[open] .form-card-toggle {
+    color: var(--accent, #198754);
+    transform: rotate(180deg);
+}
+
+.form-card[open]  {
+    border: 1px solid var(--accent, #0c442a);
+}
+
+.form-card-title {
+    letter-spacing: 0;
 }
 
 .form-grid-2 {
@@ -563,16 +619,8 @@ html {
     transition: all .2s ease;
 }
 
-.btn-secondary {
-    background: #ffffff;
-    border: 1px solid #d1d5db;
-    color: #495057;
-}
 
-.btn-secondary:hover {
-    background: #f1f3f5;
-    border-color: #adb5bd;
-}
+
 
 .btn-primary-dark {
     background: #212529;

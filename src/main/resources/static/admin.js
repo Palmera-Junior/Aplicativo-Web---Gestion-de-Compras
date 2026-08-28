@@ -45,6 +45,23 @@ function showSection(id){
     if(visible) visible.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
+function controlarFormulario(entity, abierto){
+    const idsFormulario = {
+        producto: 'productForm',
+        usuario: 'usuarioForm',
+        proveedor: 'proveedorForm',
+        sede: 'sedeForm',
+        centro: 'centroForm'
+    };
+    const formulario = document.getElementById(idsFormulario[entity]);
+    const tarjeta = formulario ? formulario.closest('.form-card') : null;
+    if(tarjeta) tarjeta.open = abierto;
+}
+
+function abrirFormulario(entity){
+    controlarFormulario(entity, true);
+}
+
 document.addEventListener('DOMContentLoaded',()=>{
     document.querySelectorAll('.module-card').forEach(card=>{
         card.addEventListener('click',()=>{
@@ -295,11 +312,11 @@ async function applyFilters(entity){
 // - Uso: enlazado desde botones/acciones que ponen al usuario en el formulario de creación.
 // - Endpoints: Ninguno (manipulación del DOM).
 function showCreate(kind){
-    if(kind==='usuario') showSection('section-usuarios');
-    if(kind==='proveedor') showSection('section-proveedores');
-    if(kind==='producto') showSection('section-productos');
-    if(kind==='sede') showSection('section-sedes');
-    if(kind==='centro') showSection('section-centros');
+    if(kind==='usuario') { showSection('section-usuarios'); abrirFormulario('usuario'); }
+    if(kind==='proveedor') { showSection('section-proveedores'); abrirFormulario('proveedor'); }
+    if(kind==='producto') { showSection('section-productos'); abrirFormulario('product'); }
+    if(kind==='sede') { showSection('section-sedes'); abrirFormulario('sede'); }
+    if(kind==='centro') { showSection('section-centros'); abrirFormulario('centro'); }
 }
 
 // setButtonLabel(buttonId, iconName, label)
@@ -402,6 +419,7 @@ if(entity === 'centro'){
         document.getElementById('direccionSede').value = '';
         setButtonLabel('sedeSubmitButton', 'add', 'Crear sede');
     }
+    controlarFormulario(entity, false);
 }
 
 // cargarPresentacionesEnFormulario(idProducto)
@@ -441,6 +459,7 @@ function editEntity(entity, element){
     if(!row) return;
     if(entity === 'producto'){
         showSection('section-productos');
+        abrirFormulario('producto');
         document.getElementById('idProducto').value = row.dataset.id || '';
         document.getElementById('codigoInventario').value = row.dataset.codigo || '';
         document.getElementById('nombreProducto').value = row.dataset.nombre || '';
@@ -451,6 +470,7 @@ function editEntity(entity, element){
     }
 if(entity==='centro'){
         showSection('section-centros');
+    abrirFormulario('centro');
         document.getElementById('idCentroCosto').value = row.dataset.id || '';
         document.getElementById('codigoCentro').value = row.dataset.codigo || '';
         document.getElementById('nombreCentro').value = row.dataset.nombre || '';
@@ -461,6 +481,7 @@ if(entity==='centro'){
     }
     if(entity==='usuario'){
         showSection('section-usuarios');
+        abrirFormulario('usuario');
         document.getElementById('idUsuario').value = row.dataset.id || '';
         document.getElementById('cedula').value = row.dataset.cedula || '';
         document.getElementById('nombreUsuarioField').value = row.dataset.nombre || '';
@@ -475,6 +496,7 @@ if(entity==='centro'){
     }
     if(entity==='proveedor'){
         showSection('section-proveedores');
+        abrirFormulario('proveedor');
         document.getElementById('idProv').value = row.dataset.id || '';
         document.getElementById('nit').value = row.dataset.nit || '';
         document.getElementById('nombreProveedor').value = row.dataset.nombre || '';
@@ -495,6 +517,7 @@ if(entity==='centro'){
     }
     if(entity==='sede'){
         showSection('section-sedes');
+        abrirFormulario('sede');
         document.getElementById('idSede').value = row.dataset.id || '';
         document.getElementById('nombreSede').value = row.dataset.nombre || '';
         document.getElementById('prefijoCiudad').value = row.dataset.prefijo || '';
@@ -515,9 +538,9 @@ if(entity==='centro'){
 //     usuario  -> POST /admin/usuarios/delete/{id}
 //     proveedor-> POST /admin/proveedores/delete/{id}
 //     sede     -> POST /admin/sedes/delete/{id}
-async function deleteEntity(entity, id){
+async function deleteEntity(entity, id, nombre){
     if(!id){ alert('ID inválido'); return; }
-    if(!confirm('¿Eliminar ' + entity + ' con id=' + id + '? Esta acción no se puede revertir.')) return;
+    if(!await mostrarConfirmacion('Esta acción no se puede deshacer. ¿Desea continuar con la eliminación de', '¿Está seguro?', nombre)) return;
     const routes = {
         producto: '/admin/productos/delete/',
         centro: '/admin/centros-costo/delete/',

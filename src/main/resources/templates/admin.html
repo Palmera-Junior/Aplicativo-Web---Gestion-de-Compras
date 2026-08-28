@@ -178,7 +178,9 @@
         <!-- ============================================
              TARJETAS DE CATÁLOGO
              ============================================ -->
-        <h3 class="catalog-label">Catálogos</h3>
+        <div class="divider">
+                <span> <b>    CATALOGOS    </b></span>
+            </div>
         <section class="modules-grid">
             <div class="module-card accent-blue" data-target="section-usuarios">
                 <div class="module-icon-wrap">
@@ -271,8 +273,11 @@
                     </div>
                 </div>
 
-                <div class="form-card">
-                    <h3 class="form-card-title">Nuevo proveedor</h3>
+                <details class="form-card">
+                    <summary class="form-card-title">
+                        <span class="form-card-title-content"><span class="material-symbols">chevron_right</span> Nuevo proveedor</span>
+                        <span class="material-symbols form-card-toggle" aria-hidden="true">expand_more</span>
+                    </summary>
                     <form th:action="@{/admin/proveedores}" method="post" id="proveedorForm">
                         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                         <input type="hidden" id="idProv" name="idProv">
@@ -318,7 +323,7 @@
                             </button>
                         </div>
                     </form>
-                </div>
+                </details>
 
                 <!-- ================= FILTROS PROVEEDORES ================= -->
                 <div id="filtros-proveedores" class="filtros-section" data-entity="proveedor">
@@ -368,8 +373,8 @@
                                                 <span class="material-symbols">edit</span>
                                             </button>
                                             <button type="button" class="btn-icon delete" title="Eliminar"
-                                                th:attr="data-id=${proveedor.idProv}"
-                                                onclick="deleteEntity('proveedor', this.getAttribute('data-id'))">
+                                                th:attr="data-id=${proveedor.idProv},data-nombre=${proveedor.nombre}"
+                                                onclick="deleteEntity('proveedor', this.getAttribute('data-id'), this.getAttribute('data-nombre'))">
                                                 <span class="material-symbols">delete</span>
                                             </button>
                                         </td>
@@ -417,8 +422,11 @@
                     </div>
                 </div>
 
-                <div class="form-card">
-                    <h3 class="form-card-title">Nuevo usuario</h3>
+                <details class="form-card">
+                    <summary class="form-card-title">
+                        <span class="form-card-title-content"><span class="material-symbols">chevron_right</span> Nuevo usuario</span>
+                        <span class="material-symbols form-card-toggle" aria-hidden="true">expand_more</span>
+                    </summary>
                     <form th:action="@{/admin/usuarios}" method="post" id="usuarioForm">
                         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                         <input type="hidden" id="idUsuario" name="idUsuario">
@@ -475,7 +483,7 @@
                             </button>
                         </div>
                     </form>
-                </div>
+                </details>
 
                 <!-- ================= FILTROS USUARIOS ================= -->
                 <div id="filtros-usuarios" class="filtros-section" data-entity="usuario">
@@ -543,8 +551,8 @@
                                                 <span class="material-symbols">edit</span>
                                             </button>
                                             <button type="button" class="btn-icon delete" title="Eliminar"
-                                                th:attr="data-id=${usuario.idUsuario}"
-                                                onclick="deleteEntity('usuario', this.getAttribute('data-id'))">
+                                                th:attr="data-id=${usuario.idUsuario},data-nombre=${usuario.nombre + ' ' + usuario.apellido}"
+                                                onclick="deleteEntity('usuario', this.getAttribute('data-id'), this.getAttribute('data-nombre'))">
                                                 <span class="material-symbols">delete</span>
                                             </button>
                                         </td>
@@ -592,8 +600,11 @@
                     </div>
                 </div>
 
-                <div class="form-card">
-                    <h3 class="form-card-title">Nuevo producto</h3>
+                <details class="form-card">
+                    <summary class="form-card-title">
+                        <span class="form-card-title-content"><span class="material-symbols">chevron_right</span> Nuevo producto</span>
+                        <span class="material-symbols form-card-toggle" aria-hidden="true">expand_more</span>
+                    </summary>
                     <form th:action="@{/admin/productos}" method="post" id="productForm">
                         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                         <input type="hidden" id="idProducto" name="idProducto">
@@ -663,7 +674,7 @@
                             </button>
                         </div>
                     </form>
-                </div>
+                </details>
 
 
                 <!-- ================= FILTROS PRODUCTOS ================= -->
@@ -726,8 +737,8 @@
                                                 <span class="material-symbols">edit</span>
                                             </button>
                                             <button type="button" class="btn-icon delete" title="Eliminar"
-                                                th:attr="data-id=${producto.idProducto}"
-                                                onclick="deleteEntity('producto', this.getAttribute('data-id'))">
+                                                th:attr="data-id=${producto.idProducto},data-nombre=${producto.nombre}"
+                                                onclick="deleteEntity('producto', this.getAttribute('data-id'), this.getAttribute('data-nombre'))">
                                                 <span class="material-symbols">delete</span>
                                             </button>
                                         </td>
@@ -775,8 +786,11 @@
                     </div>
                 </div>
 
-                <div class="form-card">
-                    <h3 class="form-card-title">Nueva sede</h3>
+                <details class="form-card">
+                    <summary class="form-card-title">
+                        <span class="form-card-title-content"><span class="material-symbols">chevron_right</span> Nueva sede</span>
+                        <span class="material-symbols form-card-toggle" aria-hidden="true">expand_more</span>
+                    </summary>
                     <form th:action="@{/admin/sedes}" method="post" id="sedeForm">
                         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                         <input type="hidden" id="idSede" name="idSede">
@@ -802,7 +816,7 @@
                             </button>
                         </div>
                     </form>
-                </div>
+                </details>
 
                 <div class="admin-list">
                     <h2 class="list-title"><span class="material-symbols">chevron_right</span> Sedes existentes</h2>
@@ -830,8 +844,8 @@
                                                 <span class="material-symbols">edit</span>
                                             </button>
                                             <button type="button" class="btn-icon delete" title="Eliminar"
-                                                th:attr="data-id=${sede.idSede}"
-                                                onclick="deleteEntity('sede', this.getAttribute('data-id'))">
+                                                th:attr="data-id=${sede.idSede},data-nombre=${sede.nombre}"
+                                                onclick="deleteEntity('sede', this.getAttribute('data-id'), this.getAttribute('data-nombre'))">
                                                 <span class="material-symbols">delete</span>
                                             </button>
                                         </td>
@@ -879,8 +893,11 @@
                     </div>
                 </div>
 
-                <div class="form-card">
-                    <h3 class="form-card-title">Nuevo centro de costo</h3>
+                <details class="form-card">
+                    <summary class="form-card-title">
+                        <span class="form-card-title-content"><span class="material-symbols">chevron_right</span> Nuevo centro de costo</span>
+                        <span class="material-symbols form-card-toggle" aria-hidden="true">expand_more</span>
+                    </summary>
                     <form th:action="@{/admin/centros-costo}" method="post" id="centroForm">
                         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                         <input type="hidden" id="idCentroCosto" name="idCentroCosto">
@@ -915,7 +932,7 @@
                             </button>
                         </div>
                     </form>
-                </div>
+                </details>
 
                 <div class="admin-list">
                     <h2 class="list-title"><span class="material-symbols">chevron_right</span> Centros de costo
@@ -946,8 +963,8 @@
                                                 <span class="material-symbols">edit</span>
                                             </button>
                                             <button type="button" class="btn-icon delete" title="Eliminar"
-                                                th:attr="data-id=${centro.idCentroCosto}"
-                                                onclick="deleteEntity('centro', this.getAttribute('data-id'))">
+                                                th:attr="data-id=${centro.idCentroCosto},data-nombre=${centro.nombre}"
+                                                onclick="deleteEntity('centro', this.getAttribute('data-id'), this.getAttribute('data-nombre'))">
                                                 <span class="material-symbols">delete</span>
                                             </button>
                                         </td>
