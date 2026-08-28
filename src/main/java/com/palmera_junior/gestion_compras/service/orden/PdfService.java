@@ -435,6 +435,8 @@ public class PdfService implements IPdfService {
         } else {
             obsCell.addElement(new Paragraph("Observaciones: sin comentarios", fontalert));
         }
+        obsCell.addElement(new Paragraph(" ", fontEspaciador));
+        obsCell.addElement(new Paragraph(" ", fontEspaciador));
         obsCell.addElement(new Paragraph(
                 "Toda factura debe llegar al correo recepcionfacturas@palmerajunior.com de lo contrario no será aceptada",
                 fontalert));
