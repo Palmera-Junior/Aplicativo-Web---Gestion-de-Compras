@@ -7,3 +7,15 @@
    - `docker compose up --build`
 3. La aplicación quedará disponible en `http://localhost` y la base de datos en `localhost:5432`.
 4. Para detener los servicios usa `docker compose down`.
+
+## Configuración de correo con Amazon SES
+
+El envío automático usa Amazon SES mediante SMTP. Copia `.env.example` a `.env` y completa:
+
+- `SES_SMTP_HOST`: endpoint SMTP de la región SES, por ejemplo `email-smtp.us-east-1.amazonaws.com`.
+- `SES_SMTP_PORT`: `587` para SMTP con STARTTLS.
+- `SES_SMTP_USERNAME`: usuario SMTP generado desde Amazon SES.
+- `SES_SMTP_PASSWORD`: contraseña SMTP generada desde Amazon SES.
+- `SES_FROM_EMAIL`: remitente verificado; por defecto `notificaciones@palmerajunior.com`.
+
+Las credenciales SMTP de SES no son las mismas credenciales generales de AWS. El archivo `.env` está excluido de Git y no debe compartirse.

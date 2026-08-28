@@ -19,18 +19,18 @@ public class EmailService implements IEmailService {
 
         private final JavaMailSender mailSender;
 
-        @Value("${spring.mail.username}")
+        @Value("${correo.remitente}")
         private String remitente;
 
         /**
          * Qué hace:
          * Genera un mensaje MIME UTF-8 con cuerpo HTML y el archivo PDF adjunto ("Orden_Compra.pdf"),
          * y lo despacha a través del servidor SMTP configurado.
-         * 
+         *
          * A dónde apunta:
          * - Protocolo SMTP mediante {@link JavaMailSender#send(MimeMessage)}
-         * - Cuenta remitente: propiedad `spring.mail.username`
-         * 
+         * - Cuenta remitente: propiedad `correo.remitente`
+         *
          * @param destinatario Dirección de correo del destinatario.
          * @param html Plantilla HTML procesada.
          * @param pdf Arreglo de bytes del PDF generado.
@@ -66,4 +66,4 @@ public class EmailService implements IEmailService {
 
                 mailSender.send(message);
         }
-}
+}

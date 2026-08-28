@@ -1,7 +1,6 @@
--- 1. Creación de tipos personalizados (ENUMS)
-CREATE TYPE tipo_rol AS ENUM ('ADMIN', 'USER');
-
--- 2. Creación de tablas independientes (sin llaves foráneas que dependan de otras)
+-- Esquema inicial de Gestion de Compras.
+-- Se ejecuta despues de 01-create-schema.sql dentro de PostgreSQL.
+SET search_path TO dep_compras;
 
 CREATE TABLE sede (
     id_sede SERIAL PRIMARY KEY,
@@ -10,38 +9,33 @@ CREATE TABLE sede (
     direccion VARCHAR(255)
 );
 
+CREATE TABLE centro_costo (
+    id_centro_costo SERIAL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    codigo VARCHAR(20) UNIQUE,
+    direccion VARCHAR(200),
+    id_sede INT NOT NULL,
+    CONSTRAINT fk_centro_costo_sede FOREIGN KEY (id_sede) REFERENCES sede (id_sede)
+);
+
 CREATE TABLE producto (
     id_producto SERIAL PRIMARY KEY,
     codigo_inventario VARCHAR(50) NOT NULL UNIQUE,
     nombre VARCHAR(150) NOT NULL,
-    categoria TEXT
+    categoria VARCHAR(30) NOT NULL CHECK (categoria IN (
+        'EPPS', 'MECANISMOS', 'EQUIPOS', 'PAPELERIA', 'DOTACION', 'REPUESTOS', 'PRODUCTOS'
+    ))
 );
 
--- Tabla de presentaciones de producto (independizada de producto)
--- cantidad es NULL cuando la presentación equivale a "1 unidad" (evita redundancia)
 CREATE TABLE presentacion_producto (
     id_presentacion SERIAL PRIMARY KEY,
     presentacion VARCHAR(150) NOT NULL,
-    cantidad INT, -- NULLable: se guarda NULL cuando la cantidad es 1
+    cantidad INT,
     unidad VARCHAR(20) NOT NULL,
-    precio DECIMAL(10,2) NOT NULL,
+    precio DECIMAL(10, 2) NOT NULL,
     id_producto INT NOT NULL,
-    CONSTRAINT fk_presentacion_producto FOREIGN KEY (id_producto) REFERENCES producto (id_producto) ON DELETE CASCADE
-);
-
--- 3. Creación de tablas con dependencias simples (Nivel 1)
-
-CREATE TABLE usuario (
-    id_usuario SERIAL PRIMARY KEY,
-    cedula VARCHAR(20) NOT NULL UNIQUE,
-    nombre VARCHAR(100) NOT NULL,
-    apellido VARCHAR(100) NOT NULL,
-    cargo VARCHAR(100),
-    nombre_usuario VARCHAR(50) NOT NULL UNIQUE,
-    contrasenia VARCHAR(255) NOT NULL,
-    rol tipo_rol NOT NULL,
-    id_sede INT NOT NULL,
-    CONSTRAINT fk_usuario_sede FOREIGN KEY (id_sede) REFERENCES sede (id_sede)
+    CONSTRAINT fk_presentacion_producto FOREIGN KEY (id_producto)
+        REFERENCES producto (id_producto) ON DELETE CASCADE
 );
 
 CREATE TABLE proveedor (
@@ -51,65 +45,109 @@ CREATE TABLE proveedor (
     correo VARCHAR(150),
     direccion VARCHAR(255),
     telefono VARCHAR(50),
-    ciudad VARCHAR(100)
+    ciudad VARCHAR(150)
 );
 
--- Tabla intermedia para asociar proveedores a múltiples sedes
 CREATE TABLE proveedor_sede (
     id_prov INT NOT NULL,
     id_sede INT NOT NULL,
     PRIMARY KEY (id_prov, id_sede),
-    CONSTRAINT fk_ps_proveedor FOREIGN KEY (id_prov) REFERENCES proveedor (id_prov) ON DELETE CASCADE,
-    CONSTRAINT fk_ps_sede FOREIGN KEY (id_sede) REFERENCES sede (id_sede) ON DELETE CASCADE
+    CONSTRAINT fk_proveedor_sede_proveedor FOREIGN KEY (id_prov)
+        REFERENCES proveedor (id_prov) ON DELETE CASCADE,
+    CONSTRAINT fk_proveedor_sede_sede FOREIGN KEY (id_sede)
+        REFERENCES sede (id_sede) ON DELETE CASCADE
 );
 
--- 4. Creación de tabla principal transaccional (Nivel 2)
+CREATE TABLE usuario (
+    id_usuario SERIAL PRIMARY KEY,
+    cedula VARCHAR(20) NOT NULL UNIQUE,
+    nombre VARCHAR(100) NOT NULL,
+    apellido VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE,
+    proveedor VARCHAR(100),
+    proveedor_id VARCHAR(100),
+    cargo VARCHAR(100),
+    nombre_usuario VARCHAR(50) NOT NULL UNIQUE,
+    contraseña VARCHAR(255) NOT NULL,
+    rol VARCHAR(20) NOT NULL CHECK (rol IN ('ADMINISTRADOR', 'APROBADOR', 'SOLICITANTE')),
+    id_sede INT NOT NULL,
+    CONSTRAINT fk_usuario_sede FOREIGN KEY (id_sede) REFERENCES sede (id_sede)
+);
 
 CREATE TABLE orden_compra (
     id_orden SERIAL PRIMARY KEY,
-    id_prov INT, -- Nullable para el caso de proveedores esporádicos ("Otro")
+    id_prov INT,
+    fecha DATE NOT NULL,
+    numero_orden VARCHAR(20) UNIQUE,
+    estado VARCHAR(20) NOT NULL CHECK (estado IN (
+        'BORRADOR', 'APROBADA', 'RECIBIDA', 'FACTURADA', 'COMPLETADA', 'ANULADA'
+    )),
     id_sede INT NOT NULL,
+    id_centro_costo INT,
+    observaciones TEXT,
+    sub_total DECIMAL(10, 2) NOT NULL,
+    iva_total DECIMAL(10, 2) NOT NULL,
+    descuento DECIMAL(10, 2),
+    paga_flete BOOLEAN NOT NULL DEFAULT FALSE,
+    valor_flete DECIMAL(10, 2),
+    total DECIMAL(10, 2) NOT NULL,
     id_usuario INT NOT NULL,
-    numero_orden VARCHAR(50) NOT NULL UNIQUE,
-    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
-    -- Totales y Observaciones
-    observaciones TEXT, -- Nullable
-    sub_total DECIMAL(10,2) NOT NULL,
-iva_total DECIMAL(10,2) NOT NULL,
-    descuento DECIMAL(10,2) DEFAULT 0.00, -- Nullable/Default 0
-    paga_flete BOOLEAN NOT NULL DEFAULT FALSE, -- Indica si la orden contempla pago de flete
-    valor_flete DECIMAL(10,2) NULL, -- Valor del flete (nullable)
-    total DECIMAL(10,2) NOT NULL,
-    
-    -- Recepción
+    id_usuario_aprobacion INT,
+    fecha_aprobacion DATE,
     numero_factura VARCHAR(100),
     recibido_por VARCHAR(150),
     fecha_recepcion DATE,
     observacion_recepcion TEXT,
     foto_recepcion TEXT,
-    
-    CONSTRAINT fk_orden_proveedor FOREIGN KEY (id_prov) REFERENCES proveedor (id_prov) ON DELETE SET NULL,
+    foto_factura TEXT,
+    se_recibio BOOLEAN NOT NULL DEFAULT FALSE,
+    se_facturo BOOLEAN NOT NULL DEFAULT FALSE,
+    CONSTRAINT fk_orden_proveedor FOREIGN KEY (id_prov)
+        REFERENCES proveedor (id_prov) ON DELETE SET NULL,
     CONSTRAINT fk_orden_sede FOREIGN KEY (id_sede) REFERENCES sede (id_sede),
-    CONSTRAINT fk_orden_usuario FOREIGN KEY (id_usuario) REFERENCES usuario (id_usuario)
+    CONSTRAINT fk_orden_centro_costo FOREIGN KEY (id_centro_costo)
+        REFERENCES centro_costo (id_centro_costo),
+    CONSTRAINT fk_orden_usuario FOREIGN KEY (id_usuario) REFERENCES usuario (id_usuario),
+    CONSTRAINT fk_orden_usuario_aprobacion FOREIGN KEY (id_usuario_aprobacion)
+        REFERENCES usuario (id_usuario)
 );
-
--- 5. Creación de tabla de detalle (Nivel 3)
 
 CREATE TABLE detalle_compra (
     id_detalle SERIAL PRIMARY KEY,
-    id_orden INT NOT NULL,
-    id_producto INT NOT NULL,
-    
-    -- Snapshot del Producto en el momento de la compra
     cantidad INT NOT NULL,
+    cantidad_recibida INT DEFAULT 0,
+    recibido BOOLEAN DEFAULT FALSE,
     codigo_inventario VARCHAR(50) NOT NULL,
-    descripcion VARCHAR(150) NOT NULL,
-    presentacion TEXT,
-    valor_unitario DECIMAL(10,2) NOT NULL, -- Ingresado manualmente
-    iva_producto DECIMAL(10,2) NOT NULL,
-    valor_total_linea DECIMAL(10,2) NOT NULL,
-    
-    CONSTRAINT fk_detalle_orden FOREIGN KEY (id_orden) REFERENCES orden_compra (id_orden) ON DELETE CASCADE,
-    CONSTRAINT fk_detalle_producto FOREIGN KEY (id_producto) REFERENCES producto (id_producto)
+    descripcion TEXT,
+    presentacion VARCHAR(150) NOT NULL,
+    valor_unitario DECIMAL(10, 2) NOT NULL,
+    iva_producto DECIMAL(10, 2) NOT NULL,
+    valor_iva DECIMAL(10, 2) NOT NULL,
+    valor_total_linea DECIMAL(10, 2) NOT NULL,
+    id_producto INT,
+    id_orden INT NOT NULL,
+    CONSTRAINT fk_detalle_producto FOREIGN KEY (id_producto) REFERENCES producto (id_producto),
+    CONSTRAINT fk_detalle_orden FOREIGN KEY (id_orden)
+        REFERENCES orden_compra (id_orden) ON DELETE CASCADE
 );
+
+CREATE TABLE auditoria_envio_correo (
+    id_auditoria_correo BIGSERIAL PRIMARY KEY,
+    id_orden INT NOT NULL,
+    destinatario VARCHAR(150) NOT NULL,
+    estado VARCHAR(20) NOT NULL CHECK (estado IN (
+        'PENDIENTE', 'PROCESANDO', 'ENVIADO', 'REINTENTAR', 'FALLIDO'
+    )),
+    intentos INT NOT NULL DEFAULT 0,
+    proximo_intento TIMESTAMP,
+    bloqueado_en TIMESTAMP,
+    enviado_en TIMESTAMP,
+    creado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    actualizado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ultimo_error TEXT,
+    CONSTRAINT fk_auditoria_orden FOREIGN KEY (id_orden)
+        REFERENCES orden_compra (id_orden) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_auditoria_correo_estado_reintento
+    ON auditoria_envio_correo (estado, proximo_intento);
