@@ -47,7 +47,7 @@
             <div class="dashboard-header-actions">
                 <button title="Refrescar página" type="button" id="btn-refrescar" class="btn-refrescar"
                     aria-label="Refrescar página">
-                    <span class="material-symbols">refresh</span>
+                    <span class="material-symbols">cached</span>
                 </button>
             </div>
         </div>
@@ -79,98 +79,97 @@
                       ordenesFacturadas=${ordenesCompra.?[estado.name() == 'FACTURADA'].size()},
                       ordenesRecibidas=${ordenesCompra.?[estado.name() == 'RECIBIDA'].size()},
                       ordenesCompletadas=${ordenesCompra.?[estado.name() == 'COMPLETADA'].size()},
-                      ordenesAnuladas=${ordenesCompra.?[estado.name() == 'ANULADA'].size()}">
+                      ordenesAnuladas=${ordenesCompra.?[estado.name() == 'ANULADA'].size()},
+                      totalEstadosVisibles=${ordenesCompletadas + ordenesRecibidas + ordenesAprobadas + ordenesAnuladas + ordenesFacturadas + ordenesBorrador}">
 
             <a th:href="@{/dashboard}" class="order-status-card js-page-transition">
-                <div class="order-status-main">
-                    <div class="order-status-icon">
-                        <span class="material-symbols stacks">stacks</span>
+                <div class="order-status-header">
+                    <div class="order-status-main">
+                        <div class="order-status-icon">
+                            <span class="material-symbols stacks">stacks</span>
+                        </div>
+                        <div class="order-status-body">
+                            <h2>Órdenes de compra</h2>
+                            <p>Flujo completo: creación, aprobación y seguimiento.</p>
+                        </div>
                     </div>
-                    <div class="order-status-body">
-                        <h2>Órdenes de compra</h2>
-                        <p>Flujo completo: creación, aprobación y seguimiento.</p>
+                    <div class="order-status-total">
+                        <div class="order-total-main">
+                            <div class="order-total-text">
+                                <span class="order-stat-value total" th:text="${ordenesCompra.size()}">0</span>
+                                <span class="order-stat-label">TOTAL</span>
+                            </div>
+                            <span class="material-symbols order-status-arrow">arrow_forward</span>
+                        </div>
                     </div>
                 </div>
 
-                <div class="order-status-stats">
-                    <div class="order-stat order-stat-total">
-                        <div class="order-stat-text">
-                            <span class="order-stat-value total" th:text="${ordenesCompra.size()}">0</span>
-                            <span class="order-stat-label">total</span>
-                        </div>
+                <!-- Barra de progreso del flujo de trabajo -->
+                <div class="order-progress-bar" th:with="total=${totalEstadosVisibles}">
+
+                    <div class="progress-segment progress-anuladas"
+                        th:style="${total > 0 ? 'width: ' + (ordenesAnuladas * 100 / total) + '%' : 'width: 0%'}"
+                        th:title="'Anuladas: ' + ${ordenesAnuladas}"></div>
+
+                    <div class="progress-segment progress-borrador"
+                        th:style="${total > 0 ? 'width: ' + (ordenesBorrador * 100 / total) + '%' : 'width: 0%'}"
+                        th:title="'Borrador: ' + ${ordenesBorrador}"></div>
+
+                    <div class="progress-segment progress-aprobadas"
+                        th:style="${total > 0 ? 'width: ' + (ordenesAprobadas * 100 / total) + '%' : 'width: 0%'}"
+                        th:title="'Aprobadas: ' + ${ordenesAprobadas}"></div>
+
+                    <div class="progress-segment progress-facturadas"
+                        th:style="${total > 0 ? 'width: ' + (ordenesFacturadas * 100 / total) + '%' : 'width: 0%'}"
+                        th:title="'Facturadas: ' + ${ordenesFacturadas}"></div>
+
+                    <div class="progress-segment progress-recibidas"
+                        th:style="${total > 0 ? 'width: ' + (ordenesRecibidas * 100 / total) + '%' : 'width: 0%'}"
+                        th:title="'Recibidas: ' + ${ordenesRecibidas}"></div>
+
+
+                    <div class="progress-segment progress-completadas"
+                        th:style="${total > 0 ? 'width: ' + (ordenesCompletadas * 100 / total) + '%' : 'width: 0%'}"
+                        th:title="'Completadas: ' + ${ordenesCompletadas}"></div>
+                </div>
+
+                <!-- Referencias del flujo de trabajo -->
+                <div class="order-status-references">
+
+
+
+                    <div class="reference-item">
+                        <span class="reference-value" th:text="${ordenesAnuladas}">0</span>
+                        <span class="reference-label">Anuladas</span>
+                        <span class="reference-color progress-anuladas"></span>
                     </div>
 
-                    <div class="order-stat accent-gray">
-                        <span class="order-stat-icon-wrap">
-                            <span class="material-symbols order-stat-icon">draft_orders</span>
-                        </span>
-                        <div class="order-stat-text">
-                            <span class="order-stat-value" th:text="${ordenesBorrador}">0</span>
-                            <span class="order-stat-label">borradores</span>
-                        </div>
+                    <div class="reference-item">
+                        <span class="reference-value" th:text="${ordenesBorrador}">0</span>
+                        <span class="reference-label">Borradoes</span>
+                        <span class="reference-color progress-borrador"></span>
+                    </div>
+                    <div class="reference-item">
+                        <span class="reference-value" th:text="${ordenesAprobadas}">0</span>
+                        <span class="reference-label">Aprobadas</span>
+                        <span class="reference-color progress-aprobadas"></span>
+                    </div>
+                    <div class="reference-item">
+                        <span class="reference-value" th:text="${ordenesFacturadas}">0</span>
+                        <span class="reference-label">Facturadas</span>
+                        <span class="reference-color progress-facturadas"></span>
+                    </div>
+                    <div class="reference-item">
+                        <span class="reference-value" th:text="${ordenesRecibidas}">0</span>
+                        <span class="reference-label">Recibidas</span>
+                        <span class="reference-color progress-recibidas"></span>
+                    </div>
+                    <div class="reference-item">
+                        <span class="reference-value" th:text="${ordenesCompletadas}">0</span>
+                        <span class="reference-label">Completadas</span>
+                        <span class="reference-color progress-completadas"></span>
                     </div>
 
-                    <div class="order-stat accent-green">
-                        <span class="order-stat-icon-wrap">
-                            <span class="material-symbols order-stat-icon">how_to_reg</span>
-                        </span>
-                        <div class="order-stat-text">
-                            <span class="order-stat-value" th:text="${ordenesAprobadas}">0</span>
-                            <span class="order-stat-label">aprobadas</span>
-                        </div>
-                    </div>
-
-                    <div class="order-stat accent-amber">
-                        <span class="order-stat-icon-wrap">
-                            <span class="material-symbols order-stat-icon">receipt_long</span>
-                        </span>
-                        <div class="order-stat-text">
-                            <span class="order-stat-value" th:text="${ordenesFacturadas}">0</span>
-                            <span class="order-stat-label">facturadas</span>
-                        </div>
-                    </div>
-
-                    <div class="order-stat accent-teal">
-                        <span class="order-stat-icon-wrap">
-                            <span class="material-symbols order-stat-icon">inventory</span>
-                        </span>
-                        <div class="order-stat-text">
-                            <span class="order-stat-value" th:text="${ordenesRecibidas}">0</span>
-                            <span class="order-stat-label">recibidas</span>
-                        </div>
-                    </div>
-
-                    <div class="order-stat accent-purple">
-                        <span class="order-stat-icon-wrap">
-                            <span class="material-symbols order-stat-icon">task_alt</span>
-                        </span>
-                        <div class="order-stat-text">
-                            <span class="order-stat-value" th:text="${ordenesCompletadas}">0</span>
-                            <span class="order-stat-label">completadas</span>
-                        </div>
-                    </div>
-
-                     <div class="order-stat accent-alert">
-                        <span class="order-stat-icon-wrap">
-                            <span class="material-symbols order-stat-icon">warning</span>
-                        </span>
-                        <div class="order-stat-text">
-                            <span class="order-stat-value" th:text="${ordenesIncompletas}">0</span>
-                            <span class="order-stat-label">Modificadas</span>
-                        </div>
-                    </div>
-
-                    <div class="order-stat accent-red">
-                        <span class="order-stat-icon-wrap">
-                            <span class="material-symbols order-stat-icon">block</span>
-                        </span>
-                        <div class="order-stat-text">
-                            <span class="order-stat-value" th:text="${ordenesAnuladas}">0</span>
-                            <span class="order-stat-label">anuladas</span>
-                        </div>
-                    </div>
-
-                    <span class="material-symbols order-status-arrow">arrow_forward</span>
                 </div>
             </a>
         </section>
@@ -179,8 +178,8 @@
              TARJETAS DE CATÁLOGO
              ============================================ -->
         <div class="divider">
-                <span> <b>    CATALOGOS    </b></span>
-            </div>
+            <span> <b> CATALOGOS </b></span>
+        </div>
         <section class="modules-grid">
             <div class="module-card accent-blue" data-target="section-usuarios">
                 <div class="module-icon-wrap">
@@ -275,7 +274,8 @@
 
                 <details class="form-card">
                     <summary class="form-card-title">
-                        <span class="form-card-title-content"><span class="material-symbols">chevron_right</span> Nuevo proveedor</span>
+                        <span class="form-card-title-content"><span class="material-symbols">chevron_right</span> Nuevo
+                            proveedor</span>
                         <span class="material-symbols form-card-toggle" aria-hidden="true">expand_more</span>
                     </summary>
                     <form th:action="@{/admin/proveedores}" method="post" id="proveedorForm">
@@ -424,7 +424,8 @@
 
                 <details class="form-card">
                     <summary class="form-card-title">
-                        <span class="form-card-title-content"><span class="material-symbols">chevron_right</span> Nuevo usuario</span>
+                        <span class="form-card-title-content"><span class="material-symbols">chevron_right</span> Nuevo
+                            usuario</span>
                         <span class="material-symbols form-card-toggle" aria-hidden="true">expand_more</span>
                     </summary>
                     <form th:action="@{/admin/usuarios}" method="post" id="usuarioForm">
@@ -602,7 +603,8 @@
 
                 <details class="form-card">
                     <summary class="form-card-title">
-                        <span class="form-card-title-content"><span class="material-symbols">chevron_right</span> Nuevo producto</span>
+                        <span class="form-card-title-content"><span class="material-symbols">chevron_right</span> Nuevo
+                            producto</span>
                         <span class="material-symbols form-card-toggle" aria-hidden="true">expand_more</span>
                     </summary>
                     <form th:action="@{/admin/productos}" method="post" id="productForm">
@@ -788,7 +790,8 @@
 
                 <details class="form-card">
                     <summary class="form-card-title">
-                        <span class="form-card-title-content"><span class="material-symbols">chevron_right</span> Nueva sede</span>
+                        <span class="form-card-title-content"><span class="material-symbols">chevron_right</span> Nueva
+                            sede</span>
                         <span class="material-symbols form-card-toggle" aria-hidden="true">expand_more</span>
                     </summary>
                     <form th:action="@{/admin/sedes}" method="post" id="sedeForm">
@@ -895,7 +898,8 @@
 
                 <details class="form-card">
                     <summary class="form-card-title">
-                        <span class="form-card-title-content"><span class="material-symbols">chevron_right</span> Nuevo centro de costo</span>
+                        <span class="form-card-title-content"><span class="material-symbols">chevron_right</span> Nuevo
+                            centro de costo</span>
                         <span class="material-symbols form-card-toggle" aria-hidden="true">expand_more</span>
                     </summary>
                     <form th:action="@{/admin/centros-costo}" method="post" id="centroForm">

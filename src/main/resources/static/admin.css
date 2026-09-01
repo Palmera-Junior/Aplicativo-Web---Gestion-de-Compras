@@ -100,44 +100,45 @@ html {
 
 .order-status-card {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 24px;
-    background: #fff;
+    flex-direction: column;
+    gap: 20px;
+    background: #fcfffe;
     border: 1px solid #e9ecef;
-    border-top: 3px solid transparent;
     border-radius: 12px;
-    padding: 38px 26px;
+    padding: 28px;
     text-decoration: none;
     color: inherit;
     transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
-    border-left: 5px solid #131261;
-    border-right: 5px solid #131261;
+    border-left: 5px solid #0c442a;
+    font-family: 'Inter', sans-serif;
 }
 
 .order-status-card:hover {
-    
     box-shadow: 0 8px 20px rgba(23, 27, 33, 0.07);
     transform: translateY(-2px);
-    border-top: 0.5px solid #131261;
-    border-bottom: 0.5px solid #131261;
 }
 
+/* Header: icono + info + total */
+.order-status-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
 
 .order-status-main {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 16px;
-    min-width: 240px;
+    flex: 1;
 }
 
-/* Ícono principal: identidad neutra del módulo, no un estado */
+/* Ícono principal */
 .order-status-icon {
-    width: 52px;
-    height: 52px;
-    border-radius: 12px;
-    background: #d6d7f2;
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    background: #0f3024;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -146,145 +147,191 @@ html {
 
 .order-status-icon .material-symbols {
     font-size: 28px;
+    color: white;
 }
 
 .material-symbols.stacks {
     font-size: 28px;
-    color: #131261;
+    color: #ffffff;
+}
+
+.order-status-body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
 .order-status-body h2 {
-    margin: 0 0 3px;
+    margin: 0;
     font-size: 18px;
     font-weight: 700;
     color: #212529;
+    font-family: 'Inter', sans-serif;
 }
 
 .order-status-body p {
     margin: 0;
     font-size: 13px;
     color: #868e96;
+    font-family: 'Inter', sans-serif;
 }
 
-.order-status-stats {
-    display: grid;
-    grid-template-columns: auto 1px repeat(4, auto) auto;
-    grid-template-rows: auto auto;
-    gap: 15px 35px;
+/* Número total a la derecha */
+.order-status-total {
+    display: flex;
+    justify-content: flex-end;
     align-items: center;
+    min-width: 110px;
+    padding-top: 2px;
 }
 
-/* Total: ocupa las 2 filas a la izquierda */
-.order-stat-total {
-    grid-row: 1 / -1;
-}
-
-/* Separador vertical entre total y desglose */
-.order-status-stats::before {
-    content: '';
-    grid-row: 1 / -1;
-    grid-column: 2;
-    width: 1px;
-    height: 100%;
-    background: #ced4da;
-}
-
-/* Flecha: ocupa las 2 filas a la derecha */
-.order-status-stats .order-status-arrow {
-    grid-row: 1 / -1;
-    grid-column: 7;
-}
-
-.order-stat {
+.order-total-main {
     display: flex;
     align-items: center;
-    gap: 9px;
+    justify-content: flex-end;
+    gap: 10px;
 }
 
-/* Total: número más grande y sin color, es el dato ancla */
-.order-stat-total .order-stat-value {
-    font-size: 28px;
-    font-weight: 800;
-    color: #212529;
-    font-family: JetBrains Mono, monospace;
-}
-
-.order-stat-total .order-stat-label {
-    align-self: flex-end;
-    margin-bottom: 3px;
-}
-
-/* Ícono de estado: el color vive en el símbolo mismo,
-   sin fondo ni variables — un color fijo por estado */
-.order-stat-icon-wrap {
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.order-stat-icon {
-    font-size: 22px !important;
-}
-
-.order-stat.accent-gray .order-stat-icon {
-    color: #616161;
-}
-
-.order-stat.accent-green .order-stat-icon {
-    color: #110eb4;
-}
-
-.order-stat.accent-amber .order-stat-icon {
-    color: #2b7a86; 
-}
-
-.order-stat.accent-teal .order-stat-icon {
-    color: #6b4fa0;
-}
-
-.order-stat.accent-purple .order-stat-icon {
-    color: #115a1c;
-}
-
-.order-stat.accent-red .order-stat-icon {
-    color: #d33122;
-}
-
-.accent-alert .order-stat-icon {
-    color: #b8791f;
-}
-
-.order-stat-text {
+.order-total-text {
     display: flex;
     flex-direction: column;
-    line-height: 1.2;
+    align-items: flex-end;
+    gap: 2px;
 }
 
-.order-stat-value {
-    font-family: 'JetBrains Mono', monospace;
+.order-status-total .order-stat-value {
+    font-size: 32px;
+    font-weight: 800;
+    color: #212529;
+    font-family: 'Inter', sans-serif;
+    line-height: 1;
+}
+
+.order-status-total .order-stat-label {
+    font-size: 11px;
+    color: #868e96;
     font-weight: 500;
-    font-size: 17px;
-    color: #656a6e;
-    font-variant-numeric: tabular-nums;
+    font-family: 'Inter', sans-serif;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
 }
 
-.order-stat-label {
-    font-size: 11.5px;
-    color: #939aa3;
+
+/* Barra de progreso del flujo de trabajo */
+.order-progress-bar {
+    display: flex;
+    width: 100%;
+    height: 6px;
+    border-radius: 999px;
+    overflow: hidden; 
+    gap: 0;
+   
+}
+
+.progress-segment {
+    flex: 0 0 auto;
+    height: 100%;
+    min-width: 0;
+    transition: all .3s ease;
+    position: relative;
+    border-right: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.08);
+}
+
+.progress-segment:last-child {
+    border-right: none;
+    box-shadow: none;
+}
+
+.progress-completadas {
+    background: #0f3024;
+}
+
+.progress-modificadas {
+    background: #e28b12;
+}
+
+.progress-recibidas {
+    background: #1e7481;
+}
+
+.progress-aprobadas {
+    background: #0d3977;
+}
+
+.progress-anuladas {
+    background: #bf1708;
+}
+
+.progress-facturadas {
+    background: #c8811d;
+}
+
+.progress-borrador {
+    background: #a8a8a8;
+}
+
+/* Referencias del flujo de trabajo */
+.order-status-references {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0;
+    flex-wrap: wrap;
+    border-top: 1px solid rgba(33, 37, 41, 0.05);
+    padding-top: 10px;
+}
+
+.reference-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    min-width: 85px;
+    position: relative;
+    padding: 0 10px;
+}
+
+.reference-item + .reference-item {
+    border-left: 1px solid rgba(33, 37, 41, 0.09);
+}
+.reference-color {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-top: 2px;
+}
+
+.reference-value {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 20px;
+    color: #212529;
+    line-height: 1;
+}
+
+.reference-label {
+    font-size: 12px;
+    color: #495057;
+    text-align: center;
+    white-space: nowrap;
+    font-weight: 500;
+    font-family: 'Inter', sans-serif;
 }
 
 .order-status-arrow {
-    font-size: 20px;
+    font-size: 22px;
     color: #ced4da;
-    transition: transform .2s ease, color .2s ease;
-    margin-left: 4px;
+    align-self: center;
+    line-height: 1;
+    transition: transform .2s ease;
+    margin-top: 2px;
 }
 
 .order-status-card:hover .order-status-arrow {
-    color: #04029e;
+    color: #0f3024;
     transform: translateX(3px);
 }
 
@@ -334,6 +381,7 @@ html {
     flex-direction: column;
     gap: 14px;
     transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+    font-family: 'Inter', sans-serif;
 }
 
 .module-card:hover {
@@ -377,6 +425,7 @@ html {
     font-size: 16.5px;
     font-weight: 700;
     color: #212529;
+    font-family: 'Inter', sans-serif;
 }
 
 .module-body p {
@@ -384,6 +433,7 @@ html {
     font-size: 13px;
     color: #6c757d;
     line-height: 1.45;
+    font-family: 'Inter', sans-serif;
 }
 
 .module-footer {
@@ -396,7 +446,7 @@ html {
 }
 
 .module-badge {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'Inter', sans-serif;
     font-size: 26px;
     font-weight: 800;
     color: #212529;
@@ -406,6 +456,7 @@ html {
     font-size: 12px;
     color: #adb5bd;
     flex: 1;
+    font-family: 'Inter', sans-serif;
 }
 
 .module-arrow {
@@ -885,16 +936,37 @@ td.actions {
 
     .order-status-card {
         flex-direction: column;
+        gap: 16px;
+    }
+
+    .order-status-header {
+        flex-direction: column;
         align-items: flex-start;
+        gap: 12px;
     }
 
-    .order-status-stats {
-        grid-template-columns: auto 1px repeat(2, 1fr);
-        gap: 25px 25px;
+    .order-status-total {
+        align-self: flex-start;
     }
 
-    .order-status-stats .order-status-arrow {
-        grid-column: -1;
+    .order-progress-bar {
+        height: 6px;
+    }
+
+    .order-status-references {
+        gap: 6px;
+    }
+
+    .reference-item {
+        min-width: 70px;
+    }
+
+    .reference-value {
+        font-size: 18px;
+    }
+
+    .reference-label {
+        font-size: 12px;
     }
 }
 
@@ -1051,23 +1123,31 @@ td.actions {
     }
 
     .order-status-card {
-        align-items: stretch;
-        gap: 18px;
-        padding: 18px 14px;
+        gap: 14px;
+        padding: 16px 12px;
+    }
+
+    .order-status-header {
+        flex-direction: column;
+        gap: 10px;
     }
 
     .order-status-main {
-        min-width: 0;
-        width: 100%;
         gap: 12px;
     }
 
-    .order-status-body {
-        min-width: 0;
+    .order-status-icon {
+        width: 42px;
+        height: 42px;
+    }
+
+    .order-status-icon .material-symbols,
+    .material-symbols.stacks {
+        font-size: 24px;
     }
 
     .order-status-body h2 {
-        font-size: 17px;
+        font-size: 16px;
     }
 
     .order-status-body p {
@@ -1075,23 +1155,34 @@ td.actions {
         line-height: 1.4;
     }
 
-    .order-status-stats {
-        width: 100%;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        grid-template-rows: auto;
-        gap: 10px;
+    .order-status-total .order-stat-value {
+        font-size: 26px;
     }
 
-    .order-status-stats::before {
-        display: none;
+    .order-progress-bar {
+        height: 5px;
     }
 
-    .order-stat-total {
-        grid-column: 1 / -1;
-        grid-row: auto;
-        justify-content: center;
-        padding-bottom: 6px;
-        border-bottom: 1px solid #e9ecef;
+    .order-status-references {
+        gap: 6px;
+        justify-content: space-around;
+    }
+
+    .reference-item {
+        min-width: 55px;
+        gap: 4px;
+    }
+
+    .reference-value {
+        font-size: 16px;
+    }
+
+    .reference-label {
+        font-size: 11px;
+    }
+
+    .order-status-arrow {
+        font-size: 18px;
     }
 
     .order-stat {
