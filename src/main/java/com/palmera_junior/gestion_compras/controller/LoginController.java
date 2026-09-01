@@ -1,7 +1,9 @@
 package com.palmera_junior.gestion_compras.controller;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import com.palmera_junior.gestion_compras.service.usuario.IUsuarioService;
@@ -14,6 +16,9 @@ import com.palmera_junior.gestion_compras.service.usuario.IUsuarioService;
 public class LoginController {
 
     private final IUsuarioService usuarioService;
+
+    @Value("${security.oauth2.microsoft.enabled:true}")
+    private boolean microsoftOAuth2Enabled;
 
     /**
      * Constructor para inyección de dependencias del servicio de usuarios.
@@ -36,7 +41,8 @@ public class LoginController {
      * @return Vista a renderizar o redirección.
      */
     @GetMapping("/login")
-    public String login(Authentication authentication) {
+    public String login(Authentication authentication, Model model) {
+        model.addAttribute("microsoftOAuth2Enabled", microsoftOAuth2Enabled);
         return usuarioService.obtenerVistaLogin(authentication);
     }
 }

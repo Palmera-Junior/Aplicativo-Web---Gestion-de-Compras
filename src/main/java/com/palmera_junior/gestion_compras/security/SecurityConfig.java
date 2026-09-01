@@ -1,5 +1,6 @@
 package com.palmera_junior.gestion_compras.security;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -19,6 +20,9 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 public class SecurityConfig {
 
     private final CustomOAuth2UserService customOAuth2UserService;
+
+    @Value("${security.oauth2.microsoft.enabled:true}")
+    private boolean microsoftOAuth2Enabled;
 
     /**
      * Constructor para inyección del servicio OAuth2 personalizado.
@@ -90,18 +94,22 @@ public class SecurityConfig {
                         .loginPage("/login")
                         .successHandler(successHandler())
                         .permitAll())
-                .oauth2Login(oauth2 -> oauth2
-                        .loginPage("/login")
-                        .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
-                        .successHandler(successHandler())
-                        .failureUrl("/login?error") // mismo comportamiento que un login fallido normal
-                )
                 .logout(logout -> logout
                         .logoutUrl("/logout")
                         .logoutSuccessUrl("/login?logout")
                         .permitAll())
                 .sessionManagement(session -> session
                         .sessionFixation(fixation -> fixation.changeSessionId()));
+
+        // Permite desplegar sin credenciales de Microsoft configuradas.
+        if (microsoftOAuth2Enabled) {
+            http.oauth2Login(oauth2 -> oauth2
+                    .loginPage("/login")
+                    .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
+                    .successHandler(successHandler())
+                    .failureUrl("/login?error") // mismo comportamiento que un login fallido normal
+            );
+        }
 
         return http.build();
     }

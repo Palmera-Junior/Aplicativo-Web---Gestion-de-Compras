@@ -7,6 +7,7 @@
    - `docker compose up --build`
 3. La aplicación quedará disponible en `http://localhost` y la base de datos en `localhost:5432`.
 4. Para detener los servicios usa `docker compose down`.
+5. Si no necesitas login con Microsoft, usa `docker compose -f docker-compose.no-oauth2.yml up --build` (no exige `MICROSOFT_CLIENT_ID`, `MICROSOFT_CLIENT_SECRET` ni `MICROSOFT_TENANT_ID`).
 
 ## Configuración de correo con Amazon SES
 

@@ -56,11 +56,11 @@
                 Iniciar Sesión
             </button>
 
-            <div class="divider">
+            <div class="divider" th:if="${microsoftOAuth2Enabled}">
                 <span>o continúa con</span>
             </div>
 
-            <a href="/oauth2/authorization/microsoft" class="btn-microsoft">
+            <a th:if="${microsoftOAuth2Enabled}" href="/oauth2/authorization/microsoft" class="btn-microsoft">
                 <span class="microsoft-icon" aria-hidden="true">
                     <span></span><span></span><span></span><span></span>
                 </span>
