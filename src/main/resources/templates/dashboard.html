@@ -627,7 +627,22 @@
             </div>
         </div>
     </div>
+    <!-- ============================================
+         OVERLAY DE TRANSICIÓN DE PÁGINA
+         Se activa al hacer clic en cualquier enlace con
+         la clase "js-page-transition". El overlay se
+         oculta automáticamente cuando la página termina
+         de cargar.
+         ============================================ -->
+    <div id="page-transition-overlay" class="page-transition-overlay" aria-hidden="true">
+        <div class="page-transition-content">
+            <span class="material-symbols">progress_activity</span>
+            <p>Cargando…</p>
+        </div>
+    </div>
+
     <script th:src="@{/security.js(v=1)}"></script>
+    <script th:src="@{/page-transition.js}"></script>
     <script th:src="@{/dashboard.js(v=3)}"></script>
 
 </body>
