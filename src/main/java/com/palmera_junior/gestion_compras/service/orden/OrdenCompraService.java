@@ -32,6 +32,7 @@ import com.palmera_junior.gestion_compras.entity.Rol;
 import com.palmera_junior.gestion_compras.entity.Sede;
 import com.palmera_junior.gestion_compras.entity.Usuario;
 import com.palmera_junior.gestion_compras.events.OrdenCompraAprobadaEvent;
+import com.palmera_junior.gestion_compras.events.OrdenFacturadaEvent;
 import com.palmera_junior.gestion_compras.entity.Proveedor;
 import com.palmera_junior.gestion_compras.repository.OrdenCompraRepository;
 import com.palmera_junior.gestion_compras.repository.ProductoRepository;
@@ -738,9 +739,13 @@ public class OrdenCompraService implements IOrdenCompraService {
     /**
      * Qué hace:
      * Guarda el número de factura y soporte digital en base64; si la orden ya estaba recibida, pasa a COMPLETADA, de lo contrario a FACTURADA.
+     * Registra el correo pendiente en la tabla de auditoría outbox y dispara el evento {@link OrdenFacturadaEvent}
+     * para notificar al correo fijo de facturación, independientemente de si la orden ya fue recibida o no.
      * 
      * A dónde apunta:
      * - Tabla: orden_compra
+     * - Servicio outbox: {@link CorreoOrdenOutboxService#registrarPendienteFacturacion}
+     * - Event Publisher: {@link ApplicationEventPublisher#publishEvent}
      */
     @Override
     @Transactional
@@ -769,7 +774,15 @@ public class OrdenCompraService implements IOrdenCompraService {
             orden.setEstado(EstadoOrdenCompra.FACTURADA);
         }
 
-        return ordenCompraRepository.save(orden);
+        OrdenCompra ordenGuardada = ordenCompraRepository.save(orden);
+
+        Long idAuditoria = correoOrdenOutboxService
+                .registrarPendienteFacturacion(ordenGuardada);
+
+        eventPublisher.publishEvent(
+                new OrdenFacturadaEvent(idAuditoria));
+
+        return ordenGuardada;
     }
 
     /**

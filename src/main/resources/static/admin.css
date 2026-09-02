@@ -244,7 +244,7 @@ html {
 }
 
 .progress-completadas {
-    background: #0f3024;
+    background: #115c41;
 }
 
 .progress-modificadas {
@@ -668,6 +668,10 @@ html {
     font-weight: 600;
     cursor: pointer;
     transition: all .2s ease;
+}
+
+#btn-refrescar {
+  border: none;
 }
 
 

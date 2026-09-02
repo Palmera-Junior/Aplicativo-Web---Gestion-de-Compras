@@ -138,6 +138,9 @@ CREATE TABLE auditoria_envio_correo (
     estado VARCHAR(20) NOT NULL CHECK (estado IN (
         'PENDIENTE', 'PROCESANDO', 'ENVIADO', 'REINTENTAR', 'FALLIDO'
     )),
+    tipo_envio VARCHAR(20) NOT NULL DEFAULT 'APROBACION' CHECK (tipo_envio IN (
+        'APROBACION', 'FACTURACION'
+    )),
     intentos INT NOT NULL DEFAULT 0,
     proximo_intento TIMESTAMP,
     bloqueado_en TIMESTAMP,

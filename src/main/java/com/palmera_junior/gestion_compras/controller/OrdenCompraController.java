@@ -311,10 +311,10 @@ public class OrdenCompraController {
      * 
      * A dónde apunta:
      * - Ruta HTTP: PUT /orden-compra/{id}/correo/marcar-enviado
-     * - Servicio delegado: {@link CorreoOrdenOutboxService#marcarEnviadoManualmente(Integer, String)} -> AuditoriaEnvioCorreoRepository
+     * - Servicio delegado: {@link CorreoOrdenOutboxService#marcarEnviadoManualmente(Integer, com.palmera_junior.gestion_compras.entity.TipoEnvioCorreo, String)} -> AuditoriaEnvioCorreoRepository
      * 
      * @param id Identificador de la orden.
-     * @param dto DTO con la descripción o motivo del marcado manual.
+     * @param dto DTO con el tipo de envío (APROBACION/FACTURACION) y la descripción o motivo del marcado manual.
      * @return 200 OK con confirmación.
      */
     @PutMapping("/{id}/correo/marcar-enviado")
@@ -324,7 +324,11 @@ public class OrdenCompraController {
 
         try {
 
-            correoOrdenOutboxService.marcarEnviadoManualmente(id, dto.getDescripcion());
+            if (dto.getTipoEnvio() == null) {
+                return ResponseEntity.badRequest().body("Debe indicar el tipo de correo a marcar (APROBACION o FACTURACION)");
+            }
+
+            correoOrdenOutboxService.marcarEnviadoManualmente(id, dto.getTipoEnvio(), dto.getDescripcion());
 
             return ResponseEntity.ok(
                     "Correo marcado como enviado correctamente");
@@ -377,4 +381,4 @@ public class OrdenCompraController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-}
+}

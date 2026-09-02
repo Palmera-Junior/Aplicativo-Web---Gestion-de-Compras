@@ -57,4 +57,33 @@ public class EmailTemplateService {
                 context
         );
     }
-}
+
+    /**
+     * Qué hace:
+     * Construye el asunto del correo de notificación de facturación, incluyendo el número de orden.
+     * 
+     * @param orden Entidad {@link OrdenCompra} recién facturada.
+     * @return Asunto del correo.
+     */
+    public String generarAsuntoFacturacion(OrdenCompra orden) {
+        return "Orden de Compra Facturada - N° " + orden.getNumeroOrden();
+    }
+
+    /**
+     * Qué hace:
+     * Construye el cuerpo en texto plano del correo de notificación de facturación.
+     * 
+     * @param orden Entidad {@link OrdenCompra} recién facturada.
+     * @return Cuerpo del mensaje en texto plano.
+     */
+    public String generarCuerpoFacturacion(OrdenCompra orden) {
+        String proveedor = orden.getProveedor() != null ? orden.getProveedor().getNombre() : "N/A";
+        String numeroFactura = orden.getNumeroFactura() != null ? orden.getNumeroFactura() : "N/A";
+
+        return "Se registró correctamente la facturación de la Orden de Compra N° " + orden.getNumeroOrden() + ".\n\n"
+                + "Proveedor: " + proveedor + "\n"
+                + "N° Factura proveedor: " + numeroFactura + "\n\n"
+                + "Se adjunta la evidencia digital del soporte de factura del proveedor.\n\n"
+                + "Este es un mensaje automático, por favor no responder.";
+    }
+}

@@ -54,15 +54,26 @@
         // Ocultar overlay cuando la página termine de cargar
         window.addEventListener('load', hideOverlay);
 
+        // Ocultar overlay al restaurar la página desde el bfcache (navegación
+        // con los botones atrás/adelante), caso en el que 'load' no se dispara.
+        window.addEventListener('pageshow', hideOverlay);
+
         // Mostrar overlay al hacer clic en enlaces de transición
         document.addEventListener('click', function (e) {
             const link = e.target.closest('.' + CONFIG.transitionClass);
-            if (link) {
-                showOverlay();
+            if (!link) return;
 
-                // Fallback: ocultar overlay después de tiempo máximo
-                setTimeout(hideOverlay, CONFIG.maxWaitTime);
-            }
+            // Si el clic abre el enlace en una pestaña/ventana nueva (Ctrl/Cmd/Shift+click,
+            // clic central o target="_blank"), la página actual no navega y por lo tanto
+            // 'load'/'pageshow' nunca se disparan aquí: no mostrar el overlay en ese caso.
+            const abreEnNuevaPestana = e.ctrlKey || e.metaKey || e.shiftKey || e.button === 1
+                || link.target === '_blank';
+            if (abreEnNuevaPestana) return;
+
+            showOverlay();
+
+            // Fallback: ocultar overlay después de tiempo máximo
+            setTimeout(hideOverlay, CONFIG.maxWaitTime);
         });
 
         // Ocultar overlay si la página ya está cargada (por ejemplo, en recarga)

@@ -737,10 +737,7 @@ body {
 /* ============================================
    BOTONES DE ACCIONES (íconos en la tabla)
    ============================================ */
-.acciones-th {
-    text-align: center !important;
-  
-}
+
 
 .acciones-cell {
     width: 175px;
@@ -749,8 +746,13 @@ body {
     
 }
 
+.acciones-th {
+    padding-left: 34px !important;
+}
+
 /*############## CODIDO PARA OCULTAR BOTONES DE ACCIÓN HASTA QUE EL USUARIO HAGA HOVER SOBRE LA FILA ##############*/
 /*
+
 .acciones-cell{
     text-align: center;
     font-size: 0;
@@ -883,9 +885,33 @@ body {
    ÍCONO DE ESTADO DE ENVÍO DE CORREO (columna Correo)
    ============================================ */
 .correo-cell {
-    width: 90px;
+    width: 60px;
+    padding-left: 4px !important;
+    padding-right: 4px !important;
     text-align: center;
     vertical-align: middle;
+}
+
+/* Encabezados de las columnas de correo: solo ícono, mismo ancho que .correo-cell */
+.correo-th {
+    width: 60px;
+    padding-left: 4px !important;
+    padding-right: 4px !important;
+    text-align: center !important;
+    white-space: nowrap;
+}
+
+.correo-th .material-symbols {
+    font-size: 18px;
+    color: #495057;
+}
+
+.correo-th-icon {
+    width: 20px;
+    height: 20px;
+    display: inline-block;
+    vertical-align: middle;
+    object-fit: contain;
 }
 
 .correo-estado-icon {
@@ -935,6 +961,11 @@ body {
 .correo-estado-icon.pendiente .material-symbols {
     color: #d97706;
 }
+
+#correo-fallido-descripcion {
+    min-height: fit-content;
+}
+
 
 /* Tablas Generales */
 .table-responsive {
@@ -1346,19 +1377,30 @@ body {
 }
 
 .btn-close {
-   
-    padding: 5px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
     background: transparent;
     border: none;
 
-    
+    color: #0f5f1c;
+    cursor: pointer;
+}
+
+.btn-close .material-symbols {
+    font-size: 20px;
+    color: inherit;
 }
 
 .btn-close:hover {
-    transform: scale(1.2);
+
     color: #ffffff;
-   
+    transform: scale(1.08);
 }
+
+
 
 .modal-body {
     padding: 24px;

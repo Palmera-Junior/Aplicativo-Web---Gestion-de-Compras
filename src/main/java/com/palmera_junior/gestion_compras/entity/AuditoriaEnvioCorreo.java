@@ -33,6 +33,10 @@ public class AuditoriaEnvioCorreo {
     @Column(nullable = false, length = 20)
     private EstadoEnvioCorreo estado;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_envio", nullable = false, length = 20)
+    private TipoEnvioCorreo tipoEnvio = TipoEnvioCorreo.APROBACION;
+
     @Column(nullable = false)
     private Integer intentos = 0;
 

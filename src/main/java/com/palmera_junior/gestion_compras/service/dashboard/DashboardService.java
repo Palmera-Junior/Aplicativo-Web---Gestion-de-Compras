@@ -14,6 +14,7 @@ import com.palmera_junior.gestion_compras.entity.CentroCosto;
 import com.palmera_junior.gestion_compras.entity.EstadoOrdenCompra;
 import com.palmera_junior.gestion_compras.entity.EstadoEnvioCorreo;
 import com.palmera_junior.gestion_compras.entity.OrdenCompra;
+import com.palmera_junior.gestion_compras.entity.TipoEnvioCorreo;
 import com.palmera_junior.gestion_compras.entity.Usuario;
 import com.palmera_junior.gestion_compras.service.catalogo.IProductoService;
 import com.palmera_junior.gestion_compras.service.catalogo.IProveedorService;
@@ -87,7 +88,10 @@ public class DashboardService implements IDashboardService {
         List<Integer> idsOrdenes = ordenesCompra.getContent().stream()
                 .map(OrdenCompra::getIdOrden)
                 .toList();
-        Map<Integer, EstadoEnvioCorreo> estadosCorreo = correoOrdenOutboxService.obtenerEstadosPorOrdenes(idsOrdenes);
+        Map<Integer, EstadoEnvioCorreo> estadosCorreoAprobacion = correoOrdenOutboxService
+                .obtenerEstadosPorOrdenes(idsOrdenes, TipoEnvioCorreo.APROBACION);
+        Map<Integer, EstadoEnvioCorreo> estadosCorreoFacturacion = correoOrdenOutboxService
+                .obtenerEstadosPorOrdenes(idsOrdenes, TipoEnvioCorreo.FACTURACION);
 
         List<CentroCosto> centroCostos;
         if (usuario.getSede() != null && "Sede Nacional".equalsIgnoreCase(usuario.getSede().getNombre())) {
@@ -102,7 +106,8 @@ public class DashboardService implements IDashboardService {
         model.addAttribute("productos", productoService.getAllProductos());
         model.addAttribute("paginaActual", page);
         model.addAttribute("ordenesCompra", ordenesCompra);
-        model.addAttribute("estadosCorreo", estadosCorreo);
+        model.addAttribute("estadosCorreoAprobacion", estadosCorreoAprobacion);
+        model.addAttribute("estadosCorreoFacturacion", estadosCorreoFacturacion);
         model.addAttribute("proveedores",
                 esNacional ? proveedorService.getAllProveedores() : proveedorService.listarPorSede(idSede));
         model.addAttribute("q", q);

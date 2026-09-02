@@ -12,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 
 import com.palmera_junior.gestion_compras.entity.AuditoriaEnvioCorreo;
 import com.palmera_junior.gestion_compras.entity.EstadoEnvioCorreo;
+import com.palmera_junior.gestion_compras.entity.TipoEnvioCorreo;
 
 /**
  * Repositorio JPA para la entidad {@link AuditoriaEnvioCorreo}.
@@ -28,16 +29,18 @@ public interface AuditoriaEnvioCorreoRepository extends JpaRepository<AuditoriaE
 
     // Ordenado por id descendente para poder quedarnos con el intento más reciente por orden
     /**
-     * Qué hace: Retorna el historial de auditoría de envío para una lista de órdenes ordenado descendentemente por ID.
+     * Qué hace: Retorna el historial de auditoría de envío para una lista de órdenes y un tipo de envío puntual, ordenado descendentemente por ID.
      * A dónde apunta: Tabla `auditoria_envio_correo`.
      */
-    List<AuditoriaEnvioCorreo> findByOrdenCompra_IdOrdenInOrderByIdDesc(Collection<Integer> idsOrdenes);
+    List<AuditoriaEnvioCorreo> findByOrdenCompra_IdOrdenInAndTipoEnvioOrderByIdDesc(
+            Collection<Integer> idsOrdenes, TipoEnvioCorreo tipoEnvio);
 
     /**
-     * Qué hace: Obtiene el registro de intento de envío más reciente para una orden puntual.
+     * Qué hace: Obtiene el registro de intento de envío más reciente de un tipo puntual (APROBACION/FACTURACION) para una orden.
      * A dónde apunta: Tabla `auditoria_envio_correo`.
      */
-    Optional<AuditoriaEnvioCorreo> findFirstByOrdenCompra_IdOrdenOrderByIdDesc(Integer idOrden);
+    Optional<AuditoriaEnvioCorreo> findFirstByOrdenCompra_IdOrdenAndTipoEnvioOrderByIdDesc(
+            Integer idOrden, TipoEnvioCorreo tipoEnvio);
 
     /**
      * Qué hace: Bloquea atómicamente un registro outbox pasando su estado a PROCESANDO e incrementando los intentos.

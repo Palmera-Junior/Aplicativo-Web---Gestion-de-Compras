@@ -2367,6 +2367,7 @@ function limpiarFormularioRecepcion() {
 // ==========================================
 
 let idOrdenCorreoSeleccionada = null;
+let tipoEnvioCorreoSeleccionado = null;
 
 // ABRIR MODAL (clic sobre el ícono ❌ de correo FALLIDO)
 document.addEventListener("click", function (e) {
@@ -2378,6 +2379,12 @@ document.addEventListener("click", function (e) {
     }
 
     idOrdenCorreoSeleccionada = boton.dataset.id;
+    tipoEnvioCorreoSeleccionado = boton.getAttribute('data-tipo-envio')?.toUpperCase();
+
+    if (!idOrdenCorreoSeleccionada || !['APROBACION', 'FACTURACION'].includes(tipoEnvioCorreoSeleccionado)) {
+        mostrarToast('No fue posible identificar el tipo de correo.', 'error');
+        return;
+    }
 
     document.getElementById(
         "correo-fallido-numero-orden"
@@ -2425,6 +2432,10 @@ document
         const btn = document.getElementById("btn-confirmar-correo-fallido");
 
         try {
+            if (!idOrdenCorreoSeleccionada || !tipoEnvioCorreoSeleccionado) {
+                throw new Error('No fue posible identificar el correo seleccionado.');
+            }
+
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
 
@@ -2433,7 +2444,7 @@ document
                 {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ descripcion })
+                    body: JSON.stringify({ descripcion, tipoEnvio: tipoEnvioCorreoSeleccionado })
                 }
             );
 
@@ -2485,6 +2496,7 @@ function limpiarFormularioCorreoFallido() {
     document.getElementById("correo-fallido-numero-orden").textContent = "";
 
     idOrdenCorreoSeleccionada = null;
+    tipoEnvioCorreoSeleccionado = null;
 }
 
 // LISTENER BOTN VIEW 

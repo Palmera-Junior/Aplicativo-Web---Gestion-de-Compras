@@ -66,4 +66,50 @@ public class EmailService implements IEmailService {
 
                 mailSender.send(message);
         }
+
+        /**
+         * Qué hace:
+         * Genera un mensaje MIME UTF-8 de texto plano con el PDF de la orden (incluye la evidencia
+         * de factura ya embebida) adjunto y lo despacha a través del servidor SMTP configurado.
+         *
+         * A dónde apunta:
+         * - Protocolo SMTP mediante {@link JavaMailSender#send(MimeMessage)}
+         * - Cuenta remitente: propiedad `correo.remitente`
+         *
+         * @param destinatario Dirección de correo fija de notificación de facturación.
+         * @param asunto Asunto del mensaje.
+         * @param cuerpo Cuerpo del mensaje en texto plano.
+         * @param pdf Arreglo de bytes del PDF de la orden facturada.
+         * @throws Exception Si falla el transporte SMTP o la creación del mensaje.
+         */
+        @Override
+        public void enviarNotificacionFacturacion(
+                        String destinatario,
+                        String asunto,
+                        String cuerpo,
+                        byte[] pdf) throws Exception {
+
+                MimeMessage message = mailSender.createMimeMessage();
+
+                MimeMessageHelper helper = new MimeMessageHelper(
+                                message,
+                                true,
+                                "UTF-8");
+
+                helper.setFrom(remitente);
+
+                helper.setTo(destinatario);
+
+                helper.setSubject(asunto);
+
+                helper.setText(
+                                cuerpo,
+                                false);
+
+                helper.addAttachment(
+                                "Orden_Compra.pdf",
+                                new ByteArrayResource(pdf));
+
+                mailSender.send(message);
+        }
 }
