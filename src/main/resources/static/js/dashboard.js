@@ -363,12 +363,18 @@ document.addEventListener("change", async function (e) {
             `/dashboard/producto?codigo=${encodeURIComponent(codigo)}`
         );
 
-        // Si el servidor devuelve error o no encontró el producto
-        if (!response.ok) {
+        // Un 404 confirma que el código no existe en el catálogo.
+        if (response.status === 404) {
             campoDescripcion.value = "";
             if (campoPresentacion) campoPresentacion.value = "";
             campoValorUnitario.value = "";
+            e.target.dataset.idProducto = "";
+            mostrarToast(`El código de producto "${codigo}" no existe.`, 'info');
             return;
+        }
+
+        if (!response.ok) {
+            throw new Error("No fue posible consultar el producto.");
         }
 
         const producto = await response.json();
@@ -387,6 +393,8 @@ document.addEventListener("change", async function (e) {
             campoDescripcion.value = "";
             if (campoPresentacion) campoPresentacion.value = "";
             campoValorUnitario.value = "";
+            e.target.dataset.idProducto = "";
+            mostrarToast(`El código de producto "${codigo}" no existe.`, 'info');
 
         }
 
@@ -397,6 +405,7 @@ document.addEventListener("change", async function (e) {
         campoDescripcion.value = "";
         if (campoPresentacion) campoPresentacion.value = "";
         campoValorUnitario.value = "";
+        e.target.dataset.idProducto = "";
 
     }
 

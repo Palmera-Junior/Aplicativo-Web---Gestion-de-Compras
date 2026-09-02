@@ -21,7 +21,7 @@ public class SecurityConfig {
 
     private final CustomOAuth2UserService customOAuth2UserService;
 
-    @Value("${security.oauth2.microsoft.enabled:true}")
+    @Value("${security.oauth2.microsoft.enabled:false}")
     private boolean microsoftOAuth2Enabled;
 
     /**
@@ -71,7 +71,7 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/login", "/login.css", "/imgs/**", "/static/**",
+                                "/login", "/css/**", "/imgs/**", "/static/**",
                                 "/oauth2/**", "/login/oauth2/**" // rutas del flujo de Google
                         ).permitAll()
 
@@ -83,7 +83,7 @@ public class SecurityConfig {
                         .requestMatchers("/dashboard", "/dashboard/**", "/ordenes/**", "/orden-compra/**", "/api/usuario/**")
                         .hasAnyRole("SOLICITANTE", "APROBADOR", "ADMINISTRADOR")
 
-                        .requestMatchers("/dashboard.js", "/index.css", "/admin.css", "/admin.js", "/security.js")
+                        .requestMatchers("/css/**", "/js/**")
                         .authenticated()
 
                         .anyRequest().denyAll())

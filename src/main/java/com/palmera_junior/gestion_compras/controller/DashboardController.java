@@ -3,6 +3,7 @@ package com.palmera_junior.gestion_compras.controller;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -90,11 +91,14 @@ public class DashboardController {
      */
     @GetMapping("/dashboard/producto")
     @ResponseBody
-    public Producto buscarProducto(@RequestParam(required = false) String codigo) {
+    public ResponseEntity<Producto> buscarProducto(@RequestParam(required = false) String codigo) {
         if (codigo == null || codigo.isBlank()) {
-            return null;
+            return ResponseEntity.notFound().build();
         }
-        return productoService.buscarPorCodigo(codigo);
+        Producto producto = productoService.buscarPorCodigo(codigo);
+        return producto == null
+                ? ResponseEntity.notFound().build()
+                : ResponseEntity.ok(producto);
     }
 
     /**
@@ -137,4 +141,4 @@ public class DashboardController {
         return ordenCompraService.obtenerOrdenDTO(id);
     }
 
-}
+}
