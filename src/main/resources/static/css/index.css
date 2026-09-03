@@ -87,7 +87,7 @@ body {
 .btn-logout:hover {
     background: rgba(255, 255, 255, 0.2);
     border-color: rgba(255, 255, 255, 0.4);
-    color: #af6969;
+    color: #af6969; 
 }
 
 .btn-logout .material-symbols {
@@ -451,9 +451,12 @@ body {
     text-transform: uppercase;
     letter-spacing: 0.4px;
     font-weight: 600;
-    text-align: left;
+    text-align:left;
     padding: 12px 16px;
     white-space: nowrap;
+}
+.estado-th {
+    text-align: center !important;
 }
 
 .data-table tbody td {
@@ -533,8 +536,8 @@ body {
     letter-spacing: 0.3px;
     white-space: nowrap;
     gap: 6px;
-    background: #f1f3f5;
-    color: #6c757d;
+
+    
 }
 
 .badge-estado::before {
@@ -1799,6 +1802,15 @@ body {
 }
 
 #recepcion-proveedor {
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+#factura-numero-orden {
+    font-weight: 500;
+}
+
+#factura-proveedor{
     color: var(--primary-color);
     font-weight: 500;
 }

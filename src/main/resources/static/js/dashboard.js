@@ -2239,7 +2239,7 @@ document
         if (pagaFleteSegunOrden && (valorFlete === null || valorFlete <= 0)) {
 
             mostrarToast(
-                "El valor del flete debe ser mayor a 0.",
+                "Debe ingresar el valor del flete ",
                 'error'
             );
 

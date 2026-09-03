@@ -64,7 +64,7 @@ public class DashboardController {
     @GetMapping("/dashboard")
     public String listarOrdenesCompra(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "8") int size,
+            @RequestParam(defaultValue = "12") int size,
             @RequestParam(defaultValue = "") String q,
             @RequestParam(defaultValue = "") String fechaDesde,
             @RequestParam(defaultValue = "") String fechaHasta,
