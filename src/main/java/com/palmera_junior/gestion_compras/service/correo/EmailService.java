@@ -1,26 +1,39 @@
 package com.palmera_junior.gestion_compras.service.correo;
 
+import java.io.ByteArrayOutputStream;
+import java.util.Properties;
+
+import jakarta.mail.Session;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
+import software.amazon.awssdk.core.SdkBytes;
+import software.amazon.awssdk.services.sesv2.SesV2Client;
+import software.amazon.awssdk.services.sesv2.model.Destination;
+import software.amazon.awssdk.services.sesv2.model.EmailContent;
+import software.amazon.awssdk.services.sesv2.model.RawMessage;
+import software.amazon.awssdk.services.sesv2.model.SendEmailRequest;
+
 /**
- * Servicio encargado del envío de correos electrónicos mediante {@link JavaMailSender}.
- * Inyecta el remitente institucional configurado y adjunta el PDF de la orden de compra.
+ * Servicio encargado del envío de correos electrónicos mediante Amazon SES API v2.
+ * Construye el mensaje MIME y adjunta el PDF de la orden de compra.
  */
 @Service
 @RequiredArgsConstructor
 public class EmailService implements IEmailService {
 
-        private final JavaMailSender mailSender;
+        private final SesV2Client sesClient;
 
         @Value("${correo.remitente}")
         private String remitente;
+
+        @Value("${correo.remitente-nombre}")
+        private String nombreRemitente;
 
         /**
          * Qué hace:
@@ -28,7 +41,7 @@ public class EmailService implements IEmailService {
          * y lo despacha a través del servidor SMTP configurado.
          *
          * A dónde apunta:
-         * - Protocolo SMTP mediante {@link JavaMailSender#send(MimeMessage)}
+         * - Amazon SES API v2 mediante un mensaje MIME Raw.
          * - Cuenta remitente: propiedad `correo.remitente`
          *
          * @param destinatario Dirección de correo del destinatario.
@@ -42,14 +55,14 @@ public class EmailService implements IEmailService {
                         String html,
                         byte[] pdf) throws Exception {
 
-                MimeMessage message = mailSender.createMimeMessage();
+                MimeMessage message = new MimeMessage(Session.getInstance(new Properties()));
 
                 MimeMessageHelper helper = new MimeMessageHelper(
                                 message,
                                 true,
                                 "UTF-8");
 
-                helper.setFrom(remitente);
+                helper.setFrom(remitente, nombreRemitente);
 
                 helper.setTo(destinatario);
 
@@ -64,7 +77,7 @@ public class EmailService implements IEmailService {
                                 "Orden_Compra.pdf",
                                 new ByteArrayResource(pdf));
 
-                mailSender.send(message);
+                enviarComoRaw(message, destinatario);
         }
 
         /**
@@ -73,7 +86,7 @@ public class EmailService implements IEmailService {
          * de factura ya embebida) adjunto y lo despacha a través del servidor SMTP configurado.
          *
          * A dónde apunta:
-         * - Protocolo SMTP mediante {@link JavaMailSender#send(MimeMessage)}
+         * - Amazon SES API v2 mediante un mensaje MIME Raw.
          * - Cuenta remitente: propiedad `correo.remitente`
          *
          * @param destinatario Dirección de correo fija de notificación de facturación.
@@ -89,14 +102,14 @@ public class EmailService implements IEmailService {
                         String cuerpo,
                         byte[] pdf) throws Exception {
 
-                MimeMessage message = mailSender.createMimeMessage();
+                MimeMessage message = new MimeMessage(Session.getInstance(new Properties()));
 
                 MimeMessageHelper helper = new MimeMessageHelper(
                                 message,
                                 true,
                                 "UTF-8");
 
-                helper.setFrom(remitente);
+                helper.setFrom(remitente, nombreRemitente);
 
                 helper.setTo(destinatario);
 
@@ -110,6 +123,22 @@ public class EmailService implements IEmailService {
                                 "Orden_Compra.pdf",
                                 new ByteArrayResource(pdf));
 
-                mailSender.send(message);
+                enviarComoRaw(message, destinatario);
+        }
+
+        private void enviarComoRaw(MimeMessage message, String destinatario) throws Exception {
+                ByteArrayOutputStream output = new ByteArrayOutputStream();
+                message.writeTo(output);
+
+                RawMessage rawMessage = RawMessage.builder()
+                                .data(SdkBytes.fromByteArray(output.toByteArray()))
+                                .build();
+
+                SendEmailRequest request = SendEmailRequest.builder()
+                                .destination(Destination.builder().toAddresses(destinatario).build())
+                                .content(EmailContent.builder().raw(rawMessage).build())
+                                .build();
+
+                sesClient.sendEmail(request);
         }
 }

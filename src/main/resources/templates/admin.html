@@ -95,10 +95,17 @@
                     </div>
                     <div class="order-status-total">
                         <div class="order-total-main">
+                            <!--Mostrar valor total de órdenes-->
+                            <div class="order-total-text order-value-summary">
+                                <span class="material-symbols total">finance_mode</span>
+                                <span class="order-stat-value value"
+                                    th:text="'$ ' + ${#numbers.formatDecimal(valorTotalOrdenes, 1, 'COMMA', 0, 'POINT')}">$ 0</span>                                
+                            </div>
                             <div class="order-total-text">
                                 <span class="order-stat-value total" th:text="${ordenesCompra.size()}">0</span>
                                 <span class="order-stat-label">TOTAL</span>
                             </div>
+                            
                             <span class="material-symbols order-status-arrow">arrow_forward</span>
                         </div>
                     </div>
@@ -169,6 +176,7 @@
                         <span class="reference-label">Completadas</span>
                         <span class="reference-color progress-completadas"></span>
                     </div>
+
 
                 </div>
             </a>

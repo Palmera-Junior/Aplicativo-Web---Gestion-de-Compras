@@ -66,7 +66,7 @@ public class EmailTemplateService {
      * @return Asunto del correo.
      */
     public String generarAsuntoFacturacion(OrdenCompra orden) {
-        return "Orden de Compra Facturada - N° " + orden.getNumeroOrden();
+        return "Orden de Compra Facturada para " + (orden.getCentroCosto().getNombre()) +" - " +orden.getNumeroOrden();
     }
 
     /**
@@ -83,7 +83,6 @@ public class EmailTemplateService {
         return "Se registró correctamente la facturación de la Orden de Compra N° " + orden.getNumeroOrden() + ".\n\n"
                 + "Proveedor: " + proveedor + "\n"
                 + "N° Factura proveedor: " + numeroFactura + "\n\n"
-                + "Se adjunta la evidencia digital del soporte de factura del proveedor.\n\n"
-                + "Este es un mensaje automático, por favor no responder.";
+                + "Se adjunta la evidencia digital del soporte de factura del proveedor.";
     }
 }

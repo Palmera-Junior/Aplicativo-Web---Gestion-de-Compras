@@ -1,5 +1,6 @@
 package com.palmera_junior.gestion_compras.controller.admin;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -114,6 +115,11 @@ public class AdminDashboardController {
 
         List<Proveedor> proveedores = proveedorService.listarTodos();
         List<OrdenCompra> ordenesCompra = ordenCompraService.listarOrdenesCompra();
+        BigDecimal valorTotalOrdenes = ordenesCompra.stream()
+            .filter(orden -> orden != null)
+            .map(OrdenCompra::getTotal)
+            .filter(total -> total != null)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
         long ordenesIncompletas = ordenesCompra.stream()
                 .filter(orden -> orden != null && orden.getIdOrden() != null)
                 .filter(orden -> ordenCompraService.tieneDiferenciasRecepcion(orden.getIdOrden()))
@@ -214,6 +220,7 @@ public class AdminDashboardController {
         model.addAttribute("proveedores", proveedores);
         model.addAttribute("usuarios", usuarios);
         model.addAttribute("ordenesCompra", ordenesCompra);
+        model.addAttribute("valorTotalOrdenes", valorTotalOrdenes);
         model.addAttribute("ordenesIncompletas", ordenesIncompletas);
         model.addAttribute("productos", productos);
         model.addAttribute("sedes", sedes);
