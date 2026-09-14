@@ -116,8 +116,34 @@ body {
     align-items: flex-end; /* antes: center — con el breadcrumb arriba, alinea mejor abajo con las acciones */
     padding-bottom: 20px;
     margin-bottom: 20px;
-    border-bottom: 1px solid #eef0f2;
 }
+
+.dashboard-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.dashboard-summary-icon {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    min-height: 48px;
+    padding: 0;
+    border-radius: 12px;
+    background: #0f3024;
+    color: #ffffff !important;
+    font-size: 28px;
+    line-height: 1;
+    box-sizing: border-box;
+    flex-shrink: 0;
+    font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 32;
+}
+
+
 
 .dashboard-header h1 {
     font-size: 26px;
@@ -145,19 +171,37 @@ body {
     padding: 5px;
 }
 
-.breadcrumb-admin a {
-    display: flex;
+.breadcrumb-admin a,
+.breadcrumb-admin .breadcrumb-link,
+.breadcrumb-admin .breadcrumb-current,
+.breadcrumb-admin .breadcrumb-separator {
+    display: inline-flex;
     align-items: center;
     gap: 4px;
-    color: #198754; /* mismo verde de acento que btn-refrescar:active */
+}
+
+.breadcrumb-admin .breadcrumb-link {
+    color: #6c757d;
     text-decoration: none;
+    font-weight: 500;
 }
 
-.breadcrumb-admin a:hover {
+.breadcrumb-admin .breadcrumb-link:hover {
     transform: scale(1.03);
+    color: #495057;
 }
 
-.breadcrumb-admin a .material-symbols {
+.breadcrumb-admin .breadcrumb-current {
+    color: #198754;
+    font-weight: 700;
+}
+
+.breadcrumb-admin .breadcrumb-separator {
+    color: #adb5bd;
+    font-size: 18px;
+}
+
+.breadcrumb-admin .material-symbols {
     font-size: 18px;
 }
 
@@ -566,16 +610,16 @@ body {
 }
 
 .badge-estado.recibida {
-    background: #fdf1e7;
-    color: #b45309;
+    background: #f8e5cd;
+    color: #5b2f0d;
 }
 .badge-estado.recibida::before {
-    background: #d97706;
+    background: #5b2f0d;
 }
 
 .badge-estado.facturada {
     background: #fdf1e7;
-    color: #b45309;
+    color: #de6c16;
 }
 .badge-estado.facturada::before {
     background: #d97706;
@@ -972,11 +1016,11 @@ body {
     font-size: 1.15rem;
     line-height: 1;
     display: inline-flex;
-    align-items: right;
-    justify-content: right;
+    align-items: center;
+    justify-content: center;
     color: #717880d0;
-    
 }
+
 
 .material-symbols:hover {
 
@@ -2085,8 +2129,11 @@ body {
 }
 
 /* El contenedor de la tabla de productos no debe recortar el dropdown */
+.table-responsive.tabla-productos,
 .tabla-productos {
     overflow: visible;
+    overflow-x: visible;
+    overflow-y: visible;
 }
 
 .autocomplete-item {

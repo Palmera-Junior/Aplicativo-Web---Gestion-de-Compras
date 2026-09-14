@@ -9,6 +9,7 @@
     <title>Gestión Órdenes de Compra</title>
     <link rel="icon" type="image/png" th:href="@{/imgs/logo1.png}">
     <link rel="stylesheet" th:href="@{/css/index.css(v=4)}">
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet"
@@ -38,25 +39,129 @@
         </div>
     </header>
 
-    <nav sec:authorize="hasRole('ADMINISTRADOR')" class="breadcrumb-admin" aria-label="breadcrumb">
-        <a th:href="@{/admin}" title="Volver a panel administrador">
-            <span class="material-symbols">admin_panel_settings</span> Panel de administración <span
-                class="material-symbols">chevron_right</span>
+    <nav sec:authorize="hasAnyRole('ADMINISTRADOR', 'SUPERADMINISTRADOR')" class="breadcrumb-admin" aria-label="breadcrumb">
+        <a class="breadcrumb-link" th:href="@{/admin}" title="Ir al panel administrador">
+            <span class="material-symbols">admin_panel_settings</span> Panel de Administración
         </a>
+        <span class="material-symbols breadcrumb-separator">chevron_right</span>
+        <span class="breadcrumb-current">
+            <span class="material-symbols">assignment</span> Órdenes de Compra
+        </span>
     </nav>
 
     <main class="dashboard-container">
         <div class="dashboard-header">
-            <div>
+            <div class="dashboard-header-left">
+                <div class="order-status-icon">
+                    <span class="material-symbols stacks">stacks</span>
+                </div>
                 <h1>Órdenes de Compra</h1>
-                <p>Gestión y consulta de documentos</p>
             </div>
-            <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+            <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; justify-content: flex-end;">
                 <button title="Crear Orden de Compra" type="button" id="btn-nueva-orden" class="btn-primary">
                     <span class="material-symbols">add</span> Nueva Orden
                 </button>
             </div>
         </div>
+
+        <section class="orders-summary" th:with="ordenesBorrador=${ordenesCompraResumen.?[estado.name() == 'BORRADOR'].size()},
+                      ordenesAprobadas=${ordenesCompraResumen.?[estado.name() == 'APROBADA'].size()},
+                      ordenesFacturadas=${ordenesCompraResumen.?[estado.name() == 'FACTURADA'].size()},
+                      ordenesRecibidas=${ordenesCompraResumen.?[estado.name() == 'RECIBIDA'].size()},
+                      ordenesCompletadas=${ordenesCompraResumen.?[estado.name() == 'COMPLETADA'].size()},
+                      ordenesAnuladas=${ordenesCompraResumen.?[estado.name() == 'ANULADA'].size()},
+                      totalEstadosVisibles=${ordenesCompletadas + ordenesRecibidas + ordenesAprobadas + ordenesAnuladas + ordenesFacturadas + ordenesBorrador}">
+            <div class="order-status-card">
+                <div class="order-status-header">
+                    <div class="order-status-main">
+                        <div class="order-status-icon">
+                            <span class="material-symbols dashboard">grid_view</span>
+                        </div>
+                        <div class="order-status-body">
+                            <h2>Resumen por estado</h2>
+                            <p>Distribución de las órdenes de compra por estado.</p>
+                        </div>
+                    </div>
+                    <div class="order-status-total">
+                        <div class="order-total-main">
+                            <div class="order-total-text order-value-summary">
+                                <span class="material-symbols total">finance_mode</span>
+                                <span class="order-stat-value value"
+                                    th:text="${'$ ' + #numbers.formatDecimal(valorTotalOrdenes, 1, 'COMMA', 0, 'POINT')}">$ 0</span>
+                            </div>
+                            <div class="order-total-text">
+                                <span class="order-stat-value total" th:text="${ordenesCompraResumen.size()}">0</span>
+                                <span class="order-stat-label">TOTAL</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="order-progress-bar" th:with="total=${totalEstadosVisibles}">
+                    <div class="progress-segment progress-anuladas"
+                        th:style="${total > 0 ? 'width: ' + (ordenesAnuladas * 100 / total) + '%' : 'width: 0%'}"
+                        th:title="'Anuladas: ' + ${ordenesAnuladas}"></div>
+
+                    <div class="progress-segment progress-borrador"
+                        th:style="${total > 0 ? 'width: ' + (ordenesBorrador * 100 / total) + '%' : 'width: 0%'}"
+                        th:title="'Borrador: ' + ${ordenesBorrador}"></div>
+
+                    <div class="progress-segment progress-aprobadas"
+                        th:style="${total > 0 ? 'width: ' + (ordenesAprobadas * 100 / total) + '%' : 'width: 0%'}"
+                        th:title="'Aprobadas: ' + ${ordenesAprobadas}"></div>
+
+                    <div class="progress-segment progress-facturadas"
+                        th:style="${total > 0 ? 'width: ' + (ordenesFacturadas * 100 / total) + '%' : 'width: 0%'}"
+                        th:title="'Facturadas: ' + ${ordenesFacturadas}"></div>
+
+                    <div class="progress-segment progress-recibidas"
+                        th:style="${total > 0 ? 'width: ' + (ordenesRecibidas * 100 / total) + '%' : 'width: 0%'}"
+                        th:title="'Recibidas: ' + ${ordenesRecibidas}"></div>
+
+                    <div class="progress-segment progress-completadas"
+                        th:style="${total > 0 ? 'width: ' + (ordenesCompletadas * 100 / total) + '%' : 'width: 0%'}"
+                        th:title="'Completadas: ' + ${ordenesCompletadas}"></div>
+                </div>
+
+                <div class="order-status-references">
+                    <div class="reference-item">
+                        <span class="reference-value" th:text="${ordenesAnuladas}">0</span>
+                        <span class="reference-label">Anuladas</span>
+                        <span class="reference-color progress-anuladas"></span>
+                    </div>
+
+                    <div class="reference-item">
+                        <span class="reference-value" th:text="${ordenesBorrador}">0</span>
+                        <span class="reference-label">Borradores</span>
+                        <span class="reference-color progress-borrador"></span>
+                    </div>
+
+                    <div class="reference-item">
+                        <span class="reference-value" th:text="${ordenesAprobadas}">0</span>
+                        <span class="reference-label">Aprobadas</span>
+                        <span class="reference-color progress-aprobadas"></span>
+                    </div>
+
+                    <div class="reference-item">
+                        <span class="reference-value" th:text="${ordenesFacturadas}">0</span>
+                        <span class="reference-label">Facturadas</span>
+                        <span class="reference-color progress-facturadas"></span>
+                    </div>
+
+                    <div class="reference-item">
+                        <span class="reference-value" th:text="${ordenesRecibidas}">0</span>
+                        <span class="reference-label">Recibidas</span>
+                        <span class="reference-color progress-recibidas"></span>
+                    </div>
+
+                    <div class="reference-item">
+                        <span class="reference-value" th:text="${ordenesCompletadas}">0</span>
+                        <span class="reference-label">Completadas</span>
+                        <span class="reference-color progress-completadas"></span>
+                    </div>
+                </div>
+            </div>
+        </section>
 
         <form class="filtros-section" method="GET" th:action="@{/dashboard}">
             <span class="filtro-icon" title="Filtros">
@@ -203,7 +308,7 @@
                                 <span class="material-symbols">visibility</span>
                             </button>
                             <button title="Aprobar Orden de Compra"
-                                sec:authorize="hasRole('APROBADOR') or hasRole('ADMINISTRADOR')"
+                                sec:authorize="hasAnyRole('APROBADOR', 'SUPERADMINISTRADOR')"
                                 th:if="${orden.estado.name() == 'BORRADOR'}" class="btn-icon approve"
                                 th:data-id="${orden.idOrden}">
                                 <span class="material-symbols">person_check</span>
@@ -231,7 +336,7 @@
                                 <span class="material-symbols">receipt_long</span>
                             </button>
                             <button title="Anular Orden de Compra"
-                                sec:authorize="hasRole('APROBADOR') or hasRole('ADMINISTRADOR')"
+                                sec:authorize="hasAnyRole('APROBADOR', 'SUPERADMINISTRADOR')"
                                 th:if="${orden.estado.name() == 'BORRADOR' or orden.estado.name() == 'APROBADA'}"
                                 class="btn-icon delete-orden" th:data-id="${orden.idOrden}"
                                 th:data-numero-orden="${orden.numeroOrden}">
