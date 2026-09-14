@@ -95,7 +95,7 @@ public class AdminDashboardController {
      * @return Nombre de la plantilla ("admin").
      */
     @GetMapping("/admin")
-    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyRole('SUPERADMINISTRADOR', 'ADMINISTRADOR')")
     public String mostrarPanelAdministracion(Model model,
 
             @RequestParam(defaultValue = "0") int pageProveedores,

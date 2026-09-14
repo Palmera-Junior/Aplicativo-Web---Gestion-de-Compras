@@ -135,7 +135,13 @@ public class OrdenCompraService implements IOrdenCompraService {
         }
 
         if (!esNacional && idSede != null) {
-            spec = spec.and((root, query, cb) -> cb.equal(root.get("sede").get("idSede"), idSede));
+            spec = spec.and((root, query, cb) -> {
+                jakarta.persistence.criteria.Join<Object, Object> centroCostoJoin = root.join("centroCosto",
+                        jakarta.persistence.criteria.JoinType.LEFT);
+                return cb.or(
+                        cb.equal(root.get("sede").get("idSede"), idSede),
+                        cb.equal(centroCostoJoin.get("sede").get("idSede"), idSede));
+            });
         }
 
         // Filtro por estado
@@ -534,7 +540,12 @@ public class OrdenCompraService implements IOrdenCompraService {
         boolean mismaSede = orden.getSede().getIdSede()
                 .equals(usuarioAprobador.getSede().getIdSede());
 
-        if (!esAdministrador && !mismaSede) {
+        boolean centroCostoPerteneceSede = orden.getCentroCosto() != null
+                && orden.getCentroCosto().getSede() != null
+                && orden.getCentroCosto().getSede().getIdSede()
+                        .equals(usuarioAprobador.getSede().getIdSede());
+
+        if (!esAdministrador && !mismaSede && !centroCostoPerteneceSede) {
             throw new RuntimeException(
                     "No tiene permisos para aprobar órdenes de otra sede");
         }

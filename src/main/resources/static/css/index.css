@@ -753,38 +753,7 @@ body {
     padding-left: 34px !important;
 }
 
-/*############## CODIDO PARA OCULTAR BOTONES DE ACCIÓN HASTA QUE EL USUARIO HAGA HOVER SOBRE LA FILA ##############*/
-/*
 
-.acciones-cell{
-    text-align: center;
-    font-size: 0;
-    padding-left: 4px !important;
-    padding-right: 4px !important;
-}
-
-.data-table tbody .acciones-cell .btn-icon {
-    visibility: hidden;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity .15s ease, background .15s ease;
-}
-
-.data-table tbody tr:hover .acciones-cell .btn-icon,
-.data-table tbody tr:focus-within .acciones-cell .btn-icon {
-    visibility: visible;
-    opacity: 1;
-    pointer-events: auto;
-}
-
-@media (hover: none) {
-    .data-table tbody .acciones-cell .btn-icon {
-        visibility: visible;
-        opacity: 1;
-        pointer-events: auto;
-    }
-}
-*/
 .btn-icon {
     display: inline-flex;
     align-items: center;

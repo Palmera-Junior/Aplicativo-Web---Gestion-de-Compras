@@ -63,14 +63,18 @@ public class OrdenCompraController {
     public ResponseEntity<String> guardarOrden(
             @RequestBody OrdenCompraDTO dto) {
 
-        if (dto.getIdCentroCosto() == null) {
-            return ResponseEntity.badRequest()
-                    .body("Centro de costo requerido");
+        try {
+            if (dto.getIdCentroCosto() == null) {
+                return ResponseEntity.badRequest()
+                        .body("Centro de costo requerido");
+            }
+
+            ordenCompraService.guardarOrdenDesdeDTO(dto);
+
+            return ResponseEntity.ok("Orden guardada correctamente");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
-
-        ordenCompraService.guardarOrdenDesdeDTO(dto);
-
-        return ResponseEntity.ok("Orden guardada correctamente");
     }
 
     /**
@@ -91,14 +95,18 @@ public class OrdenCompraController {
             @PathVariable Integer id,
             @RequestBody OrdenCompraDTO dto) {
 
-        if (dto.getIdCentroCosto() == null) {
-            return ResponseEntity.badRequest()
-                    .body("Centro de costo requerido");
+        try {
+            if (dto.getIdCentroCosto() == null) {
+                return ResponseEntity.badRequest()
+                        .body("Centro de costo requerido");
+            }
+
+            ordenCompraService.actualizarOrdenDesdeDTO(id, dto);
+
+            return ResponseEntity.ok("Orden actualizada correctamente");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
-
-        ordenCompraService.actualizarOrdenDesdeDTO(id, dto);
-
-        return ResponseEntity.ok("Orden actualizada correctamente");
     }
 
     /**

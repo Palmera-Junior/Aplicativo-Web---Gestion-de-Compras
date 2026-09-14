@@ -56,7 +56,7 @@ public class ProductoAdminController {
      * @return Fragmento Thymeleaf `admin :: productosFragment`.
      */
     @GetMapping("/admin/productos/pagina")
-    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyRole('SUPERADMINISTRADOR', 'ADMINISTRADOR')")
     public String paginaProductos(Model model,
             @RequestParam(defaultValue = "0") int pageProductos,
             @RequestParam(defaultValue = "10") int size) {
@@ -93,7 +93,7 @@ public class ProductoAdminController {
      * @return Redirección a la vista de administración.
      */
     @PostMapping("/admin/productos")
-    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyRole('SUPERADMINISTRADOR', 'ADMINISTRADOR')")
     public String guardarProducto(@RequestParam(required = false) Integer idProducto,
             @RequestParam String codigoInventario,
             @RequestParam String nombre,
@@ -141,7 +141,7 @@ public class ProductoAdminController {
      * @return {@link ResponseEntity} indicando el resultado.
      */
     @PostMapping("/admin/productos/delete/{id}")
-    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyRole('SUPERADMINISTRADOR', 'ADMINISTRADOR')")
     public ResponseEntity<?> deleteProducto(@PathVariable Integer id) {
         try {
             if (!productoService.eliminarProducto(id)) {
@@ -169,7 +169,7 @@ public class ProductoAdminController {
      * @return Lista JSON de presentaciones.
      */
     @GetMapping("/admin/producto/{id}/presentaciones")
-    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyRole('SUPERADMINISTRADOR', 'ADMINISTRADOR')")
     @ResponseBody
     public List<PresentacionProducto> obtenerPresentacionesProducto(@PathVariable Integer id) {
         return productoService.obtenerPresentacionesProducto(id);

@@ -20,7 +20,7 @@ public class Proveedor {
     @Column(name = "id_prov")
     private Integer idProv;
     
-    @Column(nullable = false, length = 50)
+    @Column(nullable = false, length = 50, unique = true)
     private String nit;
 
     @Column(nullable = false, length = 150)

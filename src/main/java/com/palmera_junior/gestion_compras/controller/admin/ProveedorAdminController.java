@@ -52,7 +52,7 @@ public class ProveedorAdminController {
      * @return Fragmento Thymeleaf `admin :: proveedoresFragment`.
      */
     @GetMapping("/admin/proveedores/pagina")
-    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyRole('SUPERADMINISTRADOR', 'ADMINISTRADOR')")
     public String paginaProveedores(Model model,
             @RequestParam(defaultValue = "0") int pageProveedores,
             @RequestParam(defaultValue = "10") int size) {
@@ -86,7 +86,7 @@ public class ProveedorAdminController {
      * @return Redirección a la vista de administración.
      */
     @PostMapping("/admin/proveedores")
-    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyRole('SUPERADMINISTRADOR', 'ADMINISTRADOR')")
     public String guardarProveedor(@RequestParam(required = false) Integer idProv,
             @RequestParam String nit,
             @RequestParam String nombre,
@@ -122,7 +122,7 @@ public class ProveedorAdminController {
      * @return {@link ResponseEntity} indicando el resultado.
      */
     @PostMapping("/admin/proveedores/delete/{id}")
-    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyRole('SUPERADMINISTRADOR', 'ADMINISTRADOR')")
     public ResponseEntity<?> deleteProveedor(@PathVariable Integer id) {
         try {
             if (!proveedorService.eliminar(id)) {

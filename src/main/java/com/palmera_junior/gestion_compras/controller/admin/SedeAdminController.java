@@ -50,7 +50,7 @@ public class SedeAdminController {
      * @return Redirección a la vista de administración.
      */
     @PostMapping("/admin/sedes")
-    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    @PreAuthorize("hasRole('SUPERADMINISTRADOR')")
     public String guardarSede(@RequestParam(required = false) Integer idSede,
             @RequestParam String nombre,
             @RequestParam String prefijoCiudad,
@@ -82,7 +82,7 @@ public class SedeAdminController {
      * @return {@link ResponseEntity} con la respuesta.
      */
     @PostMapping("/admin/sedes/delete/{id}")
-    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    @PreAuthorize("hasRole('SUPERADMINISTRADOR')")
     public ResponseEntity<?> deleteSede(@PathVariable Integer id) {
         try {
             if (!sedeService.eliminar(id)) {

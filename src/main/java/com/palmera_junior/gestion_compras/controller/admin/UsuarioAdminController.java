@@ -53,7 +53,7 @@ public class UsuarioAdminController {
      * @return Fragmento Thymeleaf `admin :: usuariosFragment`.
      */
     @GetMapping("/admin/usuarios/pagina")
-    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    @PreAuthorize("hasRole('SUPERADMINISTRADOR')")
     public String paginaUsuarios(Model model,
             @RequestParam(defaultValue = "0") int pageUsuarios,
             @RequestParam(defaultValue = "10") int size) {
@@ -89,7 +89,7 @@ public class UsuarioAdminController {
      * @return Redirección a la vista de administración.
      */
     @PostMapping("/admin/usuarios")
-    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    @PreAuthorize("hasRole('SUPERADMINISTRADOR')")
     public String guardarUsuario(@RequestParam(required = false) Integer idUsuario,
             @RequestParam String cedula,
             @RequestParam String nombre,
@@ -128,7 +128,7 @@ public class UsuarioAdminController {
      * @return {@link ResponseEntity} indicando el resultado.
      */
     @PostMapping("/admin/usuarios/delete/{id}")
-    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    @PreAuthorize("hasRole('SUPERADMINISTRADOR')")
     public ResponseEntity<?> deleteUsuario(@PathVariable Integer id) {
         try {
             if (!usuarioService.eliminar(id)) {
