@@ -1,6 +1,7 @@
 package com.palmera_junior.gestion_compras.service.correo;
 
 import com.palmera_junior.gestion_compras.entity.OrdenCompra;
+import com.palmera_junior.gestion_compras.entity.Poliza;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
@@ -85,4 +86,25 @@ public class EmailTemplateService {
                 + "N° Factura proveedor: " + numeroFactura + "\n\n"
                 + "Se adjunta la evidencia digital del soporte de factura del proveedor.";
     }
+
+        public String generarAsuntoPolizaAprobada(Poliza poliza) {
+                return "Póliza aprobada para contabilidad - " + poliza.getNumeroContrato();
+        }
+
+        public String generarCuerpoPolizaAprobada(Poliza poliza) {
+                String proveedor = poliza.getProveedor() == null ? "N/A" : poliza.getProveedor().getNombre();
+                String sede = poliza.getSede() == null ? "N/A" : poliza.getSede().getNombre();
+                String aprobador = poliza.getUsuarioAprobacion() == null ? "N/A"
+                                : (poliza.getUsuarioAprobacion().getNombre() + " " + poliza.getUsuarioAprobacion().getApellido()).trim();
+                return "Se aprobó la póliza para registro contable.\n\n"
+                                + "Número de contrato: " + poliza.getNumeroContrato() + "\n"
+                                + "Proveedor: " + proveedor + "\n"
+                                + "Cliente: " + poliza.getCliente() + "\n"
+                                + "Valor de la prima: " + poliza.getValorPrima() + "\n"
+                                + "Valor del contrato: " + poliza.getValorContrato() + "\n"
+                                + "Sede: " + sede + "\n"
+                                + "Fecha de aprobación: " + poliza.getFechaAprobacion() + "\n"
+                                + "Aprobada por: " + aprobador + "\n\n"
+                                + "Se adjunta el contrato en formato PDF.";
+        }
 }

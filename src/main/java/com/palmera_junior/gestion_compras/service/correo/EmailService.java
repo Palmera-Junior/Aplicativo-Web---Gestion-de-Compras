@@ -126,6 +126,19 @@ public class EmailService implements IEmailService {
                 enviarComoRaw(message, destinatario);
         }
 
+        @Override
+        public void enviarNotificacionPoliza(String destinatario, String asunto, String cuerpo,
+                        byte[] pdf, String nombreArchivo) throws Exception {
+                MimeMessage message = new MimeMessage(Session.getInstance(new Properties()));
+                MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+                helper.setFrom(remitente, nombreRemitente);
+                helper.setTo(destinatario);
+                helper.setSubject(asunto);
+                helper.setText(cuerpo, false);
+                helper.addAttachment(nombreArchivo, new ByteArrayResource(pdf));
+                enviarComoRaw(message, destinatario);
+        }
+
         private void enviarComoRaw(MimeMessage message, String destinatario) throws Exception {
                 ByteArrayOutputStream output = new ByteArrayOutputStream();
                 message.writeTo(output);

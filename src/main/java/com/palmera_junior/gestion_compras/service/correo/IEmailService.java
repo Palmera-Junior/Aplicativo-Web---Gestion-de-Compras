@@ -44,4 +44,7 @@ public interface IEmailService {
             byte[] pdf
     ) throws Exception;
 
+   void enviarNotificacionPoliza(String destinatario, String asunto, String cuerpo,
+         byte[] pdf, String nombreArchivo) throws Exception;
+
 }
