@@ -14,6 +14,8 @@ import com.palmera_junior.gestion_compras.entity.EstadoEnvioCorreo;
 
 public interface AuditoriaEnvioCorreoPolizaRepository extends JpaRepository<AuditoriaEnvioCorreoPoliza, Long> {
 
+        List<AuditoriaEnvioCorreoPoliza> findByPoliza_IdPolizaInOrderByIdDesc(Collection<Integer> idsPolizas);
+
     List<AuditoriaEnvioCorreoPoliza> findTop50ByEstadoInAndProximoIntentoLessThanEqualOrderByCreadoEnAsc(
             Collection<EstadoEnvioCorreo> estados, LocalDateTime ahora);
 

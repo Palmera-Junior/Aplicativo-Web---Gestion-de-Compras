@@ -37,6 +37,9 @@ public class Poliza {
     @Column(name = "fecha_creacion", nullable = false)
     private LocalDate fechaCreacion;
 
+    @Column(name = "fecha_vencimiento")
+    private LocalDate fechaVencimiento;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_prov", nullable = false)
     @ToString.Exclude
@@ -84,6 +87,11 @@ public class Poliza {
 
     @Column(name = "fecha_aprobacion")
     private LocalDate fechaAprobacion;
+
+    public boolean estaProximaAVencer() {
+        return fechaVencimiento != null
+                && !fechaVencimiento.isAfter(LocalDate.now().plusDays(10));
+    }
 
     public void aprobar(Usuario aprobador, LocalDate fecha) {
         if (estado != EstadoPoliza.BORRADOR) {

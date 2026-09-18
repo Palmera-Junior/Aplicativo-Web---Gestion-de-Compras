@@ -14,6 +14,7 @@ public class PolizaDTO {
 
     private Integer idPoliza;
     private String fechaCreacion;
+    private String fechaVencimiento;
     private Long idProveedor;
     private String cliente;
     private String descripcion;

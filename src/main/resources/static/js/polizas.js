@@ -115,6 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         form.setAttribute('action', button.dataset.url || createAction);
         campos.fechaCreacion.value = button.dataset.fecha || '';
+        campos.fechaVencimiento.value = button.dataset.fechaVencimiento || '';
         campos.numeroContrato.value = button.dataset.contrato || '';
         campos.idProveedor.value = button.dataset.proveedor || '';
         campos.cliente.value = button.dataset.cliente || '';

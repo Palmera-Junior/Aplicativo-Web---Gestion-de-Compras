@@ -2,6 +2,9 @@ package com.palmera_junior.gestion_compras.service.correo;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.List;
 import java.util.Set;
 
@@ -51,6 +54,17 @@ public class CorreoPolizaOutboxService {
             auditoria.setProximoIntento(null);
         }
         return auditoriaRepository.save(auditoria).getId();
+    }
+
+    @Transactional(readOnly = true)
+    public Map<Integer, EstadoEnvioCorreo> obtenerEstadosPorPolizas(Collection<Integer> idsPolizas) {
+        if (idsPolizas == null || idsPolizas.isEmpty()) {
+            return Map.of();
+        }
+        Map<Integer, EstadoEnvioCorreo> estados = new LinkedHashMap<>();
+        auditoriaRepository.findByPoliza_IdPolizaInOrderByIdDesc(idsPolizas)
+                .forEach(auditoria -> estados.putIfAbsent(auditoria.getPoliza().getIdPoliza(), auditoria.getEstado()));
+        return estados;
     }
 
     @Transactional

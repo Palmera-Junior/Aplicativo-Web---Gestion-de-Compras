@@ -219,6 +219,25 @@
 .status-borrador { background: #a8a8a8; }
 .status-aprobada { background: #0d3977; }
 
+.poliza-vencimiento-cell {
+    white-space: nowrap;
+}
+
+.poliza-vencimiento-alerta {
+    margin-left: 5px;
+    color: #c77700;
+    font-size: 18px;
+    vertical-align: middle;
+}
+
+.polizas-table tr.poliza-proxima-vencer > td {
+    background: #fff8d9;
+}
+
+.polizas-table tr.poliza-proxima-vencer:hover > td {
+    background: #fff1b8;
+}
+
 .poliza-status-references {
     display: grid;
     grid-template-columns: repeat(3, 1fr);

@@ -236,6 +236,13 @@ public class PolizaService implements IPolizaService {
         if (fecha == null) {
             throw new IllegalArgumentException("La fecha de creación es obligatoria y debe ser válida");
         }
+        LocalDate fechaVencimiento = parseDate(dto.getFechaVencimiento());
+        if (fechaVencimiento == null) {
+            throw new IllegalArgumentException("La fecha de vencimiento es obligatoria y debe ser válida");
+        }
+        if (fechaVencimiento.isBefore(fecha)) {
+            throw new IllegalArgumentException("La fecha de vencimiento no puede ser anterior a la fecha de creación");
+        }
 
         Proveedor proveedor = proveedorRepository.findById(dto.getIdProveedor().intValue())
                 .orElseThrow(() -> new IllegalArgumentException("El proveedor no existe"));
@@ -245,6 +252,7 @@ public class PolizaService implements IPolizaService {
         }
 
         poliza.setFechaCreacion(fecha);
+        poliza.setFechaVencimiento(fechaVencimiento);
         poliza.setProveedor(proveedor);
         poliza.setCliente(dto.getCliente().trim());
         poliza.setDescripcion(trimToNull(dto.getDescripcion()));

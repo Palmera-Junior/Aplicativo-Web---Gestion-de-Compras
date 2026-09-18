@@ -113,13 +113,13 @@
                 <thead>
                     <tr>
                         <th>Contrato</th>
-                        <th>Fecha creación</th>
+                        <th>Fecha vencimiento</th>
                         <th>Proveedor</th>
                         <th>Cliente</th>                        
-                        <th>Creado por</th>
                         <th>Valor prima</th>
                         <th>Valor contrato</th>
                         <th class="estado-th">Estado</th>
+                        <th class="correo-th" title="Estado del correo a contabilidad"><span class="material-symbols">mail</span></th>
                         <th class="acciones-th">Acciones</th>
                     </tr>
                 </thead>
@@ -133,18 +133,33 @@
                             </div>
                         </td>
                     </tr>
-                    <tr th:each="poliza : ${polizasPage != null ? polizasPage.content : {}}">
+                    <tr th:each="poliza : ${polizasPage != null ? polizasPage.content : {}}"
+                        th:classappend="${poliza.estaProximaAVencer()} ? ' poliza-proxima-vencer' : ''">
                         <td class="mono" th:text="${poliza.numeroContrato}">CTR-0001</td>
-                        <td class="mono" th:text="${poliza.fechaCreacion}">2026-09-14</td>
+                        <td class="mono poliza-vencimiento-cell">
+                            <span th:text="${poliza.fechaVencimiento != null ? poliza.fechaVencimiento : 'Sin fecha'}">2026-12-31</span>
+                            <span th:if="${poliza.estaProximaAVencer()}" class="material-symbols poliza-vencimiento-alerta" title="Póliza próxima a vencer" aria-label="Póliza próxima a vencer">warning</span>
+                        </td>
                         <td th:text="${poliza.proveedor.nombre}">Aseguradora</td>
                         <td th:text="${poliza.cliente}">Cliente</td>                        
-                        <td th:text="${poliza.usuario != null ? poliza.usuario.nombre + ' ' + poliza.usuario.apellido : 'Sin información'}">Usuario creador</td>
                         <td th:text="${poliza.valorPrima}">$ 0</td>
                         <td th:text="${poliza.valorContrato}">$ 0</td>
                         <td><span class="poliza-badge" th:classappend="${' ' + #strings.toLowerCase(poliza.estado)}" th:text="${poliza.estado}">BORRADOR</span></td>
+                        <td class="correo-cell" th:with="estadoCorreo=${estadosCorreoPoliza.get(poliza.idPoliza)}">
+                            <span th:if="${estadoCorreo == null}" class="correo-estado-icon sin-envio" title="No se ha generado un envío de correo a contabilidad">-</span>
+                            <span th:if="${estadoCorreo != null and estadoCorreo.name() == 'ENVIADO'}" class="correo-estado-icon enviado" title="Correo enviado correctamente a contabilidad">
+                                <span class="material-symbols">check</span>
+                            </span>
+                            <span th:if="${estadoCorreo != null and estadoCorreo.name() == 'FALLIDO'}" class="correo-estado-icon fallido" title="El correo a contabilidad no pudo enviarse">
+                                <span class="material-symbols">close</span>
+                            </span>
+                            <span th:if="${estadoCorreo != null and (estadoCorreo.name() == 'PENDIENTE' or estadoCorreo.name() == 'PROCESANDO' or estadoCorreo.name() == 'REINTENTAR')}" class="correo-estado-icon pendiente" title="El correo a contabilidad está en proceso de envío">
+                                <span class="material-symbols">schedule</span>
+                            </span>
+                        </td>
                         <td class="actions poliza-actions">
                             <button class="btn-icon js-ver-poliza" type="button" title="Ver detalles"
-                                    th:attr="data-url=@{/polizas/{id}/editar(id=${poliza.idPoliza})},data-contrato=${poliza.numeroContrato},data-fecha=${poliza.fechaCreacion},data-proveedor=${poliza.proveedor.idProv},data-cliente=${poliza.cliente},data-creador=${poliza.usuario != null ? poliza.usuario.nombre + ' ' + poliza.usuario.apellido : 'Sin información'},data-prima=${poliza.valorPrima},data-valor-contrato=${poliza.valorContrato},data-estado=${poliza.estado},data-descripcion=${poliza.descripcion},data-archivo-nombre=${poliza.contratoAdjuntoNombre != null ? poliza.contratoAdjuntoNombre : poliza.contratoAdjunto}">
+                                    th:attr="data-url=@{/polizas/{id}/editar(id=${poliza.idPoliza})},data-contrato=${poliza.numeroContrato},data-fecha=${poliza.fechaCreacion},data-fecha-vencimiento=${poliza.fechaVencimiento},data-proveedor=${poliza.proveedor.idProv},data-cliente=${poliza.cliente},data-creador=${poliza.usuario != null ? poliza.usuario.nombre + ' ' + poliza.usuario.apellido : 'Sin información'},data-prima=${poliza.valorPrima},data-valor-contrato=${poliza.valorContrato},data-estado=${poliza.estado},data-descripcion=${poliza.descripcion},data-archivo-nombre=${poliza.contratoAdjuntoNombre != null ? poliza.contratoAdjuntoNombre : poliza.contratoAdjunto}">
                                 <span class="material-symbols">visibility</span>
                             </button>
                             <form sec:authorize="hasAnyRole('APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')"
@@ -182,6 +197,7 @@
             </div>
             <div class="poliza-form-grid">
                 <label>Fecha de creación<input class="input-control" type="date" name="fechaCreacion" required></label>
+                <label>Fecha de vencimiento<input class="input-control" type="date" name="fechaVencimiento" required></label>
                 <label>Código o número de contrato<input class="input-control" type="text" name="numeroContrato" maxlength="50" required></label>
                 <label>Proveedor / expedidor<select class="input-control" name="idProveedor" required>
                     <option value="">Selecciona un proveedor</option>

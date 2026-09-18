@@ -20,9 +20,11 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.palmera_junior.gestion_compras.dto.PolizaDTO;
 import com.palmera_junior.gestion_compras.entity.EstadoPoliza;
+import com.palmera_junior.gestion_compras.entity.EstadoEnvioCorreo;
 import com.palmera_junior.gestion_compras.entity.Poliza;
 import com.palmera_junior.gestion_compras.entity.Usuario;
 import com.palmera_junior.gestion_compras.service.catalogo.IProveedorService;
+import com.palmera_junior.gestion_compras.service.correo.CorreoPolizaOutboxService;
 import com.palmera_junior.gestion_compras.service.poliza.IPolizaService;
 import com.palmera_junior.gestion_compras.service.usuario.IUsuarioService;
 
@@ -33,12 +35,14 @@ public class PolizaController {
     private final IPolizaService polizaService;
     private final IProveedorService proveedorService;
     private final IUsuarioService usuarioService;
+    private final CorreoPolizaOutboxService correoPolizaOutboxService;
 
     public PolizaController(IPolizaService polizaService, IProveedorService proveedorService,
-            IUsuarioService usuarioService) {
+            IUsuarioService usuarioService, CorreoPolizaOutboxService correoPolizaOutboxService) {
         this.polizaService = polizaService;
         this.proveedorService = proveedorService;
         this.usuarioService = usuarioService;
+        this.correoPolizaOutboxService = correoPolizaOutboxService;
     }
 
     @GetMapping
@@ -79,6 +83,8 @@ public class PolizaController {
         List<Poliza> polizasResumen = polizasResumenPage.getContent();
 
         model.addAttribute("polizasPage", polizasPage);
+        model.addAttribute("estadosCorreoPoliza", correoPolizaOutboxService.obtenerEstadosPorPolizas(
+            polizasPage.getContent().stream().map(Poliza::getIdPoliza).toList()));
         model.addAttribute("estadosPoliza", EstadoPoliza.values());
         model.addAttribute("estadoSeleccionado", estado);
         model.addAttribute("q", q);
