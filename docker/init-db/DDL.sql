@@ -69,10 +69,44 @@ CREATE TABLE usuario (
     cargo VARCHAR(100),
     nombre_usuario VARCHAR(50) NOT NULL UNIQUE,
     contraseña VARCHAR(255) NOT NULL,
-    rol VARCHAR(20) NOT NULL CHECK (rol IN ('ADMINISTRADOR', 'APROBADOR', 'SOLICITANTE')),
+    rol VARCHAR(20) NOT NULL CHECK (rol IN ('ADMINISTRADOR', 'APROBADOR', 'SOLICITANTE', 'COMERCIAL')),
     id_sede INT NOT NULL,
     CONSTRAINT fk_usuario_sede FOREIGN KEY (id_sede) REFERENCES sede (id_sede)
 );
+
+CREATE TABLE poliza (
+    id_poliza SERIAL PRIMARY KEY,
+    fecha_creacion DATE NOT NULL,
+    id_prov INT NOT NULL,
+    cliente VARCHAR(150) NOT NULL,
+    descripcion TEXT,
+    numero_contrato VARCHAR(50) NOT NULL UNIQUE,
+    valor_prima DECIMAL(15, 2) NOT NULL,
+    valor_contrato DECIMAL(15, 2) NOT NULL,
+    contrato_adjunto TEXT,
+    contrato_adjunto_nombre VARCHAR(255),
+    estado VARCHAR(20) NOT NULL DEFAULT 'BORRADOR' CHECK (estado IN (
+        'BORRADOR', 'APROBADA', 'ANULADA'
+    )),
+    id_sede INT NOT NULL,
+    id_usuario INT NOT NULL,
+    id_usuario_aprobacion INT,
+    fecha_aprobacion DATE,
+    CONSTRAINT fk_poliza_proveedor FOREIGN KEY (id_prov)
+        REFERENCES proveedor (id_prov),
+    CONSTRAINT fk_poliza_sede FOREIGN KEY (id_sede)
+        REFERENCES sede (id_sede),
+    CONSTRAINT fk_poliza_usuario FOREIGN KEY (id_usuario)
+        REFERENCES usuario (id_usuario),
+    CONSTRAINT fk_poliza_usuario_aprobacion FOREIGN KEY (id_usuario_aprobacion)
+        REFERENCES usuario (id_usuario),
+    CONSTRAINT chk_poliza_valor_prima_no_negativo CHECK (valor_prima >= 0),
+    CONSTRAINT chk_poliza_valor_contrato_no_negativo CHECK (valor_contrato >= 0)
+);
+
+CREATE INDEX idx_poliza_sede ON poliza (id_sede);
+CREATE INDEX idx_poliza_estado ON poliza (estado);
+CREATE INDEX idx_poliza_fecha_creacion ON poliza (fecha_creacion);
 
 CREATE TABLE orden_compra (
     id_orden SERIAL PRIMARY KEY,
@@ -154,3 +188,24 @@ CREATE TABLE auditoria_envio_correo (
 
 CREATE INDEX idx_auditoria_correo_estado_reintento
     ON auditoria_envio_correo (estado, proximo_intento);
+
+CREATE TABLE auditoria_envio_correo_poliza (
+    id_auditoria_correo_poliza BIGSERIAL PRIMARY KEY,
+    id_poliza INT NOT NULL,
+    destinatario VARCHAR(150) NOT NULL,
+    estado VARCHAR(20) NOT NULL CHECK (estado IN (
+        'PENDIENTE', 'PROCESANDO', 'ENVIADO', 'REINTENTAR', 'FALLIDO'
+    )),
+    intentos INT NOT NULL DEFAULT 0,
+    proximo_intento TIMESTAMP,
+    bloqueado_en TIMESTAMP,
+    enviado_en TIMESTAMP,
+    creado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    actualizado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ultimo_error TEXT,
+    CONSTRAINT fk_auditoria_poliza FOREIGN KEY (id_poliza)
+        REFERENCES poliza (id_poliza) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_auditoria_poliza_estado_reintento
+    ON auditoria_envio_correo_poliza (estado, proximo_intento);

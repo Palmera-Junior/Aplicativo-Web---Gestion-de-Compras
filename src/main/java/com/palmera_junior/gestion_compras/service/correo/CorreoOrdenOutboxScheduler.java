@@ -14,6 +14,8 @@ public class CorreoOrdenOutboxScheduler {
 
     private final CorreoOrdenOutboxService correoOrdenOutboxService;
     private final CorreoOrdenAsyncProcessor correoOrdenAsyncProcessor;
+    private final CorreoPolizaOutboxService correoPolizaOutboxService;
+    private final CorreoPolizaAsyncProcessor correoPolizaAsyncProcessor;
 
     /**
      * Qué hace:
@@ -29,6 +31,9 @@ public class CorreoOrdenOutboxScheduler {
         correoOrdenOutboxService.liberarProcesamientosAtascados();
         correoOrdenOutboxService.pendientesParaProcesar()
                 .forEach(auditoria -> correoOrdenAsyncProcessor.procesar(auditoria.getId()));
+        correoPolizaOutboxService.liberarProcesamientosAtascados();
+        correoPolizaOutboxService.pendientesParaProcesar()
+            .forEach(auditoria -> correoPolizaAsyncProcessor.procesar(auditoria.getId()));
     }
 }
 
