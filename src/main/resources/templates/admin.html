@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
 <head>
     <meta charset="UTF-8">
@@ -38,6 +38,16 @@
         </div>
     </header>
 
+    <nav class="breadcrumb-admin" aria-label="breadcrumb">
+        <a class="breadcrumb-link" th:href="@{/dashboard}" title="Volver al dashboard">
+            <span class="material-symbols">assignment</span> Órdenes de Compra
+        </a>
+        <span class="material-symbols breadcrumb-separator">chevron_right</span>
+        <span class="breadcrumb-current">
+            <span class="material-symbols">admin_panel_settings</span> Panel de Administración
+        </span>
+    </nav>
+
     <main class="dashboard-container">
         <div class="dashboard-header">
             <div>
@@ -74,7 +84,7 @@
              calcular en el Controller y pasar como atributos al modelo —
              es más eficiente si la lista es grande.
              ============================================ -->
-        <section class="orders-summary" th:with="ordenesBorrador=${ordenesCompra.?[estado.name() == 'BORRADOR'].size()},
+        <section sec:authorize="hasRole('SUPERADMINISTRADOR')" class="orders-summary" th:with="ordenesBorrador=${ordenesCompra.?[estado.name() == 'BORRADOR'].size()},
                       ordenesAprobadas=${ordenesCompra.?[estado.name() == 'APROBADA'].size()},
                       ordenesFacturadas=${ordenesCompra.?[estado.name() == 'FACTURADA'].size()},
                       ordenesRecibidas=${ordenesCompra.?[estado.name() == 'RECIBIDA'].size()},
@@ -189,7 +199,7 @@
             <span> <b> CATALOGOS </b></span>
         </div>
         <section class="modules-grid">
-            <div class="module-card accent-blue" data-target="section-usuarios">
+            <div sec:authorize="hasRole('SUPERADMINISTRADOR')" class="module-card accent-blue" data-target="section-usuarios">
                 <div class="module-icon-wrap">
                     <span class="material-symbols">group</span>
                 </div>
@@ -234,7 +244,7 @@
                 </div>
             </div>
 
-            <div class="module-card accent-teal" data-target="section-sedes">
+            <div sec:authorize="hasRole('SUPERADMINISTRADOR')" class="module-card accent-teal" data-target="section-sedes">
                 <div class="module-icon-wrap">
                     <span class="material-symbols">store</span>
                 </div>
@@ -249,7 +259,7 @@
                 </div>
             </div>
 
-            <div class="module-card accent-purple" data-target="section-centros">
+            <div sec:authorize="hasRole('SUPERADMINISTRADOR')" class="module-card accent-purple" data-target="section-centros">
                 <div class="module-icon-wrap">
                     <span class="material-symbols">account_tree</span>
                 </div>
@@ -421,7 +431,7 @@
             </div>
 
             <!-- ---------- USUARIOS ---------- -->
-            <div class="card admin-card" id="section-usuarios" style="display:none;">
+            <div sec:authorize="hasRole('SUPERADMINISTRADOR')" class="card admin-card" id="section-usuarios" style="display:none;">
                 <div class="section-panel-header accent-blue">
                     <span class="material-symbols">group</span>
                     <div>
@@ -787,7 +797,7 @@
             </div>
 
             <!-- ---------- SEDES ---------- -->
-            <div class="card admin-card" id="section-sedes" style="display:none;">
+            <div sec:authorize="hasRole('SUPERADMINISTRADOR')" class="card admin-card" id="section-sedes" style="display:none;">
                 <div class="section-panel-header accent-teal">
                     <span class="material-symbols">store</span>
                     <div>
@@ -895,7 +905,7 @@
             </div>
 
             <!-- ---------- CENTROS DE COSTO ---------- -->
-            <div class="card admin-card" id="section-centros" style="display:none;">
+            <div sec:authorize="hasRole('SUPERADMINISTRADOR')" class="card admin-card" id="section-centros" style="display:none;">
                 <div class="section-panel-header accent-purple">
                     <span class="material-symbols">account_tree</span>
                     <div>

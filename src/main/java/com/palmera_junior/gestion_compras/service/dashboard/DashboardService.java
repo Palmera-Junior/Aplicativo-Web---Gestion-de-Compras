@@ -1,5 +1,6 @@
 package com.palmera_junior.gestion_compras.service.dashboard;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -85,6 +86,18 @@ public class DashboardService implements IDashboardService {
                 PageRequest.of(page, size), q, fechaDesdeAplicada, fechaHastaAplicada, idSede, esNacional, estado,
                 soloModificadas);
 
+        Page<OrdenCompra> ordenesCompraResumenPage = ordenCompraService.ordenesDeCompraPaginadas(
+                PageRequest.of(0, Integer.MAX_VALUE), q, fechaDesdeAplicada, fechaHastaAplicada, idSede, esNacional,
+                estado, soloModificadas);
+
+        List<OrdenCompra> ordenesCompraResumen = ordenesCompraResumenPage.getContent();
+
+        BigDecimal valorTotalOrdenes = ordenesCompraResumen.stream()
+                .filter(orden -> orden != null)
+                .map(OrdenCompra::getTotal)
+                .filter(total -> total != null)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
         List<Integer> idsOrdenes = ordenesCompra.getContent().stream()
                 .map(OrdenCompra::getIdOrden)
                 .toList();
@@ -106,6 +119,8 @@ public class DashboardService implements IDashboardService {
         model.addAttribute("productos", productoService.getAllProductos());
         model.addAttribute("paginaActual", page);
         model.addAttribute("ordenesCompra", ordenesCompra);
+        model.addAttribute("ordenesCompraResumen", ordenesCompraResumen);
+        model.addAttribute("valorTotalOrdenes", valorTotalOrdenes);
         model.addAttribute("estadosCorreoAprobacion", estadosCorreoAprobacion);
         model.addAttribute("estadosCorreoFacturacion", estadosCorreoFacturacion);
         model.addAttribute("proveedores",

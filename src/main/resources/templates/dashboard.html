@@ -10,6 +10,7 @@
     <link rel="icon" type="image/png" th:href="@{/imgs/logo1.png}">
     <link rel="stylesheet" th:href="@{/css/index.css(v=4)}">
     <link rel="stylesheet" th:href="@{/css/admin.css}">
+    <link rel="stylesheet" th:href="@{/css/polizas.css}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet"
@@ -39,17 +40,28 @@
         </div>
     </header>
 
-    <nav sec:authorize="hasAnyRole('ADMINISTRADOR', 'SUPERADMINISTRADOR')" class="breadcrumb-admin" aria-label="breadcrumb">
+    <nav sec:authorize="hasAnyRole('ADMINISTRADOR', 'SUPERADMINISTRADOR')" class="breadcrumb-admin"
+        aria-label="breadcrumb">
         <a class="breadcrumb-link" th:href="@{/admin}" title="Ir al panel administrador">
             <span class="material-symbols">admin_panel_settings</span> Panel de Administración
         </a>
-        <span class="material-symbols breadcrumb-separator">chevron_right</span>
-        <span class="breadcrumb-current">
-            <span class="material-symbols">assignment</span> Órdenes de Compra
-        </span>
     </nav>
-
+    <br>
     <main class="dashboard-container">
+
+        <div class="tabs-shell" style="margin-top: -18px; margin-bottom: 0;">
+            <nav class="view-tabs" aria-label="Módulos de gestión">
+                <a sec:authorize="hasAnyRole('SOLICITANTE', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')"
+                    class="view-tab active" th:href="@{/dashboard}" aria-current="page">
+                    <span class="material-symbols">assignment</span> Órdenes de Compra
+                </a>
+                <a sec:authorize="hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')"
+                    class="view-tab" th:href="@{/polizas}">
+                    <span class="material-symbols">policy</span> Pólizas
+                </a>
+            </nav>
+        </div>
+
         <div class="dashboard-header">
             <div class="dashboard-header-left">
                 <div class="order-status-icon">
@@ -58,13 +70,15 @@
                 <h1>Órdenes de Compra</h1>
             </div>
             <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; justify-content: flex-end;">
-                <button title="Crear Orden de Compra" type="button" id="btn-nueva-orden" class="btn-primary">
+                <button sec:authorize="hasAnyRole('SOLICITANTE', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')"
+                    title="Crear Orden de Compra" type="button" id="btn-nueva-orden" class="btn-primary">
                     <span class="material-symbols">add</span> Nueva Orden
                 </button>
             </div>
         </div>
 
-        <section class="orders-summary" th:with="ordenesBorrador=${ordenesCompraResumen.?[estado.name() == 'BORRADOR'].size()},
+        <section class="orders-summary"
+            th:with="ordenesBorrador=${ordenesCompraResumen.?[estado.name() == 'BORRADOR'].size()},
                       ordenesAprobadas=${ordenesCompraResumen.?[estado.name() == 'APROBADA'].size()},
                       ordenesFacturadas=${ordenesCompraResumen.?[estado.name() == 'FACTURADA'].size()},
                       ordenesRecibidas=${ordenesCompraResumen.?[estado.name() == 'RECIBIDA'].size()},
@@ -87,7 +101,8 @@
                             <div class="order-total-text order-value-summary">
                                 <span class="material-symbols total">finance_mode</span>
                                 <span class="order-stat-value value"
-                                    th:text="${'$ ' + #numbers.formatDecimal(valorTotalOrdenes, 1, 'COMMA', 0, 'POINT')}">$ 0</span>
+                                    th:text="${'$ ' + #numbers.formatDecimal(valorTotalOrdenes, 1, 'COMMA', 0, 'POINT')}">$
+                                    0</span>
                             </div>
                             <div class="order-total-text">
                                 <span class="order-stat-value total" th:text="${ordenesCompraResumen.size()}">0</span>
@@ -226,7 +241,8 @@
                             <div class="ordenes-empty-state">
                                 <span class="material-symbols ordenes-empty-icon" aria-hidden="true">assignment</span>
                                 <p class="ordenes-empty-title">No se encontraron órdenes</p>
-                                <p class="ordenes-empty-hint">Haga clic en "Nueva Orden" para crear o configure los filtros.</p>
+                                <p class="ordenes-empty-hint">Haga clic en "Nueva Orden" para crear o configure los
+                                    filtros.</p>
                             </div>
                         </td>
                     </tr>
@@ -270,8 +286,7 @@
                             </span>
                             <button th:if="${estadoCorreo != null and estadoCorreo.name() == 'FALLIDO'}" type="button"
                                 class="correo-estado-icon fallido correo-marcar-enviado" th:data-id="${orden.idOrden}"
-                                th:data-tipo-envio="'APROBACION'"
-                                th:data-numero-orden="${orden.numeroOrden}"
+                                th:data-tipo-envio="'APROBACION'" th:data-numero-orden="${orden.numeroOrden}"
                                 title="El correo al proveedor no pudo enviarse. Haga clic para marcarlo como enviado manualmente.">
                                 <span class="material-symbols">close</span>
                             </button>
@@ -291,8 +306,7 @@
                             </span>
                             <button th:if="${estadoCorreo != null and estadoCorreo.name() == 'FALLIDO'}" type="button"
                                 class="correo-estado-icon fallido correo-marcar-enviado" th:data-id="${orden.idOrden}"
-                                th:data-tipo-envio="'FACTURACION'"
-                                th:data-numero-orden="${orden.numeroOrden}"
+                                th:data-tipo-envio="'FACTURACION'" th:data-numero-orden="${orden.numeroOrden}"
                                 title="El correo de facturación no pudo enviarse. Haga clic para marcarlo como enviado manualmente.">
                                 <span class="material-symbols">close</span>
                             </button>

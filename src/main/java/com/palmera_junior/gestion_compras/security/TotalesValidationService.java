@@ -40,6 +40,76 @@ public class TotalesValidationService {
      * Este método es el punto de entrada para garantizar que todos los valores
      * económicos sean validados y recalculados en el servidor.
      */
+    public void validarRequisitosBasicosOrden(OrdenCompraDTO dto) {
+        if (dto == null) {
+            throw new IllegalArgumentException("La orden de compra es obligatoria");
+        }
+
+        if (dto.getIdCentroCosto() == null) {
+            throw new IllegalArgumentException("Centro de costo requerido");
+        }
+
+        boolean tieneIdProveedor = dto.getIdProv() != null && dto.getIdProv() > 0;
+        boolean tieneDatosProveedor = hayDatosProveedor(dto);
+
+        if (!tieneIdProveedor && !tieneDatosProveedor) {
+            throw new IllegalArgumentException("Debe seleccionar un proveedor o ingresar los datos del proveedor");
+        }
+
+        if (tieneIdProveedor) {
+            validarCamposProveedor(dto);
+        } else if (tieneDatosProveedor) {
+            validarCamposProveedor(dto);
+        }
+
+        if (dto.getDetalles() == null || dto.getDetalles().isEmpty()) {
+            throw new IllegalArgumentException("Debe agregar al menos un producto a la orden de compra");
+        }
+
+        for (DetalleCompraDTO detalle : dto.getDetalles()) {
+            if (detalle == null) {
+                throw new IllegalArgumentException("Hay un producto con datos incompletos");
+            }
+            if (detalle.getCantidad() == null || detalle.getCantidad() <= 0) {
+                throw new IllegalArgumentException("La cantidad de cada producto debe ser mayor a cero");
+            }
+            if ((detalle.getIdProducto() == null || detalle.getIdProducto() <= 0)
+                    && (detalle.getCodigoInventario() == null || detalle.getCodigoInventario().isBlank())) {
+                throw new IllegalArgumentException("Cada producto debe tener un código de inventario válido");
+            }
+        }
+    }
+
+    private boolean hayDatosProveedor(OrdenCompraDTO dto) {
+        return (dto.getNitProv() != null && !dto.getNitProv().isBlank())
+                || (dto.getNombreProv() != null && !dto.getNombreProv().isBlank())
+                || (dto.getCiudadProv() != null && !dto.getCiudadProv().isBlank())
+                || (dto.getDireccionProv() != null && !dto.getDireccionProv().isBlank())
+                || (dto.getTelefonoProv() != null && !dto.getTelefonoProv().isBlank())
+                || (dto.getCorreoProv() != null && !dto.getCorreoProv().isBlank());
+    }
+
+    private void validarCamposProveedor(OrdenCompraDTO dto) {
+        if (dto.getNitProv() == null || dto.getNitProv().isBlank()) {
+            throw new IllegalArgumentException("El NIT del proveedor es obligatorio");
+        }
+        if (dto.getNombreProv() == null || dto.getNombreProv().isBlank()) {
+            throw new IllegalArgumentException("El nombre del proveedor es obligatorio");
+        }
+        if (dto.getCiudadProv() == null || dto.getCiudadProv().isBlank()) {
+            throw new IllegalArgumentException("La ciudad del proveedor es obligatoria");
+        }
+        if (dto.getDireccionProv() == null || dto.getDireccionProv().isBlank()) {
+            throw new IllegalArgumentException("La dirección del proveedor es obligatoria");
+        }
+        if (dto.getTelefonoProv() == null || dto.getTelefonoProv().isBlank()) {
+            throw new IllegalArgumentException("El teléfono del proveedor es obligatorio");
+        }
+        if (dto.getCorreoProv() == null || dto.getCorreoProv().isBlank()) {
+            throw new IllegalArgumentException("El correo del proveedor es obligatorio");
+        }
+    }
+
     public void validarYRecalcularTotalesOrden(OrdenCompraDTO dto) {
         if (dto.getDetalles() == null || dto.getDetalles().isEmpty()) {
             dto.setSubTotal(CERO);
