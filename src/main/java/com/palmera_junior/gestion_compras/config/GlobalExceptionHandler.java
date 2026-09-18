@@ -11,10 +11,12 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.ModelAndView;
 
 /**
@@ -39,6 +41,16 @@ public class GlobalExceptionHandler {
         return URLEncoder.encode(s == null ? "" : s, StandardCharsets.UTF_8);
     }
 
+    private String destinoError(HttpServletRequest request) {
+        String uri = request.getRequestURI();
+        String rutaPolizas = request.getContextPath() + "/polizas";
+        return uri != null && uri.startsWith(rutaPolizas) ? "/polizas" : "/admin";
+    }
+
+    private ModelAndView redirigirConError(HttpServletRequest request, String mensaje) {
+        return new ModelAndView("redirect:" + destinoError(request) + "?error=" + encode(mensaje));
+    }
+
     /**
      * Qué hace:
      * Maneja violaciones de integridad referencial (llaves foráneas, registros duplicados).
@@ -60,8 +72,7 @@ public class GlobalExceptionHandler {
         if (isAjax(request)) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", message));
         } else {
-            String target = "/admin?error=" + encode(message);
-            return new ModelAndView("redirect:" + target);
+            return redirigirConError(request, message);
         }
     }
 
@@ -79,8 +90,7 @@ public class GlobalExceptionHandler {
         if (isAjax(request)) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", message));
         } else {
-            String target = "/admin?error=" + encode(message);
-            return new ModelAndView("redirect:" + target);
+            return redirigirConError(request, message);
         }
     }
 
@@ -98,9 +108,40 @@ public class GlobalExceptionHandler {
         if (isAjax(request)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", message));
         } else {
-            String target = "/admin?error=" + encode(message);
-            return new ModelAndView("redirect:" + target);
+            return redirigirConError(request, message);
         }
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    @ResponseBody
+    public Object handleIllegalState(IllegalStateException ex, HttpServletRequest request) {
+        String message = ex.getMessage() == null ? "No fue posible completar la operación." : ex.getMessage();
+        if (isAjax(request)) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", message));
+        }
+        return redirigirConError(request, message);
+    }
+
+    @ExceptionHandler(BindException.class)
+    @ResponseBody
+    public Object handleBindException(BindException ex, HttpServletRequest request) {
+        String message = ex.getFieldError() == null
+                ? "No fue posible procesar los datos enviados."
+                : "El campo " + ex.getFieldError().getField() + " no tiene un valor válido.";
+        if (isAjax(request)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", message));
+        }
+        return redirigirConError(request, message);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    @ResponseBody
+    public Object handleMaxUploadSize(MaxUploadSizeExceededException ex, HttpServletRequest request) {
+        String message = "El archivo adjunto supera el tamaño máximo permitido de 10 MB.";
+        if (isAjax(request)) {
+            return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(Map.of("error", message));
+        }
+        return redirigirConError(request, message);
     }
 
     /**
@@ -117,8 +158,7 @@ public class GlobalExceptionHandler {
         if (isAjax(request)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", message));
         } else {
-            String target = "/admin?error=" + encode(message);
-            return new ModelAndView("redirect:" + target);
+            return redirigirConError(request, message);
         }
     }
 
@@ -136,8 +176,7 @@ public class GlobalExceptionHandler {
         if (isAjax(request)) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", message));
         } else {
-            String target = "/admin?error=" + encode(message);
-            return new ModelAndView("redirect:" + target);
+            return redirigirConError(request, message);
         }
     }
 }
