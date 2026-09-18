@@ -214,6 +214,7 @@ public class OrdenCompraService implements IOrdenCompraService {
     public OrdenCompra guardarOrdenDesdeDTO(OrdenCompraDTO dto) {
         // SEC-05: Validar y recalcular todos los totales en el servidor
         // No confiar en los valores enviados por el cliente
+        totalesValidationService.validarRequisitosBasicosOrden(dto);
         totalesValidationService.validarYRecalcularTotalesOrden(dto);
 
         OrdenCompra orden = new OrdenCompra();
@@ -393,6 +394,7 @@ public class OrdenCompraService implements IOrdenCompraService {
 
         // SEC-05: Validar y recalcular todos los totales en el servidor
         // No confiar en los valores enviados por el cliente
+        totalesValidationService.validarRequisitosBasicosOrden(dto);
         totalesValidationService.validarYRecalcularTotalesOrden(dto);
 
         LocalDate fechaAnterior = orden.getFecha();
@@ -521,7 +523,7 @@ public class OrdenCompraService implements IOrdenCompraService {
      * - Event Publisher: {@link ApplicationEventPublisher#publishEvent}
      */
     @Override
-    @PreAuthorize("hasRole('APROBADOR') or hasRole('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyRole('APROBADOR', 'SUPERADMINISTRADOR')")
     @Transactional
     public OrdenCompra aprobarOrden(Integer idOrden) {
 
@@ -535,7 +537,7 @@ public class OrdenCompraService implements IOrdenCompraService {
 
         Usuario usuarioAprobador = usuarioService.obtenerUsuarioAutenticado();
 
-        boolean esAdministrador = usuarioAprobador.getRol() == Rol.ADMINISTRADOR;
+        boolean esSuperAdministrador = usuarioAprobador.getRol() == Rol.SUPERADMINISTRADOR;
 
         boolean mismaSede = orden.getSede().getIdSede()
                 .equals(usuarioAprobador.getSede().getIdSede());
@@ -545,7 +547,7 @@ public class OrdenCompraService implements IOrdenCompraService {
                 && orden.getCentroCosto().getSede().getIdSede()
                         .equals(usuarioAprobador.getSede().getIdSede());
 
-        if (!esAdministrador && !mismaSede && !centroCostoPerteneceSede) {
+        if (!esSuperAdministrador && !mismaSede && !centroCostoPerteneceSede) {
             throw new RuntimeException(
                     "No tiene permisos para aprobar órdenes de otra sede");
         }
