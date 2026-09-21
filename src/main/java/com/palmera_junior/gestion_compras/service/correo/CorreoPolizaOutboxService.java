@@ -1,6 +1,5 @@
 package com.palmera_junior.gestion_compras.service.correo;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.LinkedHashMap;

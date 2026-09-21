@@ -15,7 +15,7 @@
 
 <body>
 
-    <div class="login-container" th:classappend="${param.error != null} ? ' login-error' : ''">
+    <div class="login-container" th:classappend="${param.error != null or oauth2Error != null} ? ' login-error' : ''">
 
     <div class="login-accent"></div>
 
@@ -32,6 +32,11 @@
         <div th:if="${param.error}" class="alert-error">
             <span class="material-symbols-outlined">error</span>
             <span>Usuario o contraseña incorrectos.</span>
+        </div>
+
+        <div th:if="${oauth2Error}" class="alert-error">
+            <span class="material-symbols-outlined">error</span>
+            <span>Error OAuth2: <code th:text="${oauth2Error}"></code></span>
         </div>
 
         <div th:if="${param.logout}" class="alert-success">

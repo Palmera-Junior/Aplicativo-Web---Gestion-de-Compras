@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="_csrf" th:content="${_csrf.token}">
     <meta name="_csrf_header" th:content="${_csrf.headerName}">
-    <title>Gestión Órdenes de Compra</title>
+    <title>Órdenes de Compra | Portal Comercial</title>
     <link rel="icon" type="image/png" th:href="@{/imgs/logo1.png}">
     <link rel="stylesheet" th:href="@{/css/index.css(v=4)}">
     <link rel="stylesheet" th:href="@{/css/admin.css}">
@@ -23,7 +23,7 @@
 
     <header class="navbar">
         <div class="logo">
-            <h2><span class="material-symbols">assignment</span> Gestión de Órdenes de Compra</h2>
+            <h2><span class="material-symbols">hub</span> Portal Comercial</h2>
         </div>
         <div class="user-info">
             <span class="material-symbols">account_circle</span>
@@ -52,11 +52,11 @@
         <div class="tabs-shell" style="margin-top: -18px; margin-bottom: 0;">
             <nav class="view-tabs" aria-label="Módulos de gestión">
                 <a sec:authorize="hasAnyRole('SOLICITANTE', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')"
-                    class="view-tab active" th:href="@{/dashboard}" aria-current="page">
-                    <span class="material-symbols">assignment</span> Órdenes de Compra
+                    class="view-tab active js-page-transition" th:href="@{/dashboard}" aria-current="page">
+                    <span class="material-symbols">shopping_cart</span> Órdenes de Compra
                 </a>
                 <a sec:authorize="hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')"
-                    class="view-tab" th:href="@{/polizas}">
+                    class="view-tab js-page-transition" th:href="@{/polizas}">
                     <span class="material-symbols">policy</span> Pólizas
                 </a>
             </nav>

@@ -122,6 +122,16 @@ public class GlobalExceptionHandler {
         return redirigirConError(request, message);
     }
 
+    @ExceptionHandler(SecurityException.class)
+    @ResponseBody
+    public Object handleSecurity(SecurityException ex, HttpServletRequest request) {
+        String message = ex.getMessage() == null ? "No tiene permisos para realizar esta operación." : ex.getMessage();
+        if (isAjax(request)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", message));
+        }
+        return redirigirConError(request, message);
+    }
+
     @ExceptionHandler(BindException.class)
     @ResponseBody
     public Object handleBindException(BindException ex, HttpServletRequest request) {

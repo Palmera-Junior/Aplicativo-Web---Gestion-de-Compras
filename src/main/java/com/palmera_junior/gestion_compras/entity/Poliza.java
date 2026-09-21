@@ -66,6 +66,12 @@ public class Poliza {
     @Column(name = "contrato_adjunto_nombre", length = 255)
     private String contratoAdjuntoNombre;
 
+    @Column(name = "poliza_fisica_adjunto", columnDefinition = "TEXT")
+    private String polizaFisicaAdjunto;
+
+    @Column(name = "poliza_fisica_adjunto_nombre", length = 255)
+    private String polizaFisicaAdjuntoNombre;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private EstadoPoliza estado = EstadoPoliza.BORRADOR;
@@ -90,6 +96,7 @@ public class Poliza {
 
     public boolean estaProximaAVencer() {
         return fechaVencimiento != null
+                && !fechaVencimiento.isBefore(LocalDate.now())
                 && !fechaVencimiento.isAfter(LocalDate.now().plusDays(10));
     }
 
@@ -100,6 +107,23 @@ public class Poliza {
         estado = EstadoPoliza.APROBADA;
         usuarioAprobacion = aprobador;
         fechaAprobacion = fecha;
+    }
+
+    public void activar(Usuario usuario, LocalDate nuevaFechaVencimiento,
+            String adjuntoFisico, String nombreAdjuntoFisico) {
+        if (estado != EstadoPoliza.APROBADA) {
+            throw new IllegalStateException("Solo las pólizas APROBADAS pueden pasar a estado VIGENTE");
+        }
+        if (nuevaFechaVencimiento == null || nuevaFechaVencimiento.isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException("La fecha de vencimiento debe ser hoy o posterior");
+        }
+        if (adjuntoFisico == null || adjuntoFisico.isBlank()) {
+            throw new IllegalArgumentException("Debe adjuntar el PDF de la póliza física");
+        }
+        fechaVencimiento = nuevaFechaVencimiento;
+        polizaFisicaAdjunto = adjuntoFisico;
+        polizaFisicaAdjuntoNombre = nombreAdjuntoFisico;
+        estado = EstadoPoliza.VIGENTE;
     }
 
     public void anular() {

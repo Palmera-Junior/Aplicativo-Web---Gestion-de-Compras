@@ -28,6 +28,7 @@ import com.palmera_junior.gestion_compras.repository.ProveedorRepository;
 import com.palmera_junior.gestion_compras.events.PolizaAprobadaEvent;
 import com.palmera_junior.gestion_compras.service.correo.CorreoPolizaOutboxService;
 import com.palmera_junior.gestion_compras.service.usuario.IUsuarioService;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class PolizaService implements IPolizaService {
@@ -59,10 +60,11 @@ public class PolizaService implements IPolizaService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
     public Page<Poliza> polizasPaginadas(Pageable pageable, String search, String fechaDesde,
             String fechaHasta, Integer idSede, boolean esNacional, String estado) {
+        marcarVencidas();
         Specification<Poliza> specification = Specification.where((root, query, criteriaBuilder) ->
                 criteriaBuilder.conjunction());
 
@@ -79,13 +81,16 @@ public class PolizaService implements IPolizaService {
 
         LocalDate inicio = parseDate(fechaDesde);
         LocalDate fin = parseDate(fechaHasta);
+        if (inicio != null && fin != null && inicio.isAfter(fin)) {
+            throw new IllegalArgumentException("El rango de vencimiento no es válido");
+        }
         if (inicio != null) {
             specification = specification.and((root, query, criteriaBuilder) ->
-                    criteriaBuilder.greaterThanOrEqualTo(root.get("fechaCreacion"), inicio));
+                    criteriaBuilder.greaterThanOrEqualTo(root.get("fechaVencimiento"), inicio));
         }
         if (fin != null) {
             specification = specification.and((root, query, criteriaBuilder) ->
-                    criteriaBuilder.lessThanOrEqualTo(root.get("fechaCreacion"), fin));
+                    criteriaBuilder.lessThanOrEqualTo(root.get("fechaVencimiento"), fin));
         }
 
         if (!esNacional && idSede != null) {
@@ -135,6 +140,9 @@ public class PolizaService implements IPolizaService {
     @Transactional
     @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
     public Poliza guardarDesdeDTO(PolizaDTO dto) {
+        if (dto == null || dto.getContratoAdjunto() == null || dto.getContratoAdjunto().isEmpty()) {
+            throw new IllegalArgumentException("Debe adjuntar el contrato de la póliza en formato PDF");
+        }
         Usuario usuario = usuarioService.obtenerUsuarioAutenticado();
         Poliza poliza = new Poliza();
         poliza.setUsuario(usuario);
@@ -166,6 +174,9 @@ public class PolizaService implements IPolizaService {
         boolean eliminarAdjunto = dto != null && dto.isEliminarContratoAdjunto();
         boolean hayAdjuntoNuevo = dto != null && dto.getContratoAdjunto() != null
                 && !dto.getContratoAdjunto().isEmpty();
+        if (!hayAdjuntoNuevo && (eliminarAdjunto || isBlank(adjuntoAnterior))) {
+            throw new IllegalArgumentException("Debe adjuntar el contrato de la póliza en formato PDF");
+        }
         if (hayAdjuntoNuevo && adjuntoAnterior != null && !eliminarAdjunto) {
             throw new IllegalArgumentException("Debe eliminar el archivo actual antes de adjuntar otro");
         }
@@ -198,12 +209,45 @@ public class PolizaService implements IPolizaService {
         Usuario aprobador = usuarioService.obtenerUsuarioAutenticado();
         Poliza poliza = polizaRepository.findById(idPoliza)
                 .orElseThrow(() -> new IllegalArgumentException("Póliza no encontrada"));
-        assertVisible(poliza, aprobador);
+        assertPuedeAprobar(poliza, aprobador);
         poliza.aprobar(aprobador, LocalDate.now());
         Poliza aprobada = polizaRepository.save(poliza);
         Long idAuditoria = correoPolizaOutboxService.registrarPendiente(aprobada);
         eventPublisher.publishEvent(new PolizaAprobadaEvent(idAuditoria));
         return aprobada;
+    }
+
+    @Override
+    @Transactional
+    @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
+    public Poliza activarVigente(Integer idPoliza, String fechaVencimiento, MultipartFile polizaFisica) {
+        Usuario usuario = usuarioService.obtenerUsuarioAutenticado();
+        Poliza poliza = polizaRepository.findById(idPoliza)
+                .orElseThrow(() -> new IllegalArgumentException("Póliza no encontrada"));
+        assertVisible(poliza, usuario);
+        if (polizaFisica == null || polizaFisica.isEmpty()) {
+            throw new IllegalArgumentException("Debe adjuntar el PDF de la póliza física");
+        }
+
+        LocalDate nuevaFechaVencimiento = parseDate(fechaVencimiento);
+        if (nuevaFechaVencimiento == null || nuevaFechaVencimiento.isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException("La fecha de vencimiento debe ser hoy o posterior");
+        }
+
+        String adjuntoNuevo = archivoStorage.almacenar(polizaFisica);
+        try {
+            poliza.activar(usuario, nuevaFechaVencimiento, adjuntoNuevo, polizaFisica.getOriginalFilename());
+            return polizaRepository.save(poliza);
+        } catch (RuntimeException exception) {
+            archivoStorage.eliminar(adjuntoNuevo);
+            throw exception;
+        }
+    }
+
+    @Override
+    @Transactional
+    public int marcarVencidas() {
+        return polizaRepository.marcarVigentesVencidas(LocalDate.now());
     }
 
     @Override
@@ -225,8 +269,8 @@ public class PolizaService implements IPolizaService {
         if (dto.getIdProveedor() == null) {
             throw new IllegalArgumentException("El proveedor es obligatorio");
         }
-        if (isBlank(dto.getCliente()) || isBlank(dto.getNumeroContrato())) {
-            throw new IllegalArgumentException("El cliente y el número de contrato son obligatorios");
+        if (isBlank(dto.getCliente()) || isBlank(dto.getNumeroContrato()) || isBlank(dto.getDescripcion())) {
+            throw new IllegalArgumentException("El cliente, el número de contrato y la descripción son obligatorios");
         }
         validarNumeroContratoUnico(dto.getNumeroContrato(), poliza.getIdPoliza());
         validarNoNegativo(dto.getValorPrima(), "La prima no puede ser negativa");
@@ -275,6 +319,16 @@ public class PolizaService implements IPolizaService {
         if (usuario.getSede() == null || poliza.getSede() == null
                 || !poliza.getSede().getIdSede().equals(usuario.getSede().getIdSede())) {
             throw new SecurityException("Solo puede gestionar pólizas de su sede");
+        }
+    }
+
+    private void assertPuedeAprobar(Poliza poliza, Usuario usuario) {
+        if (usuario != null && usuario.getRol() == Rol.SUPERADMINISTRADOR) {
+            return;
+        }
+        if (usuario == null || usuario.getSede() == null || poliza.getSede() == null
+                || !poliza.getSede().getIdSede().equals(usuario.getSede().getIdSede())) {
+            throw new SecurityException("No tiene permisos para aprobar polizas de otras sedes");
         }
     }
 

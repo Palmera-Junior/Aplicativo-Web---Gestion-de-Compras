@@ -31,9 +31,68 @@ async function obtenerMensajeError(response, mensajePorDefecto) {
     }
 }
 
+function pintarEstadoCorreo(celda, estado) {
+    const estados = {
+        ENVIADO: ['enviado', 'check', 'Correo enviado correctamente a contabilidad'],
+        FALLIDO: ['fallido', 'close', 'El correo a contabilidad no pudo enviarse'],
+        PENDIENTE: ['pendiente', 'schedule', 'El correo a contabilidad está en proceso de envío'],
+        PROCESANDO: ['pendiente', 'schedule', 'El correo a contabilidad está en proceso de envío'],
+        REINTENTAR: ['pendiente', 'schedule', 'El correo a contabilidad está en proceso de envío']
+    };
+    const detalle = estados[estado];
+    const indicador = document.createElement('span');
+    indicador.className = `correo-estado-icon ${detalle ? detalle[0] : 'sin-envio'}`;
+    indicador.title = detalle ? detalle[2] : 'No se ha generado un envío de correo a contabilidad';
+    if (detalle) {
+        const icono = document.createElement('span');
+        icono.className = 'material-symbols';
+        icono.textContent = detalle[1];
+        indicador.appendChild(icono);
+    } else {
+        indicador.textContent = '-';
+    }
+    celda.replaceChildren(indicador);
+}
+
+const formatearPesos = (valor) => {
+    const numero = Number(valor);
+    if (!Number.isFinite(numero)) return '';
+    return numero.toLocaleString('es-CO', {
+        style: 'currency',
+        currency: 'COP',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+    });
+};
+
+const valorNumerico = (valor) => valor.replace(/[^0-9]/g, '');
+
+function configurarCampoMoneda(campoVisible) {
+    const nombre = campoVisible.dataset.moneyField;
+    const campoOculto = campoVisible.form?.elements[nombre];
+    if (!campoOculto) return;
+
+    const sincronizar = () => {
+        campoOculto.value = valorNumerico(campoVisible.value);
+    };
+    campoVisible.addEventListener('focus', () => {
+        campoVisible.value = valorNumerico(campoVisible.value);
+        campoVisible.select();
+    });
+    campoVisible.addEventListener('input', sincronizar);
+    campoVisible.addEventListener('blur', () => {
+        sincronizar();
+        campoVisible.value = formatearPesos(campoOculto.value);
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const dialog = document.getElementById('poliza-modal');
     const detailDialog = document.getElementById('poliza-detalle-modal');
+    const activarDialog = document.getElementById('poliza-activar-modal');
+    const activarForm = document.getElementById('poliza-activar-form');
+    const activarFecha = document.getElementById('poliza-activar-fecha');
+    const activarArchivo = document.getElementById('poliza-fisica-input');
     const openButton = document.getElementById('btn-nueva-poliza');
     const closeButton = document.querySelector('#poliza-modal .modal-close');
     const cancelButton = document.querySelector('#poliza-modal .btn-cancel');
@@ -47,7 +106,60 @@ document.addEventListener('DOMContentLoaded', () => {
     const formTitle = document.getElementById('poliza-modal-title');
     const formDescription = document.getElementById('poliza-modal-description');
     const createAction = form?.getAttribute('action');
+    const fechaDesde = document.getElementById('poliza-fecha-desde');
+    const fechaHasta = document.getElementById('poliza-fecha-hasta');
+    const estadoSelect = document.querySelector('.polizas-filters .estado-select');
+    const auditoria = {
+        creador: document.getElementById('poliza-creado-por'),
+        aprobador: document.getElementById('poliza-aprobado-por'),
+        sede: document.getElementById('poliza-sede'),
+        fechaAprobacion: document.getElementById('poliza-fecha-aprobacion')
+    };
     let scrollOriginal = null;
+
+    const actualizarAuditoria = ({ creador, aprobador, sede, fechaAprobacion }) => {
+        if (auditoria.creador) auditoria.creador.textContent = creador || 'Sin información';
+        if (auditoria.aprobador) auditoria.aprobador.textContent = aprobador || 'Sin aprobación';
+        if (auditoria.sede) auditoria.sede.textContent = sede || 'Sin información';
+        if (auditoria.fechaAprobacion) auditoria.fechaAprobacion.textContent = fechaAprobacion || 'Sin aprobación';
+    };
+
+    document.querySelectorAll('.poliza-money').forEach((celda) => {
+        celda.textContent = formatearPesos(celda.textContent.trim());
+    });
+    document.querySelectorAll('.poliza-money-input').forEach(configurarCampoMoneda);
+
+    estadoSelect?.addEventListener('change', () => {
+        estadoSelect.closest('form')?.requestSubmit();
+    });
+
+    fechaDesde?.addEventListener('change', () => {
+        if (fechaHasta) fechaHasta.min = fechaDesde.value;
+    });
+    fechaHasta?.addEventListener('change', () => {
+        if (fechaDesde) fechaDesde.max = fechaHasta.value;
+    });
+
+    const actualizarEstadosCorreo = async () => {
+        const filas = [...document.querySelectorAll('tr[data-poliza-id]')];
+        if (!filas.length) return;
+        const parametros = filas.map((fila) => `ids=${encodeURIComponent(fila.dataset.polizaId)}`).join('&');
+        try {
+            const response = await fetch(`/polizas/correo-estados?${parametros}`, {
+                headers: { Accept: 'application/json' }
+            });
+            if (!response.ok) return;
+            const estados = await response.json();
+            filas.forEach((fila) => {
+                const celda = fila.querySelector('.correo-cell');
+                if (celda) pintarEstadoCorreo(celda, estados[fila.dataset.polizaId] || null);
+            });
+        } catch (error) {
+            // Mantener el último estado mostrado si el sondeo no está disponible.
+        }
+    };
+    actualizarEstadosCorreo();
+    window.setInterval(actualizarEstadosCorreo, 10000);
 
     document.querySelectorAll('.alerta-exito').forEach((alerta) => {
         mostrarToast(alerta.textContent.trim(), 'success');
@@ -87,8 +199,24 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!modal) return;
         if (typeof modal.close === 'function' && modal.open) modal.close();
         else modal.removeAttribute('open');
-        if (!dialog?.open && !detailDialog?.open) restaurarScroll();
+        if (!dialog?.open && !detailDialog?.open && !activarDialog?.open) restaurarScroll();
     };
+
+    document.querySelectorAll('.js-activar-poliza').forEach((button) => {
+        button.addEventListener('click', () => {
+            activarForm?.setAttribute('action', button.dataset.url || '');
+            activarArchivo?.form?.reset();
+            if (activarFecha) {
+                activarFecha.value = button.dataset.fechaVencimiento || '';
+                activarFecha.min = new Date().toISOString().slice(0, 10);
+            }
+            abrir(activarDialog);
+        });
+    });
+
+    document.querySelectorAll('.js-cerrar-activar').forEach((button) => {
+        button.addEventListener('click', () => cerrar(activarDialog));
+    });
 
     const prepararNueva = () => {
         form?.reset();
@@ -100,7 +228,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         if (eliminarArchivoInput) eliminarArchivoInput.value = 'false';
         if (archivoActual) archivoActual.style.display = 'none';
-        if (archivoInput) archivoInput.disabled = false;
+        if (archivoInput) {
+            archivoInput.disabled = false;
+            archivoInput.required = true;
+        }
+        actualizarAuditoria({
+            creador: form?.dataset.creadorActual,
+            aprobador: 'Sin aprobación',
+            sede: form?.dataset.sedeActual,
+            fechaAprobacion: 'Sin aprobación'
+        });
         if (saveButton) {
             saveButton.textContent = 'Guardar Póliza';
             saveButton.disabled = false;
@@ -121,9 +258,19 @@ document.addEventListener('DOMContentLoaded', () => {
         campos.cliente.value = button.dataset.cliente || '';
         campos.valorPrima.value = button.dataset.prima || '';
         campos.valorContrato.value = button.dataset.valorContrato || '';
+        const campoPrimaVisible = form.querySelector('[data-money-field="valorPrima"]');
+        const campoContratoVisible = form.querySelector('[data-money-field="valorContrato"]');
+        if (campoPrimaVisible) campoPrimaVisible.value = formatearPesos(campos.valorPrima.value);
+        if (campoContratoVisible) campoContratoVisible.value = formatearPesos(campos.valorContrato.value);
         campos.descripcion.value = button.dataset.descripcion || '';
         campos.contratoAdjunto.value = '';
         if (eliminarArchivoInput) eliminarArchivoInput.value = 'false';
+        actualizarAuditoria({
+            creador: button.dataset.creador,
+            aprobador: button.dataset.aprobador,
+            sede: button.dataset.sede,
+            fechaAprobacion: button.dataset.fechaAprobacion
+        });
 
         const nombreArchivo = button.dataset.archivoNombre || '';
         if (archivoActual && nombreArchivo) archivoActual.style.display = '';
@@ -132,7 +279,10 @@ document.addEventListener('DOMContentLoaded', () => {
         form.querySelectorAll('input, select, textarea').forEach((control) => {
             control.disabled = !esBorrador;
         });
-        if (archivoInput) archivoInput.disabled = !esBorrador || Boolean(nombreArchivo);
+        if (archivoInput) {
+            archivoInput.disabled = !esBorrador || Boolean(nombreArchivo);
+            archivoInput.required = esBorrador && !nombreArchivo;
+        }
         if (eliminarArchivoButton) eliminarArchivoButton.style.display = esBorrador && nombreArchivo ? '' : 'none';
         if (formTitle) formTitle.textContent = esBorrador ? 'Editar Póliza' : 'Ver Póliza';
         if (formDescription) {
@@ -163,6 +313,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (archivoActual) archivoActual.style.display = 'none';
         if (archivoInput) {
             archivoInput.disabled = false;
+            archivoInput.required = true;
             archivoInput.focus();
         }
         mostrarToast('Archivo actual marcado para eliminar. Ahora puedes adjuntar otro PDF.', 'info');
@@ -170,6 +321,10 @@ document.addEventListener('DOMContentLoaded', () => {
     form?.addEventListener('submit', async (event) => {
         event.preventDefault();
         if (!saveButton) return;
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
 
         saveButton.disabled = true;
         saveButton.textContent = 'Procesando...';
@@ -193,9 +348,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 ));
             }
 
+            const esCreacion = form.action === createAction;
             cerrar(dialog);
+            if (esCreacion) prepararNueva();
             mostrarToast(
-                form.action === createAction
+                esCreacion
                     ? 'Póliza creada correctamente.'
                     : 'Póliza actualizada correctamente.',
                 'success'
@@ -243,7 +400,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    [dialog, detailDialog].forEach((modal) => modal?.addEventListener('click', (event) => {
+    [dialog, detailDialog, activarDialog].forEach((modal) => modal?.addEventListener('click', (event) => {
         if (event.target === modal) cerrar(modal);
     }));
 });

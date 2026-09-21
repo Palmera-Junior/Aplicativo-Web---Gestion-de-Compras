@@ -1,5 +1,10 @@
 package com.palmera_junior.gestion_compras.service.correo;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.NumberFormat;
+import java.util.Locale;
+
 import com.palmera_junior.gestion_compras.entity.OrdenCompra;
 import com.palmera_junior.gestion_compras.entity.Poliza;
 import lombok.RequiredArgsConstructor;
@@ -100,11 +105,21 @@ public class EmailTemplateService {
                                 + "Número de contrato: " + poliza.getNumeroContrato() + "\n"
                                 + "Proveedor: " + proveedor + "\n"
                                 + "Cliente: " + poliza.getCliente() + "\n"
-                                + "Valor de la prima: " + poliza.getValorPrima() + "\n"
-                                + "Valor del contrato: " + poliza.getValorContrato() + "\n"
+                                + "Valor de la prima: " + formatearPesos(poliza.getValorPrima()) + "\n"
+                                + "Valor del contrato: " + formatearPesos(poliza.getValorContrato()) + "\n"
                                 + "Sede: " + sede + "\n"
                                 + "Fecha de aprobación: " + poliza.getFechaAprobacion() + "\n"
                                 + "Aprobada por: " + aprobador + "\n\n"
                                 + "Se adjunta el contrato en formato PDF.";
+        }
+
+        private String formatearPesos(BigDecimal valor) {
+                if (valor == null) {
+                        return "N/A";
+                }
+                NumberFormat formato = NumberFormat.getCurrencyInstance(Locale.forLanguageTag("es-CO"));
+                formato.setMinimumFractionDigits(0);
+                formato.setMaximumFractionDigits(0);
+                return formato.format(valor.setScale(0, RoundingMode.HALF_UP));
         }
 }

@@ -168,6 +168,177 @@ body {
     margin: 2px 0 0 0;
 }
 
+/* ============================================
+   RESUMEN POR ESTADO (tarjeta de Órdenes de Compra)
+   Mismo lenguaje visual que .poliza-summary en
+   polizas.css, con sus propios valores de color
+   para poder ajustarse sin afectar la otra vista.
+   ============================================ */
+.orders-summary {
+    margin: 0 0 20px;
+}
+
+.order-status-card {
+    display: flex;
+    flex-direction: column;
+    gap: 17px;
+    padding: 20px;
+    border: 1px solid #e9ecef;
+    border-radius: 10px;
+    background: #fcfffe;
+}
+
+.order-status-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.order-status-main {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.order-status-icon {
+    display: grid;
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    place-items: center;
+    border-radius: 10px;
+    background: #eaf3ee;
+}
+
+.order-status-icon .material-symbols {
+    font-size: 25px;
+    color: #0f3024;
+}
+
+.order-status-body h2 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: #212529;
+}
+
+.order-status-body p {
+    margin: 2px 0 0;
+    font-size: 13px;
+    color: #868e96;
+}
+
+.order-status-total {
+    display: flex;
+    align-items: center;
+}
+
+.order-total-main {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+}
+
+.order-total-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.order-value-summary {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+}
+
+.order-value-summary .material-symbols.total {
+    font-size: 20px;
+    color: #198754;
+}
+
+.order-stat-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: #212529;
+    line-height: 1;
+}
+
+.order-stat-value.total {
+    font-size: 27px;
+}
+
+.order-stat-label {
+    margin-top: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .05em;
+    color: #868e96;
+}
+
+.order-progress-bar {
+    display: flex;
+    width: 100%;
+    height: 7px;
+    overflow: hidden;
+    border-radius: 99px;
+    background: #edf0f1;
+}
+
+.progress-segment {
+    min-width: 0;
+    transition: transform .2s ease;
+}
+
+.progress-segment:hover {
+    transform: scaleY(1.7);
+}
+
+.progress-anuladas { background: #d92d20; }
+.progress-borrador { background: #2f2f31; }
+.progress-aprobadas { background: #131261; }
+.progress-facturadas { background: #d97706; }
+.progress-recibidas { background: #5b2f0d; }
+.progress-completadas { background: #2e9f5b; }
+
+.order-status-references {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0;
+}
+
+.order-status-references .reference-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 0 10px;
+    border-left: 1px solid rgba(33, 37, 41, .09);
+}
+
+.order-status-references .reference-item:first-child {
+    border-left: 0;
+}
+
+.reference-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    color: #212529;
+}
+
+.reference-label {
+    font-size: 10.5px;
+    font-weight: 600;
+    color: #495057;
+}
+
+.reference-color {
+    width: 18px;
+    height: 7px;
+    border-radius: 99px;
+}
+
 /* Breadcrumb de administrador, sobre el h1 */
 .breadcrumb-admin {
     display: flex;
@@ -420,9 +591,13 @@ body {
    RESPONSIVE - FILTROS
    ============================================ */
 
-/* Tablets (≤992px): los inputs empiezan a apretarse */
+/* Tablets (≤992px): los inputs empiezan a apretarse.
+   Estas reglas aplican por igual a .filtros-section (Órdenes)
+   y .polizas-filters (Pólizas) para mantener las mismas
+   proporciones en ambas pestañas. */
 @media (max-width: 992px) {
-    .filtros-section {
+    .filtros-section,
+    .polizas-filters {
         flex-wrap: wrap;
     }
 
@@ -444,9 +619,11 @@ body {
     }
 }
 
-/* Móviles (≤576px): todo apilado en columna */
+/* Móviles (≤576px): todo apilado en columna.
+   Igual que arriba, compartido entre ambas pestañas. */
 @media (max-width: 576px) {
-    .filtros-section {
+    .filtros-section,
+    .polizas-filters {
         flex-direction: column;
         align-items: stretch;
         gap: 12px;
@@ -1228,6 +1405,7 @@ body {
 
 .modal-overlay.active {
     display: flex;
+    animation: overlayFadeIn .2s ease;
 }
 
 .modal-content {
@@ -1525,6 +1703,12 @@ body {
     outline: none;
 }
 
+.table-productos .valor-unitario,
+.table-productos .iva-total,
+.table-productos .valor-total {
+    text-align: right;
+}
+
 .add-row-btn {
     display: inline-flex;
     align-items: center;
@@ -1747,6 +1931,7 @@ body {
 
 .modal-recibir-oc-overlay.active {
     display: flex;
+    animation: overlayFadeIn .2s ease;
 }
 
 .modal-recibir-oc-content {
@@ -2049,6 +2234,16 @@ body {
     }
 }
 
+@keyframes overlayFadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
 /* ==========================================
    TOAST (mensaje temporal auto-ocultable)
    Posicionado abajo a la derecha con colores
@@ -2230,18 +2425,28 @@ body {
         padding: 22px 18px;
     }
 
+    .order-status-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 14px;
+    }
+
     .order-status-main {
         align-items: flex-start;
     }
 
-    .order-status-stats {
+    .order-status-total {
         width: 100%;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 14px;
+        justify-content: flex-end;
     }
 
-    .order-status-stats > * {
-        min-width: 0;
+    .order-status-references {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        row-gap: 14px;
+    }
+
+    .order-status-references .reference-item:nth-child(3n+1) {
+        border-left: 0;
     }
 
     .table-responsive {
@@ -2259,7 +2464,8 @@ body {
         padding: 10px 12px;
     }
 
-    .filtros-section {
+    .filtros-section,
+    .polizas-filters {
         gap: 8px;
     }
 
@@ -2346,9 +2552,16 @@ body {
         padding: 18px 14px;
     }
 
-    .order-status-stats {
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
+    .order-status-references {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .order-status-references .reference-item:nth-child(3n+1) {
+        border-left: 1px solid rgba(33, 37, 41, .09);
+    }
+
+    .order-status-references .reference-item:nth-child(2n+1) {
+        border-left: 0;
     }
 
     .data-table {
@@ -2371,7 +2584,8 @@ body {
         padding: 8px 16px 16px;
     }
 
-    .filtros-section {
+    .filtros-section,
+    .polizas-filters {
         display: flex;
         flex-direction: row;
         flex-wrap: wrap;
@@ -2380,21 +2594,28 @@ body {
     }
 
     .filtros-section .filtro-icon,
+    .polizas-filters .filtro-icon,
     .filtros-section > .btn-buscar,
+    .polizas-filters > .btn-buscar,
     .filtros-section > .btn-limpiar,
+    .polizas-filters > .btn-limpiar,
     .filtros-section > .btn-limpiar-filtro {
         order: 0;
         flex: 0 0 auto;
     }
 
-    .filtros-section .filtro-icon {
+    .filtros-section .filtro-icon,
+    .polizas-filters .filtro-icon {
         align-self: center;
     }
 
     .filtros-section > .buscar-input,
+    .polizas-filters > .buscar-input,
     .filtros-section > .filtro-busqueda,
     .filtros-section > .estado-select,
+    .polizas-filters > .estado-select,
     .filtros-section > .fecha-input,
+    .polizas-filters > .fecha-input,
     .filtros-section > .filter-switch-label {
         order: 1;
         flex: 1 0 100%;
@@ -2403,7 +2624,9 @@ body {
     }
 
     .filtros-section > .btn-buscar,
+    .polizas-filters > .btn-buscar,
     .filtros-section > .btn-limpiar,
+    .polizas-filters > .btn-limpiar,
     .filtros-section > .btn-limpiar-filtro {
         width: 38px;
         min-width: 38px;
