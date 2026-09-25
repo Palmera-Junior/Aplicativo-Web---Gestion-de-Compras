@@ -38,5 +38,9 @@ public interface OrdenCompraRepository extends JpaRepository<OrdenCompra, Intege
      * A dónde apunta: Tabla `orden_compra`.
      */
     Page<OrdenCompra> findAllByOrderByIdOrdenDesc(Pageable pageable);
+
+    @EntityGraph(attributePaths = { "sede", "centroCosto", "centroCosto.sede" })
+    @Query("select o from OrdenCompra o")
+    List<OrdenCompra> findAllParaResumenAdministrativo();
 }
 

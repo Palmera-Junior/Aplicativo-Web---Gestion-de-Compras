@@ -265,8 +265,36 @@
 }
 
 .status-segment {
+    flex: 0 0 auto;
     min-width: 0;
+    height: 100%;
+    box-sizing: border-box;
+    border-right: 1px solid rgb(255, 255, 255);
+    box-shadow: inset -1px 0 0 rgba(255, 255, 255, .94);
+    animation: status-bar-fill .7s cubic-bezier(.22, .61, .36, 1) both;
+    position: relative;
     transition: transform .2s ease;
+}
+
+.status-segment:last-child {
+    border-right: none;
+    box-shadow: none;
+}
+
+.status-segment:nth-child(2) { animation-delay: .08s; }
+.status-segment:nth-child(3) { animation-delay: .16s; }
+.status-segment:nth-child(4) { animation-delay: .24s; }
+.status-segment:nth-child(5) { animation-delay: .32s; }
+
+@keyframes status-bar-fill {
+    from { clip-path: inset(0 100% 0 0); }
+    to { clip-path: inset(0 0 0 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .progress-segment,
+    .status-segment,
+    .sede-legend-track span { animation: none; }
 }
 
 .status-segment:hover {
@@ -278,6 +306,7 @@
 .status-aprobada { background: #0d3977; }
 .status-vigente { background: #198754; }
 .status-vencida { background: #c77700; }
+.status-terminada { background: #6f42c1; }
 
 .poliza-vencimiento-cell {
     white-space: nowrap;
@@ -300,7 +329,7 @@
 
 .poliza-status-references {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 0;
     width: 100%;
 }
@@ -422,6 +451,8 @@
 .poliza-badge.vigente::before { background: #198754; }
 .poliza-badge.vencida { background: #fff3cd; color: #8a5200; }
 .poliza-badge.vencida::before { background: #c77700; }
+.poliza-badge.terminada { background: #eee7f8; color: #5b21b6; }
+.poliza-badge.terminada::before { background: #6f42c1; }
 
 .poliza-actions {
     display: flex;
@@ -432,13 +463,56 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    margin: 8px 0;
-    padding: 9px 10px;
-    border: 1px solid #d9e2dc;
-    border-radius: 6px;
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 4px 10px 4px 12px;
     background: #f5faf7;
     color: #24543b;
     font-size: 13px;
+}
+
+.poliza-archivo-control {
+    display: flex;
+    align-items: center;
+    min-height: 54px;
+    overflow: hidden;
+    border: 1px dashed #9db9aa;
+    border-radius: 8px;
+    background: #f8fbf9;
+}
+
+.poliza-archivo-control input[type="file"] {
+    flex: 1 1 280px;
+    min-width: 220px;
+    width: auto;
+    min-height: 44px;
+    padding: 5px 8px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+}
+
+.poliza-archivo-control:focus-within {
+    outline: 3px solid rgba(25, 135, 84, .24);
+    outline-offset: 2px;
+    border-color: #198754;
+}
+
+.auditoria-motivo-terminacion {
+    grid-column: 1 / -1;
+    padding: 10px 12px;
+    border: 1px solid #f1d58a;
+    border-radius: 6px;
+    background: #fff8dc;
+}
+
+.auditoria-terminacion[hidden] {
+    display: none !important;
+}
+
+.auditoria-motivo-terminacion .auditoria-value {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
 }
 
 .poliza-archivo-actual > span:nth-child(2) {
@@ -577,6 +651,131 @@
     gap: 16px;
 }
 
+.vigencia-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    align-items: end;
+}
+
+.sede-aprobacion-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 6px;
+    margin-bottom: 4px;
+}
+
+.sede-checkbox-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    overflow: visible;
+    padding-bottom: 2px;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.checkbox-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 6px;
+    padding: 7px 10px;
+    border: 1.5px solid #dfe5ea;
+    border-radius: 999px;
+    background: #f8fafb;
+    color: #334155;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    user-select: none;
+    transition: background .15s ease, border-color .15s ease, color .15s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+    min-height: 36px;
+}
+.checkbox-chip:hover {
+    border-color: #b7dec3;
+    background: #f1f8f4;
+}
+.checkbox-chip:has(input:checked) {
+    background: #edf8f0;
+    border-color: #9fd6b6;
+    color: #0f5132;
+    font-weight: 600;
+}
+.checkbox-chip input {
+    width: 15px;
+    height: 15px;
+    margin: 0;
+    accent-color: #198754;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+.sede-aprobacion-resumen {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 10px 12px;
+    border: 1px dashed #cfe2d9;
+    border-radius: 10px;
+    background: #f4fbf7;
+    color: #1b4f36;
+    font-size: 13px;
+    line-height: 1.4;
+    margin-top: 12px;
+}
+.sede-aprobacion-titulo {
+    margin: 0;
+    color: #198754;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .04em;
+}
+.sede-aprobacion-contenido {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.sede-aprobacion-resumen .material-symbols {
+    color: #198754;
+}
+.sede-approval-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.sede-approval-chip {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 118px;
+    padding: 7px 10px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    font-size: 11px;
+    line-height: 1.35;
+}
+.sede-approval-chip strong {
+    font-size: 12px;
+}
+
+.sede-approval-chip small {
+    font-size: 11px;
+}
+.sede-approval-chip.estado-aprobada {
+    background: #ebf9f0;
+    border-color: #bbebc9;
+    color: #166534;
+}
+.sede-approval-chip.estado-pendiente {
+    background: #fff8e7;
+    border-color: #f5d99a;
+    color: #8a6500;
+}
+
 .poliza-form-grid label {
     display: flex;
     flex-direction: column;
@@ -586,12 +785,112 @@
     font-weight: 600;
 }
 
+.poliza-form-grid .checkbox-chip {
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+}
+
 .poliza-form-grid .full-width {
     grid-column: 1 / -1;
 }
 
 .poliza-form-grid textarea {
     resize: vertical;
+}
+
+.prima-detalles-section {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px 16px;
+}
+
+.prima-detalles-section > h3,
+.prima-detalles-section > .prima-detalles-wrap,
+.prima-detalles-section > .add-row-btn {
+    grid-column: 1 / -1;
+}
+
+.prima-detalles-section .section-title {
+    margin: 0 0 8px;
+}
+
+.prima-detalles-section > .add-row-btn {
+    justify-self: start;
+    margin-top: 0;
+}
+
+.prima-detalles-section > label {
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: #f1f3f2;
+    border: 1px solid #e9ecef;
+}
+
+.prima-detalles-section > label .input-control {
+    border: none;
+    background: transparent;
+    padding: 0;
+    font-size: 15px;
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+    color: #1f2937;
+}
+
+.poliza-total-contrato-label {
+    background: #edf8f0;
+    border-color: #b7dec3;
+}
+
+.poliza-total-contrato-label .input-control {
+    color: #0f5132;
+}
+
+.poliza-total-prima-label .input-control {
+    color: #1f2937;
+    font-family: 'Inter', sans-serif;
+}
+
+.poliza-total-prima-label .input-control:disabled {
+    opacity: 1;
+    background: transparent;
+    color: #1f2937;
+    cursor: default;
+}
+
+.prima-detalles-wrap {
+    overflow-x: auto;
+}
+
+.prima-detalles-table {
+    min-width: 560px;
+    margin-bottom: 10px;
+}
+
+.prima-detalles-table th:last-child,
+.prima-detalles-table td:last-child {
+    width: 92px;
+    text-align: center;
+}
+
+.prima-detalles-table .prima-detalle-valor {
+    min-width: 150px;
+    text-align: right;
+}
+
+.prima-detalles-table .prima-detalle-descripcion {
+    min-width: 260px;
+}
+
+.prima-detalles-table .delete {
+    margin: 0 auto;
+}
+
+.prima-detalles-section .add-row-btn:disabled,
+.prima-detalles-table .delete:disabled {
+    cursor: not-allowed;
+    opacity: .5;
 }
 
 .file-field input[type="file"] {
@@ -604,6 +903,16 @@
     color: #56645c;
     font-size: 13px;
     cursor: pointer;
+}
+
+.file-field .poliza-archivo-control input[type="file"] {
+    width: auto;
+    min-width: 220px;
+    min-height: 44px;
+    padding: 5px 8px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
 }
 
 .file-field input[type="file"]::file-selector-button {

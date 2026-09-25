@@ -44,7 +44,7 @@
         <div class="tabs-shell" style="margin-top: -18px; margin-bottom: 0;">
             <nav class="view-tabs" aria-label="Módulos de gestión">
                 <a sec:authorize="hasAnyRole('SOLICITANTE', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')" class="view-tab js-page-transition" th:href="@{/dashboard}">
-                    <span class="material-symbols">shopping_cart</span> Órdenes de Compra
+                    <span class="material-symbols">assignment</span> Órdenes de Compra
                 </a>
                 <a sec:authorize="hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')" class="view-tab active js-page-transition" th:href="@{/polizas}" aria-current="page">
                     <span class="material-symbols">policy</span> Pólizas
@@ -77,16 +77,17 @@
                     <p>Estado general de las pólizas registradas.</p>
                 </div>
                 <div class="summary-total">
-                    <strong th:text="${polizasResumen != null ? polizasResumen.size() : 0}">0</strong>
+                    <strong th:text="${totalPolizas ?: 0}">0</strong>
                     <span>TOTAL</span>
                 </div>
             </div>
-            <div class="poliza-status-bar" aria-label="Distribución por estado" th:with="totalEstados=${(polizasAnuladas ?: 0) + (polizasBorrador ?: 0) + (polizasAprobadas ?: 0) + (polizasVigentes ?: 0) + (polizasVencidas ?: 0)}">
-                <span class="status-segment status-anulada" th:style="${totalEstados > 0 ? 'flex-basis:' + (polizasAnuladas * 100 / totalEstados) + '%' : 'flex-basis:0%'}" title="Anuladas"></span>
-                <span class="status-segment status-borrador" th:style="${totalEstados > 0 ? 'flex-basis:' + (polizasBorrador * 100 / totalEstados) + '%' : 'flex-basis:0%'}" title="Borradores"></span>
-                <span class="status-segment status-aprobada" th:style="${totalEstados > 0 ? 'flex-basis:' + (polizasAprobadas * 100 / totalEstados) + '%' : 'flex-basis:0%'}" title="Aprobadas"></span>
-                <span class="status-segment status-vigente" th:style="${totalEstados > 0 ? 'flex-basis:' + (polizasVigentes * 100 / totalEstados) + '%' : 'flex-basis:0%'}" title="Vigentes"></span>
-                <span class="status-segment status-vencida" th:style="${totalEstados > 0 ? 'flex-basis:' + (polizasVencidas * 100 / totalEstados) + '%' : 'flex-basis:0%'}" title="Vencidas"></span>
+            <div class="poliza-status-bar" aria-label="Distribución por estado" th:with="totalEstados=${(polizasAnuladas ?: 0) + (polizasBorrador ?: 0) + (polizasAprobadas ?: 0) + (polizasVigentes ?: 0) + (polizasVencidas ?: 0) + (polizasTerminadas ?: 0)}">
+                <span class="status-segment status-anulada" th:style="${totalEstados > 0 ? 'flex-basis:' + (polizasAnuladas * 100.0 / totalEstados) + '%' : 'flex-basis:0%'}" title="Anuladas"></span>
+                <span class="status-segment status-borrador" th:style="${totalEstados > 0 ? 'flex-basis:' + (polizasBorrador * 100.0 / totalEstados) + '%' : 'flex-basis:0%'}" title="Borradores"></span>
+                <span class="status-segment status-aprobada" th:style="${totalEstados > 0 ? 'flex-basis:' + (polizasAprobadas * 100.0 / totalEstados) + '%' : 'flex-basis:0%'}" title="Aprobadas"></span>
+                <span class="status-segment status-vigente" th:style="${totalEstados > 0 ? 'flex-basis:' + (polizasVigentes * 100.0 / totalEstados) + '%' : 'flex-basis:0%'}" title="Vigentes"></span>
+                <span class="status-segment status-vencida" th:style="${totalEstados > 0 ? 'flex-basis:' + (polizasVencidas * 100.0 / totalEstados) + '%' : 'flex-basis:0%'}" title="Vencidas"></span>
+                <span class="status-segment status-terminada" th:style="${totalEstados > 0 ? 'flex-basis:' + (polizasTerminadas * 100.0 / totalEstados) + '%' : 'flex-basis:0%'}" title="Terminadas"></span>
             </div>
             <div class="poliza-status-references">
                 <div><strong th:text="${polizasAnuladas ?: 0}">0</strong><span>Anuladas</span><i class="status-dot status-anulada"></i></div>
@@ -94,6 +95,7 @@
                 <div><strong th:text="${polizasAprobadas ?: 0}">0</strong><span>Aprobadas</span><i class="status-dot status-aprobada"></i></div>
                 <div><strong th:text="${polizasVigentes ?: 0}">0</strong><span>Vigentes</span><i class="status-dot status-vigente"></i></div>
                 <div><strong th:text="${polizasVencidas ?: 0}">0</strong><span>Vencidas</span><i class="status-dot status-vencida"></i></div>
+                <div><strong th:text="${polizasTerminadas ?: 0}">0</strong><span>Terminadas</span><i class="status-dot status-terminada"></i></div>
             </div>
         </section>
 
@@ -104,10 +106,10 @@
                 <option value="">Todos los estados</option>
                 <option th:each="estado : ${estadosPoliza}" th:value="${estado}" th:text="${estado}" th:selected="${estado.name() == estadoSeleccionado}">BORRADOR</option>
             </select>
-            <label class="sr-only" for="poliza-fecha-desde">Vencimiento desde</label>
-            <input id="poliza-fecha-desde" class="input-control fecha-input" type="date" name="fechaDesde" th:value="${fechaDesde}" aria-label="Vencimiento desde">
-            <label class="sr-only" for="poliza-fecha-hasta">Vencimiento hasta</label>
-            <input id="poliza-fecha-hasta" class="input-control fecha-input" type="date" name="fechaHasta" th:value="${fechaHasta}" aria-label="Vencimiento hasta">
+            <label class="sr-only" for="poliza-fecha-desde">Inicio desde</label>
+            <input id="poliza-fecha-desde" class="input-control fecha-input" type="date" name="fechaDesde" th:value="${fechaDesde}" aria-label="Inicio desde">
+            <label class="sr-only" for="poliza-fecha-hasta">Inicio hasta</label>
+            <input id="poliza-fecha-hasta" class="input-control fecha-input" type="date" name="fechaHasta" th:value="${fechaHasta}" aria-label="Inicio hasta">
             <button class="btn-secondary btn-buscar" type="submit" title="Buscar"><span class="material-symbols-outlined">search</span></button>
             <a class="btn-secondary btn-limpiar" th:href="@{/polizas}" title="Limpiar filtros"><span class="material-symbols-outlined">close</span></a>
         </form>
@@ -138,7 +140,7 @@
                         </td>
                     </tr>
                     <tr th:each="poliza : ${polizasPage != null ? polizasPage.content : {}}"
-                        th:attr="data-poliza-id=${poliza.idPoliza}"
+                        th:attr="data-poliza-id=${poliza.idPoliza},data-sede-id=${poliza.sede != null ? poliza.sede.idSede : ''}"
                         th:classappend="${poliza.estaProximaAVencer()} ? ' poliza-proxima-vencer' : ''">
                         <td class="mono" th:text="${poliza.numeroContrato}">CTR-0001</td>
                         <td class="mono poliza-vencimiento-cell">
@@ -149,7 +151,9 @@
                         <td th:text="${poliza.cliente}">Cliente</td>                        
                         <td class="poliza-money" th:text="${poliza.valorPrima}">0</td>
                         <td class="poliza-money" th:text="${poliza.valorContrato}">0</td>
-                        <td><span class="poliza-badge" th:classappend="${' ' + #strings.toLowerCase(poliza.estado)}" th:text="${poliza.estado}">BORRADOR</span></td>
+                        <td th:with="estadoVisible=${poliza.getEstadoParaSede(sedeActualId)}">
+                            <span class="poliza-badge" th:classappend="${' ' + #strings.toLowerCase(estadoVisible)}" th:text="${estadoVisible}">BORRADOR</span>
+                        </td>
                         <td class="correo-cell" th:with="estadoCorreo=${estadosCorreoPoliza.get(poliza.idPoliza)}">
                             <span th:if="${estadoCorreo == null}" class="correo-estado-icon sin-envio" title="No se ha generado un envío de correo a contabilidad">-</span>
                             <span th:if="${estadoCorreo != null and estadoCorreo.name() == 'ENVIADO'}" class="correo-estado-icon enviado" title="Correo enviado correctamente a contabilidad">
@@ -163,12 +167,12 @@
                             </span>
                         </td>
                         <td class="actions poliza-actions">
-                            <button class="btn-icon js-ver-poliza" type="button" title="Ver detalles"
-                                    th:attr="data-url=@{/polizas/{id}/editar(id=${poliza.idPoliza})},data-contrato=${poliza.numeroContrato},data-fecha=${poliza.fechaCreacion},data-fecha-vencimiento=${poliza.fechaVencimiento},data-proveedor=${poliza.proveedor.idProv},data-cliente=${poliza.cliente},data-creador=${poliza.usuario != null ? poliza.usuario.nombre + ' ' + poliza.usuario.apellido : 'Sin información'},data-aprobador=${poliza.usuarioAprobacion != null ? poliza.usuarioAprobacion.nombre + ' ' + poliza.usuarioAprobacion.apellido : 'Sin aprobación'},data-sede=${poliza.sede != null ? poliza.sede.nombre : 'Sin información'},data-fecha-aprobacion=${poliza.fechaAprobacion != null ? poliza.fechaAprobacion : 'Sin aprobación'},data-prima=${poliza.valorPrima},data-valor-contrato=${poliza.valorContrato},data-estado=${poliza.estado},data-descripcion=${poliza.descripcion},data-archivo-nombre=${poliza.contratoAdjuntoNombre != null ? poliza.contratoAdjuntoNombre : poliza.contratoAdjunto}">
+                                <button class="btn-icon js-ver-poliza" type="button" title="Ver detalles"
+                                    th:attr="data-url=@{/polizas/{id}/editar(id=${poliza.idPoliza})},data-creador-id=${poliza.usuario != null ? poliza.usuario.idUsuario : ''},data-contrato=${poliza.numeroContrato},data-fecha=${poliza.fechaCreacion},data-fecha-vencimiento=${poliza.fechaVencimiento},data-proveedor=${poliza.proveedor.idProv},data-cliente=${poliza.cliente},data-creador=${poliza.usuario != null ? poliza.usuario.nombre + ' ' + poliza.usuario.apellido : 'Sin información'},data-aprobador=${poliza.usuarioAprobacion != null ? poliza.usuarioAprobacion.nombre + ' ' + poliza.usuarioAprobacion.apellido : 'Sin aprobación'},data-sede=${poliza.sede != null ? poliza.sede.nombre : 'Sin información'},data-fecha-aprobacion=${poliza.fechaAprobacion != null ? poliza.fechaAprobacion : 'Sin aprobación'},data-usuario-terminacion=${poliza.usuarioTerminacion != null ? poliza.usuarioTerminacion.nombre + ' ' + poliza.usuarioTerminacion.apellido : 'Sin terminación'},data-fecha-terminacion=${poliza.fechaTerminacion != null ? poliza.fechaTerminacion : 'Sin terminación'},data-motivo-terminacion=${poliza.motivoTerminacion != null ? poliza.motivoTerminacion : 'Sin motivo'},data-prima=${poliza.valorPrima},data-valor-contrato=${poliza.valorContrato},data-estado=${poliza.getEstadoParaSede(sedeActualId)},data-descripcion=${poliza.descripcion},data-archivo-nombre=${poliza.contratoAdjuntoNombre != null ? poliza.contratoAdjuntoNombre : poliza.contratoAdjunto}">
                                 <span class="material-symbols">visibility</span>
                             </button>
                             <form sec:authorize="hasAnyRole('APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')"
-                                  th:if="${poliza.estado.name() == 'BORRADOR'}" th:action="@{/polizas/{id}/aprobar(id=${poliza.idPoliza})}" method="post" class="poliza-action-form js-confirm-action" data-confirm="¿Aprobar esta póliza?">
+                                  th:if="${poliza.getEstadoParaSede(sedeActualId).name() == 'BORRADOR'}" th:action="@{/polizas/{id}/aprobar(id=${poliza.idPoliza})}" method="post" class="poliza-action-form js-confirm-action" data-confirm="¿Aprobar esta póliza?">
                                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                                 <button class="btn-icon" type="submit" title="Aprobar póliza"><span class="material-symbols">person_check</span></button>
                             </form>
@@ -177,10 +181,14 @@
                                     th:attr="data-url=@{/polizas/{id}/activar(id=${poliza.idPoliza})},data-fecha-vencimiento=${poliza.fechaVencimiento}"
                                     title="Activar póliza vigente"><span class="material-symbols">verified</span></button>
                             <form sec:authorize="hasAnyRole('APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')"
-                                  th:if="${poliza.estado.name() != 'ANULADA'}" th:action="@{/polizas/{id}/anular(id=${poliza.idPoliza})}" method="post" class="poliza-action-form js-confirm-action" data-confirm="¿Anular esta póliza? Esta acción no se puede revertir.">
+                                    th:if="${poliza.estado.name() == 'BORRADOR' or poliza.estado.name() == 'APROBADA'}" th:action="@{/polizas/{id}/anular(id=${poliza.idPoliza})}" method="post" class="poliza-action-form js-confirm-action" data-confirm="¿Anular esta póliza? Esta acción no se puede revertir.">
                                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                                 <button class="btn-icon btn-icon-danger" type="submit" title="Anular póliza"><span class="material-symbols">delete</span></button>
                             </form>
+                                            <button sec:authorize="hasAnyRole('APROBADOR', 'SUPERADMINISTRADOR')"
+                                                th:if="${poliza.estado.name() == 'VIGENTE'}" class="btn-icon btn-icon-danger js-terminar-poliza" type="button"
+                                                th:attr="data-url=@{/polizas/{id}/terminar(id=${poliza.idPoliza})}"
+                                                title="Terminar póliza"><span class="material-symbols">event_busy</span></button>
                         </td>
                     </tr>
                 </tbody>
@@ -198,40 +206,76 @@
     </main>
 
     <dialog id="poliza-modal" class="poliza-modal">
-        <form method="post" th:action="@{/polizas}" class="poliza-form" id="poliza-form" enctype="multipart/form-data"
-              th:attr="data-creador-actual=${polizaCreadorActual},data-sede-actual=${polizaSedeActual}">
+          <form method="post" th:action="@{/polizas}" class="poliza-form" id="poliza-form" enctype="multipart/form-data"
+              th:attr="data-creador-actual=${polizaCreadorActual},data-sede-actual=${polizaSedeActual},data-sede-actual-id=${sedeActualId},data-usuario-actual-id=${usuarioActualId},data-rol-actual=${rolUsuarioActual},data-sede-nacional=${polizaSedeNacional}">
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
             <div class="modal-heading">
                 <div><span class="material-symbols">policy</span><div><h2 id="poliza-modal-title">Nueva Póliza</h2><p id="poliza-modal-description">Registra la información principal del contrato.</p></div></div>
                 <button class="modal-close" type="button" title="Cerrar"><span class="material-symbols">close</span></button>
             </div>
             <div class="poliza-form-grid">
-                <label>Fecha de creación<input class="input-control" type="date" name="fechaCreacion" required></label>
-                <label>Fecha de vencimiento<input class="input-control" type="date" name="fechaVencimiento" required></label>
-                <label>Código o número de contrato<input class="input-control" type="text" name="numeroContrato" maxlength="50" required></label>
+                <h3 class="section-title full-width">Partes del contrato</h3>
+                <label>Cliente<input class="input-control" type="text" name="cliente" required></label>
                 <label>Proveedor / expedidor<select class="input-control" name="idProveedor" required>
                     <option value="">Selecciona un proveedor</option>
                     <option th:each="proveedor : ${proveedores}" th:value="${proveedor.idProv}"
                             th:text="${proveedor.nombre + ' - ' + proveedor.nit}">Proveedor</option>
                 </select></label>
-                <label>Cliente<input class="input-control" type="text" name="cliente" required></label>
-                <label>Valor de la prima
-                    <input class="input-control poliza-money-input" type="text" inputmode="numeric" data-money-field="valorPrima" autocomplete="off" required>
-                    <input type="hidden" name="valorPrima">
+
+                <h3 class="section-title full-width">Identificación y vigencia</h3>
+                <div class="vigencia-grid full-width">
+                    <label>Código o número de contrato<input class="input-control" type="text" name="numeroContrato" maxlength="50" required></label>
+                    <label>Fecha de inicio<input class="input-control" type="date" name="fechaCreacion" required></label>
+                    <label>Fecha de vencimiento<input class="input-control" type="date" name="fechaVencimiento" required></label>
+                </div>
+
+                <div class="full-width sede-aprobacion-section">
+                    <h3 class="section-title">Sedes involucradas</h3>
+                    <div class="sede-checkbox-grid" th:if="${sedes != null}">
+                        <label th:each="sede : ${sedes}" class="checkbox-chip">
+                            <input type="checkbox" name="idsSedes" th:value="${sede.idSede}" checked>
+                            <span th:text="${sede.nombre}">Sede</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="full-width prima-detalles-section">
+                    <h3 class="section-title">Detalle de primas</h3>
+                    <div class="table-responsive prima-detalles-wrap">
+                        <table class="table-productos prima-detalles-table">
+                            <thead>
+                                <tr><th>Descripción</th><th>Valor</th><th class="prima-detalle-acciones">Acciones</th></tr>
+                            </thead>
+                            <tbody id="tbody-detalles-prima"></tbody>
+                        </table>
+                    </div>
+                    <button title="Agregar nueva fila" type="button" id="btn-agregar-detalle-prima" class="add-row-btn">
+                        <span class="material-symbols">add</span> Agregar fila
+                    </button>
+                    <label class="poliza-total-contrato-label">Valor del contrato
+                        <input class="input-control poliza-money-input" type="text" inputmode="numeric" data-money-field="valorContrato" autocomplete="off" required>
+                        <input type="hidden" name="valorContrato">
+                    </label>
+                    <label class="poliza-total-prima-label">Valor total de la prima
+                        <input id="valor-prima-total" class="input-control poliza-money-input" type="text" inputmode="numeric" readonly aria-readonly="true" disabled>
+                        <input type="hidden" name="valorPrima">
+                    </label>
+                </div>
+
+                <h3 class="section-title full-width">Documentación</h3>
+                <label class="full-width">Descripción o motivo de la póliza
+                    <textarea class="input-control" name="descripcion" rows="3" required></textarea>
                 </label>
-                <label>Valor del contrato
-                    <input class="input-control poliza-money-input" type="text" inputmode="numeric" data-money-field="valorContrato" autocomplete="off" required>
-                    <input type="hidden" name="valorContrato">
-                </label>
-                <label class="full-width">Descripción o motivo<textarea class="input-control" name="descripcion" rows="3" required></textarea></label>
                 <div class="full-width file-field">
                     <label for="poliza-archivo-input">Contrato adjunto (PDF, máx. 10 MB) *</label>
-                    <div id="poliza-archivo-actual" class="poliza-archivo-actual" style="display: none;">
-                        <span class="material-symbols" aria-hidden="true">picture_as_pdf</span>
-                        <span id="poliza-archivo-nombre"></span>
-                        <button id="btn-eliminar-archivo-poliza" class="btn-secondary btn-eliminar-archivo" type="button">Eliminar archivo</button>
+                    <div class="poliza-archivo-control">
+                        <div id="poliza-archivo-actual" class="poliza-archivo-actual" style="display: none;">
+                            <span class="material-symbols" aria-hidden="true">picture_as_pdf</span>
+                            <span id="poliza-archivo-nombre"></span>
+                            <button id="btn-eliminar-archivo-poliza" class="btn-secondary btn-eliminar-archivo" type="button">Eliminar archivo</button>
+                        </div>
+                        <input id="poliza-archivo-input" class="input-control" type="file" name="contratoAdjunto" accept="application/pdf,.pdf" required>
                     </div>
-                    <input id="poliza-archivo-input" class="input-control" type="file" name="contratoAdjunto" accept="application/pdf,.pdf" required>
                     <input type="hidden" name="eliminarContratoAdjunto" value="false">
                 </div>
             </div>
@@ -239,9 +283,19 @@
                 <h3 id="poliza-auditoria-title" class="section-title">Auditoría</h3>
                 <div class="auditoria-grid poliza-auditoria-grid">
                     <div class="auditoria-item"><span class="auditoria-label">Creado por:</span><span id="poliza-creado-por" class="auditoria-value"></span></div>
-                    <div class="auditoria-item"><span class="auditoria-label">Aprobado por:</span><span id="poliza-aprobado-por" class="auditoria-value">Sin aprobación</span></div>
+                    <div class="auditoria-item" th:unless="${polizaSedeNacional}"><span class="auditoria-label">Aprobado por:</span><span id="poliza-aprobado-por" class="auditoria-value">Sin aprobación</span></div>
                     <div class="auditoria-item"><span class="auditoria-label">Sede:</span><span id="poliza-sede" class="auditoria-value"></span></div>
-                    <div class="auditoria-item"><span class="auditoria-label">Fecha aprobación:</span><span id="poliza-fecha-aprobacion" class="auditoria-value">Sin aprobación</span></div>
+                    <div class="auditoria-item" th:unless="${polizaSedeNacional}"><span class="auditoria-label">Fecha aprobación:</span><span id="poliza-fecha-aprobacion" class="auditoria-value">Sin aprobación</span></div>
+                    <div class="auditoria-item auditoria-terminacion" hidden><span class="auditoria-label">Terminado por:</span><span id="poliza-terminado-por" class="auditoria-value">Sin terminación</span></div>
+                    <div class="auditoria-item auditoria-terminacion" hidden><span class="auditoria-label">Fecha terminación:</span><span id="poliza-fecha-terminacion" class="auditoria-value">Sin terminación</span></div>
+                    <div class="auditoria-item auditoria-motivo-terminacion auditoria-terminacion" hidden><span class="auditoria-label">Motivo de terminación:</span><span id="poliza-motivo-terminacion" class="auditoria-value">Sin motivo de terminación</span></div>
+                </div>
+                <div class="sede-aprobacion-resumen" id="sede-aprobacion-resumen" aria-live="polite">
+                    <h4 class="sede-aprobacion-titulo">APROBACIONES</h4>
+                    <div class="sede-aprobacion-contenido">
+                        <span class="material-symbols">fact_check</span>
+                        <span>Estado de aprobación por sede. Aquí verás quién aprobó y quién falta.</span>
+                    </div>
                 </div>
             </section>
             <div class="form-actions"><button class="btn-cancel btn-modal-secundario" type="button">Cancelar</button><button id="btn-guardar-poliza" class="btn-primary btn-modal-primario" type="submit">Guardar Póliza</button></div>
@@ -268,6 +322,22 @@
         </form>
     </dialog>
 
+    <dialog id="poliza-terminar-modal" class="poliza-modal">
+        <form method="post" action="" class="poliza-form" id="poliza-terminar-form">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <div class="modal-heading">
+                <div><span class="material-symbols">event_busy</span><div><h2>Terminar póliza</h2><p>Registra el motivo de la terminación anticipada.</p></div></div>
+                <button class="modal-close js-cerrar-terminar" type="button" title="Cerrar"><span class="material-symbols">close</span></button>
+            </div>
+            <div class="poliza-form-grid">
+                <label class="full-width">Motivo de terminación
+                    <textarea class="input-control" name="motivoTerminacion" rows="4" maxlength="1000" required></textarea>
+                </label>
+            </div>
+            <div class="form-actions"><button class="btn-cancel btn-modal-secundario js-cerrar-terminar" type="button">Cancelar</button><button class="btn-primary btn-modal-primario" type="submit">Terminar póliza</button></div>
+        </form>
+    </dialog>
+
     <dialog id="poliza-detalle-modal" class="poliza-modal poliza-detalle-modal">
         <section class="poliza-form">
             <div class="modal-heading">
@@ -275,7 +345,7 @@
                 <button class="modal-close js-cerrar-detalle" type="button" title="Cerrar"><span class="material-symbols">close</span></button>
             </div>
             <dl class="poliza-detalle-grid">
-                <div><dt>Fecha de creación</dt><dd id="detalle-fecha"></dd></div>
+                <div><dt>Fecha de inicio</dt><dd id="detalle-fecha"></dd></div>
                 <div><dt>Estado</dt><dd id="detalle-estado"></dd></div>
                 <div><dt>Proveedor</dt><dd id="detalle-proveedor"></dd></div>
                 <div><dt>Cliente</dt><dd id="detalle-cliente"></dd></div>
@@ -304,7 +374,7 @@
 
     <script th:src="@{/js/security.js(v=1)}"></script>
     <script th:src="@{/js/page-transition.js}"></script>
-    <script th:src="@{/js/polizas.js(v=7)}"></script>
+    <script th:src="@{/js/polizas.js(v=8)}"></script>
 </body>
 
 </html>

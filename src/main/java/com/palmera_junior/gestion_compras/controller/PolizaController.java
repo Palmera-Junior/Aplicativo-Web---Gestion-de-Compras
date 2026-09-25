@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.time.LocalDate;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -28,12 +29,15 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.palmera_junior.gestion_compras.dto.PolizaDTO;
 import com.palmera_junior.gestion_compras.dto.ActivarPolizaDTO;
+import com.palmera_junior.gestion_compras.dto.DetallePrimaDTO;
 import com.palmera_junior.gestion_compras.entity.EstadoPoliza;
 import com.palmera_junior.gestion_compras.entity.EstadoEnvioCorreo;
 import com.palmera_junior.gestion_compras.entity.Poliza;
+import com.palmera_junior.gestion_compras.entity.EstadoAprobacionSede;
 import com.palmera_junior.gestion_compras.entity.Usuario;
 import com.palmera_junior.gestion_compras.service.catalogo.IProveedorService;
 import com.palmera_junior.gestion_compras.service.correo.CorreoPolizaOutboxService;
+import com.palmera_junior.gestion_compras.service.organizacion.ISedeService;
 import com.palmera_junior.gestion_compras.service.poliza.IPolizaService;
 import com.palmera_junior.gestion_compras.service.usuario.IUsuarioService;
 
@@ -44,13 +48,16 @@ public class PolizaController {
     private final IPolizaService polizaService;
     private final IProveedorService proveedorService;
     private final IUsuarioService usuarioService;
+    private final ISedeService sedeService;
     private final CorreoPolizaOutboxService correoPolizaOutboxService;
 
     public PolizaController(IPolizaService polizaService, IProveedorService proveedorService,
-            IUsuarioService usuarioService, CorreoPolizaOutboxService correoPolizaOutboxService) {
+            IUsuarioService usuarioService, ISedeService sedeService,
+            CorreoPolizaOutboxService correoPolizaOutboxService) {
         this.polizaService = polizaService;
         this.proveedorService = proveedorService;
         this.usuarioService = usuarioService;
+        this.sedeService = sedeService;
         this.correoPolizaOutboxService = correoPolizaOutboxService;
     }
 
@@ -70,6 +77,13 @@ public class PolizaController {
         Integer idSede = usuario.getSede() != null ? usuario.getSede().getIdSede() : null;
         boolean esNacional = usuario.getSede() != null
             && "Sede Nacional".equalsIgnoreCase(usuario.getSede().getNombre());
+
+        if ((fechaDesde == null || fechaDesde.isBlank())
+                && (fechaHasta == null || fechaHasta.isBlank())) {
+            LocalDate ahora = LocalDate.now();
+            fechaDesde = ahora.withDayOfMonth(1).toString();
+            fechaHasta = ahora.withDayOfMonth(ahora.lengthOfMonth()).toString();
+        }
 
         int paginaSegura = Math.max(page, 0);
         int tamanoSeguro = Math.min(Math.max(size, 1), 100);
@@ -92,6 +106,9 @@ public class PolizaController {
                 esNacional,
                 estado);
         List<Poliza> polizasResumen = polizasResumenPage.getContent();
+        long totalPolizas = polizasResumen.stream()
+            .filter(this::esPolizaValidaParaTotales)
+            .count();
 
         model.addAttribute("polizasPage", polizasPage);
         model.addAttribute("estadosCorreoPoliza", correoPolizaOutboxService.obtenerEstadosPorPolizas(
@@ -104,19 +121,30 @@ public class PolizaController {
         model.addAttribute("tamanoPagina", tamanoSeguro);
         model.addAttribute("paginaActual", Math.max(polizasPage.getNumber(), 0) + 1);
         model.addAttribute("polizasResumen", polizasResumen);
-        model.addAttribute("proveedores", esNacional
-            ? proveedorService.listarTodos()
+        model.addAttribute("sedes", sedeService.listarTodos());
+        model.addAttribute("sedeActualId", usuario.getSede() != null ? usuario.getSede().getIdSede() : null);
+        model.addAttribute("polizaSedeNacional", esNacional);
+        model.addAttribute("totalPolizas", totalPolizas);
+        model.addAttribute("proveedores", usuario.getSede() == null
+            ? List.of()
             : proveedorService.listarPorSede(usuario.getSede().getIdSede()));
         model.addAttribute("polizasAnuladas", polizasResumen.stream().filter(p -> p.getEstado() == EstadoPoliza.ANULADA).count());
         model.addAttribute("polizasBorrador", polizasResumen.stream().filter(p -> p.getEstado() == EstadoPoliza.BORRADOR).count());
         model.addAttribute("polizasAprobadas", polizasResumen.stream().filter(p -> p.getEstado() == EstadoPoliza.APROBADA).count());
         model.addAttribute("polizasVigentes", polizasResumen.stream().filter(p -> p.getEstado() == EstadoPoliza.VIGENTE).count());
         model.addAttribute("polizasVencidas", polizasResumen.stream().filter(p -> p.getEstado() == EstadoPoliza.VENCIDA).count());
+        model.addAttribute("polizasTerminadas", polizasResumen.stream().filter(p -> p.getEstado() == EstadoPoliza.TERMINADA).count());
         model.addAttribute("usuarioActual", authentication.getName());
+        model.addAttribute("usuarioActualId", usuario.getIdUsuario());
+        model.addAttribute("rolUsuarioActual", usuario.getRol().name());
         model.addAttribute("polizaCreadorActual", nombreCompleto(usuario));
         model.addAttribute("polizaSedeActual", usuario.getSede() == null ? "Sin información" : usuario.getSede().getNombre());
 
         return "polizas";
+    }
+
+    private boolean esPolizaValidaParaTotales(Poliza poliza) {
+        return poliza != null && poliza.getEstado() != EstadoPoliza.ANULADA;
     }
 
     @GetMapping("/correo-estados")
@@ -131,6 +159,35 @@ public class PolizaController {
                 .distinct()
                 .toList();
         return correoPolizaOutboxService.obtenerEstadosPorPolizas(idsAutorizados);
+    }
+
+    @GetMapping("/{id}/aprobaciones-sedes")
+    @ResponseBody
+    @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
+    public List<Map<String, Object>> aprobacionesPorSede(@PathVariable Integer id) {
+        return polizaService.listarAprobacionesPorSede(id).stream().map(aprobacion -> {
+            Map<String, Object> item = new java.util.HashMap<>();
+            item.put("idSede", aprobacion.getSede() != null ? aprobacion.getSede().getIdSede() : null);
+            item.put("nombreSede", aprobacion.getSede() != null ? aprobacion.getSede().getNombre() : "Sin información");
+            item.put("estado", aprobacion.getEstado() != null ? aprobacion.getEstado().name() : EstadoAprobacionSede.PENDIENTE.name());
+                item.put("aprobador", aprobacion.getUsuarioAprobacion() == null
+                    ? null
+                    : nombreCompleto(aprobacion.getUsuarioAprobacion()));
+                item.put("fechaAprobacion", aprobacion.getFechaAprobacion());
+            return item;
+        }).toList();
+    }
+
+    @GetMapping("/{id}/detalles-prima")
+    @ResponseBody
+    @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
+    public List<DetallePrimaDTO> detallesPrima(@PathVariable Integer id) {
+        return polizaService.obtenerPorId(id).getDetallesPrima().stream().map(detalle -> {
+            DetallePrimaDTO dto = new DetallePrimaDTO();
+            dto.setValor(detalle.getValor());
+            dto.setDescripcion(detalle.getDescripcion());
+            return dto;
+        }).toList();
     }
 
     @PostMapping
@@ -185,6 +242,16 @@ public class PolizaController {
     public String anularPoliza(@PathVariable Integer id, RedirectAttributes redirectAttributes) {
         polizaService.anular(id);
         redirectAttributes.addFlashAttribute("mensajeExito", "Póliza anulada correctamente.");
+        return "redirect:/polizas";
+    }
+
+    @PostMapping("/{id}/terminar")
+    @PreAuthorize("hasAnyRole('APROBADOR', 'SUPERADMINISTRADOR')")
+    public String terminarPoliza(@PathVariable Integer id,
+            @RequestParam String motivoTerminacion,
+            RedirectAttributes redirectAttributes) {
+        polizaService.terminar(id, motivoTerminacion);
+        redirectAttributes.addFlashAttribute("mensajeExito", "Póliza terminada correctamente.");
         return "redirect:/polizas";
     }
 

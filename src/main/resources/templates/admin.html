@@ -55,10 +55,22 @@
                 <p>Crear y administrar proveedores, usuarios, productos, sedes y centros de costo.</p>
             </div>
             <div class="dashboard-header-actions">
-                <button title="Refrescar página" type="button" id="btn-refrescar" class="btn-refrescar"
-                    aria-label="Refrescar página">
-                    <span class="material-symbols">cached</span>
-                </button>
+                <form sec:authorize="hasAnyRole('ADMINISTRADOR', 'SUPERADMINISTRADOR')" class="metricas-fecha-filtro" method="get" th:action="@{/admin}">
+                    <details class="metricas-fecha-dropdown" th:open="${mostrarFiltroFecha}">
+                        <summary class="metricas-fecha-trigger">
+                            <span class="material-symbols">calendar_today</span>
+                            <span th:text="${periodoMesActual ? 'Mes actual' : (fechaDesdeMetricas != null or fechaHastaMetricas != null ? 'Periodo personalizado' : 'Todo el periodo')}">Mes actual</span>
+                            <span class="material-symbols metricas-fecha-chevron">expand_more</span>
+                        </summary>
+                        <div class="metricas-fecha-panel">
+                            <label>Desde<input class="input-control" type="date" name="fechaDesde" th:value="${fechaDesdeMetricas}"></label>
+                            <label>Hasta<input class="input-control" type="date" name="fechaHasta" th:value="${fechaHastaMetricas}"></label>
+                            <input type="hidden" name="mostrarFiltroFecha" value="true">
+                            <button class="btn-primary" type="submit"><span class="material-symbols">filter_alt</span> Aplicar</button>
+                            <a class="btn-secondary" th:href="@{/admin}" title="Restablecer periodo"><span class="material-symbols">restart_alt</span></a>
+                        </div>
+                    </details>
+                </form>
             </div>
         </div>
 
@@ -70,6 +82,53 @@
             <span class="material-symbols">error</span>
             <p th:text="${errorMessage}"></p>
         </div>
+
+        <section sec:authorize="hasAnyRole('ADMINISTRADOR', 'SUPERADMINISTRADOR')" class="admin-kpi-grid" aria-label="Indicadores generales">
+            <a th:href="@{/dashboard}" class="admin-kpi-card js-page-transition">
+                <div class="admin-kpi-topline">
+                    <span class="admin-kpi-icon"><span class="material-symbols">layers</span></span>
+                    <span class="admin-kpi-scope">Global</span>
+                </div>
+                <strong class="admin-kpi-value" th:text="${totalOrdenes}">0</strong>
+                <span class="admin-kpi-label">Total órdenes</span>
+            </a>
+            <a th:href="@{/polizas}" class="admin-kpi-card" th:classappend="${polizasProximasAVencer > 0 ? ' admin-kpi-card-alert' : ''}">
+                <div class="admin-kpi-topline">
+                    <span class="admin-kpi-icon"><span class="material-symbols">policy</span></span>
+                    <span class="admin-kpi-scope">Global</span>
+                </div>
+                <strong class="admin-kpi-value" th:text="${totalPolizas}">0</strong>
+                <span class="admin-kpi-label">Total pólizas</span>
+                <span th:if="${polizasProximasAVencer > 0}" class="admin-kpi-warning">
+                    <span class="material-symbols">warning</span>
+                    <span th:text="${polizasProximasAVencer + ' próximas a vencer'}">0 próximas a vencer</span>
+                </span>
+            </a>
+            <a th:href="@{/dashboard}" class="admin-kpi-card">
+                <div class="admin-kpi-topline">
+                    <span class="admin-kpi-icon"><span class="material-symbols">monitor_heart</span></span>
+                    <span class="admin-kpi-scope">Global</span>
+                </div>
+                <strong class="admin-kpi-value" th:text="${ordenesEnProceso}">0</strong>
+                <span class="admin-kpi-label">Órdenes en proceso</span>
+            </a>
+            <a th:href="@{/dashboard(soloModificadas=true)}" class="admin-kpi-card">
+                <div class="admin-kpi-topline">
+                    <span class="admin-kpi-icon"><span class="material-symbols">rule</span></span>
+                    <span class="admin-kpi-scope">Global</span>
+                </div>
+                <strong class="admin-kpi-value" th:text="${ordenesConDiferenciasRecepcion}">0</strong>
+                <span class="admin-kpi-label">Órdenes con diferencias de recepción</span>
+            </a>
+            <a th:href="@{/dashboard}" class="admin-kpi-card">
+                <div class="admin-kpi-topline">
+                    <span class="admin-kpi-icon"><span class="material-symbols">schedule</span></span>
+                    <span class="admin-kpi-scope">Global</span>
+                </div>
+                <strong class="admin-kpi-value" th:text="${tiempoPromedioAprobacion}">Sin datos</strong>
+                <span class="admin-kpi-label">Tiempo promedio de aprobación</span>
+            </a>
+        </section>
 
         <!-- ============================================
              ÓRDENES DE COMPRA — tarjeta destacada con estados
@@ -84,69 +143,64 @@
              calcular en el Controller y pasar como atributos al modelo —
              es más eficiente si la lista es grande.
              ============================================ -->
-        <section sec:authorize="hasRole('SUPERADMINISTRADOR')" class="orders-summary" th:with="ordenesBorrador=${ordenesCompra.?[estado.name() == 'BORRADOR'].size()},
-                      ordenesAprobadas=${ordenesCompra.?[estado.name() == 'APROBADA'].size()},
-                      ordenesFacturadas=${ordenesCompra.?[estado.name() == 'FACTURADA'].size()},
-                      ordenesRecibidas=${ordenesCompra.?[estado.name() == 'RECIBIDA'].size()},
-                      ordenesCompletadas=${ordenesCompra.?[estado.name() == 'COMPLETADA'].size()},
-                      ordenesAnuladas=${ordenesCompra.?[estado.name() == 'ANULADA'].size()},
+        <section sec:authorize="hasAnyRole('ADMINISTRADOR', 'SUPERADMINISTRADOR')" class="orders-summary" th:with="ordenesBorrador=${ordenesCompraTarjeta.?[estado.name() == 'BORRADOR'].size()},
+                      ordenesAprobadas=${ordenesCompraTarjeta.?[estado.name() == 'APROBADA'].size()},
+                      ordenesFacturadas=${ordenesCompraTarjeta.?[estado.name() == 'FACTURADA'].size()},
+                      ordenesRecibidas=${ordenesCompraTarjeta.?[estado.name() == 'RECIBIDA'].size()},
+                      ordenesCompletadas=${ordenesCompraTarjeta.?[estado.name() == 'COMPLETADA'].size()},
+                      ordenesAnuladas=${ordenesCompraTarjeta.?[estado.name() == 'ANULADA'].size()},
                       totalEstadosVisibles=${ordenesCompletadas + ordenesRecibidas + ordenesAprobadas + ordenesAnuladas + ordenesFacturadas + ordenesBorrador}">
 
-            <a th:href="@{/dashboard}" class="order-status-card js-page-transition">
-                <div class="order-status-header">
-                    <div class="order-status-main">
+            <div class="order-status-header">
+                <div class="order-status-main">
                         <div class="order-status-icon">
                             <span class="material-symbols stacks">stacks</span>
                         </div>
                         <div class="order-status-body">
                             <h2>Órdenes de compra</h2>
-                            <p>Flujo completo: creación, aprobación y seguimiento.</p>
+                            <p th:text="${sedeOrdenesSeleccionada == null ? 'División global de órdenes por estado.' : 'Órdenes por estado de la sede seleccionada.'}">División global de órdenes por estado.</p>
                         </div>
-                    </div>
-                    <div class="order-status-total">
-                        <div class="order-total-main">
-                            <!--Mostrar valor total de órdenes-->
-                            <div class="order-total-text order-value-summary">
-                                <span class="material-symbols total">finance_mode</span>
-                                <span class="order-stat-value value"
-                                    th:text="'$ ' + ${#numbers.formatDecimal(valorTotalOrdenes, 1, 'COMMA', 0, 'POINT')}">$ 0</span>                                
-                            </div>
-                            <div class="order-total-text">
-                                <span class="order-stat-value total" th:text="${ordenesCompra.size()}">0</span>
-                                <span class="order-stat-label">TOTAL</span>
-                            </div>
-                            
-                            <span class="material-symbols order-status-arrow">arrow_forward</span>
-                        </div>
-                    </div>
                 </div>
-
+                <form class="orders-sede-filter" method="get" th:action="@{/admin}">
+                    <span class="material-symbols" aria-hidden="true">store</span>
+                    <label class="sr-only" for="sede-ordenes">Sede de las órdenes</label>
+                    <select id="sede-ordenes" name="sedeOrdenes" class="input-control" onchange="this.form.submit()">
+                        <option value="">Todas las sedes</option>
+                        <option th:each="sede : ${sedes}" th:value="${sede.idSede}"
+                            th:text="${sede.nombre}"
+                            th:selected="${sedeOrdenesSeleccionada != null and sede.idSede == sedeOrdenesSeleccionada}">Sede</option>
+                    </select>
+                    <input type="hidden" name="fechaDesde" th:value="${fechaDesdeMetricas}">
+                    <input type="hidden" name="fechaHasta" th:value="${fechaHastaMetricas}">
+                </form>
+                </div>
+                <br>
                 <!-- Barra de progreso del flujo de trabajo -->
                 <div class="order-progress-bar" th:with="total=${totalEstadosVisibles}">
 
                     <div class="progress-segment progress-anuladas"
-                        th:style="${total > 0 ? 'width: ' + (ordenesAnuladas * 100 / total) + '%' : 'width: 0%'}"
+                        th:style="${total > 0 ? 'width: ' + (ordenesAnuladas * 100.0 / total) + '%' : 'width: 0%'}"
                         th:title="'Anuladas: ' + ${ordenesAnuladas}"></div>
 
                     <div class="progress-segment progress-borrador"
-                        th:style="${total > 0 ? 'width: ' + (ordenesBorrador * 100 / total) + '%' : 'width: 0%'}"
+                        th:style="${total > 0 ? 'width: ' + (ordenesBorrador * 100.0 / total) + '%' : 'width: 0%'}"
                         th:title="'Borrador: ' + ${ordenesBorrador}"></div>
 
                     <div class="progress-segment progress-aprobadas"
-                        th:style="${total > 0 ? 'width: ' + (ordenesAprobadas * 100 / total) + '%' : 'width: 0%'}"
+                        th:style="${total > 0 ? 'width: ' + (ordenesAprobadas * 100.0 / total) + '%' : 'width: 0%'}"
                         th:title="'Aprobadas: ' + ${ordenesAprobadas}"></div>
 
                     <div class="progress-segment progress-facturadas"
-                        th:style="${total > 0 ? 'width: ' + (ordenesFacturadas * 100 / total) + '%' : 'width: 0%'}"
+                        th:style="${total > 0 ? 'width: ' + (ordenesFacturadas * 100.0 / total) + '%' : 'width: 0%'}"
                         th:title="'Facturadas: ' + ${ordenesFacturadas}"></div>
 
                     <div class="progress-segment progress-recibidas"
-                        th:style="${total > 0 ? 'width: ' + (ordenesRecibidas * 100 / total) + '%' : 'width: 0%'}"
+                        th:style="${total > 0 ? 'width: ' + (ordenesRecibidas * 100.0 / total) + '%' : 'width: 0%'}"
                         th:title="'Recibidas: ' + ${ordenesRecibidas}"></div>
 
 
                     <div class="progress-segment progress-completadas"
-                        th:style="${total > 0 ? 'width: ' + (ordenesCompletadas * 100 / total) + '%' : 'width: 0%'}"
+                        th:style="${total > 0 ? 'width: ' + (ordenesCompletadas * 100.0 / total) + '%' : 'width: 0%'}"
                         th:title="'Completadas: ' + ${ordenesCompletadas}"></div>
                 </div>
 
@@ -163,7 +217,7 @@
 
                     <div class="reference-item">
                         <span class="reference-value" th:text="${ordenesBorrador}">0</span>
-                        <span class="reference-label">Borradoes</span>
+                        <span class="reference-label">Borradores</span>
                         <span class="reference-color progress-borrador"></span>
                     </div>
                     <div class="reference-item">
@@ -189,7 +243,57 @@
 
 
                 </div>
-            </a>
+            
+        </section>
+
+        <section sec:authorize="hasAnyRole('ADMINISTRADOR', 'SUPERADMINISTRADOR')" class="sede-total-card" aria-labelledby="sede-total-title">
+            <div class="sede-total-copy" th:if="${!ordenesPorSede.isEmpty()}">
+                <h2 id="sede-total-title">Valor de órdenes distribuido por sede</h2>
+                <div class="sede-legend" aria-label="Detalle de valor y participación por sede">
+                    <div class="sede-legend-header" aria-hidden="true">
+                        <span>Sede</span>
+                        <span>Valor · Participación</span>
+                    </div>
+                    <div th:each="resumen : ${ordenesPorSede}" class="sede-legend-item">
+                        <div class="sede-legend-name">
+                            <span class="sede-legend-swatch" th:style="'background:' + resumen.color" aria-hidden="true"></span>
+                            <span th:text="${resumen.nombre}">Sede</span>
+                        </div>
+                        <div class="sede-legend-metrics">
+                            <strong th:text="${'$' + #numbers.formatDecimal(resumen.total, 1, 'COMMA', 0, 'POINT')}">$ 0</strong>
+                            <span th:text="${#numbers.formatDecimal(resumen.porcentaje, 1, 1) + '%'}">0.0%</span>
+                        </div>
+                        <div class="sede-legend-track" aria-hidden="true">
+                            <span th:attr="style=${'width: ' + resumen.porcentajeBarra + '%; background-color: ' + resumen.color}"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="sede-donut-wrap" th:if="${!ordenesPorSede.isEmpty()}">
+                <svg class="sede-donut" viewBox="0 0 240 240" role="img" aria-labelledby="sede-donut-title sede-donut-description">
+                    <title id="sede-donut-title">Distribución del valor de órdenes por sede</title>
+                    <desc id="sede-donut-description">Cada segmento representa el valor total de órdenes de compra de una sede.</desc>
+                    <circle class="sede-donut-track" cx="120" cy="120" r="88" pathLength="100"></circle>
+                    <g class="sede-donut-segments" transform="rotate(-90 120 120)">
+                        <circle th:each="resumen : ${ordenesPorSede}"
+                                class="sede-donut-segment" cx="120" cy="120" r="88" pathLength="100"
+                                th:attr="stroke=${resumen.color},stroke-dasharray=${resumen.longitud + ' ' + (100 - resumen.longitud)},stroke-dashoffset=${-resumen.inicio},data-sede=${resumen.nombre},data-total=${'$ ' + #numbers.formatDecimal(resumen.total, 1, 'COMMA', 0, 'POINT')},data-porcentaje=${#numbers.formatDecimal(resumen.porcentaje, 1, 1) + '%'},aria-label=${resumen.nombre + ': $' + #numbers.formatDecimal(resumen.total, 1, 'COMMA', 0, 'POINT') + ', ' + #numbers.formatDecimal(resumen.porcentaje, 1, 1) + '%'}"
+                                tabindex="0">
+                            <title th:text="${resumen.nombre + ': $ ' + #numbers.formatDecimal(resumen.total, 1, 'COMMA', 0, 'POINT') + ' (' + #numbers.formatDecimal(resumen.porcentaje, 1, 1) + '%)'}"></title>
+                        </circle>
+                    </g>
+                </svg>
+                <div class="sede-donut-center" aria-live="polite">
+                    <span class="sede-donut-label">Consolidado</span>
+                    <strong th:text="${'$ ' + #numbers.formatDecimal(valorTotalOrdenesPorSede, 1, 'COMMA', 0, 'POINT')}">$ 0</strong>
+                    <span th:text="${ordenesPorSede.size() + (ordenesPorSede.size() == 1 ? ' sede' : ' sedes')}">0 sedes</span>
+                </div>
+                <div id="sede-donut-tooltip" class="sede-donut-tooltip" role="tooltip" hidden></div>
+            </div>
+            <div class="sede-donut-empty" th:if="${ordenesPorSede.isEmpty()}">
+                <span class="material-symbols">donut_large</span>
+                <p>Aún no hay órdenes con sede y valor para consolidar.</p>
+            </div>
         </section>
 
         <!-- ============================================

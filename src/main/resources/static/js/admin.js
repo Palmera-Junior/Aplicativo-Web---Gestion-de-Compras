@@ -63,6 +63,33 @@ function abrirFormulario(entity){
 }
 
 document.addEventListener('DOMContentLoaded',()=>{
+    const donut = document.querySelector('.sede-donut');
+    const donutTooltip = document.getElementById('sede-donut-tooltip');
+    if (donut && donutTooltip) {
+        const ocultarTooltip = () => { donutTooltip.hidden = true; };
+        const mostrarTooltip = (segmento, event) => {
+            const rect = donut.getBoundingClientRect();
+            const x = event?.clientX ?? rect.left + rect.width / 2;
+            const y = event?.clientY ?? rect.top + rect.height / 2;
+            donutTooltip.replaceChildren();
+            const nombre = document.createElement('strong');
+            nombre.textContent = segmento.dataset.sede;
+            const valor = document.createElement('span');
+            valor.textContent = `${segmento.dataset.total} · ${segmento.dataset.porcentaje}`;
+            donutTooltip.append(nombre, valor);
+            donutTooltip.style.left = `${x - rect.left}px`;
+            donutTooltip.style.top = `${y - rect.top}px`;
+            donutTooltip.hidden = false;
+        };
+        donut.querySelectorAll('.sede-donut-segment').forEach(segmento => {
+            segmento.addEventListener('pointerenter', event => mostrarTooltip(segmento, event));
+            segmento.addEventListener('pointermove', event => mostrarTooltip(segmento, event));
+            segmento.addEventListener('pointerleave', ocultarTooltip);
+            segmento.addEventListener('focus', () => mostrarTooltip(segmento));
+            segmento.addEventListener('blur', ocultarTooltip);
+        });
+    }
+
     document.querySelectorAll('.module-card').forEach(card=>{
         card.addEventListener('click',()=>{
             const target = card.getAttribute('data-target');
@@ -138,16 +165,6 @@ document.addEventListener('DOMContentLoaded',()=>{
             reportClientError('Error cargando página de usuarios.', err);
         }
     });
-
-
-
-    // Botón refrescar página
-    const btnRefrescar = document.getElementById('btn-refrescar');
-    if(btnRefrescar){
-        btnRefrescar.addEventListener('click',()=>{
-            window.location.reload();
-        });
-    }
 
     // Agregar presentación
     const btnAgregarPres = document.getElementById('btn-agregar-presentacion');

@@ -24,16 +24,25 @@ public interface PolizaRepository extends JpaRepository<Poliza, Integer>, JpaSpe
      * proxies perezosos una vez haya terminado la transacción del servicio.
      */
     @Override
-    @EntityGraph(attributePaths = { "proveedor", "sede", "usuario", "usuarioAprobacion" })
+    @EntityGraph(attributePaths = { "proveedor", "sede", "usuario", "usuarioAprobacion", "aprobacionesPorSede.sede", "aprobacionesPorSede.usuarioAprobacion" })
     Page<Poliza> findAll(Specification<Poliza> specification, Pageable pageable);
 
     Optional<Poliza> findByNumeroContrato(String numeroContrato);
 
     Page<Poliza> findAllByOrderByIdPolizaDesc(Pageable pageable);
 
-    @EntityGraph(attributePaths = { "proveedor", "sede", "usuario", "usuarioAprobacion" })
+    @EntityGraph(attributePaths = { "proveedor", "sede", "usuario", "usuarioAprobacion", "detallesPrima" })
     @Query("select p from Poliza p where p.idPoliza = :idPoliza")
     Optional<Poliza> findWithRelationsByIdPoliza(@Param("idPoliza") Integer idPoliza);
+
+    /**
+     * Carga exclusivamente el grafo necesario para consultar aprobaciones por sede.
+     * No se combina con detallesPrima porque ambas asociaciones son listas y Hibernate
+     * no permite cargar dos colecciones tipo bag con fetch join en la misma consulta.
+     */
+    @EntityGraph(attributePaths = { "sede", "aprobacionesPorSede.sede", "aprobacionesPorSede.usuarioAprobacion" })
+    @Query("select p from Poliza p where p.idPoliza = :idPoliza")
+    Optional<Poliza> findWithAprobacionesPorSedeByIdPoliza(@Param("idPoliza") Integer idPoliza);
 
     @Modifying(clearAutomatically = true)
     @Transactional

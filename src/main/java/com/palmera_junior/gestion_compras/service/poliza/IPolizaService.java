@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 
 import com.palmera_junior.gestion_compras.dto.PolizaDTO;
 import com.palmera_junior.gestion_compras.entity.Poliza;
+import com.palmera_junior.gestion_compras.entity.PolizaSedeAprobacion;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface IPolizaService {
@@ -18,15 +19,21 @@ public interface IPolizaService {
 
     Poliza obtenerPorId(Integer idPoliza);
 
+    List<PolizaSedeAprobacion> listarAprobacionesPorSede(Integer idPoliza);
+
     Poliza guardarDesdeDTO(PolizaDTO dto);
 
     Poliza actualizarDesdeDTO(Integer idPoliza, PolizaDTO dto);
 
     Poliza aprobar(Integer idPoliza);
 
+    Poliza aprobarPorSede(Integer idPoliza, Integer idSede);
+
     Poliza activarVigente(Integer idPoliza, String fechaVencimiento, MultipartFile polizaFisica);
 
     int marcarVencidas();
 
     Poliza anular(Integer idPoliza);
+
+    Poliza terminar(Integer idPoliza, String motivoTerminacion);
 }

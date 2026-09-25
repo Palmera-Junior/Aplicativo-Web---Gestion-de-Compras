@@ -93,10 +93,13 @@ public class DashboardService implements IDashboardService {
         List<OrdenCompra> ordenesCompraResumen = ordenesCompraResumenPage.getContent();
 
         BigDecimal valorTotalOrdenes = ordenesCompraResumen.stream()
-                .filter(orden -> orden != null)
+                .filter(this::esOrdenValidaParaTotales)
                 .map(OrdenCompra::getTotal)
                 .filter(total -> total != null)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+        long totalOrdenes = ordenesCompraResumen.stream()
+                .filter(this::esOrdenValidaParaTotales)
+                .count();
 
         List<Integer> idsOrdenes = ordenesCompra.getContent().stream()
                 .map(OrdenCompra::getIdOrden)
@@ -121,6 +124,7 @@ public class DashboardService implements IDashboardService {
         model.addAttribute("ordenesCompra", ordenesCompra);
         model.addAttribute("ordenesCompraResumen", ordenesCompraResumen);
         model.addAttribute("valorTotalOrdenes", valorTotalOrdenes);
+        model.addAttribute("totalOrdenes", totalOrdenes);
         model.addAttribute("estadosCorreoAprobacion", estadosCorreoAprobacion);
         model.addAttribute("estadosCorreoFacturacion", estadosCorreoFacturacion);
         model.addAttribute("proveedores",
@@ -131,5 +135,9 @@ public class DashboardService implements IDashboardService {
         model.addAttribute("soloModificadas", soloModificadas);
         return "dashboard";
     }
+
+        private boolean esOrdenValidaParaTotales(OrdenCompra orden) {
+                return orden != null && orden.getEstado() != EstadoOrdenCompra.ANULADA;
+        }
 }
 

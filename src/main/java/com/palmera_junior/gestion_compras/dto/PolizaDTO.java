@@ -1,6 +1,7 @@
 package com.palmera_junior.gestion_compras.dto;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,7 +21,9 @@ public class PolizaDTO {
     private String descripcion;
     private String numeroContrato;
     private BigDecimal valorPrima;
+    private List<DetallePrimaDTO> detallesPrima;
     private BigDecimal valorContrato;
+    private List<Integer> idsSedes;
     /** Archivo original del contrato, recibido desde el formulario multipart. */
     private MultipartFile contratoAdjunto;
     private boolean eliminarContratoAdjunto;

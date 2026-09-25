@@ -53,7 +53,7 @@
             <nav class="view-tabs" aria-label="Módulos de gestión">
                 <a sec:authorize="hasAnyRole('SOLICITANTE', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')"
                     class="view-tab active js-page-transition" th:href="@{/dashboard}" aria-current="page">
-                    <span class="material-symbols">shopping_cart</span> Órdenes de Compra
+                    <span class="material-symbols">assignment</span> Órdenes de Compra
                 </a>
                 <a sec:authorize="hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')"
                     class="view-tab js-page-transition" th:href="@{/polizas}">
@@ -105,7 +105,7 @@
                                     0</span>
                             </div>
                             <div class="order-total-text">
-                                <span class="order-stat-value total" th:text="${ordenesCompraResumen.size()}">0</span>
+                                <span class="order-stat-value total" th:text="${totalOrdenes}">0</span>
                                 <span class="order-stat-label">TOTAL</span>
                             </div>
                         </div>
@@ -114,27 +114,27 @@
 
                 <div class="order-progress-bar" th:with="total=${totalEstadosVisibles}">
                     <div class="progress-segment progress-anuladas"
-                        th:style="${total > 0 ? 'width: ' + (ordenesAnuladas * 100 / total) + '%' : 'width: 0%'}"
+                        th:style="${total > 0 ? 'width: ' + (ordenesAnuladas * 100.0 / total) + '%' : 'width: 0%'}"
                         th:title="'Anuladas: ' + ${ordenesAnuladas}"></div>
 
                     <div class="progress-segment progress-borrador"
-                        th:style="${total > 0 ? 'width: ' + (ordenesBorrador * 100 / total) + '%' : 'width: 0%'}"
+                        th:style="${total > 0 ? 'width: ' + (ordenesBorrador * 100.0 / total) + '%' : 'width: 0%'}"
                         th:title="'Borrador: ' + ${ordenesBorrador}"></div>
 
                     <div class="progress-segment progress-aprobadas"
-                        th:style="${total > 0 ? 'width: ' + (ordenesAprobadas * 100 / total) + '%' : 'width: 0%'}"
+                        th:style="${total > 0 ? 'width: ' + (ordenesAprobadas * 100.0 / total) + '%' : 'width: 0%'}"
                         th:title="'Aprobadas: ' + ${ordenesAprobadas}"></div>
 
                     <div class="progress-segment progress-facturadas"
-                        th:style="${total > 0 ? 'width: ' + (ordenesFacturadas * 100 / total) + '%' : 'width: 0%'}"
+                        th:style="${total > 0 ? 'width: ' + (ordenesFacturadas * 100.0 / total) + '%' : 'width: 0%'}"
                         th:title="'Facturadas: ' + ${ordenesFacturadas}"></div>
 
                     <div class="progress-segment progress-recibidas"
-                        th:style="${total > 0 ? 'width: ' + (ordenesRecibidas * 100 / total) + '%' : 'width: 0%'}"
+                        th:style="${total > 0 ? 'width: ' + (ordenesRecibidas * 100.0 / total) + '%' : 'width: 0%'}"
                         th:title="'Recibidas: ' + ${ordenesRecibidas}"></div>
 
                     <div class="progress-segment progress-completadas"
-                        th:style="${total > 0 ? 'width: ' + (ordenesCompletadas * 100 / total) + '%' : 'width: 0%'}"
+                        th:style="${total > 0 ? 'width: ' + (ordenesCompletadas * 100.0 / total) + '%' : 'width: 0%'}"
                         th:title="'Completadas: ' + ${ordenesCompletadas}"></div>
                 </div>
 

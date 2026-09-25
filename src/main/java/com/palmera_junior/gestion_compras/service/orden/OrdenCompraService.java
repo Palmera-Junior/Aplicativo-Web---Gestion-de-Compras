@@ -82,7 +82,7 @@ public class OrdenCompraService implements IOrdenCompraService {
      */
     @Override
     public List<OrdenCompra> listarOrdenesCompra() {        
-        return ordenCompraRepository.findAll();
+        return ordenCompraRepository.findAllParaResumenAdministrativo();
     }
     
     /**
@@ -186,7 +186,7 @@ public class OrdenCompraService implements IOrdenCompraService {
     @Override
     public boolean tieneDiferenciasRecepcion(Integer idOrden) {
         OrdenCompra orden = ordenCompraRepository.findById(idOrden).orElse(null);
-        if (orden == null) return false;
+        if (orden == null || !Boolean.TRUE.equals(orden.getSeRecibio())) return false;
         List<com.palmera_junior.gestion_compras.entity.DetalleCompra> detalles = orden.getDetalles();
         if (detalles == null) return false;
 

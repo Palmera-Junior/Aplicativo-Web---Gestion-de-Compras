@@ -2,8 +2,12 @@ package com.palmera_junior.gestion_compras.entity;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -13,6 +17,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -57,6 +62,51 @@ public class Poliza {
     @Column(name = "valor_prima", nullable = false, precision = 15, scale = 2)
     private BigDecimal valorPrima;
 
+    @OneToMany(mappedBy = "poliza", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
+    private List<DetallePrima> detallesPrima = new ArrayList<>();
+
+    @OneToMany(mappedBy = "poliza", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
+    private List<PolizaSedeAprobacion> aprobacionesPorSede = new ArrayList<>();
+
+    public void addDetallePrima(DetallePrima detalle) {
+        detallesPrima.add(detalle);
+        detalle.setPoliza(this);
+    }
+
+    public void addAprobacionPorSede(PolizaSedeAprobacion aprobacion) {
+        aprobacionesPorSede.add(aprobacion);
+        aprobacion.setPoliza(this);
+    }
+
+    public Optional<PolizaSedeAprobacion> obtenerAprobacionPorSede(Integer idSede) {
+        if (idSede == null) {
+            return Optional.empty();
+        }
+        return aprobacionesPorSede.stream()
+                .filter(aprobacion -> aprobacion.getSede() != null
+                        && idSede.equals(aprobacion.getSede().getIdSede()))
+                .findFirst();
+    }
+
+    public boolean todasLasSedesAprobadas() {
+        return aprobacionesPorSede != null
+                && !aprobacionesPorSede.isEmpty()
+                && aprobacionesPorSede.stream()
+                        .allMatch(aprobacion -> aprobacion.getEstado() == EstadoAprobacionSede.APROBADA);
+    }
+
+    public EstadoPoliza getEstadoParaSede(Integer idSede) {
+        boolean esSedePrincipal = sede != null && idSede != null && idSede.equals(sede.getIdSede());
+        boolean aproboLaSedeSecundaria = !esSedePrincipal
+                && estado == EstadoPoliza.BORRADOR
+                && obtenerAprobacionPorSede(idSede)
+                        .map(aprobacion -> aprobacion.getEstado() == EstadoAprobacionSede.APROBADA)
+                        .orElse(false);
+        return aproboLaSedeSecundaria ? EstadoPoliza.APROBADA : estado;
+    }
+
     @Column(name = "valor_contrato", nullable = false, precision = 15, scale = 2)
     private BigDecimal valorContrato;
 
@@ -94,10 +144,22 @@ public class Poliza {
     @Column(name = "fecha_aprobacion")
     private LocalDate fechaAprobacion;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_usuario_terminacion")
+    @ToString.Exclude
+    private Usuario usuarioTerminacion;
+
+    @Column(name = "fecha_terminacion")
+    private LocalDate fechaTerminacion;
+
+    @Column(name = "motivo_terminacion", columnDefinition = "TEXT")
+    private String motivoTerminacion;
+
     public boolean estaProximaAVencer() {
-        return fechaVencimiento != null
+        return estado != EstadoPoliza.ANULADA && estado != EstadoPoliza.TERMINADA
+            && fechaVencimiento != null
                 && !fechaVencimiento.isBefore(LocalDate.now())
-                && !fechaVencimiento.isAfter(LocalDate.now().plusDays(10));
+                && !fechaVencimiento.isAfter(LocalDate.now().plusDays(30));
     }
 
     public void aprobar(Usuario aprobador, LocalDate fecha) {
@@ -131,6 +193,19 @@ public class Poliza {
             throw new IllegalStateException("Solo se pueden anular pólizas borrador o aprobadas");
         }
         estado = EstadoPoliza.ANULADA;
+    }
+
+    public void terminar(Usuario usuario, LocalDate fecha, String motivo) {
+        if (estado != EstadoPoliza.VIGENTE) {
+            throw new IllegalStateException("Solo se pueden terminar pólizas vigentes");
+        }
+        if (usuario == null || fecha == null || motivo == null || motivo.isBlank()) {
+            throw new IllegalArgumentException("El usuario, la fecha y el motivo de terminación son obligatorios");
+        }
+        estado = EstadoPoliza.TERMINADA;
+        usuarioTerminacion = usuario;
+        fechaTerminacion = fecha;
+        motivoTerminacion = motivo.trim();
     }
 
     @Override
