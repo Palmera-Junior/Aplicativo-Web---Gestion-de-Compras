@@ -44,7 +44,7 @@
     border-radius: 10px 10px 0 0;
     background: rgba(255, 255, 255, 0.35);
     color: #475467;
-    font-family: 'JetBrains Mono', monospace;
+    font-family: var(--font-family);
     font-size: 12px;
     font-weight: 700;
     text-decoration: none;
@@ -162,12 +162,12 @@
 .summary-heading h2 {
     margin: 0;
     color: #212529;
-    font-family: 'Inter', sans-serif;
+    font-family: var(--font-family);
 }
 
 .modal-heading h2 {
     margin: 0;
-    font-family: 'Inter', sans-serif;
+    font-family: var(--font-family);
 }
 
 .polizas-header h1 {
@@ -217,13 +217,30 @@
     border: 1px solid #e9ecef;
     border-radius: 10px;
     background: #fcfffe;
+    box-shadow: 0 5px 16px rgba(24, 54, 42, .06);
 }
 
 .summary-heading {
-    gap: 12px;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
 }
 
-.summary-heading > .material-symbols {
+.summary-main {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 14px;
+}
+
+.summary-main > .material-symbols {
+    display: grid;
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    place-items: center;
+    border-radius: 10px;
+    background: #eaf3ee;
     color: #0f3024;
     font-size: 25px;
 }
@@ -237,12 +254,14 @@
     flex-direction: column;
     align-items: flex-end;
     margin-left: auto;
-    padding-right: 32px;
+    margin-right: 5%;
+    padding-right: 0;
+    flex: 0 0 auto;
 }
 
 .summary-total strong {
     color: #212529;
-    font-family: 'Inter', sans-serif;
+    font-family: var(--font-family);
     font-size: 27px;
     line-height: 1;
 }
@@ -258,7 +277,7 @@
 .poliza-status-bar {
     display: flex;
     width: 100%;
-    height: 7px;
+    height: 6px;
     overflow: hidden;
     border-radius: 99px;
     background: #edf0f1;
@@ -340,8 +359,7 @@
     align-items: center;
     justify-content: center;
     gap: 4px;
-    min-height: 82px;
-    padding: 0 12px;
+    padding: 0 10px;
     border-left: 1px solid rgba(33, 37, 41, .09);
 }
 
@@ -351,7 +369,7 @@
 
 .poliza-status-references strong {
     color: #212529;
-    font-family: 'JetBrains Mono', monospace;
+    font-family: var(--font-family);
     font-size: 14px;
 }
 
@@ -570,7 +588,8 @@
     position: fixed;
     top: 50%;
     left: 50%;
-    width: min(760px, calc(100% - 32px));
+    width: 90%;
+    max-width: 1150px;
     max-height: calc(100dvh - 32px);
     margin: 0;
     padding: 0;
@@ -580,8 +599,16 @@
     transform: translate(-50%, -50%);
 }
 
+#poliza-modal[open] {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
 .poliza-modal::backdrop {
-    background: rgba(15, 48, 36, .35);
+    background: rgba(11, 29, 22, .42);
+    -webkit-backdrop-filter: blur(3px);
+    backdrop-filter: blur(3px);
 }
 
 .poliza-form {
@@ -589,6 +616,39 @@
     background: #ffffff;
     max-height: calc(100dvh - 32px);
     overflow-y: auto;
+}
+
+#poliza-modal > #poliza-form {
+    display: flex;
+    min-height: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+    max-height: none;
+    overflow: hidden;
+}
+
+#poliza-modal .modal-heading {
+    flex: 0 0 auto;
+}
+
+#poliza-modal .poliza-modal-scroll {
+    min-height: 0;
+    flex: 1 1 auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+}
+
+#poliza-modal .poliza-form-grid {
+    overflow: visible;
+}
+
+#poliza-modal > #poliza-form > .form-actions {
+    flex: 0 0 auto;
+    padding-top: 12px;
+    background: #fff;
 }
 
 /* Encabezado del modal: mismo degradado institucional y texto
@@ -649,6 +709,75 @@
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 16px;
+}
+
+.proveedor-poliza-field {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.proveedor-poliza-search {
+    width: 100%;
+}
+
+.proveedor-poliza-search > input {
+    width: 100%;
+}
+
+.proveedor-poliza-option {
+    display: block;
+    width: 100%;
+    border: 0;
+    border-radius: 0;
+    background: #fff;
+    text-align: left;
+}
+
+.proveedor-poliza-no-results {
+    padding: 10px 12px;
+    color: #66736b;
+    font-size: 0.88rem;
+}
+
+.proveedor-poliza-card {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 16px;
+    border: 1px solid #198754;
+    border-radius: 8px;
+    background: #e7f4ec;
+}
+
+.proveedor-poliza-card[hidden],
+.proveedor-poliza-search[hidden] {
+    display: none !important;
+}
+
+.proveedor-poliza-card strong {
+    display: block;
+    margin-bottom: 5px;
+    color: #18231c;
+}
+
+.proveedor-poliza-card p {
+    margin-top: 4px;
+    color: #58675e;
+    font-size: 0.88rem;
+    overflow-wrap: anywhere;
+}
+
+.proveedor-poliza-card button {
+    flex: 0 0 auto;
+}
+
+.proveedor-poliza-option:focus-visible,
+#btn-cambiar-proveedor-poliza:focus-visible {
+    outline: 2px solid #198754;
+    outline-offset: 2px;
 }
 
 .vigencia-grid {
@@ -834,7 +963,7 @@
     padding: 0;
     font-size: 15px;
     font-weight: 700;
-    font-family: 'Inter', sans-serif;
+    font-family: var(--font-family);
     color: #1f2937;
 }
 
@@ -849,7 +978,7 @@
 
 .poliza-total-prima-label .input-control {
     color: #1f2937;
-    font-family: 'Inter', sans-serif;
+    font-family: var(--font-family);
 }
 
 .poliza-total-prima-label .input-control:disabled {
@@ -975,6 +1104,11 @@
 .poliza-detalle-grid #detalle-valor-contrato { text-align: right; }
 
 @media (max-width: 768px) {
+    .poliza-modal {
+        width: calc(100% - 20px);
+        max-height: calc(100dvh - 20px);
+    }
+
     .polizas-container {
         width: calc(100% - 20px);
         margin: 12px auto;
@@ -994,11 +1128,31 @@
     }
 
     .polizas-header,
-    .poliza-summary,
     .polizas-table-wrap,
     .polizas-pagination {
         margin-left: 0;
         margin-right: 0;
+    }
+
+
+    .summary-heading {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .summary-total {
+        width: 100%;
+        align-items: flex-end;
+    }
+
+    .poliza-status-references {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        row-gap: 14px;
+    }
+
+    .poliza-status-references > div:nth-child(3n+1) {
+        border-left: 0;
     }
 
     .polizas-header {
@@ -1021,6 +1175,10 @@
         grid-template-columns: 1fr;
     }
 
+    .proveedor-poliza-card {
+        flex-direction: column;
+    }
+
     .poliza-form-grid .full-width {
         grid-column: auto;
     }
@@ -1039,5 +1197,39 @@
     .modal-heading {
         margin: -16px -16px 18px;
         padding: 14px 16px;
+    }
+}
+
+@media (max-width: 576px) {
+    .poliza-status-references {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .poliza-status-references > div:nth-child(3n+1) {
+        border-left: 1px solid rgba(33, 37, 41, .09);
+    }
+
+    .poliza-status-references > div:nth-child(2n+1) {
+        border-left: 0;
+    }
+}
+
+@media (max-width: 576px) {
+    .poliza-summary {
+        gap: 16px;
+        padding: 18px 14px;
+        box-shadow: 0 5px 16px rgba(24, 54, 42, .06);
+    }
+
+    .poliza-status-references {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .poliza-status-references > div:nth-child(3n+1) {
+        border-left: 1px solid rgba(33, 37, 41, .09);
+    }
+
+    .poliza-status-references > div:nth-child(2n+1) {
+        border-left: 0;
     }
 }

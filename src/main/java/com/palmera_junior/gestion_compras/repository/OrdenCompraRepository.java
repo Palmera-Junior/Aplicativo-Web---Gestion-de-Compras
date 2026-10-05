@@ -12,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 
 
 import com.palmera_junior.gestion_compras.entity.OrdenCompra;
+import com.palmera_junior.gestion_compras.entity.EstadoOrdenCompra;
 
 public interface OrdenCompraRepository extends JpaRepository<OrdenCompra, Integer>, JpaSpecificationExecutor<OrdenCompra> {
 
@@ -38,6 +39,21 @@ public interface OrdenCompraRepository extends JpaRepository<OrdenCompra, Intege
      * A dónde apunta: Tabla `orden_compra`.
      */
     Page<OrdenCompra> findAllByOrderByIdOrdenDesc(Pageable pageable);
+
+    long countByEstadoAndSedeIdSede(EstadoOrdenCompra estado, Integer idSede);
+
+    /**
+     * Qué hace: Cuenta las órdenes de compra en estado de borrador pendientes de aprobación
+     * para una sede determinada, tomando en cuenta tanto las que pertenecen directamente a la sede
+     * como las que tienen un centro de costo asociado a esa sede.
+     *
+     * A dónde apunta: Tabla `orden_compra` y relación `centro_costo` -> `sede`.
+     */
+    @Query("select count(o) from OrdenCompra o left join o.centroCosto centroCosto "
+            + "where o.estado = :estado and ((centroCosto is not null and centroCosto.sede.idSede = :idSede) "
+            + "or (centroCosto is null and o.sede.idSede = :idSede))")
+    long countPendientesAprobacionPorSede(@Param("estado") EstadoOrdenCompra estado,
+            @Param("idSede") Integer idSede);
 
     @EntityGraph(attributePaths = { "sede", "centroCosto", "centroCosto.sede" })
     @Query("select o from OrdenCompra o")

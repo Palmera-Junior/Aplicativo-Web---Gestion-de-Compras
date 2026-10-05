@@ -30,17 +30,24 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.palmera_junior.gestion_compras.dto.PolizaDTO;
 import com.palmera_junior.gestion_compras.dto.ActivarPolizaDTO;
 import com.palmera_junior.gestion_compras.dto.DetallePrimaDTO;
+import com.palmera_junior.gestion_compras.dto.ProveedorAutocompleteDTO;
 import com.palmera_junior.gestion_compras.entity.EstadoPoliza;
 import com.palmera_junior.gestion_compras.entity.EstadoEnvioCorreo;
 import com.palmera_junior.gestion_compras.entity.Poliza;
 import com.palmera_junior.gestion_compras.entity.EstadoAprobacionSede;
 import com.palmera_junior.gestion_compras.entity.Usuario;
+import com.palmera_junior.gestion_compras.entity.Proveedor;
 import com.palmera_junior.gestion_compras.service.catalogo.IProveedorService;
 import com.palmera_junior.gestion_compras.service.correo.CorreoPolizaOutboxService;
 import com.palmera_junior.gestion_compras.service.organizacion.ISedeService;
 import com.palmera_junior.gestion_compras.service.poliza.IPolizaService;
 import com.palmera_junior.gestion_compras.service.usuario.IUsuarioService;
 
+/**
+ * Controlador de gestión de pólizas del sistema.
+ * Centraliza el listado, búsqueda, aprobación, activación y edición de pólizas, así como la
+ * consulta de datos auxiliares necesarios para la pantalla de administración.
+ */
 @Controller
 @RequestMapping("/polizas")
 public class PolizaController {
@@ -51,6 +58,9 @@ public class PolizaController {
     private final ISedeService sedeService;
     private final CorreoPolizaOutboxService correoPolizaOutboxService;
 
+    /**
+     * Construye el controlador con los servicios de pólizas, proveedores, usuarios, sedes y correos.
+     */
     public PolizaController(IPolizaService polizaService, IProveedorService proveedorService,
             IUsuarioService usuarioService, ISedeService sedeService,
             CorreoPolizaOutboxService correoPolizaOutboxService) {
@@ -61,6 +71,10 @@ public class PolizaController {
         this.correoPolizaOutboxService = correoPolizaOutboxService;
     }
 
+    /**
+     * Muestra la vista principal de pólizas con filtros, paginación y totales por estado.
+     * La consulta se ajusta según la sede del usuario para respetar el alcance funcional del rol.
+     */
     @GetMapping
     @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
     public String listarPolizas(
@@ -125,9 +139,6 @@ public class PolizaController {
         model.addAttribute("sedeActualId", usuario.getSede() != null ? usuario.getSede().getIdSede() : null);
         model.addAttribute("polizaSedeNacional", esNacional);
         model.addAttribute("totalPolizas", totalPolizas);
-        model.addAttribute("proveedores", usuario.getSede() == null
-            ? List.of()
-            : proveedorService.listarPorSede(usuario.getSede().getIdSede()));
         model.addAttribute("polizasAnuladas", polizasResumen.stream().filter(p -> p.getEstado() == EstadoPoliza.ANULADA).count());
         model.addAttribute("polizasBorrador", polizasResumen.stream().filter(p -> p.getEstado() == EstadoPoliza.BORRADOR).count());
         model.addAttribute("polizasAprobadas", polizasResumen.stream().filter(p -> p.getEstado() == EstadoPoliza.APROBADA).count());
@@ -143,10 +154,39 @@ public class PolizaController {
         return "polizas";
     }
 
+    /**
+     * Busca proveedores por texto para alimentar autocompletados y sugerencias en los formularios de pólizas.
+     */
+    @GetMapping("/proveedores/buscar")
+    @ResponseBody
+    @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
+    public List<ProveedorAutocompleteDTO> buscarProveedores(@RequestParam(required = false) String query) {
+        if (query == null || query.trim().length() < 3) {
+            return List.of();
+        }
+        return proveedorService.buscarPorTerminoNacional(query).stream()
+                .map(this::aProveedorAutocompleteDTO)
+                .toList();
+    }
+
+    /**
+     * Convierte una entidad de proveedor en el DTO compacto usado por el front-end de autocompletado.
+     */
+    private ProveedorAutocompleteDTO aProveedorAutocompleteDTO(Proveedor proveedor) {
+        return new ProveedorAutocompleteDTO(proveedor.getIdProv(), proveedor.getNit(), proveedor.getNombre(),
+                proveedor.getCiudad(), proveedor.getDireccion(), proveedor.getTelefono(), proveedor.getCorreo());
+    }
+
+    /**
+     * Determina si una póliza debe contabilizarse en los totales generales del resumen.
+     */
     private boolean esPolizaValidaParaTotales(Poliza poliza) {
         return poliza != null && poliza.getEstado() != EstadoPoliza.ANULADA;
     }
 
+    /**
+     * Consulta en tiempo real el estado de envío de correo de las pólizas visibles por el usuario.
+     */
     @GetMapping("/correo-estados")
     @ResponseBody
     @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
@@ -161,6 +201,9 @@ public class PolizaController {
         return correoPolizaOutboxService.obtenerEstadosPorPolizas(idsAutorizados);
     }
 
+    /**
+     * Devuelve el estado de aprobación de la póliza por sede para renderizar el historial de revisiones.
+     */
     @GetMapping("/{id}/aprobaciones-sedes")
     @ResponseBody
     @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
@@ -178,6 +221,9 @@ public class PolizaController {
         }).toList();
     }
 
+    /**
+     * Recupera los detalles de prima asociados a una póliza para mostrarlos en una vista de detalle.
+     */
     @GetMapping("/{id}/detalles-prima")
     @ResponseBody
     @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
@@ -190,6 +236,9 @@ public class PolizaController {
         }).toList();
     }
 
+    /**
+     * Crea una nueva póliza a partir del DTO del formulario y responde de forma compatible con AJAX y submit tradicional.
+     */
     @PostMapping
     @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
     public Object guardarPoliza(@ModelAttribute PolizaDTO dto, RedirectAttributes redirectAttributes,
@@ -203,6 +252,9 @@ public class PolizaController {
         return "redirect:/polizas";
     }
 
+    /**
+     * Actualiza una póliza existente y mantiene la misma respuesta dual para formularios convencionales y peticiones AJAX.
+     */
     @PostMapping("/{id}/editar")
     @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
     public Object actualizarPoliza(
@@ -218,6 +270,9 @@ public class PolizaController {
         return "redirect:/polizas";
     }
 
+    /**
+     * Aprueba la póliza y deja el flujo listo para continuar con la activación o seguimiento posterior.
+     */
     @PostMapping("/{id}/aprobar")
     @PreAuthorize("hasAnyRole('APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
     public String aprobarPoliza(@PathVariable Integer id, RedirectAttributes redirectAttributes) {
@@ -226,6 +281,9 @@ public class PolizaController {
         return "redirect:/polizas";
     }
 
+    /**
+     * Activa la póliza como vigente, validando la fecha de vencimiento y el archivo físico si aplica.
+     */
     @PostMapping(value = "/{id}/activar", consumes = "multipart/form-data")
     @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
     public String activarPoliza(
@@ -237,16 +295,22 @@ public class PolizaController {
         return "redirect:/polizas";
     }
 
+    /**
+     * Anula una póliza cuando se confirma que ya no debe seguir vigente en el sistema.
+     */
     @PostMapping("/{id}/anular")
-    @PreAuthorize("hasAnyRole('APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
+    @PreAuthorize("hasAnyRole('APROBADOR', 'SUPERADMINISTRADOR')")
     public String anularPoliza(@PathVariable Integer id, RedirectAttributes redirectAttributes) {
         polizaService.anular(id);
         redirectAttributes.addFlashAttribute("mensajeExito", "Póliza anulada correctamente.");
         return "redirect:/polizas";
     }
 
+    /**
+     * Finaliza la póliza con un motivo explícito cuando la cobertura ya no está vigente para la operación.
+     */
     @PostMapping("/{id}/terminar")
-    @PreAuthorize("hasAnyRole('APROBADOR', 'SUPERADMINISTRADOR')")
+    @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
     public String terminarPoliza(@PathVariable Integer id,
             @RequestParam String motivoTerminacion,
             RedirectAttributes redirectAttributes) {
@@ -255,10 +319,16 @@ public class PolizaController {
         return "redirect:/polizas";
     }
 
+    /**
+     * Detecta si la petición entrante es una llamada AJAX para responder con JSON en lugar de redirección.
+     */
     private boolean esSolicitudAjax(HttpServletRequest request) {
         return "XMLHttpRequest".equalsIgnoreCase(request.getHeader("X-Requested-With"));
     }
 
+    /**
+     * Normaliza el nombre completo del usuario para mostrarlo en la UI sin campos nulos o vacíos.
+     */
     private String nombreCompleto(Usuario usuario) {
         if (usuario == null) {
             return "Sin información";

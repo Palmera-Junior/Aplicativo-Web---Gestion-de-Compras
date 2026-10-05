@@ -206,8 +206,7 @@ public class PolizaService implements IPolizaService {
         Usuario usuario = usuarioService.obtenerUsuarioAutenticado();
         Poliza poliza = polizaRepository.findById(idPoliza)
                 .orElseThrow(() -> new IllegalArgumentException("Póliza no encontrada"));
-        assertVisible(poliza, usuario);
-        assertPuedeEditar(poliza, usuario);
+        assertPuedeModificar(poliza, usuario);
         if (poliza.getEstado() != EstadoPoliza.BORRADOR) {
             throw new IllegalStateException("Solo se pueden editar pólizas en estado BORRADOR");
         }
@@ -316,7 +315,7 @@ public class PolizaService implements IPolizaService {
         Usuario usuario = usuarioService.obtenerUsuarioAutenticado();
         Poliza poliza = polizaRepository.findById(idPoliza)
                 .orElseThrow(() -> new IllegalArgumentException("Póliza no encontrada"));
-        assertVisible(poliza, usuario);
+        assertPuedeModificar(poliza, usuario);
         if (polizaFisica == null || polizaFisica.isEmpty()) {
             throw new IllegalArgumentException("Debe adjuntar el PDF de la póliza física");
         }
@@ -344,24 +343,24 @@ public class PolizaService implements IPolizaService {
 
     @Override
     @Transactional
-    @PreAuthorize("hasAnyRole('APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
+    @PreAuthorize("hasAnyRole('APROBADOR', 'SUPERADMINISTRADOR')")
     public Poliza anular(Integer idPoliza) {
         Usuario usuario = usuarioService.obtenerUsuarioAutenticado();
         Poliza poliza = polizaRepository.findById(idPoliza)
                 .orElseThrow(() -> new IllegalArgumentException("Póliza no encontrada"));
-        assertVisible(poliza, usuario);
+        assertPuedeAnular(poliza, usuario);
         poliza.anular();
         return polizaRepository.save(poliza);
     }
 
     @Override
     @Transactional
-    @PreAuthorize("hasAnyRole('APROBADOR', 'SUPERADMINISTRADOR')")
+    @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
     public Poliza terminar(Integer idPoliza, String motivoTerminacion) {
         Usuario usuario = usuarioService.obtenerUsuarioAutenticado();
         Poliza poliza = polizaRepository.findById(idPoliza)
                 .orElseThrow(() -> new IllegalArgumentException("Póliza no encontrada"));
-        assertVisible(poliza, usuario);
+        assertPuedeModificar(poliza, usuario);
         poliza.terminar(usuario, LocalDate.now(), motivoTerminacion);
         return polizaRepository.save(poliza);
     }
@@ -457,10 +456,7 @@ public class PolizaService implements IPolizaService {
 
         Proveedor proveedor = proveedorRepository.findById(dto.getIdProveedor().intValue())
                 .orElseThrow(() -> new IllegalArgumentException("El proveedor no existe"));
-        if (!esNacional(usuario) && (usuario.getSede() == null || proveedor.getSedes().stream()
-                .noneMatch(sede -> sede.getIdSede().equals(usuario.getSede().getIdSede())))) {
-            throw new IllegalArgumentException("El proveedor no está asociado a la sede del usuario");
-        }
+        asociarProveedorASede(proveedor.getNit(), usuario.getSede());
 
         poliza.setFechaCreacion(fecha);
         poliza.setFechaVencimiento(fechaVencimiento);
@@ -474,6 +470,17 @@ public class PolizaService implements IPolizaService {
             poliza.setContratoAdjunto(adjuntoNuevo);
             poliza.setContratoAdjuntoNombre(dto.getContratoAdjunto().getOriginalFilename());
         }
+    }
+
+    void asociarProveedorASede(Long nit, Sede sede) {
+        if (nit == null || sede == null) {
+            return;
+        }
+        proveedorRepository.findByNit(nit).ifPresent(proveedor -> {
+            if (proveedor.getSedes().add(sede)) {
+                proveedorRepository.save(proveedor);
+            }
+        });
     }
 
     private BigDecimal aplicarDetallesPrima(Poliza poliza, PolizaDTO dto) {
@@ -524,17 +531,35 @@ public class PolizaService implements IPolizaService {
         }
     }
 
-    private void assertPuedeEditar(Poliza poliza, Usuario usuario) {
-        boolean esCreador = usuario != null && poliza.getUsuario() != null
-                && usuario.getIdUsuario().equals(poliza.getUsuario().getIdUsuario());
-        boolean esSuperAdministrador = usuario != null && usuario.getRol() == Rol.SUPERADMINISTRADOR;
-        boolean perteneceASedePrincipal = usuario != null && usuario.getSede() != null
-            && poliza.getSede() != null
-            && usuario.getSede().getIdSede().equals(poliza.getSede().getIdSede());
-        if (!esCreador && !esSuperAdministrador && !perteneceASedePrincipal) {
+    private void assertPuedeModificar(Poliza poliza, Usuario usuario) {
+        boolean esCreador = usuario != null && usuario.getIdUsuario() != null
+                && poliza.getUsuario() != null && usuario.getIdUsuario().equals(poliza.getUsuario().getIdUsuario());
+        if (!esCreador && !esAprobadorDeSedeInvolucrada(poliza, usuario)) {
             throw new SecurityException(
-                "Solo el creador, un usuario de la sede principal o un superadministrador pueden editar la póliza.");
+                "Solo el creador o el aprobador de una sede involucrada pueden modificar o terminar la póliza.");
         }
+    }
+
+    private void assertPuedeAnular(Poliza poliza, Usuario usuario) {
+        if (usuario == null || (usuario.getRol() != Rol.SUPERADMINISTRADOR
+                && !esAprobadorDeSedeInvolucrada(poliza, usuario))) {
+            throw new SecurityException(
+                "Solo un superadministrador o el aprobador de una sede involucrada puede anular la póliza.");
+        }
+    }
+
+    private boolean esAprobadorDeSedeInvolucrada(Poliza poliza, Usuario usuario) {
+        if (poliza == null || usuario == null || usuario.getRol() != Rol.APROBADOR
+                || usuario.getSede() == null || usuario.getSede().getIdSede() == null) {
+            return false;
+        }
+        Integer idSedeUsuario = usuario.getSede().getIdSede();
+        if (poliza.getAprobacionesPorSede() != null && !poliza.getAprobacionesPorSede().isEmpty()) {
+            return poliza.getAprobacionesPorSede().stream()
+                    .anyMatch(aprobacion -> aprobacion.getSede() != null
+                            && idSedeUsuario.equals(aprobacion.getSede().getIdSede()));
+        }
+        return poliza.getSede() != null && idSedeUsuario.equals(poliza.getSede().getIdSede());
     }
 
     private void assertPuedeAprobar(Poliza poliza, Usuario usuario) {

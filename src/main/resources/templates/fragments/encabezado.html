@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<body>
+    <header th:fragment="administracion" class="navbar">
+        <div class="logo">
+            <h1><span class="material-symbols">hub</span> SIGO | </h1>
+            <h4> Palmera By Anticimex</h4>
+        </div>
+        <div class="user-info">
+            <span class="material-symbols">account_circle</span>
+            <span th:text="${#authentication.principal.usuario.nombre + ' ' + #authentication.principal.usuario.apellido}">Administrador</span>
+            | <span th:text="${#authentication.principal.usuario.sede.nombre}">Sede</span>
+            <form th:action="@{/logout}" method="POST" style="display: inline; margin: 0;">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <button title="Cerrar sesión" type="submit" class="btn-logout">
+                    <span class="material-symbols">logout</span> Salir
+                </button>
+            </form>
+        </div>
+    </header>
+    <div th:fragment="mensajes">
+        <div th:if="${successMessage}" class="alert-success"><span class="material-symbols">check_circle</span><p th:text="${successMessage}"></p></div>
+        <div th:if="${errorMessage}" class="alert-error"><span class="material-symbols">error</span><p th:text="${errorMessage}"></p></div>
+    </div>
+</body>
+</html>

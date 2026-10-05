@@ -25,7 +25,7 @@ import com.palmera_junior.gestion_compras.service.organizacion.ICentroCostoServi
 import com.palmera_junior.gestion_compras.service.usuario.IUsuarioService;
 
 /**
- * Implementación del servicio de agregación del Dashboard.
+ * Implementación del servicio de agregación de la vista de Órdenes de Compra.
  * Coordina la recopilación de datos de múltiples módulos (órdenes, productos, proveedores, sedes, correos)
  * respetando el alcance de seguridad por sede.
  */
@@ -60,7 +60,7 @@ public class DashboardService implements IDashboardService {
      * 
      * A dónde apunta:
      * - Servicios: {@link IOrdenCompraService#ordenesDeCompraPaginadas}, {@link CorreoOrdenOutboxService#obtenerEstadosPorOrdenes}, {@link ICentroCostoService}, {@link IProveedorService}, {@link IProductoService}
-     * - Retorno: Plantilla "dashboard".
+     * - Retorno: Plantilla "compras".
      */
     @Override
     public String prepararModeloDashboard(int page, int size, String q, String fechaDesde, String fechaHasta,
@@ -133,7 +133,7 @@ public class DashboardService implements IDashboardService {
         model.addAttribute("fechaDesde", fechaDesdeAplicada);
         model.addAttribute("fechaHasta", fechaHastaAplicada);
         model.addAttribute("soloModificadas", soloModificadas);
-        return "dashboard";
+        return "compras";
     }
 
         private boolean esOrdenValidaParaTotales(OrdenCompra orden) {

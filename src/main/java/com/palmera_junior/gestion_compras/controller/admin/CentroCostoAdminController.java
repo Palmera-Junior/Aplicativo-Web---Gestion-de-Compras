@@ -62,10 +62,10 @@ public class CentroCostoAdminController {
             centroCostoService.guardar(idCentroCosto, nombre, sedeId, codigo, direccion);
             redirectAttributes.addAttribute("success",
                     idCentroCosto == null ? "Centro de costo creado correctamente." : "Centro de costo actualizado correctamente.");
-            return "redirect:/admin";
+            return "redirect:/admin/catalogos/centros";
         } catch (IllegalArgumentException ex) {
             redirectAttributes.addAttribute("error", ex.getMessage());
-            return "redirect:/admin";
+            return "redirect:/admin/catalogos/centros";
         }
     }
 

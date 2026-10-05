@@ -25,6 +25,32 @@ public interface IProveedorService {
 
     /**
      * Qué hace:
+     * Busca proveedores asociados a una sede según un término de coincidencia parcial.
+     *
+     * A dónde apunta:
+     * - Consulta tabla: proveedor, proveedor_sede
+     *
+     * @param idSede Identificador de la sede donde se limita la búsqueda.
+     * @param termino Texto a buscar en nombre o NIT.
+     * @return Lista de proveedores coincidentes en la sede.
+     */
+    List<Proveedor> buscarPorTerminoEnSede(Integer idSede, String termino);
+
+    /**
+     * Qué hace:
+     * Realiza una búsqueda nacional de proveedores por coincidencia parcial en nombre o NIT,
+     * sin limitarla a una sede concreta.
+     *
+     * A dónde apunta:
+     * - Consulta tabla: proveedor
+     *
+     * @param termino Texto a buscar en nombre o NIT.
+     * @return Lista de proveedores coincidentes a nivel nacional.
+     */
+    List<Proveedor> buscarPorTerminoNacional(String termino);
+
+    /**
+     * Qué hace:
      * Retorna el listado completo de proveedores registrados en el sistema.
      * 
      * A dónde apunta:
@@ -75,7 +101,7 @@ public interface IProveedorService {
      * @param sedeIds Lista de IDs de sedes a vincular.
      * @return Proveedor persistido.
      */
-    Proveedor guardar(Integer idProv, String nit, String nombre, String ciudad, String direccion,
+    Proveedor guardar(Integer idProv, Long nit, String nombre, String ciudad, String direccion,
             String telefono, String correo, java.util.List<Integer> sedeIds);
 
     /**

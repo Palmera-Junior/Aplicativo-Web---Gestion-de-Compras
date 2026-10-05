@@ -45,12 +45,12 @@ public class UsuarioAdminController {
      * - Ruta HTTP: GET /admin/usuarios/pagina
      * - Seguridad: `@PreAuthorize("hasRole('ADMINISTRADOR')")`
      * - Servicio delegado: {@link IUsuarioService#paginar(int, int)} -> UsuarioRepository
-     * - Fragmento: "admin :: usuariosFragment"
+    * - Fragmento: "catalogos :: usuariosFragment"
      * 
      * @param model Modelo para inyectar la página y metadatos.
      * @param pageUsuarios Índice de página.
      * @param size Cantidad de usuarios por página.
-     * @return Fragmento Thymeleaf `admin :: usuariosFragment`.
+    * @return Fragmento Thymeleaf `catalogos :: usuariosFragment`.
      */
     @GetMapping("/admin/usuarios/pagina")
     @PreAuthorize("hasRole('SUPERADMINISTRADOR')")
@@ -61,7 +61,7 @@ public class UsuarioAdminController {
         model.addAttribute("usuariosPage", usuariosPage);
         model.addAttribute("pageUsuarios", pageUsuarios);
         model.addAttribute("size", size);
-        return "admin :: usuariosFragment";
+        return "catalogos :: usuariosFragment";
     }
 
     /**
@@ -107,10 +107,10 @@ public class UsuarioAdminController {
                     email, rol, sedeId);
             redirectAttributes.addAttribute("success",
                     idUsuario == null ? "Usuario creado correctamente." : "Usuario actualizado correctamente.");
-            return "redirect:/admin";
+            return "redirect:/admin/catalogos/usuarios";
         } catch (IllegalArgumentException ex) {
             redirectAttributes.addAttribute("error", ex.getMessage());
-            return "redirect:/admin";
+            return "redirect:/admin/catalogos/usuarios";
         }
     }
 

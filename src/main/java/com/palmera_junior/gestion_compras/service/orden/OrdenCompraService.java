@@ -244,8 +244,10 @@ public class OrdenCompraService implements IOrdenCompraService {
         Usuario usuarioLogueado = usuarioService.obtenerUsuarioAutenticado();
 
         // Asignar o crear proveedor asociado
-        Proveedor proveedorAsignado = obtenerProveedorParaOrden(dto, usuarioLogueado);
+        Proveedor proveedorAsignado = obtenerProveedorParaOrden(dto);
+        asociarProveedorASede(dto.getNitProv(), usuarioLogueado.getSede());
         orden.setProveedor(proveedorAsignado);
+        aplicarSnapshotProveedor(orden, dto);
 
         orden.setSede(usuarioLogueado.getSede());
         orden.setUsuario(usuarioLogueado);
@@ -295,83 +297,37 @@ public class OrdenCompraService implements IOrdenCompraService {
     }
 
 
-    private Proveedor obtenerProveedorParaOrden(OrdenCompraDTO dto, Usuario usuarioLogueado) {
-        String nit = dto.getNitProv() != null ? dto.getNitProv().trim() : null;
-        String nombre = dto.getNombreProv() != null ? dto.getNombreProv().trim() : null;
-        String ciudad = dto.getCiudadProv() != null ? dto.getCiudadProv().trim() : null;
-        String direccion = dto.getDireccionProv() != null ? dto.getDireccionProv().trim() : null;
-        String telefono = dto.getTelefonoProv() != null ? dto.getTelefonoProv().trim() : null;
-        String correo = dto.getCorreoProv() != null ? dto.getCorreoProv().trim() : null;
-
-        boolean tieneDatosProveedor = (nit != null && !nit.isBlank())
-                || (nombre != null && !nombre.isBlank())
-                || (ciudad != null && !ciudad.isBlank())
-                || (direccion != null && !direccion.isBlank())
-                || (telefono != null && !telefono.isBlank())
-                || (correo != null && !correo.isBlank());
-
-        if (dto.getIdProv() == null && !tieneDatosProveedor) {
+    private Proveedor obtenerProveedorParaOrden(OrdenCompraDTO dto) {
+        if (dto.getIdProv() == null) {
             return null;
         }
 
-        if (dto.getIdProv() != null) {
-            if (nit == null || nit.isBlank()) {
-                throw new RuntimeException("El NIT del proveedor es obligatorio.");
-            }
-
-            Proveedor proveedorAsignado = proveedorRepository.findById(dto.getIdProv().intValue())
-                    .orElseThrow(() -> new RuntimeException("Proveedor seleccionado no existe"));
-
-            Optional<Proveedor> proveedorConMismoNit = proveedorRepository.findByNitIgnoreCase(nit);
-            if (proveedorConMismoNit.isPresent()
-                    && !proveedorConMismoNit.get().getIdProv().equals(proveedorAsignado.getIdProv())) {
-                throw new RuntimeException("Ya existe otro proveedor con ese NIT.");
-            }
-
-            actualizarCamposProveedor(proveedorAsignado, dto);
-            asociarProveedorASede(proveedorAsignado, usuarioLogueado.getSede());
-            return proveedorRepository.save(proveedorAsignado);
-        }
-
-        if (nit == null || nit.isBlank()) {
-            throw new RuntimeException("El NIT del proveedor es obligatorio.");
-        }
-
-        Optional<Proveedor> proveedorExistente = proveedorRepository.findByNitIgnoreCase(nit);
-        if (proveedorExistente.isPresent()) {
-            Proveedor proveedor = proveedorExistente.get();
-            actualizarCamposProveedor(proveedor, dto);
-            asociarProveedorASede(proveedor, usuarioLogueado.getSede());
-            return proveedorRepository.save(proveedor);
-        }
-
-        Proveedor nuevoProv = new Proveedor();
-        nuevoProv.setNit(nit);
-        nuevoProv.setNombre(nombre);
-        nuevoProv.setCorreo(correo);
-        nuevoProv.setDireccion(direccion);
-        nuevoProv.setTelefono(telefono);
-        nuevoProv.setCiudad(ciudad);
-        asociarProveedorASede(nuevoProv, usuarioLogueado.getSede());
-        return proveedorRepository.save(nuevoProv);
+        return proveedorRepository.findById(dto.getIdProv().intValue())
+                .orElseThrow(() -> new RuntimeException("Proveedor seleccionado no existe"));
     }
 
-    private void actualizarCamposProveedor(Proveedor proveedor, OrdenCompraDTO dto) {
-        proveedor.setNit(dto.getNitProv());
-        proveedor.setNombre(dto.getNombreProv());
-        proveedor.setCorreo(dto.getCorreoProv());
-        proveedor.setDireccion(dto.getDireccionProv());
-        proveedor.setTelefono(dto.getTelefonoProv());
-        proveedor.setCiudad(dto.getCiudadProv());
-    }
-
-    private void asociarProveedorASede(Proveedor proveedor, Sede sede) {
-        if (sede == null) {
+    void asociarProveedorASede(Long nit, Sede sede) {
+        if (nit == null || sede == null) {
             return;
         }
-        if (!proveedor.getSedes().contains(sede)) {
-            proveedor.getSedes().add(sede);
-        }
+        proveedorRepository.findByNit(nit).ifPresent(proveedor -> {
+            if (proveedor.getSedes().add(sede)) {
+                proveedorRepository.save(proveedor);
+            }
+        });
+    }
+
+    private void aplicarSnapshotProveedor(OrdenCompra orden, OrdenCompraDTO dto) {
+        orden.setNitProveedorSnapshot(dto.getNitProv());
+        orden.setNombreProveedorSnapshot(normalizarSnapshot(dto.getNombreProv()));
+        orden.setCiudadProveedorSnapshot(normalizarSnapshot(dto.getCiudadProv()));
+        orden.setDireccionProveedorSnapshot(normalizarSnapshot(dto.getDireccionProv()));
+        orden.setTelefonoProveedorSnapshot(normalizarSnapshot(dto.getTelefonoProv()));
+        orden.setCorreoProveedorSnapshot(normalizarSnapshot(dto.getCorreoProv()));
+    }
+
+    private String normalizarSnapshot(String valor) {
+        return valor == null || valor.isBlank() ? null : valor.trim();
     }
 
     /**
@@ -402,8 +358,10 @@ public class OrdenCompraService implements IOrdenCompraService {
 
         Usuario usuarioLogueado = usuarioService.obtenerUsuarioAutenticado();
 
-        Proveedor proveedorAsignado = obtenerProveedorParaOrden(dto, usuarioLogueado);
+        Proveedor proveedorAsignado = obtenerProveedorParaOrden(dto);
+        asociarProveedorASede(dto.getNitProv(), usuarioLogueado.getSede());
         orden.setProveedor(proveedorAsignado);
+        aplicarSnapshotProveedor(orden, dto);
         orden.setObservaciones(dto.getObservaciones());
 
         if (dto.getFecha() != null && !dto.getFecha().isBlank()) {
@@ -858,20 +816,14 @@ public class OrdenCompraService implements IOrdenCompraService {
                 orden.getFecha().toString());
 
         if (orden.getProveedor() != null) {
-            dto.setNombreProv(orden.getProveedor().getNombre());
-            dto.setNitProv(orden.getProveedor().getNit());
-            dto.setCiudadProv(orden.getProveedor().getCiudad());
-            dto.setDireccionProv(orden.getProveedor().getDireccion());
-            dto.setTelefonoProv(orden.getProveedor().getTelefono());
-            dto.setCorreoProv(orden.getProveedor().getCorreo());
-        } else {
-            dto.setNombreProv(null);
-            dto.setNitProv(null);
-            dto.setCiudadProv(null);
-            dto.setDireccionProv(null);
-            dto.setTelefonoProv(null);
-            dto.setCorreoProv(null);
+            dto.setIdProv(orden.getProveedor().getIdProv().longValue());
         }
+        dto.setNombreProv(orden.getNombreProveedorSnapshot());
+        dto.setNitProv(orden.getNitProveedorSnapshot());
+        dto.setCiudadProv(orden.getCiudadProveedorSnapshot());
+        dto.setDireccionProv(orden.getDireccionProveedorSnapshot());
+        dto.setTelefonoProv(orden.getTelefonoProveedorSnapshot());
+        dto.setCorreoProv(orden.getCorreoProveedorSnapshot());
 
         dto.setObservaciones(
                 orden.getObservaciones());

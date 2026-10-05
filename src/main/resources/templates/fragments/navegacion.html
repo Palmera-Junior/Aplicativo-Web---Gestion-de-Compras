@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+    <aside th:fragment="principal(vista)" class="app-navigation" aria-label="Navegación principal">
+        <!-- Administradores usan un sidebar; el alcance de cada enlace se controla por rol. -->
+        <nav id="main-admin-sidebar" sec:authorize="hasAnyRole('ADMINISTRADOR', 'SUPERADMINISTRADOR')" class="app-sidebar">
+            <button type="button" class="sidebar-mobile-toggle" aria-label="Expandir navegación"
+                aria-expanded="false" aria-controls="main-admin-sidebar" title="Expandir navegación">
+                <span class="material-symbols" aria-hidden="true">menu</span>
+            </button>
+            <div sec:authorize="hasAnyRole('ADMINISTRADOR', 'SUPERADMINISTRADOR')" class="sidebar-section">
+                <p class="sidebar-label">Principal</p>
+                <a th:href="@{/admin}" class="sidebar-link js-page-transition" aria-label="Dashboard" title="Dashboard"
+                    th:classappend="${vista == 'admin' and catalogoActivo == null} ? ' is-current' : ''"
+                    th:attr="aria-current=${vista == 'admin' and catalogoActivo == null} ? 'page' : null">
+                    <span class="material-symbols">grid_view</span><span>Dashboard</span>
+                </a>
+            </div>
+
+            <div class="sidebar-section">
+                <p class="sidebar-label">Operación</p>
+                <a th:href="@{/dashboard}" class="sidebar-link js-page-transition" aria-label="Compras" title="Compras"
+                    th:classappend="${vista == 'compras'} ? ' is-current' : ''"
+                    th:attr="aria-current=${vista == 'compras'} ? 'page' : null">
+                    <span class="material-symbols" aria-hidden="true">shopping_cart</span><span>Compras</span>
+                </a>
+                <a th:href="@{/polizas}" class="sidebar-link js-page-transition" aria-label="Pólizas" title="Pólizas"
+                    th:classappend="${vista == 'polizas'} ? ' is-current' : ''"
+                    th:attr="aria-current=${vista == 'polizas'} ? 'page' : null">
+                    <span class="material-symbols" aria-hidden="true">policy</span><span>Pólizas</span>
+                </a>
+            </div>
+
+            <div class="sidebar-section sidebar-system">
+                <p class="sidebar-label">Sistema</p>
+                <div class="sidebar-system-group"
+                    th:classappend="${catalogoActivo != null} ? ' is-open' : ''">
+                    <button type="button" class="sidebar-link sidebar-group-title" aria-label="Configuración" title="Configuración"
+                        th:attr="aria-expanded=${catalogoActivo != null}"
+                        aria-controls="sidebar-system-menu">
+                        <span class="material-symbols">settings</span><span>Configuración</span><span class="material-symbols sidebar-chevron">expand_more</span>
+                    </button>
+                    <div id="sidebar-system-menu" class="sidebar-submenu">
+                        <a th:href="@{/admin/catalogos/productos}" data-admin-section="section-productos"
+                            th:classappend="${catalogoActivo == 'productos'} ? ' is-current' : ''">Productos</a>
+                        <a th:href="@{/admin/catalogos/proveedores}" data-admin-section="section-proveedores"
+                            th:classappend="${catalogoActivo == 'proveedores'} ? ' is-current' : ''">Proveedores</a>
+                        <a sec:authorize="hasRole('SUPERADMINISTRADOR')" th:href="@{/admin/catalogos/sedes}" data-admin-section="section-sedes"
+                            th:classappend="${catalogoActivo == 'sedes'} ? ' is-current' : ''">Sedes</a>
+                        <a sec:authorize="hasRole('SUPERADMINISTRADOR')" th:href="@{/admin/catalogos/centros}" data-admin-section="section-centros"
+                            th:classappend="${catalogoActivo == 'centros'} ? ' is-current' : ''">Centros de costo</a>
+                        <a sec:authorize="hasRole('SUPERADMINISTRADOR')" th:href="@{/admin/catalogos/usuarios}" data-admin-section="section-usuarios"
+                            th:classappend="${catalogoActivo == 'usuarios'} ? ' is-current' : ''">Usuarios</a>
+                        <span sec:authorize="hasRole('SUPERADMINISTRADOR')" class="sidebar-submenu-link is-disabled" aria-disabled="true">Permisos</span>
+                    </div>
+                </div>
+            </div>
+        </nav>
+        <script th:src="@{/js/navegacion.js(v=1)}"></script>
+    </aside>
+    <!-- El aprobador conserva las pestañas de los módulos, con el total pendiente de su propia sede. -->
+    <div th:fragment="pestanasAprobador(vista)" sec:authorize="hasRole('APROBADOR')" class="tabs-shell approver-tabs-shell">
+        <nav class="view-tabs" aria-label="Módulos de gestión">
+            <a th:href="@{/dashboard}" class="view-tab js-page-transition"
+                th:classappend="${vista == 'compras'} ? ' active' : ''"
+                th:attr="aria-current=${vista == 'compras'} ? 'page' : null">
+                <span class="material-symbols">stacks</span>
+                <span>Órdenes de Compra</span>
+                <span th:if="${borradoresOrdenesSede > 0}" class="view-tab-count"
+                    th:title="${'Órdenes de compra pendientes por aprobar: ' + borradoresOrdenesSede}"
+                    th:attr="aria-label=${borradoresOrdenesSede + ' órdenes de compra pendientes por aprobar'}"
+                    th:text="${borradoresOrdenesSede}">0</span>
+            </a>
+            <a th:href="@{/polizas}" class="view-tab js-page-transition"
+                th:classappend="${vista == 'polizas'} ? ' active' : ''"
+                th:attr="aria-current=${vista == 'polizas'} ? 'page' : null">
+                <span class="material-symbols">policy</span>
+                <span>Pólizas</span>
+                <span th:if="${borradoresPolizasSede > 0}" class="view-tab-count"
+                    th:title="${'Pólizas pendientes por aprobar: ' + borradoresPolizasSede}"
+                    th:attr="aria-label=${borradoresPolizasSede + ' pólizas pendientes por aprobar'}"
+                    th:text="${borradoresPolizasSede}">0</span>
+            </a>
+        </nav>
+    </div>
+</body>
+</html>

@@ -61,10 +61,10 @@ public class SedeAdminController {
             sedeService.guardar(idSede, nombre, prefijoCiudad, direccion);
             redirectAttributes.addAttribute("success",
                     idSede == null ? "Sede creada correctamente." : "Sede actualizada correctamente.");
-            return "redirect:/admin";
+            return "redirect:/admin/catalogos/sedes";
         } catch (IllegalArgumentException ex) {
             redirectAttributes.addAttribute("error", ex.getMessage());
-            return "redirect:/admin";
+            return "redirect:/admin/catalogos/sedes";
         }
     }
 

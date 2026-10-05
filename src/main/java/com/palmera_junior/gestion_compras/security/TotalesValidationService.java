@@ -81,7 +81,7 @@ public class TotalesValidationService {
     }
 
     private boolean hayDatosProveedor(OrdenCompraDTO dto) {
-        return (dto.getNitProv() != null && !dto.getNitProv().isBlank())
+        return dto.getNitProv() != null
                 || (dto.getNombreProv() != null && !dto.getNombreProv().isBlank())
                 || (dto.getCiudadProv() != null && !dto.getCiudadProv().isBlank())
                 || (dto.getDireccionProv() != null && !dto.getDireccionProv().isBlank())
@@ -90,7 +90,7 @@ public class TotalesValidationService {
     }
 
     private void validarCamposProveedor(OrdenCompraDTO dto) {
-        if (dto.getNitProv() == null || dto.getNitProv().isBlank()) {
+        if (dto.getNitProv() == null) {
             throw new IllegalArgumentException("El NIT del proveedor es obligatorio");
         }
         if (dto.getNombreProv() == null || dto.getNombreProv().isBlank()) {

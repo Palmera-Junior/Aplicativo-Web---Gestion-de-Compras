@@ -48,12 +48,12 @@ public class ProductoAdminController {
      * - Ruta HTTP: GET /admin/productos/pagina
      * - Seguridad: `@PreAuthorize("hasRole('ADMINISTRADOR')")`
      * - Servicio delegado: {@link IProductoService#paginar(int, int)} -> ProductoRepository
-     * - Vista Thymeleaf: Fragmento "admin :: productosFragment"
+    * - Vista Thymeleaf: Fragmento "catalogos :: productosFragment"
      * 
      * @param model Modelo para inyectar la página de productos y controles.
      * @param pageProductos Índice de página a consultar.
      * @param size Cantidad de registros por página.
-     * @return Fragmento Thymeleaf `admin :: productosFragment`.
+    * @return Fragmento Thymeleaf `catalogos :: productosFragment`.
      */
     @GetMapping("/admin/productos/pagina")
     @PreAuthorize("hasAnyRole('SUPERADMINISTRADOR', 'ADMINISTRADOR')")
@@ -67,7 +67,7 @@ public class ProductoAdminController {
         model.addAttribute("pageProductos", pageProductos);
         model.addAttribute("size", size);
 
-        return "admin :: productosFragment";
+        return "catalogos :: productosFragment";
     }
 
     /**
@@ -109,21 +109,21 @@ public class ProductoAdminController {
                     presentacionCantidades, presentacionUnidades, presentacionPrecios);
             redirectAttributes.addAttribute("success",
                     idProducto == null ? "Producto creado correctamente." : "Producto actualizado correctamente.");
-            return "redirect:/admin";
+            return "redirect:/admin/catalogos/productos";
         } catch (IllegalArgumentException ex) {
             redirectAttributes.addAttribute("error", ex.getMessage());
-            return "redirect:/admin";
+            return "redirect:/admin/catalogos/productos";
         } catch (DataAccessException e) {
             String causa = e.getMostSpecificCause() != null && e.getMostSpecificCause().getMessage() != null
                     ? e.getMostSpecificCause().getMessage()
                     : e.getMessage();
             redirectAttributes.addAttribute("error",
                     "No se pudo guardar el producto. Detalle: " + causa);
-            return "redirect:/admin";
+            return "redirect:/admin/catalogos/productos";
         } catch (Exception e) {
             redirectAttributes.addAttribute("error",
                     "Ocurrió un error inesperado al guardar el producto: " + e.getMessage());
-            return "redirect:/admin";
+            return "redirect:/admin/catalogos/productos";
         }
     }
 

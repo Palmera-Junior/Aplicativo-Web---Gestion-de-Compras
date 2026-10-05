@@ -18,6 +18,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.palmera_junior.gestion_compras.entity.Categoria;
@@ -111,9 +112,11 @@ public class AdminDashboardController {
      * @param error Mensaje de error temporal para toasts.
      * @return Nombre de la plantilla ("admin").
      */
-    @GetMapping("/admin")
+    @GetMapping({ "/admin", "/admin/catalogos/{catalogo}" })
     @PreAuthorize("hasAnyRole('SUPERADMINISTRADOR', 'ADMINISTRADOR')")
     public String mostrarPanelAdministracion(Model model,
+
+            @PathVariable(value = "catalogo", required = false) String catalogo,
 
             @RequestParam(defaultValue = "0") int pageProveedores,
             @RequestParam(defaultValue = "0") int pageUsuarios,
@@ -133,6 +136,8 @@ public class AdminDashboardController {
             @RequestParam(defaultValue = "false") boolean mostrarFiltroFecha,
             @RequestParam(required = false) String success,
             @RequestParam(required = false) String error) {
+
+        String catalogoActivo = normalizarCatalogo(catalogo);
 
         List<Proveedor> proveedores = proveedorService.listarTodos();
         boolean periodoMesActual = (fechaDesde == null || fechaDesde.isBlank())
@@ -185,8 +190,8 @@ public class AdminDashboardController {
             .filter(poliza -> poliza != null && poliza.getEstado() != EstadoPoliza.ANULADA)
             .filter(Poliza::estaProximaAVencer)
             .count();
-        long totalPolizas = polizas.stream()
-            .filter(poliza -> poliza != null && poliza.getEstado() != EstadoPoliza.ANULADA)
+        long totalPolizas = todasLasPolizas.stream()
+            .filter(poliza -> poliza != null && poliza.getEstado() == EstadoPoliza.VIGENTE)
             .count();
         BigDecimal valorTotalOrdenes = ordenesCompraValidas.stream()
             .map(OrdenCompra::getTotal)
@@ -218,7 +223,7 @@ public class AdminDashboardController {
                 return true;
             String s = searchProveedores.trim().toLowerCase();
             return (p.getNombre() != null && p.getNombre().toLowerCase().contains(s))
-                    || (p.getNit() != null && p.getNit().toLowerCase().contains(s));
+                    || (p.getNit() != null && p.getNit().toString().contains(s));
         }).collect(Collectors.toList());
 
         List<Usuario> usuariosFiltrados = usuarios.stream().filter(u -> {
@@ -332,11 +337,23 @@ public class AdminDashboardController {
         model.addAttribute("fechaHastaMetricas", fechaHasta);
         model.addAttribute("periodoMesActual", periodoMesActual);
         model.addAttribute("mostrarFiltroFecha", mostrarFiltroFecha);
+        model.addAttribute("catalogoActivo", catalogoActivo);
 
         model.addAttribute("successMessage", success);
         model.addAttribute("errorMessage", error);
 
-        return "admin";
+        return catalogoActivo == null ? "admin" : "catalogos";
+    }
+
+    private String normalizarCatalogo(String catalogo) {
+        if (catalogo == null || catalogo.isBlank()) {
+            return null;
+        }
+        String catalogoNormalizado = catalogo.trim().toLowerCase();
+        if (!List.of("proveedores", "productos", "usuarios", "sedes", "centros").contains(catalogoNormalizado)) {
+            throw new IllegalArgumentException("El catálogo solicitado no existe");
+        }
+        return catalogoNormalizado;
     }
 
     private List<ResumenOrdenesPorSedeDTO> resumirOrdenesPorSede(List<OrdenCompra> ordenes) {

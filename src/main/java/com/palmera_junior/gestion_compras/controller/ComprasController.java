@@ -10,33 +10,41 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.palmera_junior.gestion_compras.dto.OrdenCompraDTO;
+import com.palmera_junior.gestion_compras.dto.ProveedorAutocompleteDTO;
 import com.palmera_junior.gestion_compras.entity.EstadoOrdenCompra;
 import com.palmera_junior.gestion_compras.entity.Producto;
+import com.palmera_junior.gestion_compras.entity.Proveedor;
 import com.palmera_junior.gestion_compras.service.catalogo.IProductoService;
+import com.palmera_junior.gestion_compras.service.catalogo.IProveedorService;
 import com.palmera_junior.gestion_compras.service.dashboard.IDashboardService;
 import com.palmera_junior.gestion_compras.service.orden.IOrdenCompraService;
+import com.palmera_junior.gestion_compras.service.usuario.IUsuarioService;
 
 /**
 
- * Controlador principal para la vista y operaciones del Dashboard de Gestión de Compras.
- * Gestiona el renderizado de la interfaz del usuario autenticado y las consultas AJAX rápidas
- * de productos y órdenes de compra.
+ * Controlador principal para la vista de Órdenes de Compra.
+ * Gestiona el renderizado de la interfaz autenticada en la ruta /dashboard y las consultas AJAX
+ * rápidas de productos y órdenes de compra.
  */
 @Controller
-public class DashboardController {
+public class ComprasController {
 
     private final IDashboardService dashboardService;
     private final IOrdenCompraService ordenCompraService;
     private final IProductoService productoService;
+    private final IProveedorService proveedorService;
+    private final IUsuarioService usuarioService;
 
     /**
-     * Constructor para inyección de dependencias de servicios del dashboard, órdenes y productos.
+     * Constructor para inyección de dependencias de servicios de compras, órdenes y productos.
      */
-    public DashboardController(IDashboardService dashboardService, IOrdenCompraService ordenCompraService,
-            IProductoService productoService) {
+    public ComprasController(IDashboardService dashboardService, IOrdenCompraService ordenCompraService,
+            IProductoService productoService, IProveedorService proveedorService, IUsuarioService usuarioService) {
         this.dashboardService = dashboardService;
         this.ordenCompraService = ordenCompraService;
         this.productoService = productoService;
+        this.proveedorService = proveedorService;
+        this.usuarioService = usuarioService;
     }
 
     /**
@@ -46,9 +54,9 @@ public class DashboardController {
      * según el rol y sede del usuario autenticado. Prepara los datos en el modelo de Thymeleaf.
      * 
      * A dónde apunta:
-     * - Ruta HTTP: GET /dashboard
+     * - Ruta HTTP: GET /dashboard (vista de órdenes de compra)
      * - Servicio delegado: {@link IDashboardService#prepararModeloDashboard}
-     * - Vista / Plantilla renderizada: templates/dashboard.html
+     * - Vista / Plantilla renderizada: templates/compras.html
      * 
      * @param page Número de página actual (0-indexed).
      * @param size Cantidad de elementos por página.
@@ -59,7 +67,7 @@ public class DashboardController {
      * @param soloModificadas Filtro booleano para órdenes con discrepancias en la recepción.
      * @param model Objeto Model de Spring MVC para inyectar atributos a la vista.
      * @param authentication Información de autenticación y rol del usuario en sesión.
-     * @return Nombre de la plantilla Thymeleaf a renderizar ("dashboard").
+     * @return Nombre de la plantilla Thymeleaf a renderizar ("compras").
      */
     @GetMapping("/dashboard")
     public String listarOrdenesCompra(
@@ -118,6 +126,30 @@ public class DashboardController {
     public java.util.List<Producto> buscarProductosPorTermino(
             @RequestParam(required = false) String query) {
         return productoService.buscarPorTermino(query);
+    }
+
+    @GetMapping("/dashboard/proveedores/buscar")
+    @ResponseBody
+    public java.util.List<ProveedorAutocompleteDTO> buscarProveedoresPorTermino(
+            @RequestParam(required = false) String query, Authentication authentication) {
+        if (query == null || query.trim().length() < 2) {
+            return java.util.List.of();
+        }
+        var usuario = usuarioService.obtenerUsuarioAutenticado(authentication);
+        boolean esNacional = usuario.getSede() != null
+            && "Sede Nacional".equalsIgnoreCase(usuario.getSede().getNombre());
+        var proveedores = esNacional
+            ? proveedorService.buscarPorTerminoNacional(query)
+            : proveedorService.buscarPorTerminoEnSede(
+                usuario.getSede() != null ? usuario.getSede().getIdSede() : null, query);
+        return proveedores.stream()
+                .map(this::aProveedorAutocompleteDTO)
+                .toList();
+    }
+
+    private ProveedorAutocompleteDTO aProveedorAutocompleteDTO(Proveedor proveedor) {
+        return new ProveedorAutocompleteDTO(proveedor.getIdProv(), proveedor.getNit(), proveedor.getNombre(),
+                proveedor.getCiudad(), proveedor.getDireccion(), proveedor.getTelefono(), proveedor.getCorreo());
     }
 
     /**

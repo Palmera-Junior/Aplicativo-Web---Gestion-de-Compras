@@ -303,12 +303,12 @@ public class PdfService implements IPdfService {
         infoTable.setWidthPercentage(100);
         infoTable.setWidths(new float[] { 24f, 38f, 38f });
 
-        String provNit = orden.getProveedor() != null ? orden.getProveedor().getNit() : "";
-        String provNombre = orden.getProveedor() != null ? orden.getProveedor().getNombre() : "";
-        String provCiudad = orden.getProveedor() != null ? orden.getProveedor().getCiudad() : "";
-        String provTelefono = orden.getProveedor() != null ? orden.getProveedor().getTelefono() : "";
-        String provDireccion = orden.getProveedor() != null ? orden.getProveedor().getDireccion() : "";
-        String provCorreo = orden.getProveedor() != null ? orden.getProveedor().getCorreo() : "";
+        String provNit = orden.getNitProveedorSnapshot() != null ? orden.getNitProveedorSnapshot().toString() : "";
+        String provNombre = orden.getNombreProveedorSnapshot() != null ? orden.getNombreProveedorSnapshot() : "";
+        String provCiudad = orden.getCiudadProveedorSnapshot() != null ? orden.getCiudadProveedorSnapshot() : "";
+        String provTelefono = orden.getTelefonoProveedorSnapshot() != null ? orden.getTelefonoProveedorSnapshot() : "";
+        String provDireccion = orden.getDireccionProveedorSnapshot() != null ? orden.getDireccionProveedorSnapshot() : "";
+        String provCorreo = orden.getCorreoProveedorSnapshot() != null ? orden.getCorreoProveedorSnapshot() : "";
 
         PdfPCell cellProv1 = new PdfPCell();
         cellProv1.setBorder(Rectangle.NO_BORDER);
@@ -947,12 +947,12 @@ public class PdfService implements IPdfService {
         PdfPTable infoTable = new PdfPTable(2);
         infoTable.setWidthPercentage(100);
 
-        String provNombre = orden.getProveedor() != null ? orden.getProveedor().getNombre() : "";
-        String provNit = orden.getProveedor() != null ? orden.getProveedor().getNit() : "";
-        String provDireccion = orden.getProveedor() != null ? orden.getProveedor().getDireccion() : "";
-        String provCiudad = orden.getProveedor() != null ? orden.getProveedor().getCiudad() : "";
-        String provTelefono = orden.getProveedor() != null ? orden.getProveedor().getTelefono() : "";
-        String provCorreo = orden.getProveedor() != null ? orden.getProveedor().getCorreo() : "";
+        String provNombre = orden.getNombreProveedorSnapshot() != null ? orden.getNombreProveedorSnapshot() : "";
+        String provNit = orden.getNitProveedorSnapshot() != null ? orden.getNitProveedorSnapshot().toString() : "";
+        String provDireccion = orden.getDireccionProveedorSnapshot() != null ? orden.getDireccionProveedorSnapshot() : "";
+        String provCiudad = orden.getCiudadProveedorSnapshot() != null ? orden.getCiudadProveedorSnapshot() : "";
+        String provTelefono = orden.getTelefonoProveedorSnapshot() != null ? orden.getTelefonoProveedorSnapshot() : "";
+        String provCorreo = orden.getCorreoProveedorSnapshot() != null ? orden.getCorreoProveedorSnapshot() : "";
 
         PdfPCell cellProv = new PdfPCell();
         cellProv.setBorder(Rectangle.NO_BORDER);

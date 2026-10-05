@@ -8,18 +8,20 @@
     <meta name="_csrf_header" th:content="${_csrf.headerName}">
     <title>Pólizas | Portal Comercial</title>
     <link rel="icon" type="image/png" th:href="@{/imgs/logo1.png}">
-    <link rel="stylesheet" th:href="@{/css/index.css(v=4)}">
-    <link rel="stylesheet" th:href="@{/css/polizas.css}">
+    <link rel="stylesheet" th:href="@{/css/compras.css(v=7)}">
+    <link rel="stylesheet" th:href="@{/css/polizas.css(v=10)}">
+    <link rel="stylesheet" th:href="@{/css/navigation.css(v=18)}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=block">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 </head>
 
 <body>
     <header class="navbar">
         <div class="logo">
-            <h2><span class="material-symbols">hub</span> Portal Comercial</h2>
+            <h1><span class="material-symbols">hub</span> SIGO | </h1>
+            <h4> Palmera By Anticimex</h4>
         </div>
         <div class="user-info">
             <span class="material-symbols">account_circle</span>
@@ -34,23 +36,10 @@
         </div>
     </header>
 
-    <nav class="breadcrumb-admin" aria-label="breadcrumb">
-        <a class="breadcrumb-link" th:href="@{/admin}" sec:authorize="hasAnyRole('ADMINISTRADOR', 'SUPERADMINISTRADOR')">
-            <span class="material-symbols">admin_panel_settings</span> Panel de Administración
-        </a>
-    </nav>
+    <div th:replace="~{fragments/navegacion :: principal('polizas')}"></div>
     <br>
     <main class="polizas-container">
-        <div class="tabs-shell" style="margin-top: -18px; margin-bottom: 0;">
-            <nav class="view-tabs" aria-label="Módulos de gestión">
-                <a sec:authorize="hasAnyRole('SOLICITANTE', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')" class="view-tab js-page-transition" th:href="@{/dashboard}">
-                    <span class="material-symbols">assignment</span> Órdenes de Compra
-                </a>
-                <a sec:authorize="hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')" class="view-tab active js-page-transition" th:href="@{/polizas}" aria-current="page">
-                    <span class="material-symbols">policy</span> Pólizas
-                </a>
-            </nav>
-        </div>
+        <div th:replace="~{fragments/navegacion :: pestanasAprobador('polizas')}"></div>
 
         <div class="polizas-header">
             <div class="polizas-header-title">
@@ -71,10 +60,12 @@
 
         <section class="poliza-summary" aria-labelledby="poliza-summary-title">
             <div class="summary-heading">
-                <span class="material-symbols">analytics</span>
-                <div>
-                    <h2 id="poliza-summary-title">Resumen de pólizas</h2>
-                    <p>Estado general de las pólizas registradas.</p>
+                <div class="summary-main">
+                    <span class="material-symbols">analytics</span>
+                    <div>
+                        <h2 id="poliza-summary-title">Resumen de pólizas</h2>
+                        <p>Distribución de las pólizas por estado.</p>
+                    </div>
                 </div>
                 <div class="summary-total">
                     <strong th:text="${totalPolizas ?: 0}">0</strong>
@@ -168,7 +159,7 @@
                         </td>
                         <td class="actions poliza-actions">
                                 <button class="btn-icon js-ver-poliza" type="button" title="Ver detalles"
-                                    th:attr="data-url=@{/polizas/{id}/editar(id=${poliza.idPoliza})},data-creador-id=${poliza.usuario != null ? poliza.usuario.idUsuario : ''},data-contrato=${poliza.numeroContrato},data-fecha=${poliza.fechaCreacion},data-fecha-vencimiento=${poliza.fechaVencimiento},data-proveedor=${poliza.proveedor.idProv},data-cliente=${poliza.cliente},data-creador=${poliza.usuario != null ? poliza.usuario.nombre + ' ' + poliza.usuario.apellido : 'Sin información'},data-aprobador=${poliza.usuarioAprobacion != null ? poliza.usuarioAprobacion.nombre + ' ' + poliza.usuarioAprobacion.apellido : 'Sin aprobación'},data-sede=${poliza.sede != null ? poliza.sede.nombre : 'Sin información'},data-fecha-aprobacion=${poliza.fechaAprobacion != null ? poliza.fechaAprobacion : 'Sin aprobación'},data-usuario-terminacion=${poliza.usuarioTerminacion != null ? poliza.usuarioTerminacion.nombre + ' ' + poliza.usuarioTerminacion.apellido : 'Sin terminación'},data-fecha-terminacion=${poliza.fechaTerminacion != null ? poliza.fechaTerminacion : 'Sin terminación'},data-motivo-terminacion=${poliza.motivoTerminacion != null ? poliza.motivoTerminacion : 'Sin motivo'},data-prima=${poliza.valorPrima},data-valor-contrato=${poliza.valorContrato},data-estado=${poliza.getEstadoParaSede(sedeActualId)},data-descripcion=${poliza.descripcion},data-archivo-nombre=${poliza.contratoAdjuntoNombre != null ? poliza.contratoAdjuntoNombre : poliza.contratoAdjunto}">
+                                    th:attr="data-url=@{/polizas/{id}/editar(id=${poliza.idPoliza})},data-creador-id=${poliza.usuario != null ? poliza.usuario.idUsuario : ''},data-contrato=${poliza.numeroContrato},data-fecha=${poliza.fechaCreacion},data-fecha-vencimiento=${poliza.fechaVencimiento},data-proveedor=${poliza.proveedor.idProv},data-proveedor-nombre=${poliza.proveedor.nombre},data-proveedor-nit=${poliza.proveedor.nit},data-proveedor-ciudad=${poliza.proveedor.ciudad},data-proveedor-direccion=${poliza.proveedor.direccion},data-proveedor-telefono=${poliza.proveedor.telefono},data-proveedor-correo=${poliza.proveedor.correo},data-cliente=${poliza.cliente},data-creador=${poliza.usuario != null ? poliza.usuario.nombre + ' ' + poliza.usuario.apellido : 'Sin información'},data-aprobador=${poliza.usuarioAprobacion != null ? poliza.usuarioAprobacion.nombre + ' ' + poliza.usuarioAprobacion.apellido : 'Sin aprobación'},data-sede=${poliza.sede != null ? poliza.sede.nombre : 'Sin información'},data-fecha-aprobacion=${poliza.fechaAprobacion != null ? poliza.fechaAprobacion : 'Sin aprobación'},data-usuario-terminacion=${poliza.usuarioTerminacion != null ? poliza.usuarioTerminacion.nombre + ' ' + poliza.usuarioTerminacion.apellido : 'Sin terminación'},data-fecha-terminacion=${poliza.fechaTerminacion != null ? poliza.fechaTerminacion : 'Sin terminación'},data-motivo-terminacion=${poliza.motivoTerminacion != null ? poliza.motivoTerminacion : 'Sin motivo'},data-prima=${poliza.valorPrima},data-valor-contrato=${poliza.valorContrato},data-estado=${poliza.getEstadoParaSede(sedeActualId)},data-descripcion=${poliza.descripcion},data-archivo-nombre=${poliza.contratoAdjuntoNombre != null ? poliza.contratoAdjuntoNombre : poliza.contratoAdjunto}">
                                 <span class="material-symbols">visibility</span>
                             </button>
                             <form sec:authorize="hasAnyRole('APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')"
@@ -213,14 +204,33 @@
                 <div><span class="material-symbols">policy</span><div><h2 id="poliza-modal-title">Nueva Póliza</h2><p id="poliza-modal-description">Registra la información principal del contrato.</p></div></div>
                 <button class="modal-close" type="button" title="Cerrar"><span class="material-symbols">close</span></button>
             </div>
+            <div class="poliza-modal-scroll">
             <div class="poliza-form-grid">
                 <h3 class="section-title full-width">Partes del contrato</h3>
                 <label>Cliente<input class="input-control" type="text" name="cliente" required></label>
-                <label>Proveedor / expedidor<select class="input-control" name="idProveedor" required>
-                    <option value="">Selecciona un proveedor</option>
-                    <option th:each="proveedor : ${proveedores}" th:value="${proveedor.idProv}"
-                            th:text="${proveedor.nombre + ' - ' + proveedor.nit}">Proveedor</option>
-                </select></label>
+                <div class="proveedor-poliza-field">
+                    <label for="buscar-proveedor-poliza">Proveedor / expedidor</label>
+                    <div class="autocomplete-container proveedor-poliza-search">
+                        <input class="input-control" id="buscar-proveedor-poliza" type="text"
+                            placeholder="Buscar por NIT o nombre..." autocomplete="off" role="combobox"
+                            aria-autocomplete="list" aria-expanded="false"
+                            aria-controls="proveedor-poliza-resultados" required>
+                        <input type="hidden" name="idProveedor" id="id-proveedor-poliza">
+                        <div class="autocomplete-dropdown" id="proveedor-poliza-resultados" role="listbox"
+                            aria-label="Proveedores coincidentes"></div>
+                    </div>
+                    <div class="proveedor-poliza-card" id="proveedor-poliza-card" role="status" hidden>
+                        <div>
+                            <strong id="proveedor-poliza-nombre"></strong>
+                            <p id="proveedor-poliza-identificacion"></p>
+                            <p id="proveedor-poliza-direccion"></p>
+                            <p id="proveedor-poliza-contacto"></p>
+                        </div>
+                        <button type="button" id="btn-cambiar-proveedor-poliza" class="btn-secondary">
+                            Cambiar
+                        </button>
+                    </div>
+                </div>
 
                 <h3 class="section-title full-width">Identificación y vigencia</h3>
                 <div class="vigencia-grid full-width">
@@ -233,7 +243,8 @@
                     <h3 class="section-title">Sedes involucradas</h3>
                     <div class="sede-checkbox-grid" th:if="${sedes != null}">
                         <label th:each="sede : ${sedes}" class="checkbox-chip">
-                            <input type="checkbox" name="idsSedes" th:value="${sede.idSede}" checked>
+                            <input type="checkbox" name="idsSedes" th:value="${sede.idSede}"
+                                th:attr="data-sede-nacional=${#strings.equalsIgnoreCase(sede.nombre, 'Sede Nacional')}">
                             <span th:text="${sede.nombre}">Sede</span>
                         </label>
                     </div>
@@ -298,6 +309,7 @@
                     </div>
                 </div>
             </section>
+            </div>
             <div class="form-actions"><button class="btn-cancel btn-modal-secundario" type="button">Cancelar</button><button id="btn-guardar-poliza" class="btn-primary btn-modal-primario" type="submit">Guardar Póliza</button></div>
         </form>
     </dialog>
@@ -374,7 +386,8 @@
 
     <script th:src="@{/js/security.js(v=1)}"></script>
     <script th:src="@{/js/page-transition.js}"></script>
-    <script th:src="@{/js/polizas.js(v=8)}"></script>
+    <script th:src="@{/js/toast.js(v=1)}"></script>
+    <script th:src="@{/js/polizas.js(v=10)}"></script>
 </body>
 
 </html>

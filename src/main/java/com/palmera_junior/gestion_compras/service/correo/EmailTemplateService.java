@@ -55,7 +55,7 @@ public class EmailTemplateService {
 
         context.setVariable(
                 "proveedor",
-                orden.getProveedor() != null ? orden.getProveedor().getNombre() : ""
+                orden.getNombreProveedorSnapshot() != null ? orden.getNombreProveedorSnapshot() : ""
         );
 
         return templateEngine.process(
@@ -83,7 +83,7 @@ public class EmailTemplateService {
      * @return Cuerpo del mensaje en texto plano.
      */
     public String generarCuerpoFacturacion(OrdenCompra orden) {
-        String proveedor = orden.getProveedor() != null ? orden.getProveedor().getNombre() : "N/A";
+        String proveedor = orden.getNombreProveedorSnapshot() != null ? orden.getNombreProveedorSnapshot() : "N/A";
         String numeroFactura = orden.getNumeroFactura() != null ? orden.getNumeroFactura() : "N/A";
 
         return "Se registró correctamente la facturación de la Orden de Compra N° " + orden.getNumeroOrden() + ".\n\n"

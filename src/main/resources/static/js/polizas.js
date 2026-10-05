@@ -1,22 +1,5 @@
 function mostrarToast(mensaje, tipo = 'success') {
-    if (!mensaje) return;
-
-    let toast = document.getElementById('toast-root');
-    if (!toast) {
-        toast = document.createElement('div');
-        toast.id = 'toast-root';
-        document.body.appendChild(toast);
-    }
-
-    const item = document.createElement('div');
-    item.className = `toast-item toast-${tipo}`;
-    item.textContent = mensaje;
-    toast.appendChild(item);
-
-    setTimeout(() => {
-        item.classList.add('toast-hide');
-        setTimeout(() => item.remove(), 400);
-    }, 3000);
+    window.mostrarAppToast(mensaje, tipo);
 }
 
 async function obtenerMensajeError(response, mensajePorDefecto) {
@@ -238,6 +221,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const detallesPrimaBody = document.getElementById('tbody-detalles-prima');
     const formTitle = document.getElementById('poliza-modal-title');
     const formDescription = document.getElementById('poliza-modal-description');
+    const proveedorSearch = document.getElementById('buscar-proveedor-poliza');
+    const proveedorId = document.getElementById('id-proveedor-poliza');
+    const proveedorSearchContainer = document.querySelector('.proveedor-poliza-search');
+    const proveedorDropdown = document.getElementById('proveedor-poliza-resultados');
+    const proveedorCard = document.getElementById('proveedor-poliza-card');
+    const cambiarProveedorButton = document.getElementById('btn-cambiar-proveedor-poliza');
     const createAction = form?.getAttribute('action');
     const fechaDesde = document.getElementById('poliza-fecha-desde');
     const fechaHasta = document.getElementById('poliza-fecha-hasta');
@@ -253,6 +242,145 @@ document.addEventListener('DOMContentLoaded', () => {
         terminacion: document.querySelectorAll('.auditoria-terminacion')
     };
     let scrollOriginal = null;
+    let proveedorSearchTimer = null;
+    let proveedorSearchController = null;
+    let proveedorOpcionActiva = -1;
+
+    const cerrarResultadosProveedor = (abortar = false) => {
+        window.clearTimeout(proveedorSearchTimer);
+        if (abortar) {
+            proveedorSearchController?.abort();
+            proveedorSearchController = null;
+        }
+        proveedorDropdown?.replaceChildren();
+        if (proveedorDropdown) proveedorDropdown.style.display = 'none';
+        proveedorSearch?.setAttribute('aria-expanded', 'false');
+        proveedorSearch?.removeAttribute('aria-activedescendant');
+        proveedorOpcionActiva = -1;
+    };
+
+    const mostrarTarjetaProveedor = (proveedor) => {
+        proveedorId.value = proveedor.idProv || '';
+        proveedorSearch.value = '';
+        proveedorSearch.required = false;
+        document.getElementById('proveedor-poliza-nombre').textContent = proveedor.nombre || '';
+        document.getElementById('proveedor-poliza-identificacion').textContent =
+            `NIT ${proveedor.nit || ''}${proveedor.ciudad ? ` · ${proveedor.ciudad}` : ''}`;
+        document.getElementById('proveedor-poliza-direccion').textContent = proveedor.direccion || '';
+        document.getElementById('proveedor-poliza-contacto').textContent =
+            [proveedor.telefono, proveedor.correo].filter(Boolean).join(' · ');
+        cerrarResultadosProveedor(true);
+        proveedorSearchContainer.hidden = true;
+        proveedorCard.hidden = false;
+    };
+
+    const restablecerProveedorPoliza = () => {
+        cerrarResultadosProveedor(true);
+        proveedorId.value = '';
+        proveedorSearch.value = '';
+        proveedorSearch.required = true;
+        proveedorSearch.disabled = false;
+        proveedorSearchContainer.hidden = false;
+        proveedorCard.hidden = true;
+        cambiarProveedorButton.disabled = false;
+    };
+
+    proveedorSearch?.addEventListener('input', () => {
+        const termino = proveedorSearch.value.trim();
+        cerrarResultadosProveedor(true);
+        proveedorId.value = '';
+        proveedorSearch.required = true;
+        proveedorCard.hidden = true;
+        if (termino.length < 3) return;
+
+        proveedorSearchTimer = window.setTimeout(async () => {
+            const controller = new AbortController();
+            proveedorSearchController = controller;
+            try {
+                const response = await fetch(
+                    `/polizas/proveedores/buscar?query=${encodeURIComponent(termino)}`,
+                    { signal: controller.signal, headers: { Accept: 'application/json' } }
+                );
+                if (!response.ok) throw new Error('No fue posible buscar proveedores.');
+                const proveedores = await response.json();
+                if (controller.signal.aborted || proveedorSearch.value.trim() !== termino) return;
+                proveedorDropdown.replaceChildren();
+
+                if (!proveedores.length) {
+                    const sinResultados = document.createElement('div');
+                    sinResultados.className = 'proveedor-poliza-no-results';
+                    sinResultados.textContent = 'No se encontraron proveedores.';
+                    proveedorDropdown.appendChild(sinResultados);
+                } else {
+                    proveedores.slice(0, 8).forEach((proveedor, index) => {
+                        const opcion = document.createElement('button');
+                        opcion.type = 'button';
+                        opcion.className = 'autocomplete-item proveedor-poliza-option';
+                        opcion.id = `proveedor-poliza-opcion-${index}`;
+                        opcion.setAttribute('role', 'option');
+                        opcion.setAttribute('aria-selected', 'false');
+                        const nombreProveedor = document.createElement('span');
+                        nombreProveedor.textContent = proveedor.nombre || '';
+                        const detalleProveedor = document.createElement('small');
+                        detalleProveedor.textContent = `NIT: ${proveedor.nit || ''}${proveedor.ciudad ? ` · ${proveedor.ciudad}` : ''}`;
+                        opcion.append(nombreProveedor, detalleProveedor);
+                        opcion.addEventListener('mousedown', (event) => event.preventDefault());
+                        opcion.addEventListener('click', () => mostrarTarjetaProveedor(proveedor));
+                        proveedorDropdown.appendChild(opcion);
+                    });
+                }
+                proveedorDropdown.style.display = 'block';
+                proveedorSearch.setAttribute('aria-expanded', 'true');
+            } catch (error) {
+                if (error.name !== 'AbortError') {
+                    mostrarToast('No fue posible cargar las sugerencias de proveedor.', 'error');
+                }
+                proveedorDropdown.replaceChildren();
+                proveedorDropdown.style.display = 'none';
+            } finally {
+                if (proveedorSearchController === controller) proveedorSearchController = null;
+            }
+        }, 250);
+    });
+
+    proveedorSearch?.addEventListener('keydown', (event) => {
+        const opciones = [...(proveedorDropdown?.querySelectorAll('[role="option"]') || [])];
+        if (event.key === 'Escape' && proveedorDropdown?.style.display === 'block') {
+            event.preventDefault();
+            event.stopPropagation();
+            cerrarResultadosProveedor(true);
+            return;
+        }
+        if ((event.key === 'ArrowDown' || event.key === 'ArrowUp') && opciones.length) {
+            event.preventDefault();
+            const delta = event.key === 'ArrowDown' ? 1 : -1;
+            proveedorOpcionActiva = proveedorOpcionActiva < 0
+                ? (delta > 0 ? 0 : opciones.length - 1)
+                : (proveedorOpcionActiva + delta + opciones.length) % opciones.length;
+            opciones.forEach((opcion, index) => {
+                const activa = index === proveedorOpcionActiva;
+                opcion.classList.toggle('active', activa);
+                opcion.setAttribute('aria-selected', String(activa));
+            });
+            proveedorSearch.setAttribute('aria-activedescendant', opciones[proveedorOpcionActiva].id);
+        } else if (event.key === 'Enter' && opciones.length) {
+            const indice = proveedorOpcionActiva >= 0
+                ? proveedorOpcionActiva
+                : opciones.length === 1 ? 0 : -1;
+            if (indice >= 0) {
+                event.preventDefault();
+                opciones[indice].click();
+            }
+        }
+    });
+
+    cambiarProveedorButton?.addEventListener('click', () => {
+        restablecerProveedorPoliza();
+        proveedorSearch.focus();
+    });
+    document.addEventListener('click', (event) => {
+        if (!event.target.closest('.proveedor-poliza-field')) cerrarResultadosProveedor(true);
+    });
 
     const actualizarAuditoria = ({ creador, aprobador, sede, fechaAprobacion, terminadoPor, fechaTerminacion, motivoTerminacion }) => {
         if (auditoria.creador) auditoria.creador.textContent = creador || 'Sin información';
@@ -347,7 +475,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const checkboxes = form?.querySelectorAll('input[name="idsSedes"]') || [];
         checkboxes.forEach((checkbox) => {
             const esSedePropia = String(checkbox.value) === String(sedeActualId);
-            checkbox.checked = esSedeNacional || esSedePropia;
+            checkbox.checked = esSedeNacional
+                ? checkbox.dataset.sedeNacional === 'true'
+                : esSedePropia;
         });
         configurarSedesParaEdicion(true);
         actualizarResumenSedes();
@@ -416,6 +546,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const prepararNueva = () => {
         form?.reset();
+        restablecerProveedorPoliza();
         reiniciarDetallesPrima();
         configurarEdicionDetallesPrima(true);
         if (form && createAction) form.setAttribute('action', createAction);
@@ -464,6 +595,15 @@ document.addEventListener('DOMContentLoaded', () => {
         campos.fechaVencimiento.value = button.dataset.fechaVencimiento || '';
         campos.numeroContrato.value = button.dataset.contrato || '';
         campos.idProveedor.value = button.dataset.proveedor || '';
+        mostrarTarjetaProveedor({
+            idProv: button.dataset.proveedor || '',
+            nombre: button.dataset.proveedorNombre || '',
+            nit: button.dataset.proveedorNit || '',
+            ciudad: button.dataset.proveedorCiudad || '',
+            direccion: button.dataset.proveedorDireccion || '',
+            telefono: button.dataset.proveedorTelefono || '',
+            correo: button.dataset.proveedorCorreo || ''
+        });
         campos.cliente.value = button.dataset.cliente || '';
         campos.valorPrima.value = button.dataset.prima || '';
         campos.valorContrato.value = button.dataset.valorContrato || '';
@@ -500,6 +640,7 @@ document.addEventListener('DOMContentLoaded', () => {
         form.querySelectorAll('input, select, textarea').forEach((control) => {
             control.disabled = !puedeEditar;
         });
+        if (cambiarProveedorButton) cambiarProveedorButton.disabled = !puedeEditar;
 
         const checkboxes = form.querySelectorAll('input[name="idsSedes"]');
         checkboxes.forEach((checkbox) => {
@@ -589,6 +730,14 @@ document.addEventListener('DOMContentLoaded', () => {
     form?.addEventListener('submit', async (event) => {
         event.preventDefault();
         if (!saveButton) return;
+        if (!proveedorId.value) {
+            mostrarToast('Selecciona un proveedor de la lista para continuar.', 'error');
+            proveedorSearchContainer.hidden = false;
+            proveedorCard.hidden = true;
+            proveedorSearch.required = true;
+            proveedorSearch.focus();
+            return;
+        }
         if (!form.checkValidity()) {
             form.reportValidity();
             return;

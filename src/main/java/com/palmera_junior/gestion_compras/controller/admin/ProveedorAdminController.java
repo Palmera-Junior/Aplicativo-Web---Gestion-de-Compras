@@ -44,12 +44,12 @@ public class ProveedorAdminController {
      * - Ruta HTTP: GET /admin/proveedores/pagina
      * - Seguridad: `@PreAuthorize("hasRole('ADMINISTRADOR')")`
      * - Servicio delegado: {@link IProveedorService#paginar(int, int)} -> ProveedorRepository
-     * - Fragmento renderizado: "admin :: proveedoresFragment"
+    * - Fragmento renderizado: "catalogos :: proveedoresFragment"
      * 
      * @param model Modelo para inyectar la página y metadatos.
      * @param pageProveedores Índice de página.
      * @param size Cantidad de elementos por página.
-     * @return Fragmento Thymeleaf `admin :: proveedoresFragment`.
+    * @return Fragmento Thymeleaf `catalogos :: proveedoresFragment`.
      */
     @GetMapping("/admin/proveedores/pagina")
     @PreAuthorize("hasAnyRole('SUPERADMINISTRADOR', 'ADMINISTRADOR')")
@@ -60,7 +60,7 @@ public class ProveedorAdminController {
         model.addAttribute("proveedoresPage", proveedoresPage);
         model.addAttribute("pageProveedores", pageProveedores);
         model.addAttribute("size", size);
-        return "admin :: proveedoresFragment";
+        return "catalogos :: proveedoresFragment";
     }
 
     /**
@@ -88,7 +88,7 @@ public class ProveedorAdminController {
     @PostMapping("/admin/proveedores")
     @PreAuthorize("hasAnyRole('SUPERADMINISTRADOR', 'ADMINISTRADOR')")
     public String guardarProveedor(@RequestParam(required = false) Integer idProv,
-            @RequestParam String nit,
+            @RequestParam Long nit,
             @RequestParam String nombre,
             @RequestParam(required = false) String ciudad,
             @RequestParam(required = false) String direccion,
@@ -101,10 +101,10 @@ public class ProveedorAdminController {
             proveedorService.guardar(idProv, nit, nombre, ciudad, direccion, telefono, correo, sedeIds);
             redirectAttributes.addAttribute("success",
                     idProv == null ? "Proveedor creado correctamente." : "Proveedor actualizado correctamente.");
-            return "redirect:/admin";
+            return "redirect:/admin/catalogos/proveedores";
         } catch (IllegalArgumentException ex) {
             redirectAttributes.addAttribute("error", ex.getMessage());
-            return "redirect:/admin";
+            return "redirect:/admin/catalogos/proveedores";
         }
     }
 

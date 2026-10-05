@@ -4,7 +4,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.ui.Model;
 
 /**
- * Contrato del servicio coordinador de la interfaz principal del Dashboard de Gestión de Compras.
+ * Contrato del servicio coordinador de la interfaz principal de Órdenes de Compra.
  */
 public interface IDashboardService {
 
@@ -15,7 +15,7 @@ public interface IDashboardService {
      * 
      * A dónde apunta:
      * - Servicios consultados: {@link com.palmera_junior.gestion_compras.service.usuario.IUsuarioService}, {@link com.palmera_junior.gestion_compras.service.orden.IOrdenCompraService}, {@link com.palmera_junior.gestion_compras.service.catalogo.IProveedorService}, {@link com.palmera_junior.gestion_compras.service.catalogo.IProductoService}, {@link com.palmera_junior.gestion_compras.service.organizacion.ICentroCostoService}, {@link com.palmera_junior.gestion_compras.service.correo.CorreoOrdenOutboxService}
-     * - Retorno: Vista Thymeleaf "dashboard" (templates/dashboard.html).
+     * - Retorno: Vista Thymeleaf "compras" (templates/compras.html).
      * 
      * @param page Índice de página actual.
      * @param size Registros por página.
@@ -26,7 +26,7 @@ public interface IDashboardService {
      * @param soloModificadas Filtro booleano para órdenes con diferencias en recepción.
      * @param model Modelo para Thymeleaf.
      * @param authentication Información del usuario en sesión.
-     * @return Nombre de la plantilla ("dashboard").
+     * @return Nombre de la plantilla ("compras").
      */
     String prepararModeloDashboard(int page, int size, String q, String fechaDesde, String fechaHasta,
             String estado, boolean soloModificadas, Model model, Authentication authentication);

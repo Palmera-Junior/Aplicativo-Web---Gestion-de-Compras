@@ -15,6 +15,8 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.palmera_junior.gestion_compras.entity.Poliza;
+import com.palmera_junior.gestion_compras.entity.EstadoAprobacionSede;
+import com.palmera_junior.gestion_compras.entity.EstadoPoliza;
 
 public interface PolizaRepository extends JpaRepository<Poliza, Integer>, JpaSpecificationExecutor<Poliza> {
 
@@ -30,6 +32,21 @@ public interface PolizaRepository extends JpaRepository<Poliza, Integer>, JpaSpe
     Optional<Poliza> findByNumeroContrato(String numeroContrato);
 
     Page<Poliza> findAllByOrderByIdPolizaDesc(Pageable pageable);
+
+    long countByEstadoAndSedeIdSede(EstadoPoliza estado, Integer idSede);
+
+    /**
+     * Qué hace: Cuenta las pólizas en estado borrador que aún tienen aprobaciones pendientes para una sede específica.
+     * Solo considera registros cuya aprobación asociada a la sede esté en estado pendiente.
+     *
+     * A dónde apunta: Tabla `poliza`, relación `aprobaciones_por_sede` y entidad `sede`.
+     */
+    @Query("select count(distinct p) from Poliza p join p.aprobacionesPorSede aprobacion "
+            + "where p.estado = :estado and aprobacion.sede.idSede = :idSede "
+            + "and aprobacion.estado = :estadoAprobacion")
+    long countPendientesAprobacionPorSede(@Param("estado") EstadoPoliza estado,
+            @Param("idSede") Integer idSede,
+            @Param("estadoAprobacion") EstadoAprobacionSede estadoAprobacion);
 
     @EntityGraph(attributePaths = { "proveedor", "sede", "usuario", "usuarioAprobacion", "detallesPrima" })
     @Query("select p from Poliza p where p.idPoliza = :idPoliza")

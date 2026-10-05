@@ -1,6 +1,8 @@
 package com.palmera_junior.gestion_compras.service.catalogo;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -9,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.palmera_junior.gestion_compras.entity.Proveedor;
+import com.palmera_junior.gestion_compras.entity.Sede;
 import com.palmera_junior.gestion_compras.repository.ProveedorRepository;
 import com.palmera_junior.gestion_compras.repository.SedeRepository;
 
@@ -37,6 +40,22 @@ public class ProveedorService implements IProveedorService {
     @Override
     public List<Proveedor> listarPorSede(Integer idSede) {
         return proveedorRepository.findBySedesIdSedeOrderByNombreAsc(idSede);
+    }
+
+    @Override
+    public List<Proveedor> buscarPorTerminoEnSede(Integer idSede, String termino) {
+        if (idSede == null || termino == null || termino.trim().length() < 2) {
+            return List.of();
+        }
+        return proveedorRepository.buscarPorNombreONitEnSede(idSede, termino.trim(), PageRequest.of(0, 8));
+    }
+
+    @Override
+    public List<Proveedor> buscarPorTerminoNacional(String termino) {
+        if (termino == null || termino.trim().length() < 2) {
+            return List.of();
+        }
+        return proveedorRepository.buscarPorNombreONit(termino.trim(), PageRequest.of(0, 8));
     }
 
     /**
@@ -72,16 +91,15 @@ public class ProveedorService implements IProveedorService {
      */
     @Override
     @Transactional
-    public Proveedor guardar(Integer idProv, String nit, String nombre, String ciudad, String direccion,
+    public Proveedor guardar(Integer idProv, Long nit, String nombre, String ciudad, String direccion,
             String telefono, String correo, List<Integer> sedeIds) {
-        nit = normalizar(nit);
         nombre = normalizar(nombre);
-        if (!StringUtils.hasText(nit) || !StringUtils.hasText(nombre)) {
+        if (nit == null || !StringUtils.hasText(nombre)) {
             throw new IllegalArgumentException("El NIT y el nombre del proveedor son obligatorios.");
         }
 
         if (idProv == null) {
-            if (proveedorRepository.findByNitIgnoreCase(nit).isPresent()) {
+            if (proveedorRepository.findByNit(nit).isPresent()) {
                 throw new IllegalArgumentException("Ya existe un proveedor con ese NIT.");
             }
             Proveedor proveedor = new Proveedor();
@@ -91,15 +109,13 @@ public class ProveedorService implements IProveedorService {
             proveedor.setDireccion(direccion);
             proveedor.setTelefono(telefono);
             proveedor.setCorreo(correo);
-            if (sedeIds != null) {
-                proveedor.getSedes().addAll(sedeRepository.findAllById(sedeIds));
-            }
+            proveedor.getSedes().addAll(resolverSedes(sedeIds));
             return proveedorRepository.save(proveedor);
         }
 
         Proveedor proveedor = proveedorRepository.findById(idProv)
                 .orElseThrow(() -> new IllegalArgumentException("Proveedor no encontrado para actualizar."));
-        if (proveedorRepository.findByNitIgnoreCase(nit).filter(p -> !p.getIdProv().equals(idProv)).isPresent()) {
+        if (proveedorRepository.findByNit(nit).filter(p -> !p.getIdProv().equals(idProv)).isPresent()) {
             throw new IllegalArgumentException("Hay otro proveedor con el mismo NIT.");
         }
         proveedor.setNit(nit);
@@ -109,10 +125,24 @@ public class ProveedorService implements IProveedorService {
         proveedor.setTelefono(telefono);
         proveedor.setCorreo(correo);
         proveedor.getSedes().clear();
-        if (sedeIds != null) {
-            proveedor.getSedes().addAll(sedeRepository.findAllById(sedeIds));
-        }
+        proveedor.getSedes().addAll(resolverSedes(sedeIds));
         return proveedorRepository.save(proveedor);
+    }
+
+    /**
+     * Qué hace: Resuelve las sedes asociadas al proveedor a partir de los IDs recibidos en el formulario,
+     * y asegura que siempre quede incluida la sede nacional como relación base del registro.
+     *
+     * A dónde apunta: {@link SedeRepository#findAllById(Iterable)} y {@link SedeRepository#findByNombreIgnoreCase(String)}.
+     */
+    private Set<Sede> resolverSedes(List<Integer> sedeIds) {
+        Set<Sede> sedes = new HashSet<>();
+        if (sedeIds != null && !sedeIds.isEmpty()) {
+            sedes.addAll(sedeRepository.findAllById(sedeIds));
+        }
+        sedes.add(sedeRepository.findByNombreIgnoreCase("Sede Nacional")
+                .orElseThrow(() -> new IllegalArgumentException("No se encontró la sede Nacional.")));
+        return sedes;
     }
 
     /**

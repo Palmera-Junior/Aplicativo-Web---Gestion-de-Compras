@@ -1,6 +1,6 @@
 /**
  * =============================================================================
- * MÓDULO DE DASHBOARD PRINCIPAL (dashboard.js)
+ * MÓDULO DE COMPRAS PRINCIPAL (compras.js)
  * =============================================================================
  * Controla la lógica de interfaz de usuario para el panel principal de compras (/dashboard):
  * - Creación y edición de órdenes de compra con cálculo de subtotales, IVA, descuento y flete.
@@ -31,22 +31,7 @@ function reportClientError(mensaje, detalle) {
 
 function mostrarToast(mensaje, tipo) {
     tipo = tipo || 'success';
-    let toast = document.getElementById('toast-root');
-    if (!toast) {
-        toast = document.createElement('div');
-        toast.id = 'toast-root';
-        document.body.appendChild(toast);
-    }
-    const t = document.createElement('div');
-    t.className = 'toast-item toast-' + tipo;
-    t.textContent = mensaje;
-    toast.appendChild(t);
-
-    // Ocultar automáticamente a los 3 segundos
-    setTimeout(() => {
-        t.classList.add('toast-hide');
-        setTimeout(() => t.remove(), 400);
-    }, 3000);
+    window.mostrarAppToast(mensaje, tipo);
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -167,6 +152,15 @@ function resetFormularioOrden() {
         }
     });
 
+    const buscarProveedor = document.getElementById('buscar-proveedor');
+    const idProveedorSeleccionado = document.getElementById('id-proveedor-seleccionado');
+    if (buscarProveedor) buscarProveedor.value = '';
+    if (idProveedorSeleccionado) idProveedorSeleccionado.value = '';
+    cerrarDropdownProveedor(true);
+    document.getElementById('proveedor-search-section').hidden = false;
+    document.getElementById('proveedor-selected-card').hidden = true;
+    document.getElementById('proveedor-new-panel').hidden = true;
+
     const observaciones = document.querySelector('#modal-orden textarea');
     if (observaciones) {
         observaciones.value = '';
@@ -269,11 +263,11 @@ function setModalOrdenModoVista(esVista) {
         boton.disabled = esVista;
         boton.style.display = esVista ? 'none' : 'inline-block';
     });
+    document.querySelectorAll('#btn-crear-proveedor-link, #btn-cambiar-proveedor, #btn-usar-proveedor-nuevo, #btn-cancelar-proveedor-nuevo')
+        .forEach(boton => boton.disabled = esVista);
 }
 
 //Codigo de los campos del proveedor ##################################################################33
-
-const selectProveedor = document.getElementById("select-proveedor");
 
 const nit = document.getElementById("prov-nit");
 const nombre = document.getElementById("prov-nombre");
@@ -281,6 +275,27 @@ const ciudad = document.getElementById("prov-ciudad");
 const direccion = document.getElementById("prov-direccion");
 const telefono = document.getElementById("prov-telefono");
 const email = document.getElementById("prov-email");
+const buscarProveedor = document.getElementById("buscar-proveedor");
+const idProveedorSeleccionado = document.getElementById("id-proveedor-seleccionado");
+const dropdownProveedor = document.getElementById("proveedor-autocomplete-dropdown");
+const proveedorSearchSection = document.getElementById("proveedor-search-section");
+const proveedorSelectedCard = document.getElementById("proveedor-selected-card");
+const proveedorNewPanel = document.getElementById("proveedor-new-panel");
+let proveedorSearchController = null;
+let proveedorAutocompleteTimer = null;
+let proveedorOpcionActiva = -1;
+
+nit?.addEventListener('input', () => {
+    const valor = nit.value.trim();
+    if (valor && !/^\d+$/.test(valor)) {
+        if (nit.dataset.nitToastShown !== 'true') {
+            mostrarToast('El NIT del proveedor solo debe contener números.', 'error');
+            nit.dataset.nitToastShown = 'true';
+        }
+        return;
+    }
+    delete nit.dataset.nitToastShown;
+});
 
 const campos = [
     nit,
@@ -291,45 +306,242 @@ const campos = [
     email
 ];
 
-selectProveedor.addEventListener("change", function () {
-
-    const opcion = this.options[this.selectedIndex];
-
-    // Opción "Otro"
-    if (this.value === "otro") {
-
-        campos.forEach(campo => {
-            campo.disabled = false;
-            campo.value = "";
-        });
-
-        return;
-    }
-
-    // Ningún proveedor seleccionado
-    if (this.value === "") {
-
-        campos.forEach(campo => {
-            campo.disabled = true;
-            campo.value = "";
-        });
-
-        return;
-    }
-
-    // Proveedor existente
-    nit.value = opcion.dataset.nit || "";
-    nombre.value = opcion.dataset.nombre || "";
-    ciudad.value = opcion.dataset.ciudad || "";
-    direccion.value = opcion.dataset.direccion || "";
-    telefono.value = opcion.dataset.telefono || "";
-    email.value = opcion.dataset.email || "";
-
-    // Permitir edición de los datos del proveedor existente en el modal
+function aplicarProveedor(proveedor) {
+    delete nit.dataset.nitToastShown;
+    idProveedorSeleccionado.value = proveedor.idProv || "";
+    nit.value = proveedor.nit || "";
+    nombre.value = proveedor.nombre || "";
+    ciudad.value = proveedor.ciudad || "";
+    direccion.value = proveedor.direccion || "";
+    telefono.value = proveedor.telefono || "";
+    email.value = proveedor.correo || "";
     campos.forEach(campo => {
         campo.disabled = false;
     });
+    cerrarDropdownProveedor(true);
+    mostrarTarjetaProveedor(false);
+}
 
+function mostrarTarjetaProveedor(esNuevo) {
+    document.getElementById("proveedor-card-name").textContent = nombre.value.trim();
+    document.getElementById("proveedor-card-location").textContent =
+        `NIT ${nit.value.trim()}${ciudad.value.trim() ? ` · ${ciudad.value.trim()}` : ""}`;
+    document.getElementById("proveedor-card-address").textContent = direccion.value.trim();
+    const contacto = [telefono.value.trim(), email.value.trim()].filter(Boolean);
+    document.getElementById("proveedor-card-contact").textContent = contacto.length
+        ? `Tel. ${contacto.join(" · ")}`
+        : "";
+    document.getElementById("proveedor-card-badge").hidden = !esNuevo;
+    proveedorSearchSection.hidden = true;
+    proveedorNewPanel.hidden = true;
+    proveedorSelectedCard.hidden = false;
+}
+
+function cerrarDropdownProveedor(abortarSolicitud = false) {
+    clearTimeout(proveedorAutocompleteTimer);
+    if (abortarSolicitud && proveedorSearchController) {
+        proveedorSearchController.abort();
+        proveedorSearchController = null;
+    }
+    dropdownProveedor.replaceChildren();
+    dropdownProveedor.style.display = "none";
+    dropdownProveedor.setAttribute("aria-expanded", "false");
+    buscarProveedor.setAttribute("aria-expanded", "false");
+    buscarProveedor.removeAttribute("aria-activedescendant");
+    proveedorOpcionActiva = -1;
+}
+
+function mostrarFormularioProveedorNuevo(termino = buscarProveedor.value.trim()) {
+    cerrarDropdownProveedor(true);
+    idProveedorSeleccionado.value = "";
+    campos.forEach(campo => {
+        campo.value = "";
+        campo.disabled = false;
+    });
+    if (/^\d+$/.test(termino)) {
+        nit.value = termino;
+    } else {
+        nombre.value = termino;
+    }
+    proveedorSearchSection.hidden = true;
+    proveedorSelectedCard.hidden = true;
+    proveedorNewPanel.hidden = false;
+    nit.focus();
+    nit.setSelectionRange(nit.value.length, nit.value.length);
+}
+
+function volverABuscarProveedor() {
+    cerrarDropdownProveedor(true);
+    buscarProveedor.value = "";
+    idProveedorSeleccionado.value = "";
+    campos.forEach(campo => {
+        campo.value = "";
+        campo.disabled = false;
+    });
+    proveedorNewPanel.hidden = true;
+    proveedorSelectedCard.hidden = true;
+    proveedorSearchSection.hidden = false;
+    buscarProveedor.focus();
+}
+
+function seleccionarProveedorNuevo() {
+    const campoIncompleto = campos.find(campo => !campo.value.trim());
+    if (campoIncompleto) {
+        mostrarToast("Complete los seis campos obligatorios del proveedor.", "error");
+        campoIncompleto.focus();
+        return;
+    }
+    if (!/^\d+$/.test(nit.value.trim())) {
+        mostrarToast("El NIT del proveedor solo debe contener números.", "error");
+        nit.focus();
+        return;
+    }
+    if (!email.checkValidity()) {
+        mostrarToast("Ingrese un email válido para el proveedor.", "error");
+        email.focus();
+        return;
+    }
+    idProveedorSeleccionado.value = "";
+    mostrarTarjetaProveedor(true);
+}
+
+function agregarOpcionProveedor(proveedor, index) {
+    const item = document.createElement("button");
+    item.type = "button";
+    item.id = `proveedor-opcion-${index}`;
+    item.className = "autocomplete-item proveedor-autocomplete-option";
+    item.setAttribute("role", "option");
+    item.setAttribute("aria-selected", "false");
+
+    const titulo = document.createElement("span");
+    titulo.textContent = proveedor.nombre || "";
+    const detalle = document.createElement("small");
+    detalle.textContent = `NIT: ${proveedor.nit || ""}${proveedor.ciudad ? ` · ${proveedor.ciudad}` : ""}`;
+    item.append(titulo, detalle);
+    item.addEventListener("click", () => aplicarProveedor(proveedor));
+    dropdownProveedor.appendChild(item);
+}
+
+function agregarOpcionOtro() {
+    const mensaje = document.createElement("div");
+    mensaje.className = "proveedor-no-results";
+    mensaje.textContent = "No encontramos coincidencias.";
+    dropdownProveedor.appendChild(mensaje);
+
+    const item = document.createElement("button");
+    item.type = "button";
+    item.id = "proveedor-opcion-otro";
+    item.className = "autocomplete-item proveedor-autocomplete-option proveedor-other-option";
+    item.setAttribute("role", "option");
+    item.setAttribute("aria-selected", "false");
+    item.textContent = "Otro · registrar proveedor nuevo";
+    item.addEventListener("click", () => mostrarFormularioProveedorNuevo());
+    dropdownProveedor.appendChild(item);
+}
+
+buscarProveedor.addEventListener("input", function () {
+    const termino = this.value.trim();
+    cerrarDropdownProveedor(true);
+    idProveedorSeleccionado.value = "";
+    delete nit.dataset.nitToastShown;
+
+    campos.forEach(campo => {
+        campo.disabled = false;
+        campo.value = "";
+    });
+    if (/^\d+$/.test(termino)) {
+        nit.value = termino;
+    } else {
+        nombre.value = termino;
+    }
+
+    if (termino.length < 3) {
+        return;
+    }
+
+    proveedorAutocompleteTimer = setTimeout(async () => {
+        const controller = new AbortController();
+        proveedorSearchController = controller;
+        try {
+            const response = await fetch(`/dashboard/proveedores/buscar?query=${encodeURIComponent(termino)}`, {
+                signal: controller.signal
+            });
+            if (!response.ok) throw new Error("No fue posible consultar los proveedores.");
+            const proveedores = await response.json();
+            if (buscarProveedor.value.trim() !== termino || idProveedorSeleccionado.value || controller.signal.aborted) return;
+            dropdownProveedor.replaceChildren();
+
+            if (!proveedores?.length) {
+                agregarOpcionOtro();
+            } else {
+                proveedores.forEach(agregarOpcionProveedor);
+            }
+
+            dropdownProveedor.style.display = "block";
+            dropdownProveedor.setAttribute("aria-expanded", "true");
+            buscarProveedor.setAttribute("aria-expanded", "true");
+        } catch (error) {
+            if (error.name === "AbortError") return;
+            reportClientError('Error al cargar sugerencias de proveedor.', error);
+            cerrarDropdownProveedor();
+        } finally {
+            if (proveedorSearchController === controller) {
+                proveedorSearchController = null;
+            }
+        }
+    }, 250);
+});
+
+buscarProveedor.addEventListener("keydown", event => {
+    const opciones = [...dropdownProveedor.querySelectorAll("[role='option']")];
+    if (event.key === "Escape") {
+        if (!dropdownProveedor.hidden && dropdownProveedor.style.display === "block") {
+            event.preventDefault();
+            cerrarDropdownProveedor(true);
+        } else if (!proveedorNewPanel.hidden) {
+            event.preventDefault();
+            volverABuscarProveedor();
+        }
+        return;
+    }
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+        if (!opciones.length) return;
+        event.preventDefault();
+        const delta = event.key === "ArrowDown" ? 1 : -1;
+        proveedorOpcionActiva = proveedorOpcionActiva < 0
+            ? (delta > 0 ? 0 : opciones.length - 1)
+            : (proveedorOpcionActiva + delta + opciones.length) % opciones.length;
+        opciones.forEach((opcion, index) => {
+            const activa = index === proveedorOpcionActiva;
+            opcion.classList.toggle("active", activa);
+            opcion.setAttribute("aria-selected", String(activa));
+        });
+        buscarProveedor.setAttribute("aria-activedescendant", opciones[proveedorOpcionActiva].id);
+    } else if (event.key === "Enter" && opciones.length) {
+        const indice = proveedorOpcionActiva >= 0 ? proveedorOpcionActiva : opciones.length === 1 ? 0 : -1;
+        if (indice >= 0) {
+            event.preventDefault();
+            opciones[indice].click();
+        }
+    }
+});
+
+document.getElementById("btn-crear-proveedor-link").addEventListener("click", () =>
+    mostrarFormularioProveedorNuevo());
+document.getElementById("btn-usar-proveedor-nuevo").addEventListener("click", seleccionarProveedorNuevo);
+document.getElementById("btn-cancelar-proveedor-nuevo").addEventListener("click", volverABuscarProveedor);
+document.getElementById("btn-cambiar-proveedor").addEventListener("click", volverABuscarProveedor);
+proveedorNewPanel.addEventListener("keydown", event => {
+    if (event.key === "Escape") {
+        event.preventDefault();
+        volverABuscarProveedor();
+    }
+});
+
+document.addEventListener("click", event => {
+    if (!event.target.closest("#buscar-proveedor, #proveedor-autocomplete-dropdown")) {
+        cerrarDropdownProveedor(true);
+    }
 });
 
 
@@ -343,6 +555,12 @@ document.addEventListener("change", async function (e) {
     }
 
     const codigo = e.target.value.trim();
+
+    const dropdownCodigo = e.target.closest(".codigo-autocomplete-container")
+        ?.querySelector(".autocomplete-dropdown");
+    if (codigo.length < 3 || dropdownCodigo?.style.display === "block") {
+        return;
+    }
 
     const fila = e.target.closest("tr");
 
@@ -534,6 +752,7 @@ document.addEventListener("input", function (e) {
 // .autocomplete-dropdown no existe, se crea automáticamente en la fila.
 
 let autocompleteTimer = null;
+const codigoAutocompleteState = new WeakMap();
 
 // Asegura que la fila tenga su dropdown
 // obtenerDropdown(input)
@@ -544,9 +763,8 @@ let autocompleteTimer = null;
 // - Endpoints: Ninguno.
 function obtenerDropdown(input) {
     const container = input.closest(".autocomplete-container");
-    if (!container) {
-        return null;
-    }
+    if (!container) return null;
+
     let dropdown = container.querySelector(".autocomplete-dropdown");
     if (!dropdown) {
         dropdown = document.createElement("div");
@@ -555,6 +773,98 @@ function obtenerDropdown(input) {
     }
     return dropdown;
 }
+
+function cerrarAutocompleteCodigo(input, abortar = false) {
+    const estado = codigoAutocompleteState.get(input);
+    if (!estado) return;
+    clearTimeout(estado.timer);
+    if (abortar) estado.controller?.abort();
+    const dropdown = estado.dropdown;
+    dropdown.replaceChildren();
+    dropdown.style.display = "none";
+}
+
+function aplicarProductoEnFila(inputCodigo, producto) {
+    const fila = inputCodigo.closest("tr");
+    const campoDescripcion = fila?.querySelector(".descripcion-producto");
+    const campoPresentacion = fila?.querySelector(".presentacion-producto");
+    const campoValorUnitario = fila?.querySelector(".valor-unitario");
+
+    inputCodigo.value = producto.codigoInventario || "";
+    inputCodigo.dataset.idProducto = producto.idProducto || "";
+    if (campoDescripcion) {
+        campoDescripcion.value = producto.nombre || "";
+        campoDescripcion.dataset.idProducto = producto.idProducto || "";
+    }
+    if (campoPresentacion) {
+        poblarPresentacionEnFila(campoPresentacion, producto.presentaciones, campoValorUnitario, fila);
+    }
+    cerrarAutocompleteCodigo(inputCodigo, true);
+}
+
+function buscarCoincidenciasPorCodigo(input) {
+    const termino = input.value.trim();
+    const dropdown = obtenerDropdown(input);
+    if (!dropdown) return;
+
+    let estado = codigoAutocompleteState.get(input);
+    if (!estado) {
+        estado = { timer: null, controller: null, dropdown };
+        codigoAutocompleteState.set(input, estado);
+    }
+    estado.dropdown = dropdown;
+    clearTimeout(estado.timer);
+    estado.controller?.abort();
+    dropdown.replaceChildren();
+    dropdown.style.display = "none";
+
+    if (!termino) return;
+
+    estado.timer = setTimeout(async () => {
+        const controller = new AbortController();
+        estado.controller = controller;
+        try {
+            const response = await fetch(
+                `/dashboard/productos/buscar?query=${encodeURIComponent(termino)}`,
+                { signal: controller.signal }
+            );
+            if (!response.ok) throw new Error("No fue posible buscar productos.");
+            const productos = await response.json();
+            if (controller.signal.aborted || input.value.trim() !== termino) return;
+
+            dropdown.replaceChildren();
+            (productos || []).slice(0, 5).forEach(producto => {
+                const item = document.createElement("div");
+                item.className = "autocomplete-item";
+                item.setAttribute("role", "option");
+                item.textContent = producto.codigoInventario || "Sin código";
+                const subtexto = document.createElement("small");
+                subtexto.textContent = producto.nombre || "";
+                item.appendChild(subtexto);
+                item.addEventListener("mousedown", event => {
+                    event.preventDefault();
+                    aplicarProductoEnFila(input, producto);
+                });
+                dropdown.appendChild(item);
+            });
+            if (dropdown.childElementCount) dropdown.style.display = "block";
+        } catch (error) {
+            if (error.name !== "AbortError") {
+                reportClientError("Error al buscar coincidencias de producto.", error);
+            }
+            dropdown.replaceChildren();
+            dropdown.style.display = "none";
+        } finally {
+            if (estado.controller === controller) estado.controller = null;
+        }
+    }, 250);
+}
+
+document.addEventListener("input", function (e) {
+    if (e.target.classList.contains("codigo-producto")) {
+        buscarCoincidenciasPorCodigo(e.target);
+    }
+});
 
 document.addEventListener("input", function (e) {
     if (!e.target.classList.contains("descripcion-producto")) {
@@ -665,6 +975,12 @@ document.addEventListener("click", function (e) {
             dd.style.display = "none";
         }
     });
+    document.querySelectorAll(".codigo-autocomplete-container .autocomplete-dropdown").forEach(dropdown => {
+        if (dropdown.style.display === "block" && !dropdown.parentElement.contains(e.target)) {
+            dropdown.replaceChildren();
+            dropdown.style.display = "none";
+        }
+    });
 });
 
 // Codigo para boton de agregar fila ###############################################33333
@@ -695,7 +1011,10 @@ function agregarFila() {
         </td>
 
         <td>
-            <input type="text" class="codigo-producto input-control td-input" >
+            <div class="autocomplete-container codigo-autocomplete-container">
+                <input type="text" class="codigo-producto input-control td-input" placeholder="Buscar código..." autocomplete="off">
+                <div class="autocomplete-dropdown"></div>
+            </div>
         </td>
 
 <td>
@@ -1027,11 +1346,20 @@ async function guardarYGenerarPdf() {
         { id: 'prov-email', label: 'Correo' }
     ];
 
-    const selectProveedorElem = document.getElementById('select-proveedor');
-    const proveedorSeleccion = selectProveedorElem ? selectProveedorElem.value : '';
+    const proveedorSeleccion = idProveedorSeleccionado?.value || '';
+
+    const nitProveedor = document.getElementById('prov-nit')?.value?.trim() || '';
+    const tieneDatosProveedor = camposProveedor.some(campo =>
+        document.getElementById(campo.id)?.value?.trim()
+    );
+    if ((proveedorSeleccion || tieneDatosProveedor) && !/^\d+$/.test(nitProveedor)) {
+        mostrarToast('El NIT del proveedor debe ser un número entero.', 'error');
+        document.getElementById('prov-nit')?.focus();
+        return;
+    }
 
     // Validar los datos de proveedor cuando hay un proveedor seleccionado
-    if (proveedorSeleccion !== '') {
+    if (proveedorSeleccion || tieneDatosProveedor) {
         const proveedorIncompleto = camposProveedor.find(campo => {
             const valor = document.getElementById(campo.id)?.value?.trim() || '';
             return !valor;
@@ -1046,9 +1374,8 @@ async function guardarYGenerarPdf() {
     const ordenDTO = {
         fecha: fechaInput,
         idCentroCosto: idCentroCosto ? parseInt(idCentroCosto) : null,
-        // Si se seleccionó un proveedor existente, enviar su id; si fue 'otro' o vacío, enviar null
-        idProv: proveedorSeleccion && proveedorSeleccion !== 'otro' ? parseInt(proveedorSeleccion) : null,
-        nitProv: document.getElementById('prov-nit')?.value?.trim() || '',
+        idProv: proveedorSeleccion ? parseInt(proveedorSeleccion) : null,
+        nitProv: nitProveedor,
         nombreProv: document.getElementById('prov-nombre')?.value?.trim() || '',
         ciudadProv: document.getElementById('prov-ciudad')?.value?.trim() || '',
         direccionProv: document.getElementById('prov-direccion')?.value?.trim() || '',
@@ -2600,6 +2927,9 @@ function cargarOrdenEnModal(
     ).value =
         orden.nitProv || "";
 
+    const idProveedor = document.getElementById('id-proveedor-seleccionado');
+    if (idProveedor) idProveedor.value = orden.idProv || '';
+
     document.getElementById(
         "prov-nombre"
     ).value =
@@ -2625,6 +2955,10 @@ function cargarOrdenEnModal(
     ).value =
         orden.correoProv || "";
 
+    if (orden.idProv || orden.nombreProv || orden.nitProv) {
+        mostrarTarjetaProveedor(!orden.idProv);
+    }
+
     const observaciones = document.querySelector('#modal-orden textarea');
     if (observaciones) {
         observaciones.value = orden.observaciones || "";
@@ -2643,7 +2977,10 @@ function cargarOrdenEnModal(
                         <input type="number" class="cantidad input-control td-input" value="${detalle.cantidad || 0}" ${esVista ? 'disabled' : ''}>
                     </td>
                     <td>
-                        <input type="text" class="codigo-producto input-control td-input" value="${detalle.codigoInventario || ''}" ${esVista ? 'disabled' : ''}>
+                        <div class="autocomplete-container codigo-autocomplete-container">
+                            <input type="text" class="codigo-producto input-control td-input" value="${detalle.codigoInventario || ''}" ${esVista ? 'disabled' : ''} autocomplete="off">
+                            <div class="autocomplete-dropdown"></div>
+                        </div>
                     </td>
 <td>
                         <div class="autocomplete-container">
