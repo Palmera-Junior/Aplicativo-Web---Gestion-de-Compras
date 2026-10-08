@@ -26,10 +26,12 @@ public interface PolizaRepository extends JpaRepository<Poliza, Integer>, JpaSpe
      * proxies perezosos una vez haya terminado la transacción del servicio.
      */
     @Override
-    @EntityGraph(attributePaths = { "proveedor", "sede", "usuario", "usuarioAprobacion", "aprobacionesPorSede.sede", "aprobacionesPorSede.usuarioAprobacion" })
+    @EntityGraph(attributePaths = { "proveedor", "sede", "usuario", "usuarioAprobacion", "usuarioActivacion", "usuarioAnulacion", "aprobacionesPorSede.sede", "aprobacionesPorSede.usuarioAprobacion" })
     Page<Poliza> findAll(Specification<Poliza> specification, Pageable pageable);
 
     Optional<Poliza> findByNumeroContrato(String numeroContrato);
+
+        Optional<Poliza> findByNumeroPolizaIgnoreCase(String numeroPoliza);
 
     Page<Poliza> findAllByOrderByIdPolizaDesc(Pageable pageable);
 

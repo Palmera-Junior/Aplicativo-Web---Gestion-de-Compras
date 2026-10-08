@@ -100,6 +100,14 @@ public class OrdenCompra {
     @Column(name = "fecha_aprobacion")
     private LocalDate fechaAprobacion;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_usuario_anulacion")
+    @ToString.Exclude
+    private Usuario usuarioAnulacion;
+
+    @Column(name = "fecha_anulacion")
+    private LocalDate fechaAnulacion;
+
     @Column(name = "numero_factura", length = 100)
     private String numeroFactura;
 

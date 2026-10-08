@@ -3,6 +3,8 @@ package com.palmera_junior.gestion_compras.controller;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.stream.Collectors;
 import java.time.LocalDate;
 
@@ -17,6 +19,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.MediaType;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -29,11 +34,14 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.palmera_junior.gestion_compras.dto.PolizaDTO;
 import com.palmera_junior.gestion_compras.dto.ActivarPolizaDTO;
+import com.palmera_junior.gestion_compras.dto.RenovarPolizaDTO;
 import com.palmera_junior.gestion_compras.dto.DetallePrimaDTO;
 import com.palmera_junior.gestion_compras.dto.ProveedorAutocompleteDTO;
 import com.palmera_junior.gestion_compras.entity.EstadoPoliza;
 import com.palmera_junior.gestion_compras.entity.EstadoEnvioCorreo;
 import com.palmera_junior.gestion_compras.entity.Poliza;
+import com.palmera_junior.gestion_compras.entity.PolizaAdjunto;
+import com.palmera_junior.gestion_compras.entity.PolizaRenovacion;
 import com.palmera_junior.gestion_compras.entity.EstadoAprobacionSede;
 import com.palmera_junior.gestion_compras.entity.Usuario;
 import com.palmera_junior.gestion_compras.entity.Proveedor;
@@ -282,7 +290,7 @@ public class PolizaController {
     }
 
     /**
-     * Activa la póliza como vigente, validando la fecha de vencimiento y el archivo físico si aplica.
+    * Activa la póliza como vigente, adjuntando sus documentos PDF físicos.
      */
     @PostMapping(value = "/{id}/activar", consumes = "multipart/form-data")
     @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
@@ -290,9 +298,101 @@ public class PolizaController {
             @PathVariable Integer id,
             @ModelAttribute ActivarPolizaDTO dto,
             RedirectAttributes redirectAttributes) {
-        polizaService.activarVigente(id, dto.getFechaVencimiento(), dto.getPolizaFisica());
+        polizaService.activarVigente(id, dto.getNumeroPoliza(), dto.getPolizasFisicas());
         redirectAttributes.addFlashAttribute("mensajeExito", "Póliza activada como vigente correctamente.");
         return "redirect:/polizas";
+    }
+
+    @PostMapping(value = "/{id}/renovar", consumes = "multipart/form-data")
+    @ResponseBody
+    @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
+    public ResponseEntity<Map<String, String>> renovarPoliza(
+            @PathVariable Integer id,
+            @ModelAttribute RenovarPolizaDTO dto) {
+        polizaService.renovar(id, dto);
+        return ResponseEntity.ok(Map.of("message", "Póliza renovada correctamente."));
+    }
+
+    @GetMapping("/{id}/renovaciones")
+    @ResponseBody
+    @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
+    public Map<String, Object> renovaciones(@PathVariable Integer id) {
+        Poliza poliza = polizaService.obtenerPorId(id);
+        List<PolizaRenovacion> renovaciones = polizaService.listarRenovaciones(id);
+        Map<String, Object> periodoInicial = new java.util.HashMap<>();
+        PolizaRenovacion primeraRenovacion = renovaciones.isEmpty() ? null : renovaciones.get(0);
+        periodoInicial.put("fechaInicio", primeraRenovacion == null
+                ? poliza.getFechaCreacion() : primeraRenovacion.getFechaInicioAnterior());
+        periodoInicial.put("fechaFin", primeraRenovacion == null
+                ? poliza.getFechaVencimiento() : primeraRenovacion.getFechaFinAnterior());
+        periodoInicial.put("usuario", poliza.getUsuario() == null ? "Sin información" : nombreCompleto(poliza.getUsuario()));
+        periodoInicial.put("archivos", poliza.getAdjuntos().stream()
+            .filter(adjunto -> adjunto.getTipoAdjunto() == com.palmera_junior.gestion_compras.entity.TipoAdjuntoPoliza.POLIZA_FISICA)
+            .map(adjunto -> Map.of(
+                "id", adjunto.getIdAdjuntoPoliza(),
+                "nombre", adjunto.getNombreOriginal(),
+                "url", "/polizas/" + id + "/adjuntos/" + adjunto.getIdAdjuntoPoliza()))
+            .toList());
+
+        List<Map<String, Object>> itemsRenovacion = renovaciones.stream().map(renovacion -> {
+            Map<String, Object> item = new java.util.HashMap<>();
+            item.put("numero", renovaciones.indexOf(renovacion) + 1);
+            item.put("id", renovacion.getIdRenovacion());
+            item.put("fechaInicio", renovacion.getFechaInicio());
+            item.put("fechaFin", renovacion.getFechaFin());
+            item.put("fechaInicioAnterior", renovacion.getFechaInicioAnterior());
+            item.put("fechaFinAnterior", renovacion.getFechaFinAnterior());
+            item.put("fechaRegistro", renovacion.getFechaRegistro());
+            item.put("usuario", renovacion.getUsuario() == null ? "Sin información" : nombreCompleto(renovacion.getUsuario()));
+            item.put("archivos", renovacion.getAdjuntos().stream().map(adjunto -> Map.of(
+                    "id", adjunto.getIdAdjuntoPoliza(),
+                    "nombre", adjunto.getNombreOriginal(),
+                    "url", "/polizas/" + id + "/renovaciones/" + renovacion.getIdRenovacion()
+                            + "/adjuntos/" + adjunto.getIdAdjuntoPoliza())).toList());
+            return item;
+        }).toList();
+        Map<String, Object> historial = new java.util.HashMap<>();
+        historial.put("periodoInicial", periodoInicial);
+        historial.put("renovaciones", itemsRenovacion);
+        return historial;
+    }
+
+    @GetMapping("/{id}/contrato-adjunto")
+    @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
+    public ResponseEntity<byte[]> descargarContratoAdjunto(@PathVariable Integer id) throws IOException {
+        PolizaAdjunto adjunto = polizaService.obtenerContratoAdjunto(id);
+        byte[] contenido = polizaService.leerContratoAdjunto(adjunto);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDisposition(ContentDisposition.attachment()
+                .filename(adjunto.getNombreOriginal(), StandardCharsets.UTF_8).build());
+        return new ResponseEntity<>(contenido, headers, HttpStatus.OK);
+    }
+
+    @GetMapping("/{id}/adjuntos/{idAdjunto}")
+    @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
+    public ResponseEntity<byte[]> descargarAdjuntoFisico(@PathVariable Integer id,
+            @PathVariable Integer idAdjunto) throws IOException {
+        PolizaAdjunto adjunto = polizaService.obtenerAdjuntoFisico(id, idAdjunto);
+        byte[] contenido = polizaService.leerContratoAdjunto(adjunto);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDisposition(ContentDisposition.attachment()
+                .filename(adjunto.getNombreOriginal(), StandardCharsets.UTF_8).build());
+        return new ResponseEntity<>(contenido, headers, HttpStatus.OK);
+    }
+
+    @GetMapping("/{id}/renovaciones/{idRenovacion}/adjuntos/{idAdjunto}")
+    @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
+    public ResponseEntity<byte[]> descargarAdjuntoRenovacion(@PathVariable Integer id,
+            @PathVariable Integer idRenovacion, @PathVariable Integer idAdjunto) throws IOException {
+        PolizaAdjunto adjunto = polizaService.obtenerAdjuntoRenovacion(id, idRenovacion, idAdjunto);
+        byte[] contenido = polizaService.leerAdjuntoRenovacion(adjunto);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDisposition(ContentDisposition.attachment()
+            .filename(adjunto.getNombreOriginal(), StandardCharsets.UTF_8).build());
+        return new ResponseEntity<>(contenido, headers, HttpStatus.OK);
     }
 
     /**

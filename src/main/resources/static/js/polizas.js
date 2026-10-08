@@ -198,11 +198,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const detailDialog = document.getElementById('poliza-detalle-modal');
     const activarDialog = document.getElementById('poliza-activar-modal');
     const activarForm = document.getElementById('poliza-activar-form');
-    const activarFecha = document.getElementById('poliza-activar-fecha');
+    const activarNumero = document.getElementById('poliza-activar-numero');
     const activarArchivo = document.getElementById('poliza-fisica-input');
     const terminarDialog = document.getElementById('poliza-terminar-modal');
     const terminarForm = document.getElementById('poliza-terminar-form');
     const terminarMotivo = terminarForm?.elements.motivoTerminacion;
+    const renovarDialog = document.getElementById('poliza-renovar-modal');
+    const renovarForm = document.getElementById('poliza-renovar-form');
+    const renovarInicio = document.getElementById('poliza-renovacion-inicio');
+    const renovarFin = document.getElementById('poliza-renovacion-fin');
+    const renovarArchivos = document.getElementById('poliza-renovacion-archivos');
+    const renovarSubmit = document.getElementById('btn-confirmar-renovacion');
+    const renovacionesAuditoria = document.getElementById('poliza-renovaciones-auditoria');
+    const renovacionesBody = document.getElementById('poliza-renovaciones-body');
     const openButton = document.getElementById('btn-nueva-poliza');
     const closeButton = document.querySelector('#poliza-modal .modal-close');
     const cancelButton = document.querySelector('#poliza-modal .btn-cancel');
@@ -215,6 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const archivoInput = form?.elements.contratoAdjunto;
     const archivoActual = document.getElementById('poliza-archivo-actual');
     const nombreArchivoActual = document.getElementById('poliza-archivo-nombre');
+    const enlaceArchivoActual = document.getElementById('poliza-archivo-enlace');
     const eliminarArchivoButton = document.getElementById('btn-eliminar-archivo-poliza');
     const eliminarArchivoInput = form?.elements.eliminarContratoAdjunto;
     const agregarDetalleButton = document.getElementById('btn-agregar-detalle-prima');
@@ -234,13 +243,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const auditoria = {
         creador: document.getElementById('poliza-creado-por'),
         aprobador: document.getElementById('poliza-aprobado-por'),
-        sede: document.getElementById('poliza-sede'),
         fechaAprobacion: document.getElementById('poliza-fecha-aprobacion'),
         terminadoPor: document.getElementById('poliza-terminado-por'),
         fechaTerminacion: document.getElementById('poliza-fecha-terminacion'),
         motivoTerminacion: document.getElementById('poliza-motivo-terminacion'),
-        terminacion: document.querySelectorAll('.auditoria-terminacion')
+        terminacion: document.querySelectorAll('.auditoria-terminacion'),
+        activador: document.getElementById('poliza-activado-por'),
+        anulador: document.getElementById('poliza-anulado-por'),
+        fechaAnulacion: document.getElementById('poliza-fecha-anulacion'),
+        anulacion: document.querySelectorAll('.auditoria-anulacion-poliza')
     };
+    ['poliza-aprobado-por', 'poliza-fecha-aprobacion',
+        'poliza-terminado-por', 'poliza-fecha-terminacion', 'poliza-motivo-terminacion']
+        .forEach((id) => document.getElementById(id)?.closest('.auditoria-item')?.setAttribute('hidden', 'hidden'));
     let scrollOriginal = null;
     let proveedorSearchTimer = null;
     let proveedorSearchController = null;
@@ -382,10 +397,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!event.target.closest('.proveedor-poliza-field')) cerrarResultadosProveedor(true);
     });
 
-    const actualizarAuditoria = ({ creador, aprobador, sede, fechaAprobacion, terminadoPor, fechaTerminacion, motivoTerminacion }) => {
+    const actualizarAuditoria = ({ creador, aprobador, sede, fechaAprobacion, terminadoPor, fechaTerminacion, motivoTerminacion, activador, anulador, fechaAnulacion }) => {
         if (auditoria.creador) auditoria.creador.textContent = creador || 'Sin información';
         if (auditoria.aprobador) auditoria.aprobador.textContent = aprobador || 'Sin aprobación';
-        if (auditoria.sede) auditoria.sede.textContent = sede || 'Sin información';
         if (auditoria.fechaAprobacion) auditoria.fechaAprobacion.textContent = fechaAprobacion || 'Sin aprobación';
         if (auditoria.terminadoPor) auditoria.terminadoPor.textContent = terminadoPor || 'Sin terminación';
         if (auditoria.fechaTerminacion) auditoria.fechaTerminacion.textContent = fechaTerminacion || 'Sin terminación';
@@ -396,6 +410,68 @@ document.addEventListener('DOMContentLoaded', () => {
         auditoria.terminacion.forEach((campo) => {
             campo.hidden = !mostrar;
         });
+    };
+
+    const mostrarAuditoriaAnulacion = (mostrar) => {
+        auditoria.anulacion.forEach((campo) => {
+            campo.hidden = !mostrar;
+        });
+    };
+
+    const limpiarAuditoriaRenovaciones = () => {
+        renovacionesBody?.replaceChildren();
+        if (renovacionesAuditoria) renovacionesAuditoria.hidden = true;
+    };
+
+    const cargarAuditoriaRenovaciones = async (idPoliza) => {
+        limpiarAuditoriaRenovaciones();
+        try {
+            const response = await fetch(`/polizas/${idPoliza}/renovaciones`, {
+                headers: { Accept: 'application/json' }
+            });
+            if (!response.ok) throw new Error('No fue posible consultar las renovaciones.');
+            const historial = await response.json();
+            if (!renovacionesBody) return;
+            const periodoInicial = historial.periodoInicial || {};
+            const filas = [{
+                periodo: 'Inicial',
+                fechaInicio: periodoInicial.fechaInicio,
+                fechaFin: periodoInicial.fechaFin,
+                fechaRegistro: '',
+                usuario: periodoInicial.usuario || 'Sin información',
+                archivos: periodoInicial.archivos || []
+            }, ...(historial.renovaciones || []).map((renovacion) => ({
+                ...renovacion,
+                periodo: `Renovación ${renovacion.numero}`
+            }))];
+
+            filas.forEach((renovacion) => {
+                const fila = document.createElement('tr');
+                [renovacion.periodo,
+                    renovacion.fechaInicio,
+                    renovacion.fechaFin,
+                    renovacion.fechaRegistro ? new Date(renovacion.fechaRegistro).toLocaleDateString('es-CO') : '',
+                    renovacion.usuario || 'Sin información'].forEach((valor) => {
+                    const celda = document.createElement('td');
+                    celda.textContent = valor || '';
+                    fila.appendChild(celda);
+                });
+                const documentos = document.createElement('td');
+                (renovacion.archivos || []).forEach((archivo, indice) => {
+                    if (indice > 0) documentos.appendChild(document.createTextNode(', '));
+                    const enlace = document.createElement('a');
+                    enlace.href = archivo.url;
+                    enlace.textContent = archivo.nombre;
+                    enlace.setAttribute('download', '');
+                    documentos.appendChild(enlace);
+                });
+                fila.appendChild(documentos);
+                renovacionesBody.appendChild(fila);
+            });
+            renovacionesAuditoria.hidden = false;
+        } catch (error) {
+            mostrarToast(error.message || 'No fue posible consultar las renovaciones.', 'error');
+        }
     };
 
     document.querySelectorAll('.poliza-money').forEach((celda) => {
@@ -512,23 +588,28 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!modal) return;
         if (typeof modal.close === 'function' && modal.open) modal.close();
         else modal.removeAttribute('open');
-        if (!dialog?.open && !detailDialog?.open && !activarDialog?.open && !terminarDialog?.open) restaurarScroll();
+        if (!dialog?.open && !detailDialog?.open && !activarDialog?.open && !terminarDialog?.open
+            && !renovarDialog?.open) restaurarScroll();
     };
 
     document.querySelectorAll('.js-activar-poliza').forEach((button) => {
         button.addEventListener('click', () => {
             activarForm?.setAttribute('action', button.dataset.url || '');
             activarArchivo?.form?.reset();
-            if (activarFecha) {
-                activarFecha.value = button.dataset.fechaVencimiento || '';
-                activarFecha.min = new Date().toISOString().slice(0, 10);
-            }
+            if (activarNumero) activarNumero.value = '';
             abrir(activarDialog);
         });
     });
 
     document.querySelectorAll('.js-cerrar-activar').forEach((button) => {
         button.addEventListener('click', () => cerrar(activarDialog));
+    });
+
+    activarArchivo?.addEventListener('change', () => {
+        if (activarArchivo.files.length > 5) {
+            activarArchivo.value = '';
+            mostrarToast('Puedes adjuntar máximo 5 archivos PDF.', 'error');
+        }
     });
 
     document.querySelectorAll('.js-terminar-poliza').forEach((button) => {
@@ -544,7 +625,77 @@ document.addEventListener('DOMContentLoaded', () => {
         button.addEventListener('click', () => cerrar(terminarDialog));
     });
 
+    document.querySelectorAll('.js-renovar-poliza').forEach((button) => {
+        button.addEventListener('click', () => {
+            renovarForm?.reset();
+            renovarForm?.setAttribute('action', button.dataset.url || '');
+            if (renovarInicio) renovarInicio.min = '';
+            if (renovarFin) renovarFin.min = '';
+            const vencimiento = button.dataset.fechaVencimiento;
+            if (vencimiento && renovarInicio) {
+                const siguienteDia = new Date(`${vencimiento}T00:00:00Z`);
+                siguienteDia.setUTCDate(siguienteDia.getUTCDate() + 1);
+                renovarInicio.min = siguienteDia.toISOString().slice(0, 10);
+            }
+            abrir(renovarDialog);
+            renovarInicio?.focus();
+        });
+    });
+
+    document.querySelectorAll('.js-cerrar-renovar').forEach((button) => {
+        button.addEventListener('click', () => cerrar(renovarDialog));
+    });
+
+    renovarInicio?.addEventListener('change', () => {
+        if (!renovarInicio.value || !renovarFin) return;
+        const siguienteDia = new Date(`${renovarInicio.value}T00:00:00Z`);
+        siguienteDia.setUTCDate(siguienteDia.getUTCDate() + 1);
+        renovarFin.min = siguienteDia.toISOString().slice(0, 10);
+        if (renovarFin.value && renovarFin.value < renovarFin.min) renovarFin.value = '';
+    });
+
+    renovarArchivos?.addEventListener('change', () => {
+        if (renovarArchivos.files.length > 5) {
+            renovarArchivos.value = '';
+            mostrarToast('Puedes adjuntar máximo 5 archivos PDF.', 'error');
+        }
+    });
+
+    renovarForm?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (!renovarSubmit) return;
+        if (!renovarForm.checkValidity()) {
+            renovarForm.reportValidity();
+            return;
+        }
+
+        renovarSubmit.disabled = true;
+        renovarSubmit.textContent = 'Procesando...';
+        try {
+            const response = await fetch(renovarForm.action, {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    [document.querySelector('meta[name="_csrf_header"]')?.content || 'X-CSRF-TOKEN']:
+                        document.querySelector('meta[name="_csrf"]')?.content || ''
+                },
+                body: new FormData(renovarForm)
+            });
+            if (!response.ok) throw new Error(await obtenerMensajeError(response, 'No fue posible renovar la póliza.'));
+            cerrar(renovarDialog);
+            mostrarToast('Póliza renovada correctamente.', 'success');
+            setTimeout(() => location.reload(), 900);
+        } catch (error) {
+            mostrarToast(error.message || 'No fue posible renovar la póliza.', 'error');
+        } finally {
+            renovarSubmit.disabled = false;
+            renovarSubmit.textContent = 'Guardar renovación';
+        }
+    });
+
     const prepararNueva = () => {
+        limpiarAuditoriaRenovaciones();
         form?.reset();
         restablecerProveedorPoliza();
         reiniciarDetallesPrima();
@@ -557,6 +708,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         if (eliminarArchivoInput) eliminarArchivoInput.value = 'false';
         if (archivoActual) archivoActual.style.display = 'none';
+        if (enlaceArchivoActual) {
+            enlaceArchivoActual.hidden = true;
+            enlaceArchivoActual.href = '#';
+        }
         if (archivoInput) {
             archivoInput.disabled = false;
             archivoInput.required = true;
@@ -573,6 +728,10 @@ document.addEventListener('DOMContentLoaded', () => {
             motivoTerminacion: 'Sin motivo de terminación'
         });
         mostrarAuditoriaTerminacion(false);
+        if (auditoria.activador) auditoria.activador.textContent = 'N/A';
+        if (auditoria.anulador) auditoria.anulador.textContent = 'N/A';
+        if (auditoria.fechaAnulacion) auditoria.fechaAnulacion.textContent = 'N/A';
+        mostrarAuditoriaAnulacion(false);
         if (saveButton) {
             saveButton.textContent = 'Guardar Póliza';
             saveButton.disabled = false;
@@ -595,6 +754,7 @@ document.addEventListener('DOMContentLoaded', () => {
         campos.fechaVencimiento.value = button.dataset.fechaVencimiento || '';
         campos.numeroContrato.value = button.dataset.contrato || '';
         campos.idProveedor.value = button.dataset.proveedor || '';
+        detalle.numeroPoliza.textContent = button.dataset.numeroPoliza || 'Sin número';
         mostrarTarjetaProveedor({
             idProv: button.dataset.proveedor || '',
             nombre: button.dataset.proveedorNombre || '',
@@ -631,11 +791,19 @@ document.addEventListener('DOMContentLoaded', () => {
             motivoTerminacion: button.dataset.motivoTerminacion
         });
         mostrarAuditoriaTerminacion(button.dataset.estado === 'TERMINADA');
+        if (auditoria.activador) auditoria.activador.textContent = button.dataset.activador || 'N/A';
+        if (auditoria.anulador) auditoria.anulador.textContent = button.dataset.anulador || 'N/A';
+        if (auditoria.fechaAnulacion) auditoria.fechaAnulacion.textContent = button.dataset.fechaAnulacion || 'N/A';
+        mostrarAuditoriaAnulacion(button.dataset.estado === 'ANULADA');
 
         const nombreArchivo = button.dataset.archivoNombre || '';
         if (archivoActual) archivoActual.style.display = nombreArchivo ? '' : 'none';
         if (archivoInput) archivoInput.style.display = nombreArchivo ? 'none' : '';
         if (nombreArchivoActual) nombreArchivoActual.textContent = nombreArchivo || 'Sin archivo adjunto';
+        if (enlaceArchivoActual) {
+            enlaceArchivoActual.href = button.dataset.urlContrato || '#';
+            enlaceArchivoActual.hidden = !nombreArchivo;
+        }
 
         form.querySelectorAll('input, select, textarea').forEach((control) => {
             control.disabled = !puedeEditar;
@@ -660,6 +828,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const filaPoliza = button.closest('tr[data-poliza-id]');
         if (filaPoliza?.dataset.polizaId) {
+            cargarAuditoriaRenovaciones(filaPoliza.dataset.polizaId);
             try {
                 const response = await fetch(`/polizas/${filaPoliza.dataset.polizaId}/aprobaciones-sedes`, {
                     headers: { Accept: 'application/json' }
@@ -719,6 +888,7 @@ document.addEventListener('DOMContentLoaded', () => {
     eliminarArchivoButton?.addEventListener('click', () => {
         if (eliminarArchivoInput) eliminarArchivoInput.value = 'true';
         if (archivoActual) archivoActual.style.display = 'none';
+        if (enlaceArchivoActual) enlaceArchivoActual.hidden = true;
         if (archivoInput) {
             archivoInput.disabled = false;
             archivoInput.required = true;
@@ -786,6 +956,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const detalle = {
         contrato: document.getElementById('detalle-contrato'),
         fecha: document.getElementById('detalle-fecha'),
+        numeroPoliza: document.getElementById('detalle-numero-poliza'),
         proveedor: document.getElementById('detalle-proveedor'),
         cliente: document.getElementById('detalle-cliente'),
         creador: document.getElementById('detalle-creador'),
@@ -817,7 +988,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    [dialog, detailDialog, activarDialog, terminarDialog].forEach((modal) => modal?.addEventListener('click', (event) => {
+    [dialog, detailDialog, activarDialog, terminarDialog, renovarDialog].forEach((modal) => modal?.addEventListener('click', (event) => {
         if (event.target === modal) cerrar(modal);
     }));
 });

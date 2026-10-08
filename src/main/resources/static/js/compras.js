@@ -211,6 +211,7 @@ function resetFormularioOrden() {
 
     const ordenNumero = document.getElementById('orden-numero');
     const ordenEstado = document.getElementById('orden-estado');
+    const ordenCreadoPor = document.getElementById('orden-creado-por');
     const ordenAprobadoPor = document.getElementById('orden-aprobado-por');
     const ordenFechaAprobacion = document.getElementById('orden-fecha-aprobacion');
     const ordenRecibidoPor = document.getElementById('orden-recibido-por');
@@ -219,10 +220,12 @@ function resetFormularioOrden() {
 
     if (ordenNumero) { ordenNumero.value = ''; }
     if (ordenEstado) { ordenEstado.value = ''; }
+    if (ordenCreadoPor) { ordenCreadoPor.textContent = 'N/A'; }
     if (ordenAprobadoPor) { ordenAprobadoPor.textContent = ''; }
     if (ordenFechaAprobacion) { ordenFechaAprobacion.textContent = ''; }
     if (ordenRecibidoPor) { ordenRecibidoPor.textContent = ''; }
     if (ordenFechaRecibido) { ordenFechaRecibido.textContent = ''; }
+    document.querySelectorAll('.auditoria-anulacion-orden').forEach((campo) => { campo.hidden = true; });
     if (modalOrdenTitle) { modalOrdenTitle.textContent = 'Crear Nueva Orden de Compra'; }
 
     setModalOrdenModoVista(false);
@@ -3095,10 +3098,16 @@ function cargarOrdenEnModal(
 
     document.getElementById('orden-numero').value = orden.numeroOrden || '';
     document.getElementById('orden-estado').value = orden.estado || '';
+    document.getElementById('orden-creado-por').textContent = orden.creadoPor || 'N/A';
     document.getElementById('orden-aprobado-por').textContent = orden.aprobadoPor || 'N/A';
     document.getElementById('orden-fecha-aprobacion').textContent = orden.fechaAprobacion || 'N/A';
     document.getElementById('orden-recibido-por').textContent = orden.recibidoPor || 'N/A';
     document.getElementById('orden-fecha-recibido').textContent = orden.fechaRecepcion || 'N/A';
+    document.getElementById('orden-anulado-por').textContent = orden.anuladoPor || 'N/A';
+    document.getElementById('orden-fecha-anulacion').textContent = orden.fechaAnulacion || 'N/A';
+    document.querySelectorAll('.auditoria-anulacion-orden').forEach((campo) => {
+        campo.hidden = orden.estado !== 'ANULADA';
+    });
     document.getElementById('modal-orden-title').textContent = esVista ? 'Ver Orden de Compra' : 'Editar Orden de Compra';
 
     setModalOrdenModoVista(esVista);

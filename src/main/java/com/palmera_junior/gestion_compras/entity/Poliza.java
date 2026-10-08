@@ -19,6 +19,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import org.hibernate.annotations.BatchSize;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -59,6 +61,9 @@ public class Poliza {
     @Column(name = "numero_contrato", nullable = false, length = 50, unique = true)
     private String numeroContrato;
 
+    @Column(name = "numero_poliza", length = 100)
+    private String numeroPoliza;
+
     @Column(name = "valor_prima", nullable = false, precision = 15, scale = 2)
     private BigDecimal valorPrima;
 
@@ -69,6 +74,15 @@ public class Poliza {
     @OneToMany(mappedBy = "poliza", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     private List<PolizaSedeAprobacion> aprobacionesPorSede = new ArrayList<>();
+
+    @OneToMany(mappedBy = "poliza", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 50)
+    @ToString.Exclude
+    private List<PolizaAdjunto> adjuntos = new ArrayList<>();
+
+    @OneToMany(mappedBy = "poliza", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
+    private List<PolizaRenovacion> renovaciones = new ArrayList<>();
 
     public void addDetallePrima(DetallePrima detalle) {
         detallesPrima.add(detalle);
@@ -110,18 +124,6 @@ public class Poliza {
     @Column(name = "valor_contrato", nullable = false, precision = 15, scale = 2)
     private BigDecimal valorContrato;
 
-    @Column(name = "contrato_adjunto", columnDefinition = "TEXT")
-    private String contratoAdjunto;
-
-    @Column(name = "contrato_adjunto_nombre", length = 255)
-    private String contratoAdjuntoNombre;
-
-    @Column(name = "poliza_fisica_adjunto", columnDefinition = "TEXT")
-    private String polizaFisicaAdjunto;
-
-    @Column(name = "poliza_fisica_adjunto_nombre", length = 255)
-    private String polizaFisicaAdjuntoNombre;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private EstadoPoliza estado = EstadoPoliza.BORRADOR;
@@ -143,6 +145,19 @@ public class Poliza {
 
     @Column(name = "fecha_aprobacion")
     private LocalDate fechaAprobacion;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_usuario_activacion")
+    @ToString.Exclude
+    private Usuario usuarioActivacion;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_usuario_anulacion")
+    @ToString.Exclude
+    private Usuario usuarioAnulacion;
+
+    @Column(name = "fecha_anulacion")
+    private LocalDate fechaAnulacion;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_usuario_terminacion")
@@ -171,20 +186,56 @@ public class Poliza {
         fechaAprobacion = fecha;
     }
 
-    public void activar(Usuario usuario, LocalDate nuevaFechaVencimiento,
-            String adjuntoFisico, String nombreAdjuntoFisico) {
+    public void addAdjunto(PolizaAdjunto adjunto) {
+        if (adjunto == null) {
+            throw new IllegalArgumentException("El adjunto de póliza es obligatorio");
+        }
+        adjuntos.add(adjunto);
+        adjunto.setPoliza(this);
+    }
+
+    public void removeAdjunto(PolizaAdjunto adjunto) {
+        if (adjunto != null && adjuntos.remove(adjunto)) {
+            adjunto.setPoliza(null);
+        }
+    }
+
+    @Transient
+    public String getContratoAdjunto() {
+        return obtenerAdjuntoContrato().map(PolizaAdjunto::getNombreOriginal).orElse(null);
+    }
+
+    @Transient
+    public byte[] getContratoAdjuntoContenido() {
+        return obtenerAdjuntoContrato().map(PolizaAdjunto::getContenido).orElse(null);
+    }
+
+    @Transient
+    public String getContratoAdjuntoNombre() {
+        return obtenerAdjuntoContrato().map(PolizaAdjunto::getNombreOriginal).orElse(null);
+    }
+
+    public Optional<PolizaAdjunto> obtenerAdjuntoContrato() {
+        return adjuntos.stream()
+                .filter(adjunto -> adjunto.getTipoAdjunto() == TipoAdjuntoPoliza.CONTRATO)
+                .findFirst();
+    }
+
+    public void activar(String numeroPoliza, List<PolizaAdjunto> adjuntos) {
         if (estado != EstadoPoliza.APROBADA) {
             throw new IllegalStateException("Solo las pólizas APROBADAS pueden pasar a estado VIGENTE");
         }
-        if (nuevaFechaVencimiento == null || nuevaFechaVencimiento.isBefore(LocalDate.now())) {
-            throw new IllegalArgumentException("La fecha de vencimiento debe ser hoy o posterior");
+        if (adjuntos == null || adjuntos.isEmpty()) {
+            throw new IllegalArgumentException("Debe adjuntar al menos un PDF de la póliza física");
         }
-        if (adjuntoFisico == null || adjuntoFisico.isBlank()) {
-            throw new IllegalArgumentException("Debe adjuntar el PDF de la póliza física");
+        if (numeroPoliza == null || numeroPoliza.isBlank()) {
+            throw new IllegalArgumentException("El número de póliza es obligatorio");
         }
-        fechaVencimiento = nuevaFechaVencimiento;
-        polizaFisicaAdjunto = adjuntoFisico;
-        polizaFisicaAdjuntoNombre = nombreAdjuntoFisico;
+        this.numeroPoliza = numeroPoliza.trim();
+        adjuntos.forEach(adjunto -> {
+            adjunto.setTipoAdjunto(TipoAdjuntoPoliza.POLIZA_FISICA);
+            addAdjunto(adjunto);
+        });
         estado = EstadoPoliza.VIGENTE;
     }
 

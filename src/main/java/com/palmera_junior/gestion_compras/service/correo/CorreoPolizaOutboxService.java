@@ -77,7 +77,7 @@ public class CorreoPolizaOutboxService {
         try {
             Poliza poliza = polizaRepository.findWithRelationsByIdPoliza(auditoria.getPoliza().getIdPoliza())
                     .orElseThrow(() -> new IllegalStateException("No existe la póliza " + auditoria.getPoliza().getIdPoliza()));
-            byte[] pdf = archivoStorage.leer(poliza.getContratoAdjunto());
+            byte[] pdf = archivoStorage.leer(poliza.getContratoAdjuntoContenido());
             String asunto = emailTemplateService.generarAsuntoPolizaAprobada(poliza);
             String cuerpo = emailTemplateService.generarCuerpoPolizaAprobada(poliza);
             emailService.enviarNotificacionPoliza(auditoria.getDestinatario(), asunto, cuerpo, pdf,

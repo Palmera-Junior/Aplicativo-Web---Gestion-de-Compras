@@ -8,7 +8,7 @@
     <meta name="_csrf_header" th:content="${_csrf.headerName}">
     <title>Órdenes de Compra | Portal Comercial</title>
     <link rel="icon" type="image/png" th:href="@{/imgs/logo1.png}">
-    <link rel="stylesheet" th:href="@{/css/compras.css(v=10)}">
+    <link rel="stylesheet" th:href="@{/css/compras.css(v=12)}">
     <link rel="stylesheet" th:href="@{/css/admin.css(v=3)}">
     <link rel="stylesheet" th:href="@{/css/polizas.css(v=8)}">
     <link rel="stylesheet" th:href="@{/css/navigation.css(v=18)}">
@@ -764,6 +764,10 @@
                     <h3 class="section-title">Auditoria</h3>
                     <div class="auditoria-grid">
                         <div class="auditoria-item">
+                            <span class="auditoria-label">Creada por:</span>
+                            <span class="auditoria-value" id="orden-creado-por">N/A</span>
+                        </div>
+                        <div class="auditoria-item">
                             <span class="auditoria-label">Aprobado por:</span>
                             <span class="auditoria-value" id="orden-aprobado-por"></span>
                         </div>
@@ -773,11 +777,19 @@
                         </div>
                         <div class="auditoria-item">
                             <span class="auditoria-label">Recibido por:</span>
-                            <span class="auditoria-value" id="orden-recibido-por">N/A</span>
+                            <span class="auditoria-value" id="orden-recibido-por"></span>
                         </div>
                         <div class="auditoria-item">
                             <span class="auditoria-label">Fecha recibido:</span>
-                            <span class="auditoria-value" id="orden-fecha-recibido">N/A</span>
+                            <span class="auditoria-value" id="orden-fecha-recibido"></span>
+                        </div>
+                        <div class="auditoria-item auditoria-anulacion-orden" hidden>
+                            <span class="auditoria-label">Anulada por:</span>
+                            <span class="auditoria-value" id="orden-anulado-por"></span>
+                        </div>
+                        <div class="auditoria-item auditoria-anulacion-orden" hidden>
+                            <span class="auditoria-label">Fecha de anulación:</span>
+                            <span class="auditoria-value" id="orden-fecha-anulacion"></span>
                         </div>
                     </div>
 

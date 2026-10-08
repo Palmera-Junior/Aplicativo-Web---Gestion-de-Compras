@@ -528,6 +528,11 @@
     display: none !important;
 }
 
+/* Los hitos de anulación solo se muestran para pólizas anuladas. */
+.auditoria-anulacion-poliza[hidden] {
+    display: none !important;
+}
+
 .auditoria-motivo-terminacion .auditoria-value {
     white-space: pre-wrap;
     overflow-wrap: anywhere;
@@ -599,6 +604,12 @@
     transform: translate(-50%, -50%);
 }
 
+#poliza-activar-modal,
+#poliza-terminar-modal,
+#poliza-renovar-modal {
+    max-width: 550px;
+}
+
 #poliza-modal[open] {
     display: flex;
     flex-direction: column;
@@ -609,6 +620,31 @@
     background: rgba(11, 29, 22, .42);
     -webkit-backdrop-filter: blur(3px);
     backdrop-filter: blur(3px);
+}
+
+.poliza-renovaciones-auditoria {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid #e3e8e5;
+}
+
+.poliza-renovaciones-table {
+    min-width: 680px;
+}
+
+.poliza-renovaciones-table a {
+    color: #176b35;
+    text-decoration: underline;
+    overflow-wrap: anywhere;
+}
+
+#poliza-archivo-enlace {
+    color: #176b35;
+    text-decoration: underline;
+}
+
+#poliza-renovar-form {
+    max-width: 600px;
 }
 
 .poliza-form {

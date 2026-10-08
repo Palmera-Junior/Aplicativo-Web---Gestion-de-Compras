@@ -6,11 +6,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 public interface IPolizaArchivoStorage {
 
-    /** Almacena un adjunto y retorna la ruta relativa persistible, o {@code null} si está vacío. */
-    String almacenar(MultipartFile archivo);
+    /** Valida un adjunto y retorna su contenido binario, o {@code null} si está vacío. */
+    byte[] almacenar(MultipartFile archivo);
 
-    byte[] leer(String rutaRelativa) throws IOException;
-
-    /** Elimina un archivo previamente almacenado. */
-    void eliminar(String rutaRelativa);
+    byte[] leer(byte[] contenido) throws IOException;
 }

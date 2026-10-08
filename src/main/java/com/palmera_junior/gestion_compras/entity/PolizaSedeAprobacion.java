@@ -65,4 +65,10 @@ public class PolizaSedeAprobacion {
         this.usuarioAprobacion = aprobador;
         this.fechaAprobacion = fecha;
     }
+
+    public void reiniciar() {
+        this.estado = EstadoAprobacionSede.PENDIENTE;
+        this.usuarioAprobacion = null;
+        this.fechaAprobacion = null;
+    }
 }

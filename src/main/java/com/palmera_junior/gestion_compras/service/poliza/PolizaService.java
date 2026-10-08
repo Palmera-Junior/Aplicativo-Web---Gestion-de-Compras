@@ -311,7 +311,7 @@ public class PolizaService implements IPolizaService {
     @Override
     @Transactional
     @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
-    public Poliza activarVigente(Integer idPoliza, String fechaVencimiento, MultipartFile polizaFisica) {
+    public Poliza activarVigente(Integer idPoliza, String numeroPoliza, MultipartFile polizaFisica) {
         Usuario usuario = usuarioService.obtenerUsuarioAutenticado();
         Poliza poliza = polizaRepository.findById(idPoliza)
                 .orElseThrow(() -> new IllegalArgumentException("Póliza no encontrada"));
@@ -319,15 +319,15 @@ public class PolizaService implements IPolizaService {
         if (polizaFisica == null || polizaFisica.isEmpty()) {
             throw new IllegalArgumentException("Debe adjuntar el PDF de la póliza física");
         }
-
-        LocalDate nuevaFechaVencimiento = parseDate(fechaVencimiento);
-        if (nuevaFechaVencimiento == null || nuevaFechaVencimiento.isBefore(LocalDate.now())) {
-            throw new IllegalArgumentException("La fecha de vencimiento debe ser hoy o posterior");
+        if (numeroPoliza == null || numeroPoliza.isBlank()) {
+            throw new IllegalArgumentException("El número de póliza es obligatorio");
         }
+        String numeroNormalizado = numeroPoliza.trim();
+        validarNumeroPolizaUnico(numeroNormalizado, poliza.getIdPoliza());
 
         String adjuntoNuevo = archivoStorage.almacenar(polizaFisica);
         try {
-            poliza.activar(usuario, nuevaFechaVencimiento, adjuntoNuevo, polizaFisica.getOriginalFilename());
+            poliza.activar(usuario, adjuntoNuevo, polizaFisica.getOriginalFilename(), numeroNormalizado);
             return polizaRepository.save(poliza);
         } catch (RuntimeException exception) {
             archivoStorage.eliminar(adjuntoNuevo);
@@ -355,7 +355,7 @@ public class PolizaService implements IPolizaService {
 
     @Override
     @Transactional
-    @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
+    @PreAuthorize("hasAnyRole('APROBADOR', 'SUPERADMINISTRADOR', 'COMERCIAL', 'ADMINISTRADOR')")
     public Poliza terminar(Integer idPoliza, String motivoTerminacion) {
         Usuario usuario = usuarioService.obtenerUsuarioAutenticado();
         Poliza poliza = polizaRepository.findById(idPoliza)
@@ -532,6 +532,9 @@ public class PolizaService implements IPolizaService {
     }
 
     private void assertPuedeModificar(Poliza poliza, Usuario usuario) {
+        if (usuario != null && usuario.getRol() == Rol.SUPERADMINISTRADOR) {
+            return;
+        }
         boolean esCreador = usuario != null && usuario.getIdUsuario() != null
                 && poliza.getUsuario() != null && usuario.getIdUsuario().equals(poliza.getUsuario().getIdUsuario());
         if (!esCreador && !esAprobadorDeSedeInvolucrada(poliza, usuario)) {
@@ -597,6 +600,15 @@ public class PolizaService implements IPolizaService {
                 .ifPresent(polizaExistente -> {
                     if (idActual == null || !idActual.equals(polizaExistente.getIdPoliza())) {
                         throw new IllegalArgumentException("El número de contrato ya existe");
+                    }
+                });
+    }
+
+    private void validarNumeroPolizaUnico(String numeroPoliza, Integer idActual) {
+        polizaRepository.findByNumeroPolizaIgnoreCase(numeroPoliza)
+                .ifPresent(polizaExistente -> {
+                    if (idActual == null || !idActual.equals(polizaExistente.getIdPoliza())) {
+                        throw new IllegalArgumentException("No se puede activar.Ya existe una póliza con ese número.");
                     }
                 });
     }

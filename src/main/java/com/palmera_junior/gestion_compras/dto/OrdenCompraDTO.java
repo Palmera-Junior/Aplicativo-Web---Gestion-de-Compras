@@ -22,10 +22,13 @@ public class OrdenCompraDTO {
     // Metadatos de la orden
     private String numeroOrden;
     private String estado;
+    private String creadoPor;
     private String aprobadoPor;
     private String fechaAprobacion;
     private String recibidoPor;
     private String fechaRecepcion;
+    private String anuladoPor;
+    private String fechaAnulacion;
     private String numeroFactura;
     private String fotoRecepcion;
 
@@ -98,6 +101,9 @@ public class OrdenCompraDTO {
     public String getEstado() { return estado; }
     public void setEstado(String estado) { this.estado = estado; }
 
+    public String getCreadoPor() { return creadoPor; }
+    public void setCreadoPor(String creadoPor) { this.creadoPor = creadoPor; }
+
     public String getAprobadoPor() { return aprobadoPor; }
     public void setAprobadoPor(String aprobadoPor) { this.aprobadoPor = aprobadoPor; }
 
@@ -109,6 +115,12 @@ public class OrdenCompraDTO {
 
     public String getFechaRecepcion() { return fechaRecepcion; }
     public void setFechaRecepcion(String fechaRecepcion) { this.fechaRecepcion = fechaRecepcion; }
+
+    public String getAnuladoPor() { return anuladoPor; }
+    public void setAnuladoPor(String anuladoPor) { this.anuladoPor = anuladoPor; }
+
+    public String getFechaAnulacion() { return fechaAnulacion; }
+    public void setFechaAnulacion(String fechaAnulacion) { this.fechaAnulacion = fechaAnulacion; }
 
     public String getNumeroFactura() { return numeroFactura; }
     public void setNumeroFactura(String numeroFactura) { this.numeroFactura = numeroFactura; }

@@ -774,6 +774,8 @@ public class OrdenCompraService implements IOrdenCompraService {
         }
 
         orden.setEstado(EstadoOrdenCompra.ANULADA);
+        orden.setUsuarioAnulacion(usuarioService.obtenerUsuarioAutenticado());
+        orden.setFechaAnulacion(LocalDate.now());
         return ordenCompraRepository.save(orden);
     }
 
@@ -792,6 +794,13 @@ public class OrdenCompraService implements IOrdenCompraService {
         }
 
         return subtotal.add(iva).subtract(descuento).add(flete);
+    }
+
+    private String nombreCompleto(Usuario usuario) {
+        if (usuario == null) {
+            return null;
+        }
+        return (usuario.getNombre() + " " + usuario.getApellido()).trim();
     }
 
     /**
@@ -852,6 +861,8 @@ public class OrdenCompraService implements IOrdenCompraService {
         dto.setEstado(
                 orden.getEstado() != null ? orden.getEstado().name() : null);
 
+        dto.setCreadoPor(nombreCompleto(orden.getUsuario()));
+
         dto.setAprobadoPor(
                 orden.getUsuarioAprobacion() != null
                         ? orden.getUsuarioAprobacion().getNombre() + " " + orden.getUsuarioAprobacion().getApellido()
@@ -862,6 +873,8 @@ public class OrdenCompraService implements IOrdenCompraService {
 
         dto.setRecibidoPor(orden.getRecibidoPor() != null ? orden.getRecibidoPor() : null);
         dto.setFechaRecepcion(orden.getFechaRecepcion() != null ? (orden.getFechaRecepcion().toString()) : null);
+        dto.setAnuladoPor(nombreCompleto(orden.getUsuarioAnulacion()));
+        dto.setFechaAnulacion(orden.getFechaAnulacion() != null ? orden.getFechaAnulacion().toString() : null);
         dto.setNumeroFactura(orden.getNumeroFactura() != null ? orden.getNumeroFactura() : null);
         dto.setFotoRecepcion(orden.getFotoRecepcion());
 
