@@ -232,18 +232,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const formDescription = document.getElementById('poliza-modal-description');
     const proveedorSearch = document.getElementById('buscar-proveedor-poliza');
     const proveedorId = document.getElementById('id-proveedor-poliza');
+    const proveedorPolizaField = document.querySelector('.proveedor-poliza-field');
     const proveedorSearchContainer = document.querySelector('.proveedor-poliza-search');
     const proveedorDropdown = document.getElementById('proveedor-poliza-resultados');
     const proveedorCard = document.getElementById('proveedor-poliza-card');
     const cambiarProveedorButton = document.getElementById('btn-cambiar-proveedor-poliza');
+    const crearProveedorButton = document.getElementById('btn-crear-proveedor-poliza');
+    const proveedorNuevoPanel = document.getElementById('proveedor-poliza-new-panel');
+    const usarProveedorNuevoButton = document.getElementById('btn-usar-proveedor-poliza-nuevo');
+    const cancelarProveedorNuevoButton = document.getElementById('btn-cancelar-proveedor-poliza-nuevo');
+    const camposProveedorNuevo = [
+        document.getElementById('poliza-prov-nit'),
+        document.getElementById('poliza-prov-nombre'),
+        document.getElementById('poliza-prov-ciudad'),
+        document.getElementById('poliza-prov-direccion'),
+        document.getElementById('poliza-prov-telefono'),
+        document.getElementById('poliza-prov-correo')
+    ];
     const createAction = form?.getAttribute('action');
     const fechaDesde = document.getElementById('poliza-fecha-desde');
     const fechaHasta = document.getElementById('poliza-fecha-hasta');
     const estadoSelect = document.querySelector('.polizas-filters .estado-select');
     const auditoria = {
         creador: document.getElementById('poliza-creado-por'),
-        aprobador: document.getElementById('poliza-aprobado-por'),
-        fechaAprobacion: document.getElementById('poliza-fecha-aprobacion'),
         terminadoPor: document.getElementById('poliza-terminado-por'),
         fechaTerminacion: document.getElementById('poliza-fecha-terminacion'),
         motivoTerminacion: document.getElementById('poliza-motivo-terminacion'),
@@ -253,8 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
         fechaAnulacion: document.getElementById('poliza-fecha-anulacion'),
         anulacion: document.querySelectorAll('.auditoria-anulacion-poliza')
     };
-    ['poliza-aprobado-por', 'poliza-fecha-aprobacion',
-        'poliza-terminado-por', 'poliza-fecha-terminacion', 'poliza-motivo-terminacion']
+    ['poliza-terminado-por', 'poliza-fecha-terminacion', 'poliza-motivo-terminacion']
         .forEach((id) => document.getElementById(id)?.closest('.auditoria-item')?.setAttribute('hidden', 'hidden'));
     let scrollOriginal = null;
     let proveedorSearchTimer = null;
@@ -286,7 +296,31 @@ document.addEventListener('DOMContentLoaded', () => {
             [proveedor.telefono, proveedor.correo].filter(Boolean).join(' · ');
         cerrarResultadosProveedor(true);
         proveedorSearchContainer.hidden = true;
+        crearProveedorButton.hidden = true;
+        proveedorNuevoPanel.hidden = true;
+        proveedorPolizaField?.classList.remove('proveedor-nuevo-abierto');
         proveedorCard.hidden = false;
+    };
+
+    const limpiarProveedorNuevo = () => camposProveedorNuevo.forEach((campo) => {
+        if (campo) campo.value = '';
+    });
+
+    const mostrarFormularioProveedorNuevo = () => {
+        const termino = proveedorSearch.value.trim();
+        cerrarResultadosProveedor(true);
+        proveedorId.value = '';
+        limpiarProveedorNuevo();
+        const nitProveedor = document.getElementById('poliza-prov-nit');
+        const nombreProveedor = document.getElementById('poliza-prov-nombre');
+        if (/^\d+$/.test(termino)) nitProveedor.value = termino;
+        else nombreProveedor.value = termino;
+        proveedorSearchContainer.hidden = true;
+        crearProveedorButton.hidden = true;
+        proveedorCard.hidden = true;
+        proveedorPolizaField?.classList.add('proveedor-nuevo-abierto');
+        proveedorNuevoPanel.hidden = false;
+        nitProveedor.focus();
     };
 
     const restablecerProveedorPoliza = () => {
@@ -296,6 +330,10 @@ document.addEventListener('DOMContentLoaded', () => {
         proveedorSearch.required = true;
         proveedorSearch.disabled = false;
         proveedorSearchContainer.hidden = false;
+        crearProveedorButton.hidden = false;
+        proveedorNuevoPanel.hidden = true;
+        proveedorPolizaField?.classList.remove('proveedor-nuevo-abierto');
+        limpiarProveedorNuevo();
         proveedorCard.hidden = true;
         cambiarProveedorButton.disabled = false;
     };
@@ -393,14 +431,42 @@ document.addEventListener('DOMContentLoaded', () => {
         restablecerProveedorPoliza();
         proveedorSearch.focus();
     });
+    crearProveedorButton?.addEventListener('click', mostrarFormularioProveedorNuevo);
+    usarProveedorNuevoButton?.addEventListener('click', () => {
+        const campoIncompleto = camposProveedorNuevo.find((campo) => !campo?.value.trim());
+        if (campoIncompleto) {
+            mostrarToast('Complete los seis campos obligatorios del proveedor.', 'error');
+            campoIncompleto.focus();
+            return;
+        }
+        const nitProveedor = document.getElementById('poliza-prov-nit');
+        const correoProveedor = document.getElementById('poliza-prov-correo');
+        if (!/^\d+$/.test(nitProveedor.value.trim())) {
+            mostrarToast('El NIT del proveedor solo debe contener números.', 'error');
+            nitProveedor.focus();
+            return;
+        }
+        if (!correoProveedor.checkValidity()) {
+            mostrarToast('Ingrese un correo válido para el proveedor.', 'error');
+            correoProveedor.focus();
+            return;
+        }
+        mostrarTarjetaProveedor({
+            nit: nitProveedor.value.trim(),
+            nombre: document.getElementById('poliza-prov-nombre').value.trim(),
+            ciudad: document.getElementById('poliza-prov-ciudad').value.trim(),
+            direccion: document.getElementById('poliza-prov-direccion').value.trim(),
+            telefono: document.getElementById('poliza-prov-telefono').value.trim(),
+            correo: correoProveedor.value.trim()
+        });
+    });
+    cancelarProveedorNuevoButton?.addEventListener('click', restablecerProveedorPoliza);
     document.addEventListener('click', (event) => {
         if (!event.target.closest('.proveedor-poliza-field')) cerrarResultadosProveedor(true);
     });
 
-    const actualizarAuditoria = ({ creador, aprobador, sede, fechaAprobacion, terminadoPor, fechaTerminacion, motivoTerminacion, activador, anulador, fechaAnulacion }) => {
+    const actualizarAuditoria = ({ creador, terminadoPor, fechaTerminacion, motivoTerminacion, activador, anulador, fechaAnulacion }) => {
         if (auditoria.creador) auditoria.creador.textContent = creador || 'Sin información';
-        if (auditoria.aprobador) auditoria.aprobador.textContent = aprobador || 'Sin aprobación';
-        if (auditoria.fechaAprobacion) auditoria.fechaAprobacion.textContent = fechaAprobacion || 'Sin aprobación';
         if (auditoria.terminadoPor) auditoria.terminadoPor.textContent = terminadoPor || 'Sin terminación';
         if (auditoria.fechaTerminacion) auditoria.fechaTerminacion.textContent = fechaTerminacion || 'Sin terminación';
         if (auditoria.motivoTerminacion) auditoria.motivoTerminacion.textContent = motivoTerminacion || 'Sin motivo de terminación';
@@ -900,12 +966,16 @@ document.addEventListener('DOMContentLoaded', () => {
     form?.addEventListener('submit', async (event) => {
         event.preventDefault();
         if (!saveButton) return;
-        if (!proveedorId.value) {
-            mostrarToast('Selecciona un proveedor de la lista para continuar.', 'error');
-            proveedorSearchContainer.hidden = false;
-            proveedorCard.hidden = true;
-            proveedorSearch.required = true;
-            proveedorSearch.focus();
+        const proveedorNuevoCompleto = camposProveedorNuevo.every((campo) => campo?.value.trim());
+        if (!proveedorId.value && !proveedorNuevoCompleto) {
+            mostrarToast('Seleccione un proveedor existente o complete los seis datos para crear uno nuevo.', 'error');
+            if (proveedorNuevoPanel.hidden) {
+                proveedorSearchContainer.hidden = false;
+                crearProveedorButton.hidden = false;
+                proveedorCard.hidden = true;
+                proveedorSearch.required = true;
+                proveedorSearch.focus();
+            }
             return;
         }
         if (!form.checkValidity()) {

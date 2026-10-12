@@ -4,10 +4,13 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.NumberFormat;
 import java.util.Locale;
+import java.util.List;
+import java.time.temporal.ChronoUnit;
 
 import com.palmera_junior.gestion_compras.entity.OrdenCompra;
 import com.palmera_junior.gestion_compras.entity.Poliza;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
@@ -20,6 +23,126 @@ import org.thymeleaf.context.Context;
 public class EmailTemplateService {
 
     private final TemplateEngine templateEngine;
+
+    @Value("${correo.plataforma-url}")
+    private String plataformaUrl;
+
+    /** Renderiza el aviso HTML de una póliza en borrador para un aprobador específico. */
+    public String generarCorreoNuevaPolizaPendiente(Poliza poliza, String nombreAprobador, String sedeAprobador) {
+        Context context = new Context(new Locale("es", "CO"));
+        String numeroPoliza = poliza.getNumeroPoliza();
+        if (numeroPoliza == null || numeroPoliza.isBlank()) {
+            numeroPoliza = "Contrato " + poliza.getNumeroContrato();
+        }
+        String creador = poliza.getUsuario() == null ? "Un usuario"
+                : (poliza.getUsuario().getNombre() + " " + poliza.getUsuario().getApellido()).trim();
+
+        context.setVariable("nombreAprobador", nombreAprobador);
+        context.setVariable("numeroPoliza", numeroPoliza);
+        context.setVariable("numeroContrato", poliza.getNumeroContrato());
+        context.setVariable("tituloResumen", "Nueva Póliza");
+        context.setVariable("cliente", poliza.getCliente());
+        context.setVariable("proveedor", poliza.getProveedor() == null ? "N/A" : poliza.getProveedor().getNombre());
+        context.setVariable("sede", sedeAprobador);
+        context.setVariable("fechaInicio", poliza.getFechaCreacion());
+        context.setVariable("fechaFin", poliza.getFechaVencimiento());
+        context.setVariable("creador", creador);
+        context.setVariable("fechaCreacion", poliza.getFechaCreacion());
+        context.setVariable("urlRevision", plataformaUrl.replaceAll("/$", "") + "/polizas");
+        context.setVariable("encabezado", "SISTEMA DE GESTIÓN · PÓLIZAS");
+        context.setVariable("etiqueta", "◷  PENDIENTE DE TU APROBACIÓN");
+        context.setVariable("mensaje", "Se ha creado una nueva póliza que requiere tu revisión y aprobación antes de continuar el proceso. A continuación encontrarás el resumen:");
+        context.setVariable("textoBoton", "Revisar y aprobar póliza");
+        context.setVariable("advertencia", "Esta póliza permanecerá en estado Borrador hasta que sea aprobada. Si no se gestiona a tiempo, puede afectar el inicio de la vigencia del contrato.");
+        return templateEngine.process("poliza-pendiente-aprobacion", context);
+    }
+
+    /** Reutiliza la plantilla de pólizas para advertir el próximo vencimiento al creador. */
+    public String generarCorreoPolizaProximaAVencer(Poliza poliza, String nombreCreador) {
+        Context context = new Context(new Locale("es", "CO"));
+        long diasRestantes = ChronoUnit.DAYS.between(java.time.LocalDate.now(), poliza.getFechaVencimiento());
+        context.setVariable("nombreAprobador", nombreCreador);
+        context.setVariable("numeroPoliza", poliza.getNumeroPoliza() == null || poliza.getNumeroPoliza().isBlank()
+                ? "Contrato " + poliza.getNumeroContrato() : poliza.getNumeroPoliza());
+        context.setVariable("numeroContrato", poliza.getNumeroContrato());
+        context.setVariable("tituloResumen", "Póliza próxima a vencer");
+        context.setVariable("cliente", poliza.getCliente());
+        context.setVariable("proveedor", poliza.getProveedor() == null ? "N/A" : poliza.getProveedor().getNombre());
+        context.setVariable("sede", poliza.getSede() == null ? "N/A" : poliza.getSede().getNombre());
+        context.setVariable("fechaInicio", poliza.getFechaCreacion());
+        context.setVariable("fechaFin", poliza.getFechaVencimiento());
+        context.setVariable("creador", nombreCreador);
+        context.setVariable("fechaCreacion", poliza.getFechaCreacion());
+        context.setVariable("urlRevision", plataformaUrl.replaceAll("/$", "") + "/polizas");
+        context.setVariable("encabezado", "SISTEMA DE GESTIÓN · PÓLIZAS");
+        context.setVariable("etiqueta", "⚠  PRÓXIMA A VENCER");
+        context.setVariable("mensaje", "La póliza está próxima a vencer. Faltan " + diasRestantes
+                + " día(s) para su vencimiento. Revise la información y gestione su renovación oportunamente.");
+        context.setVariable("textoBoton", "Revisar póliza");
+        context.setVariable("advertencia", "Esta es una alerta automática de vencimiento. Si no se gestiona a tiempo, la vigencia del contrato puede verse afectada.");
+        return templateEngine.process("poliza-pendiente-aprobacion", context);
+    }
+
+    /** Reutiliza la plantilla HTML para informar la terminación y las primas pendientes de gestionar. */
+    public String generarCorreoPolizaTerminada(Poliza poliza, String nombreDestinatario) {
+        Context context = new Context(new Locale("es", "CO"));
+        String creador = poliza.getUsuario() == null ? "N/A"
+                : (poliza.getUsuario().getNombre() + " " + poliza.getUsuario().getApellido()).trim();
+        List<String> primas = poliza.getDetallesPrima().stream()
+                .map(prima -> prima.getDescripcion() + ": " + formatearPesos(prima.getValor()))
+                .toList();
+        context.setVariable("nombreAprobador", nombreDestinatario);
+        context.setVariable("numeroPoliza", poliza.getNumeroPoliza() == null || poliza.getNumeroPoliza().isBlank()
+                ? "Contrato " + poliza.getNumeroContrato() : poliza.getNumeroPoliza());
+        context.setVariable("numeroContrato", poliza.getNumeroContrato());
+        context.setVariable("tituloResumen", "Póliza terminada");
+        context.setVariable("cliente", poliza.getCliente());
+        context.setVariable("proveedor", poliza.getProveedor() == null ? "N/A" : poliza.getProveedor().getNombre());
+        context.setVariable("sede", poliza.getSede() == null ? "N/A" : poliza.getSede().getNombre());
+        context.setVariable("fechaInicio", poliza.getFechaCreacion());
+        context.setVariable("fechaFin", poliza.getFechaVencimiento());
+        context.setVariable("creador", creador);
+        context.setVariable("fechaCreacion", poliza.getFechaTerminacion());
+        context.setVariable("urlRevision", plataformaUrl.replaceAll("/$", "") + "/polizas");
+        context.setVariable("encabezado", "SISTEMA DE GESTIÓN · PÓLIZAS");
+        context.setVariable("etiqueta", "■  PÓLIZA TERMINADA");
+        context.setVariable("mensaje", "La póliza ha sido terminada. Cada sede involucrada debe solicitar el valor restante de las primas relacionadas a continuación.");
+        context.setVariable("textoBoton", "Revisar póliza terminada");
+        context.setVariable("advertencia", "Motivo de terminación: " + (poliza.getMotivoTerminacion() == null ? "No registrado" : poliza.getMotivoTerminacion()));
+        context.setVariable("primasTerminacion", primas);
+        return templateEngine.process("poliza-pendiente-aprobacion", context);
+    }
+
+    /** Reutiliza la plantilla HTML para informar a Contabilidad que una póliza fue aprobada. */
+    public String generarCorreoPolizaAprobadaContabilidad(Poliza poliza) {
+        Context context = new Context(new Locale("es", "CO"));
+        String creador = poliza.getUsuario() == null ? "N/A"
+                : (poliza.getUsuario().getNombre() + " " + poliza.getUsuario().getApellido()).trim();
+        String aprobador = poliza.getUsuarioAprobacion() == null ? "N/A"
+                : (poliza.getUsuarioAprobacion().getNombre() + " " + poliza.getUsuarioAprobacion().getApellido()).trim();
+        context.setVariable("nombreAprobador", "Departamento de Contabilidad");
+        context.setVariable("numeroPoliza", poliza.getNumeroPoliza() == null || poliza.getNumeroPoliza().isBlank()
+                ? "Contrato " + poliza.getNumeroContrato() : poliza.getNumeroPoliza());
+        context.setVariable("numeroContrato", poliza.getNumeroContrato());
+        context.setVariable("tituloResumen", "Póliza aprobada");
+        context.setVariable("cliente", poliza.getCliente());
+        context.setVariable("proveedor", poliza.getProveedor() == null ? "N/A" : poliza.getProveedor().getNombre());
+        context.setVariable("sede", poliza.getSede() == null ? "N/A" : poliza.getSede().getNombre());
+        context.setVariable("fechaInicio", poliza.getFechaCreacion());
+        context.setVariable("fechaFin", poliza.getFechaVencimiento());
+        context.setVariable("creador", creador);
+        context.setVariable("fechaCreacion", poliza.getFechaAprobacion());
+        context.setVariable("urlRevision", plataformaUrl.replaceAll("/$", "") + "/polizas");
+        context.setVariable("encabezado", "SISTEMA DE GESTIÓN · PÓLIZAS");
+        context.setVariable("etiqueta", "✓  PÓLIZA APROBADA");
+        context.setVariable("mensaje", "La póliza fue aprobada por " + aprobador
+                + ". Se adjunta el contrato en PDF para su gestión contable.");
+        context.setVariable("textoBoton", "Revisar póliza aprobada");
+        context.setVariable("advertencia", "Por favor valide el contrato adjunto y realice el proceso contable correspondiente.");
+        context.setVariable("mostrarSaludo", false);
+        context.setVariable("mostrarEnlace", false);
+        return templateEngine.process("poliza-pendiente-aprobacion", context);
+    }
 
     /**
      * Qué hace:
@@ -55,7 +178,7 @@ public class EmailTemplateService {
 
         context.setVariable(
                 "proveedor",
-                orden.getNombreProveedorSnapshot() != null ? orden.getNombreProveedorSnapshot() : ""
+                orden.getProveedor() != null ? orden.getProveedor().getNombre() : ""
         );
 
         return templateEngine.process(
@@ -83,7 +206,7 @@ public class EmailTemplateService {
      * @return Cuerpo del mensaje en texto plano.
      */
     public String generarCuerpoFacturacion(OrdenCompra orden) {
-        String proveedor = orden.getNombreProveedorSnapshot() != null ? orden.getNombreProveedorSnapshot() : "N/A";
+        String proveedor = orden.getProveedor() != null ? orden.getProveedor().getNombre() : "N/A";
         String numeroFactura = orden.getNumeroFactura() != null ? orden.getNumeroFactura() : "N/A";
 
         return "Se registró correctamente la facturación de la Orden de Compra N° " + orden.getNumeroOrden() + ".\n\n"

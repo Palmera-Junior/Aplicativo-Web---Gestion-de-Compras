@@ -17,6 +17,13 @@ public class PolizaDTO {
     private String fechaCreacion;
     private String fechaVencimiento;
     private Long idProveedor;
+    // Se usan exclusivamente cuando se registra un proveedor nuevo desde el formulario de pólizas.
+    private Long nitProveedor;
+    private String nombreProveedor;
+    private String ciudadProveedor;
+    private String direccionProveedor;
+    private String telefonoProveedor;
+    private String correoProveedor;
     private String cliente;
     private String descripcion;
     private String numeroContrato;

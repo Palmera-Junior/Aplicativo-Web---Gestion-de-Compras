@@ -9,7 +9,7 @@ public class OrdenCompraDTO {
     private Long idProv;
     private Long idCentroCosto;
 
-    // Datos del proveedor y orden (Snapshot)
+    // Datos del proveedor: se usan para crear uno nuevo cuando idProv no fue seleccionado.
     private String fecha;          // Fecha seleccionada por el usuario (formato YYYY-MM-DD desde el frontend)
     private Long nitProv;
     private String nombreProv;

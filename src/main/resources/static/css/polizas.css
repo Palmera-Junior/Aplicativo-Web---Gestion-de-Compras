@@ -1,6 +1,13 @@
-/* ==========================================
-   VISTA DE POLIZAS
-========================================== */
+/* ==========================================================
+   VISTA DE PÓLIZAS
+   Estilos propios de la pestaña "Pólizas". Comparte variables
+   globales y utilidades (.btn-primary, .btn-secondary, .data-table,
+   .modal-overlay, etc.) con compras.css, que se carga antes.
+   ========================================================== */
+
+/* ----------------------------------------------------------
+   Contenedor principal
+   ---------------------------------------------------------- */
 .polizas-container {
     position: relative;
     width: min(1400px, calc(100% - 32px));
@@ -14,6 +21,9 @@
     overflow: visible;
 }
 
+/* ----------------------------------------------------------
+   Pestañas de navegación (Órdenes de Compra / Pólizas)
+   ---------------------------------------------------------- */
 .tabs-shell {
     position: relative;
     z-index: 3;
@@ -117,6 +127,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+
     .view-tab,
     .view-tab::after,
     .view-tab .material-symbols {
@@ -125,6 +136,9 @@
     }
 }
 
+/* ----------------------------------------------------------
+   Encabezado de la vista (título + botón "Nueva Póliza")
+   ---------------------------------------------------------- */
 .polizas-header {
     display: flex;
     align-items: flex-end;
@@ -136,7 +150,7 @@
 
 .polizas-header-title,
 .summary-heading,
-.modal-heading > div {
+.modal-heading>div {
     display: flex;
     align-items: center;
     gap: 14px;
@@ -187,6 +201,9 @@
     font-size: 14px;
 }
 
+/* ----------------------------------------------------------
+   Alertas de éxito / error (mensajes flash)
+   ---------------------------------------------------------- */
 .alerta {
     margin: 0 0 14px;
     padding: 11px 14px;
@@ -208,6 +225,9 @@
     color: #a32121;
 }
 
+/* ----------------------------------------------------------
+   Tarjeta "Resumen de pólizas" (barra de estado + referencias)
+   ---------------------------------------------------------- */
 .poliza-summary {
     display: flex;
     flex-direction: column;
@@ -233,7 +253,7 @@
     gap: 14px;
 }
 
-.summary-main > .material-symbols {
+.summary-main>.material-symbols {
     display: grid;
     width: 42px;
     height: 42px;
@@ -274,6 +294,7 @@
     letter-spacing: .05em;
 }
 
+/* Barra de distribución por estado (segmentos proporcionales) */
 .poliza-status-bar {
     display: flex;
     width: 100%;
@@ -300,32 +321,69 @@
     box-shadow: none;
 }
 
-.status-segment:nth-child(2) { animation-delay: .08s; }
-.status-segment:nth-child(3) { animation-delay: .16s; }
-.status-segment:nth-child(4) { animation-delay: .24s; }
-.status-segment:nth-child(5) { animation-delay: .32s; }
+.status-segment:nth-child(2) {
+    animation-delay: .08s;
+}
+
+.status-segment:nth-child(3) {
+    animation-delay: .16s;
+}
+
+.status-segment:nth-child(4) {
+    animation-delay: .24s;
+}
+
+.status-segment:nth-child(5) {
+    animation-delay: .32s;
+}
 
 @keyframes status-bar-fill {
-    from { clip-path: inset(0 100% 0 0); }
-    to { clip-path: inset(0 0 0 0); }
+    from {
+        clip-path: inset(0 100% 0 0);
+    }
+
+    to {
+        clip-path: inset(0 0 0 0);
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {
+
     .progress-segment,
     .status-segment,
-    .sede-legend-track span { animation: none; }
+    .sede-legend-track span {
+        animation: none;
+    }
 }
 
 .status-segment:hover {
     transform: scaleY(1.7);
 }
 
-.status-anulada { background: #bf1708; }
-.status-borrador { background: #a8a8a8; }
-.status-aprobada { background: #0d3977; }
-.status-vigente { background: #198754; }
-.status-vencida { background: #c77700; }
-.status-terminada { background: #6f42c1; }
+/* Colores por estado de póliza (usados también por .status-dot) */
+.status-anulada {
+    background: #bf1708;
+}
+
+.status-borrador {
+    background: #a8a8a8;
+}
+
+.status-aprobada {
+    background: #0d3977;
+}
+
+.status-vigente {
+    background: #198754;
+}
+
+.status-vencida {
+    background: #c77700;
+}
+
+.status-terminada {
+    background: #6f42c1;
+}
 
 .poliza-vencimiento-cell {
     white-space: nowrap;
@@ -338,14 +396,15 @@
     vertical-align: middle;
 }
 
-.polizas-table tr.poliza-proxima-vencer > td {
+.polizas-table tr.poliza-proxima-vencer>td {
     background: #fc910413;
 }
 
-.polizas-table tr.poliza-proxima-vencer:hover > td {
+.polizas-table tr.poliza-proxima-vencer:hover>td {
     background: #efaa1431;
 }
 
+/* Fila de referencias (conteo + etiqueta + punto de color por estado) */
 .poliza-status-references {
     display: grid;
     grid-template-columns: repeat(6, minmax(0, 1fr));
@@ -353,7 +412,7 @@
     width: 100%;
 }
 
-.poliza-status-references > div {
+.poliza-status-references>div {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -363,7 +422,7 @@
     border-left: 1px solid rgba(33, 37, 41, .09);
 }
 
-.poliza-status-references > div:first-child {
+.poliza-status-references>div:first-child {
     border-left: 0;
 }
 
@@ -385,10 +444,13 @@
     border-radius: 99px;
 }
 
-/* Mismo contenedor que .filtros-section (Órdenes de Compra):
+/* ----------------------------------------------------------
+   Filtros de búsqueda
+   Mismo contenedor que .filtros-section (Órdenes de Compra):
    el ancho de cada campo lo dan las clases compartidas
-   .buscar-input / .estado-select / .fecha-input de index.css,
-   así ambas pestañas quedan proporcionales entre sí. */
+   .buscar-input / .estado-select / .fecha-input de compras.css,
+   así ambas pestañas quedan proporcionales entre sí.
+   ---------------------------------------------------------- */
 .polizas-filters {
     display: flex;
     align-items: center;
@@ -402,6 +464,9 @@
     background: #ffffff;
 }
 
+/* ----------------------------------------------------------
+   Tabla de pólizas
+   ---------------------------------------------------------- */
 .polizas-table-wrap {
     margin: 0;
     border-radius: 0;
@@ -409,6 +474,65 @@
 
 .polizas-table th,
 .polizas-table td {
+    white-space: nowrap;
+}
+
+/* Anchos estables: los textos largos se truncan y no redimensionan la tabla.
+   "Cliente" se redujo de 17% a 12% (sobra espacio para nombres truncados
+   con cell-ellipsis) y esos 5 puntos se le dieron a "Acciones", que antes
+   recortaba sus íconos. min-width también se bajó un poco para que quepan
+   todas las columnas sin scroll horizontal en pantallas de portátil. */
+.polizas-table {
+    table-layout: fixed;
+    min-width: 960px;
+}
+
+.polizas-table th:nth-child(1),
+.polizas-table td:nth-child(1) {
+    width: 10%;
+}
+
+.polizas-table th:nth-child(2),
+.polizas-table td:nth-child(2) {
+    width: 12%;
+}
+
+.polizas-table th:nth-child(3),
+.polizas-table td:nth-child(3) {
+    width: 18%;
+}
+
+.polizas-table th:nth-child(4),
+.polizas-table td:nth-child(4) {
+    width: 12%;
+}
+
+.polizas-table th:nth-child(5),
+.polizas-table td:nth-child(5),
+.polizas-table th:nth-child(6),
+.polizas-table td:nth-child(6) {
+    width: 11%;
+}
+
+.polizas-table th:nth-child(7),
+.polizas-table td:nth-child(7) {
+    width: 10%;
+}
+
+.polizas-table th:nth-child(8),
+.polizas-table td:nth-child(8) {
+    width: 6%;
+    text-align: center;
+}
+
+.polizas-table th:nth-child(9),
+.polizas-table td:nth-child(9) {
+    width: 10%;
+}
+
+.polizas-table .cell-ellipsis {
+    overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
 }
 
@@ -422,16 +546,9 @@
     text-align: right;
 }
 
-.polizas-table td:nth-child(2),
-.polizas-table td:nth-child(3) {
-    max-width: 190px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* Misma tipografía, tamaño y punto indicador que .badge-estado
-   (Órdenes de Compra) en index.css, con sus propios colores
-   independientes para no afectar esa vista. */
+/* Badge de estado. Misma tipografía, tamaño y punto indicador que
+   .badge-estado (Órdenes de Compra) en compras.css, con sus propios
+   colores independientes para no afectar esa vista. */
 .poliza-badge {
     position: relative;
     display: inline-flex;
@@ -457,26 +574,63 @@
     flex-shrink: 0;
 }
 
-.poliza-badge.borrador { background: #dbdbdb; color: #2f2f31; }
-.poliza-badge.borrador::before { background: #2f2f31; }
-
-.poliza-badge.aprobada { background: #dfeaff; color: #131261; }
-.poliza-badge.aprobada::before { background: #131261; }
-
-.poliza-badge.anulada { background: #ffdede; color: #e61a0c; }
-.poliza-badge.anulada::before { background: #d92d20; }
-.poliza-badge.vigente { background: #e6f6ec; color: #157347; }
-.poliza-badge.vigente::before { background: #198754; }
-.poliza-badge.vencida { background: #fff3cd; color: #8a5200; }
-.poliza-badge.vencida::before { background: #c77700; }
-.poliza-badge.terminada { background: #eee7f8; color: #5b21b6; }
-.poliza-badge.terminada::before { background: #6f42c1; }
-
-.poliza-actions {
-    display: flex;
-    gap: 4px;
+.poliza-badge.borrador {
+    background: #dbdbdb;
+    color: #2f2f31;
 }
 
+.poliza-badge.borrador::before {
+    background: #2f2f31;
+}
+
+.poliza-badge.aprobada {
+    background: #dfeaff;
+    color: #131261;
+}
+
+.poliza-badge.aprobada::before {
+    background: #131261;
+}
+
+.poliza-badge.anulada {
+    background: #ffdede;
+    color: #e61a0c;
+}
+
+.poliza-badge.anulada::before {
+    background: #d92d20;
+}
+
+.poliza-badge.vigente {
+    background: #e6f6ec;
+    color: #157347;
+}
+
+.poliza-badge.vigente::before {
+    background: #198754;
+}
+
+.poliza-badge.vencida {
+    background: #fff3cd;
+    color: #8a5200;
+}
+
+.poliza-badge.vencida::before {
+    background: #c77700;
+}
+
+.poliza-badge.terminada {
+    background: #eee7f8;
+    color: #5b21b6;
+}
+
+.poliza-badge.terminada::before {
+    background: #6f42c1;
+}
+
+/* ----------------------------------------------------------
+   Archivo adjunto del contrato (modal de edición)
+   ---------------------------------------------------------- */
 .poliza-archivo-actual {
     display: flex;
     align-items: center;
@@ -538,7 +692,7 @@
     overflow-wrap: anywhere;
 }
 
-.poliza-archivo-actual > span:nth-child(2) {
+.poliza-archivo-actual>span:nth-child(2) {
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -552,10 +706,21 @@
     border-color: #efb8b8;
 }
 
-.poliza-action-form { display: contents; }
-.btn-icon-danger { color: #b42318; }
-.btn-icon-danger:hover { background: #fff0ef; }
+.poliza-action-form {
+    display: contents;
+}
 
+.btn-icon-danger {
+    color: #b42318;
+}
+
+.btn-icon-danger:hover {
+    background: #fff0ef;
+}
+
+/* ----------------------------------------------------------
+   Estado vacío de la tabla y paginación
+   ---------------------------------------------------------- */
 .polizas-empty-row td {
     padding: 0;
 }
@@ -589,6 +754,9 @@
     margin: 16px 0 0;
 }
 
+/* ----------------------------------------------------------
+   Modal principal de Pólizas (crear / editar)
+   ---------------------------------------------------------- */
 .poliza-modal {
     position: fixed;
     top: 50%;
@@ -654,7 +822,7 @@
     overflow-y: auto;
 }
 
-#poliza-modal > #poliza-form {
+#poliza-modal>#poliza-form {
     display: flex;
     min-height: 0;
     flex: 1 1 auto;
@@ -681,14 +849,14 @@
     overflow: visible;
 }
 
-#poliza-modal > #poliza-form > .form-actions {
+#poliza-modal>#poliza-form>.form-actions {
     flex: 0 0 auto;
     padding-top: 12px;
     background: #fff;
 }
 
 /* Encabezado del modal: mismo degradado institucional y texto
-   blanco que .modal-header en index.css (modal de Órdenes de
+   blanco que .modal-header en compras.css (modal de Órdenes de
    Compra). Se usa un margen negativo para que la barra ocupe
    todo el ancho del modal a pesar del padding de .poliza-form. */
 .modal-heading {
@@ -741,6 +909,7 @@
     transform: scale(1.08);
 }
 
+/* Formulario del modal: grilla de 2 columnas */
 .poliza-form-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -754,11 +923,15 @@
     gap: 6px;
 }
 
+.proveedor-poliza-field.proveedor-nuevo-abierto {
+    grid-column: 1 / -1;
+}
+
 .proveedor-poliza-search {
     width: 100%;
 }
 
-.proveedor-poliza-search > input {
+.proveedor-poliza-search>input {
     width: 100%;
 }
 
@@ -810,6 +983,52 @@
     flex: 0 0 auto;
 }
 
+.proveedor-poliza-create-link {
+    margin-top: 8px;
+    border: 0;
+    background: transparent;
+    color: var(--primary-color, #1f6b4f);
+    cursor: pointer;
+    font-weight: 600;
+    padding: 0;
+}
+
+.proveedor-poliza-new-panel {
+    margin-top: 10px;
+    padding: 14px;
+    border: 1px solid #dce5e0;
+    border-radius: 8px;
+    background: #f8fbf9;
+}
+
+.proveedor-poliza-new-panel>strong {
+    display: block;
+    margin-bottom: 10px;
+}
+
+.proveedor-poliza-new-panel .form-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.proveedor-poliza-new-panel label {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.proveedor-poliza-new-panel .input-control {
+    width: 100%;
+}
+
+.proveedor-poliza-new-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
 .proveedor-poliza-option:focus-visible,
 #btn-cambiar-proveedor-poliza:focus-visible {
     outline: 2px solid #198754;
@@ -823,6 +1042,7 @@
     align-items: end;
 }
 
+/* Sedes involucradas y resumen de aprobaciones por sede */
 .sede-aprobacion-section {
     display: flex;
     flex-direction: column;
@@ -860,16 +1080,19 @@
     flex-shrink: 0;
     min-height: 36px;
 }
+
 .checkbox-chip:hover {
     border-color: #b7dec3;
     background: #f1f8f4;
 }
+
 .checkbox-chip:has(input:checked) {
     background: #edf8f0;
     border-color: #9fd6b6;
     color: #0f5132;
     font-weight: 600;
 }
+
 .checkbox-chip input {
     width: 15px;
     height: 15px;
@@ -878,6 +1101,7 @@
     cursor: pointer;
     flex-shrink: 0;
 }
+
 .sede-aprobacion-resumen {
     display: flex;
     flex-direction: column;
@@ -892,6 +1116,7 @@
     line-height: 1.4;
     margin-top: 12px;
 }
+
 .sede-aprobacion-titulo {
     margin: 0;
     color: #198754;
@@ -899,19 +1124,23 @@
     font-weight: 700;
     letter-spacing: .04em;
 }
+
 .sede-aprobacion-contenido {
     display: flex;
     align-items: center;
     gap: 10px;
 }
+
 .sede-aprobacion-resumen .material-symbols {
     color: #198754;
 }
+
 .sede-approval-list {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
 }
+
 .sede-approval-chip {
     display: inline-flex;
     flex-direction: column;
@@ -923,6 +1152,7 @@
     font-size: 11px;
     line-height: 1.35;
 }
+
 .sede-approval-chip strong {
     font-size: 12px;
 }
@@ -930,11 +1160,13 @@
 .sede-approval-chip small {
     font-size: 11px;
 }
+
 .sede-approval-chip.estado-aprobada {
     background: #ebf9f0;
     border-color: #bbebc9;
     color: #166534;
 }
+
 .sede-approval-chip.estado-pendiente {
     background: #fff8e7;
     border-color: #f5d99a;
@@ -964,6 +1196,7 @@
     resize: vertical;
 }
 
+/* Detalle de primas (tabla editable + totales) */
 .prima-detalles-section {
     min-width: 0;
     display: grid;
@@ -971,9 +1204,9 @@
     gap: 14px 16px;
 }
 
-.prima-detalles-section > h3,
-.prima-detalles-section > .prima-detalles-wrap,
-.prima-detalles-section > .add-row-btn {
+.prima-detalles-section>h3,
+.prima-detalles-section>.prima-detalles-wrap,
+.prima-detalles-section>.add-row-btn {
     grid-column: 1 / -1;
 }
 
@@ -981,19 +1214,19 @@
     margin: 0 0 8px;
 }
 
-.prima-detalles-section > .add-row-btn {
+.prima-detalles-section>.add-row-btn {
     justify-self: start;
     margin-top: 0;
 }
 
-.prima-detalles-section > label {
+.prima-detalles-section>label {
     padding: 12px 14px;
     border-radius: 10px;
     background: #f1f3f2;
     border: 1px solid #e9ecef;
 }
 
-.prima-detalles-section > label .input-control {
+.prima-detalles-section>label .input-control {
     border: none;
     background: transparent;
     padding: 0;
@@ -1058,6 +1291,7 @@
     opacity: .5;
 }
 
+/* Campo de archivo (contrato adjunto) */
 .file-field input[type="file"] {
     width: 100%;
     min-height: 44px;
@@ -1127,18 +1361,39 @@
     border-radius: 0 0 10px 10px;
 }
 
+/* Modal de solo lectura "Detalle de póliza" */
 .poliza-detalle-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 16px;
     margin: 0;
 }
-.poliza-detalle-grid div { min-width: 0; }
-.poliza-detalle-grid dt { margin-bottom: 5px; color: #6c757d; font-size: 12px; font-weight: 700; }
-.poliza-detalle-grid dd { margin: 0; color: #212529; overflow-wrap: anywhere; }
-.poliza-detalle-grid #detalle-prima,
-.poliza-detalle-grid #detalle-valor-contrato { text-align: right; }
 
+.poliza-detalle-grid div {
+    min-width: 0;
+}
+
+.poliza-detalle-grid dt {
+    margin-bottom: 5px;
+    color: #6c757d;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.poliza-detalle-grid dd {
+    margin: 0;
+    color: #212529;
+    overflow-wrap: anywhere;
+}
+
+.poliza-detalle-grid #detalle-prima,
+.poliza-detalle-grid #detalle-valor-contrato {
+    text-align: right;
+}
+
+/* ==========================================================
+   RESPONSIVE
+   ========================================================== */
 @media (max-width: 768px) {
     .poliza-modal {
         width: calc(100% - 20px);
@@ -1170,7 +1425,6 @@
         margin-right: 0;
     }
 
-
     .summary-heading {
         align-items: flex-start;
         flex-direction: column;
@@ -1187,7 +1441,7 @@
         row-gap: 14px;
     }
 
-    .poliza-status-references > div:nth-child(3n+1) {
+    .poliza-status-references>div:nth-child(3n+1) {
         border-left: 0;
     }
 
@@ -1201,7 +1455,7 @@
 
     /* El ancho de los campos de .polizas-filters ya lo resuelven
        las reglas compartidas de .buscar-input/.estado-select/
-       .fecha-input en index.css (ver sección RESPONSIVE - FILTROS). */
+       .fecha-input en compras.css (ver sección RESPONSIVE - FILTROS). */
 
     .poliza-form {
         padding: 16px;
@@ -1217,6 +1471,14 @@
 
     .poliza-form-grid .full-width {
         grid-column: auto;
+    }
+
+    .proveedor-poliza-field.proveedor-nuevo-abierto {
+        grid-column: auto;
+    }
+
+    .proveedor-poliza-new-panel .form-grid-3 {
+        grid-template-columns: 1fr;
     }
 
     .poliza-form .form-actions {
@@ -1237,20 +1499,6 @@
 }
 
 @media (max-width: 576px) {
-    .poliza-status-references {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .poliza-status-references > div:nth-child(3n+1) {
-        border-left: 1px solid rgba(33, 37, 41, .09);
-    }
-
-    .poliza-status-references > div:nth-child(2n+1) {
-        border-left: 0;
-    }
-}
-
-@media (max-width: 576px) {
     .poliza-summary {
         gap: 16px;
         padding: 18px 14px;
@@ -1261,11 +1509,11 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .poliza-status-references > div:nth-child(3n+1) {
+    .poliza-status-references>div:nth-child(3n+1) {
         border-left: 1px solid rgba(33, 37, 41, .09);
     }
 
-    .poliza-status-references > div:nth-child(2n+1) {
+    .poliza-status-references>div:nth-child(2n+1) {
         border-left: 0;
     }
 }

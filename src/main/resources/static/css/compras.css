@@ -1,11 +1,23 @@
-/* Variables Globales (Basadas en el formato institucional) */
+/* ==========================================================
+   VARIABLES GLOBALES (formato institucional)
+   NOTA DE REFACTOR: el archivo original tenía DOS bloques :root
+   (uno aquí y otro cerca del final, bajo "VARIABLES - fallback").
+   En CSS, las propiedades repetidas en :root se sobrescriben por
+   orden de aparición, así que el segundo bloque ya estaba ganando
+   en --primary-color, --border-color, --danger-color y --text-color.
+   Este bloque único reproduce exactamente esos valores finales
+   (los que realmente se usaban en pantalla) para no cambiar nada
+   visualmente; el segundo :root fue eliminado más abajo.
+   ========================================================== */
 :root {
-    --primary-color: #0A8240;
+    --primary-color: #198754;
+    --primary-hover: #157347;
     --secondary-color: #f4f6f9;
-    --text-color: #333333;
-    --border-color: #d1d5db;
+    --text-color: #212529;
+    --text-muted: #6c757d;
+    --border-color: #e9ecef;
     --hover-color: #0A8240;
-    --danger-color: #dc3545;
+    --danger-color: #c9432f;
     --success-color: #28a745;
     --font-family: 'Inter', sans-serif;
 }
@@ -170,8 +182,6 @@ body {
     flex-shrink: 0;
     font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 32;
 }
-
-
 
 .dashboard-header h1 {
     font-size: 26px;
@@ -639,7 +649,6 @@ body {
 .btn-buscar:hover {
     transform: scale(0.90);
     color: #00e266;
-    ;
 }
 
 .btn-limpiar {
@@ -774,6 +783,28 @@ body {
     border-bottom: none;
 }
 
+/* La grilla de órdenes mantiene anchos predecibles aunque lleguen datos extensos. */
+.ordenes-table {
+    table-layout: fixed;
+    min-width: 1040px;
+}
+
+.ordenes-table th:nth-child(1), .ordenes-table td:nth-child(1) { width: 11%; }
+.ordenes-table th:nth-child(2), .ordenes-table td:nth-child(2) { width: 9%; }
+.ordenes-table th:nth-child(3), .ordenes-table td:nth-child(3) { width: 20%; }
+.ordenes-table th:nth-child(4), .ordenes-table td:nth-child(4) { width: 14%; }
+.ordenes-table th:nth-child(5), .ordenes-table td:nth-child(5) { width: 12%; }
+.ordenes-table th:nth-child(6), .ordenes-table td:nth-child(6) { width: 12%; }
+.ordenes-table th:nth-child(7), .ordenes-table td:nth-child(7),
+.ordenes-table th:nth-child(8), .ordenes-table td:nth-child(8) { width: 5%; }
+.ordenes-table th:nth-child(9), .ordenes-table td:nth-child(9) { width: 12%; }
+
+.ordenes-table .cell-ellipsis {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .ordenes-empty-row:hover {
     background: transparent !important;
 }
@@ -836,7 +867,6 @@ body {
     letter-spacing: 0.3px;
     white-space: nowrap;
     gap: 6px;
-
 
 }
 
@@ -909,7 +939,6 @@ body {
     overflow: hidden;
     background: #fff;
 }
-
 
 .recepcion-productos-table {
     width: 100%;
@@ -1052,18 +1081,15 @@ body {
    BOTONES DE ACCIONES (íconos en la tabla)
    ============================================ */
 
-
 .acciones-cell {
     width: 175px;
     max-width: 175px;
-
 
 }
 
 .acciones-th {
     padding-left: 34px !important;
 }
-
 
 .btn-icon {
     display: inline-flex;
@@ -1086,7 +1112,6 @@ body {
 
 .btn-icon .material-symbols {
     font-size: 20px;
-    ;
 }
 
 .btn-icon:hover {
@@ -1101,7 +1126,6 @@ body {
 .btn-icon.approve .material-symbols:hover {
     color: #1fad37;
 }
-
 
 .btn-icon.facturar {
     color: #2b7a86;
@@ -1130,7 +1154,6 @@ body {
     color: #dc3545;
 
 }
-
 
 /* Posición absoluta: el ícono ya NO forma parte del flujo flex del badge,
    así que aparecer o desaparecer nunca cambia el ancho del pill */
@@ -1163,7 +1186,6 @@ body {
     font-size: 13px !important;
     color: #b7aeab !important;
 }
-
 
 /* ============================================
    ÍCONO DE ESTADO DE ENVÍO DE CORREO (columna Correo)
@@ -1250,7 +1272,6 @@ body {
     min-height: fit-content;
 }
 
-
 /* Tablas Generales */
 .table-responsive {
     overflow-x: auto;
@@ -1289,7 +1310,6 @@ body {
     color: #717880d0;
 }
 
-
 .material-symbols:hover {
 
     transform: scale(0.90);
@@ -1301,9 +1321,6 @@ body {
     text-align: left;
     vertical-align: middle;
 }
-
-
-
 
 /* ============================================
    PAGINACIÓN
@@ -1406,19 +1423,8 @@ body {
     border: 0;
 }
 
-
-/* =========================================
-   VARIABLES (fallback por si no existen
-   ya definidas globalmente en :root)
-========================================= */
-:root {
-    --primary-color: #198754;
-    --primary-hover: #157347;
-    --border-color: #e9ecef;
-    --danger-color: #c9432f;
-    --text-color: #212529;
-    --text-muted: #6c757d;
-}
+/* (El segundo bloque :root que existía aquí se consolidó en el
+   único :root al inicio del archivo — ver nota de refactor ahí). */
 
 /* =========================================
    DATOS GENERALES - GRID MEJORADO
@@ -1696,8 +1702,6 @@ body {
     color: #ffffff;
     transform: scale(1.08);
 }
-
-
 
 .modal-body {
     padding: 24px;

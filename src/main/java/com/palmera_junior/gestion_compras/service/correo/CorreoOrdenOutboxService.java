@@ -63,7 +63,7 @@ public class CorreoOrdenOutboxService {
     public Long registrarPendiente(OrdenCompra orden) {
         AuditoriaEnvioCorreo auditoria = new AuditoriaEnvioCorreo();
         auditoria.setOrdenCompra(orden);
-        String destinatario = orden.getCorreoProveedorSnapshot();
+        String destinatario = orden.getProveedor() != null ? orden.getProveedor().getCorreo() : null;
 
         if (!StringUtils.hasText(destinatario)) {
             auditoria.setDestinatario("sin-correo@invalid.local");

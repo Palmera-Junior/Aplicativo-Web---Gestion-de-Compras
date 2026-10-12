@@ -28,24 +28,6 @@ public class OrdenCompra {
     @ToString.Exclude
     private Proveedor proveedor;
 
-    @Column(name = "proveedor_nit_snapshot")
-    private Long nitProveedorSnapshot;
-
-    @Column(name = "proveedor_nombre_snapshot", length = 150)
-    private String nombreProveedorSnapshot;
-
-    @Column(name = "proveedor_ciudad_snapshot", length = 150)
-    private String ciudadProveedorSnapshot;
-
-    @Column(name = "proveedor_direccion_snapshot", length = 255)
-    private String direccionProveedorSnapshot;
-
-    @Column(name = "proveedor_telefono_snapshot", length = 50)
-    private String telefonoProveedorSnapshot;
-
-    @Column(name = "proveedor_correo_snapshot", length = 150)
-    private String correoProveedorSnapshot;
-
     @Column(nullable = false)
     private LocalDate fecha;
 
@@ -135,36 +117,6 @@ public class OrdenCompra {
     @OneToMany(mappedBy = "ordenCompra", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     private List<DetalleCompra> detalles = new ArrayList<>();
-
-    public Long getNitProveedorSnapshot() {
-        return tieneSnapshotProveedor() ? nitProveedorSnapshot : proveedor == null ? null : proveedor.getNit();
-    }
-
-    public String getNombreProveedorSnapshot() {
-        return tieneSnapshotProveedor() ? nombreProveedorSnapshot : proveedor == null ? null : proveedor.getNombre();
-    }
-
-    public String getCiudadProveedorSnapshot() {
-        return tieneSnapshotProveedor() ? ciudadProveedorSnapshot : proveedor == null ? null : proveedor.getCiudad();
-    }
-
-    public String getDireccionProveedorSnapshot() {
-        return tieneSnapshotProveedor() ? direccionProveedorSnapshot : proveedor == null ? null : proveedor.getDireccion();
-    }
-
-    public String getTelefonoProveedorSnapshot() {
-        return tieneSnapshotProveedor() ? telefonoProveedorSnapshot : proveedor == null ? null : proveedor.getTelefono();
-    }
-
-    public String getCorreoProveedorSnapshot() {
-        return tieneSnapshotProveedor() ? correoProveedorSnapshot : proveedor == null ? null : proveedor.getCorreo();
-    }
-
-    private boolean tieneSnapshotProveedor() {
-        return nitProveedorSnapshot != null || nombreProveedorSnapshot != null || ciudadProveedorSnapshot != null
-                || direccionProveedorSnapshot != null || telefonoProveedorSnapshot != null
-                || correoProveedorSnapshot != null;
-    }
 
     public void addDetalle(DetalleCompra detalle) {
         detalles.add(detalle);

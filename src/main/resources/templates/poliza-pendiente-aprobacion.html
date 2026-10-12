@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body style="margin:0;padding:0;background:#f1f3f4;font-family:Arial,Helvetica,sans-serif;color:#10261d;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"
+        style="padding:28px 12px;background:#f1f3f4;">
+        <tr>
+            <td align="center">
+                <table role="presentation" width="560" cellspacing="0" cellpadding="0" border="0"
+                    style="width:100%;max-width:560px;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 3px 14px rgba(0,0,0,.12);">
+                    <tr>
+                        <td align="center" style="padding:28px 24px;background:#197447;color:#ffffff;">
+                            <div
+                                style="display:inline-block;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.15);font-size:24px;line-height:24px;">
+                                <span aria-hidden="true" style="font-size:22px;line-height:1;">🛡️</span>
+                            </div>
+                            <div style="margin-top:12px;font-weight:700;font-size:14px;" th:text="${encabezado}">
+                                SIGO · PÓLIZAS
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:30px 32px 12px;">
+                            <div th:text="${etiqueta}"
+                                style="display:inline-block;padding:6px 13px;border-radius:15px;background:#fff1d7;color:#9b6100;font-size:12px;font-weight:700;">
+                                ◷&nbsp; PENDIENTE DE TU APROBACIÓN</div>
+                            <h1 th:if="${mostrarSaludo != false}" style="margin:18px 0 10px;font-size:20px;line-height:1.2;">Hola <span
+                                    th:text="${nombreAprobador}">Aprobador</span>,</h1>
+                            <p th:text="${mensaje}" style="margin:0 0 20px;font-size:15px;line-height:1.55;color:#273b32;">Se ha creado una
+                                nueva póliza que requiere tu revisión y aprobación antes de continuar el proceso. A
+                                continuación encontrarás el resumen:</p>
+
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"
+                                style="border:1px solid #d9e2dc;border-radius:10px;border-collapse:separate;overflow:hidden;">
+                                <tr>
+                                    <td colspan="2"
+                                        style="padding:14px 18px;background:#f5f8f6;border-bottom:1px solid #d9e2dc;font-size:14px;font-weight:700;">
+                                        <span th:text="${tituloResumen}">Nueva Póliza</span></td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:16px 18px 5px;color:#667a6f;font-size:13px;">Contrato</td>
+                                    <td align="right" style="padding:16px 18px 5px;font-size:13px;font-weight:700;"
+                                        th:text="${numeroContrato}">POL-2026-0148</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:5px 18px;color:#667a6f;font-size:13px;">Cliente</td>
+                                    <td align="right" style="padding:5px 18px;font-size:13px;font-weight:700;"
+                                        th:text="${cliente}">HARINA PAN</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:5px 18px;color:#667a6f;font-size:13px;">Proveedor</td>
+                                    <td align="right" style="padding:5px 18px;font-size:13px;font-weight:700;"
+                                        th:text="${proveedor}">Proveedor S.A.S.</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:5px 18px;color:#667a6f;font-size:13px;">Sede a aprobar</td>
+                                    <td align="right" style="padding:5px 18px;font-size:13px;font-weight:700;"
+                                        th:text="${sede}">Sede Nacional</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:5px 18px 14px;color:#667a6f;font-size:13px;">Vigencia</td>
+                                    <td align="right" style="padding:5px 18px 14px;font-size:13px;font-weight:700;">
+                                        <span th:text="${fechaInicio}">10/10/2026</span> — <span
+                                            th:text="${fechaFin}">19/11/2026</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2"
+                                        style="padding:13px 18px;border-top:1px solid #d9e2dc;font-size:12px;"><span
+                                            style="color:#667a6f;">Creada por</span><span
+                                            style="float:right;font-weight:700;"
+                                            th:text="${creador + ' · ' + fechaCreacion}">Felipe Corzo ·
+                                            09/10/2026</span>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <div th:if="${primasTerminacion != null}" style="margin-top:16px;padding:14px 16px;border:1px solid #d9e2dc;border-radius:8px;background:#f8fbf9;">
+                                <strong style="font-size:13px;">Primas pendientes de gestionar por las sedes involucradas</strong>
+                                <ul style="margin:9px 0 0;padding-left:20px;font-size:13px;line-height:1.65;">
+                                    <li th:each="prima : ${primasTerminacion}" th:text="${prima}">Prima: $0</li>
+                                </ul>
+                            </div>
+
+                            <div th:if="${mostrarEnlace != false}" style="text-align:center;padding:24px 0 14px;"><a th:href="${urlRevision}" href="#"
+                                    th:text="${textoBoton}" style="display:inline-block;padding:13px 26px;border-radius:8px;background:#168253;color:#ffffff;text-decoration:none;font-size:14px;font-weight:700;">Revisar
+                                    y aprobar póliza</a></div>
+                            <p th:if="${mostrarEnlace != false}" style="margin:0 0 24px;text-align:center;color:#87958e;font-size:11px;">Si el botón no
+                                funciona, copie este enlace en su navegador: <span
+                                    th:text="${urlRevision}">https://sigo.com/polizas</span></p>
+                            <div
+                                style="padding:14px 16px;border:1px solid #f0d9a5;border-radius:8px;background:#fffcf4;color:#76510a;font-size:12px;line-height:1.5;">
+                                ⚠&nbsp; <span th:text="${advertencia}">Esta póliza permanecerá en estado Borrador hasta que sea
+                                aprobada. Si no se gestiona a tiempo, puede afectar el inicio de la vigencia del
+                                contrato.</span></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td
+                            style="padding:28px 28px;text-align:center;border-top:1px solid #edf0ee;color:#8b9992;font-size:11px;line-height:1.6;">
+                            Este es un mensaje automático del Sistema Integral de Gestión Operativa.
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+
+</html>

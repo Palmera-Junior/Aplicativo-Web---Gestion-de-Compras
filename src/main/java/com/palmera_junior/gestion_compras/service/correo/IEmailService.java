@@ -47,4 +47,10 @@ public interface IEmailService {
    void enviarNotificacionPoliza(String destinatario, String asunto, String cuerpo,
          byte[] pdf, String nombreArchivo) throws Exception;
 
+   /** Envía una notificación de texto plano sin adjuntos mediante Amazon SES. */
+   void enviarNotificacion(String destinatario, String asunto, String cuerpo) throws Exception;
+
+   /** Envía una notificación HTML sin adjuntos mediante Amazon SES. */
+   void enviarNotificacionHtml(String destinatario, String asunto, String html) throws Exception;
+
 }

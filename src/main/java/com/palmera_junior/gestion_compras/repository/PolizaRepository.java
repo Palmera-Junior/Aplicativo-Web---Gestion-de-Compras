@@ -2,6 +2,7 @@ package com.palmera_junior.gestion_compras.repository;
 
 import java.time.LocalDate;
 import java.util.Optional;
+import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -69,4 +70,13 @@ public interface PolizaRepository extends JpaRepository<Poliza, Integer>, JpaSpe
             + "where p.estado = com.palmera_junior.gestion_compras.entity.EstadoPoliza.VIGENTE "
             + "and p.fechaVencimiento < :fecha")
     int marcarVigentesVencidas(@Param("fecha") LocalDate fecha);
+
+    @EntityGraph(attributePaths = { "proveedor", "sede", "usuario" })
+    @Query("select p from Poliza p where p.notificacionProximoVencimientoEn is null "
+            + "and p.fechaVencimiento between :desde and :hasta "
+            + "and p.estado not in (com.palmera_junior.gestion_compras.entity.EstadoPoliza.ANULADA, "
+            + "com.palmera_junior.gestion_compras.entity.EstadoPoliza.TERMINADA, "
+            + "com.palmera_junior.gestion_compras.entity.EstadoPoliza.VENCIDA)")
+    List<Poliza> findPendientesNotificacionProximoVencimiento(@Param("desde") LocalDate desde,
+            @Param("hasta") LocalDate hasta);
 }

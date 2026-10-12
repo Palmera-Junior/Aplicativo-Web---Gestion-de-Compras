@@ -8,10 +8,10 @@
     <meta name="_csrf_header" th:content="${_csrf.headerName}">
     <title>Órdenes de Compra | Portal Comercial</title>
     <link rel="icon" type="image/png" th:href="@{/imgs/logo1.png}">
-    <link rel="stylesheet" th:href="@{/css/compras.css(v=12)}">
-    <link rel="stylesheet" th:href="@{/css/admin.css(v=3)}">
-    <link rel="stylesheet" th:href="@{/css/polizas.css(v=8)}">
-    <link rel="stylesheet" th:href="@{/css/navigation.css(v=18)}">
+    <link rel="stylesheet" th:href="@{/css/compras.css}">
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+    <link rel="stylesheet" th:href="@{/css/polizas.css}">
+    <link rel="stylesheet" th:href="@{/css/navigation.css}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet"
@@ -22,6 +22,9 @@
 
 <body>
 
+    <!-- ============================================================
+         NAVBAR SUPERIOR: logo, usuario autenticado y cierre de sesión
+         ============================================================ -->
     <header class="navbar">
         <div class="logo">
             <h1><span class="material-symbols">hub</span> SIGO | </h1>
@@ -42,11 +45,13 @@
         </div>
     </header>
 
+    <!-- Breadcrumb y pestañas compartidas (fragmento común con Pólizas) -->
     <div th:replace="~{fragments/navegacion :: principal('compras')}"></div>
     <br>
     <main class="dashboard-container">
         <div th:replace="~{fragments/navegacion :: pestanasAprobador('compras')}"></div>
 
+        <!-- Encabezado de la vista: título + botón "Nueva Orden" -->
         <div class="dashboard-header">
             <div class="dashboard-header-left">
                 <div class="order-status-icon">
@@ -62,6 +67,8 @@
             </div>
         </div>
 
+        <!-- Tarjeta "Resumen por estado": conteos, barra proporcional
+             y total en valor/cantidad de órdenes -->
         <section class="orders-summary"
             th:with="ordenesBorrador=${ordenesCompraResumen.?[estado.name() == 'BORRADOR'].size()},
                       ordenesAprobadas=${ordenesCompraResumen.?[estado.name() == 'APROBADA'].size()},
@@ -161,6 +168,8 @@
                 </div>
         </section>
 
+        <!-- Barra de filtros: búsqueda por texto, estado, switch de
+             "solo incompletas" y rango de fechas -->
         <form class="filtros-section" method="GET" th:action="@{/dashboard}">
             <span class="filtro-icon" title="Filtros">
                 <span class="material-symbols-outlined">filter_alt</span>
@@ -200,8 +209,9 @@
             </a>
         </form>
 
+        <!-- Tabla principal de órdenes de compra -->
         <div class="table-responsive">
-            <table class="data-table">
+            <table class="data-table ordenes-table">
                 <thead>
                     <tr>
                         <th>N° Orden</th>
@@ -232,8 +242,9 @@
                     <tr th:each="orden : ${ordenesCompra.content}">
                         <td><strong th:text="${orden.numeroOrden}">BUC-07-0013</strong></td>
                         <td th:text="${orden.fecha}">2026-07-03</td>
-                        <td th:text="${orden.nombreProveedorSnapshot != null ? orden.nombreProveedorSnapshot : ''}">Proveedor S.A.</td>
-                        <td th:text="${orden.sede.nombre}">Sede Nacional</td>
+                        <td class="cell-ellipsis" th:text="${orden.proveedor != null ? orden.proveedor.nombre : ''}"
+                            th:title="${orden.proveedor != null ? orden.proveedor.nombre : ''}">Proveedor S.A.</td>
+                        <td class="cell-ellipsis" th:text="${orden.sede.nombre}" th:title="${orden.sede.nombre}">Sede Nacional</td>
                         <td style="text-align: right;"
                             th:text="'$ ' + ${#numbers.formatDecimal(orden.total, 1, 'COMMA', 0, 'POINT')}"></td>
                         <td class="estado-cell">
@@ -318,7 +329,7 @@
                                 th:if="${orden.estado.name() == 'APROBADA' or orden.estado.name() == 'FACTURADA'}"
                                 class="btn-icon receive" th:data-id="${orden.idOrden}"
                                 th:data-numero-orden="${orden.numeroOrden}"
-                                th:data-proveedor="${orden.nombreProveedorSnapshot != null ? orden.nombreProveedorSnapshot : ''}"
+                                th:data-proveedor="${orden.proveedor != null ? orden.proveedor.nombre : ''}"
                                 th:data-paga-flete="${orden.pagaFlete}" th:data-valor-flete="${orden.valorFlete}"
                                 th:data-estado="${orden.estado.name()}">
                                 <span class="material-symbols">package_2</span>
@@ -329,7 +340,7 @@
                                 th:if="${orden.estado.name() == 'APROBADA' or orden.estado.name() == 'RECIBIDA'}"
                                 class="btn-icon facturar" th:data-id="${orden.idOrden}"
                                 th:data-numero-orden="${orden.numeroOrden}"
-                                th:data-proveedor="${orden.nombreProveedorSnapshot != null ? orden.nombreProveedorSnapshot : ''}">
+                                th:data-proveedor="${orden.proveedor != null ? orden.proveedor.nombre : ''}">
                                 <span class="material-symbols">receipt_long</span>
                             </button>
                             <button title="Anular Orden de Compra"
@@ -526,6 +537,7 @@
                 </div>
             </div>
 
+            <!-- Paginación de la tabla -->
             <div class="paginacion">
                 <div class="info-pagina">
                     Mostrando página
@@ -555,7 +567,10 @@
         </div>
     </main>
 
-    <!-- Modal para crear nueva orden de compra -->
+    <!-- ============================================================
+         MODAL: crear nueva orden de compra (datos generales,
+         proveedor, detalle de productos, totales y auditoría)
+         ============================================================ -->
     <div id="modal-orden" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">

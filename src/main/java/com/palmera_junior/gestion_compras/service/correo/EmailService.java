@@ -134,8 +134,30 @@ public class EmailService implements IEmailService {
                 helper.setFrom(remitente, nombreRemitente);
                 helper.setTo(destinatario);
                 helper.setSubject(asunto);
-                helper.setText(cuerpo, false);
+                helper.setText(cuerpo, true);
                 helper.addAttachment(nombreArchivo, new ByteArrayResource(pdf));
+                enviarComoRaw(message, destinatario);
+        }
+
+        @Override
+        public void enviarNotificacion(String destinatario, String asunto, String cuerpo) throws Exception {
+                MimeMessage message = new MimeMessage(Session.getInstance(new Properties()));
+                MimeMessageHelper helper = new MimeMessageHelper(message, false, "UTF-8");
+                helper.setFrom(remitente, nombreRemitente);
+                helper.setTo(destinatario);
+                helper.setSubject(asunto);
+                helper.setText(cuerpo, false);
+                enviarComoRaw(message, destinatario);
+        }
+
+        @Override
+        public void enviarNotificacionHtml(String destinatario, String asunto, String html) throws Exception {
+                MimeMessage message = new MimeMessage(Session.getInstance(new Properties()));
+                MimeMessageHelper helper = new MimeMessageHelper(message, false, "UTF-8");
+                helper.setFrom(remitente, nombreRemitente);
+                helper.setTo(destinatario);
+                helper.setSubject(asunto);
+                helper.setText(html, true);
                 enviarComoRaw(message, destinatario);
         }
 

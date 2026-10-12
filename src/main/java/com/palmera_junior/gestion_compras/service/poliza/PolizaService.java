@@ -1,9 +1,12 @@
 package com.palmera_junior.gestion_compras.service.poliza;
 
 import java.math.BigDecimal;
+import java.io.IOException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -22,19 +25,27 @@ import jakarta.persistence.criteria.JoinType;
 
 import com.palmera_junior.gestion_compras.dto.PolizaDTO;
 import com.palmera_junior.gestion_compras.dto.DetallePrimaDTO;
+import com.palmera_junior.gestion_compras.dto.RenovarPolizaDTO;
 import com.palmera_junior.gestion_compras.entity.EstadoAprobacionSede;
 import com.palmera_junior.gestion_compras.entity.EstadoPoliza;
 import com.palmera_junior.gestion_compras.entity.DetallePrima;
 import com.palmera_junior.gestion_compras.entity.Poliza;
+import com.palmera_junior.gestion_compras.entity.PolizaAdjunto;
 import com.palmera_junior.gestion_compras.entity.PolizaSedeAprobacion;
+import com.palmera_junior.gestion_compras.entity.PolizaRenovacion;
 import com.palmera_junior.gestion_compras.entity.Proveedor;
 import com.palmera_junior.gestion_compras.entity.Rol;
 import com.palmera_junior.gestion_compras.entity.Sede;
+import com.palmera_junior.gestion_compras.entity.TipoAdjuntoPoliza;
 import com.palmera_junior.gestion_compras.entity.Usuario;
 import com.palmera_junior.gestion_compras.repository.PolizaRepository;
 import com.palmera_junior.gestion_compras.repository.PolizaSedeAprobacionRepository;
+import com.palmera_junior.gestion_compras.repository.PolizaRenovacionRepository;
 import com.palmera_junior.gestion_compras.repository.ProveedorRepository;
 import com.palmera_junior.gestion_compras.events.PolizaAprobadaEvent;
+import com.palmera_junior.gestion_compras.events.NuevaPolizaCreadaEvent;
+import com.palmera_junior.gestion_compras.events.PolizaProximaAVencerEvent;
+import com.palmera_junior.gestion_compras.events.PolizaTerminadaEvent;
 import com.palmera_junior.gestion_compras.service.correo.CorreoPolizaOutboxService;
 import com.palmera_junior.gestion_compras.service.usuario.IUsuarioService;
 import org.springframework.web.multipart.MultipartFile;
@@ -43,6 +54,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class PolizaService implements IPolizaService {
 
     private static final DateTimeFormatter ISO_DATE = DateTimeFormatter.ISO_LOCAL_DATE;
+    private static final int MAX_ADJUNTOS_POLIZA = 5;
 
     private final PolizaRepository polizaRepository;
     private final ProveedorRepository proveedorRepository;
@@ -51,12 +63,14 @@ public class PolizaService implements IPolizaService {
     private final ApplicationEventPublisher eventPublisher;
     private final CorreoPolizaOutboxService correoPolizaOutboxService;
     private final PolizaSedeAprobacionRepository polizaSedeAprobacionRepository;
+    private final PolizaRenovacionRepository polizaRenovacionRepository;
 
     @Autowired
     public PolizaService(PolizaRepository polizaRepository, ProveedorRepository proveedorRepository,
             IUsuarioService usuarioService, IPolizaArchivoStorage archivoStorage,
             ApplicationEventPublisher eventPublisher, CorreoPolizaOutboxService correoPolizaOutboxService,
-            PolizaSedeAprobacionRepository polizaSedeAprobacionRepository) {
+            PolizaSedeAprobacionRepository polizaSedeAprobacionRepository,
+            PolizaRenovacionRepository polizaRenovacionRepository) {
         this.polizaRepository = polizaRepository;
         this.proveedorRepository = proveedorRepository;
         this.usuarioService = usuarioService;
@@ -64,18 +78,27 @@ public class PolizaService implements IPolizaService {
         this.eventPublisher = eventPublisher;
         this.correoPolizaOutboxService = correoPolizaOutboxService;
         this.polizaSedeAprobacionRepository = polizaSedeAprobacionRepository;
+        this.polizaRenovacionRepository = polizaRenovacionRepository;
+        }
+
+        public PolizaService(PolizaRepository polizaRepository, ProveedorRepository proveedorRepository,
+            IUsuarioService usuarioService, IPolizaArchivoStorage archivoStorage,
+            ApplicationEventPublisher eventPublisher, CorreoPolizaOutboxService correoPolizaOutboxService,
+            PolizaSedeAprobacionRepository polizaSedeAprobacionRepository) {
+        this(polizaRepository, proveedorRepository, usuarioService, archivoStorage, eventPublisher,
+            correoPolizaOutboxService, polizaSedeAprobacionRepository, null);
     }
 
     public PolizaService(PolizaRepository polizaRepository, ProveedorRepository proveedorRepository,
             IUsuarioService usuarioService, IPolizaArchivoStorage archivoStorage,
             ApplicationEventPublisher eventPublisher, CorreoPolizaOutboxService correoPolizaOutboxService) {
         this(polizaRepository, proveedorRepository, usuarioService, archivoStorage,
-                eventPublisher, correoPolizaOutboxService, null);
+            eventPublisher, correoPolizaOutboxService, null, null);
     }
 
     PolizaService(PolizaRepository polizaRepository, ProveedorRepository proveedorRepository,
             IUsuarioService usuarioService, IPolizaArchivoStorage archivoStorage) {
-        this(polizaRepository, proveedorRepository, usuarioService, archivoStorage, null, null, null);
+        this(polizaRepository, proveedorRepository, usuarioService, archivoStorage, null, null, null, null);
     }
 
     @Override
@@ -134,7 +157,12 @@ public class PolizaService implements IPolizaService {
 
         Pageable pageableOrdenado = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
                 Sort.by(Sort.Direction.DESC, "idPoliza"));
-        return polizaRepository.findAll(specification, pageableOrdenado);
+        Page<Poliza> pagina = polizaRepository.findAll(specification, pageableOrdenado);
+        // La plantilla consulta el nombre del contrato desde la nueva relación. Se
+        // inicializa aquí, dentro de la transacción, para que la vista no dependa de
+        // Open Session in View y no falle al renderizar las acciones de cada fila.
+        pagina.getContent().forEach(poliza -> poliza.getAdjuntos().size());
+        return pagina;
     }
 
     @Override
@@ -162,6 +190,7 @@ public class PolizaService implements IPolizaService {
     public Poliza obtenerPorId(Integer idPoliza) {
         Poliza poliza = polizaRepository.findWithRelationsByIdPoliza(idPoliza)
                 .orElseThrow(() -> new IllegalArgumentException("Póliza no encontrada"));
+        poliza.getAdjuntos().size();
         assertVisible(poliza, usuarioService.obtenerUsuarioAutenticado());
         return poliza;
     }
@@ -187,14 +216,17 @@ public class PolizaService implements IPolizaService {
         Poliza poliza = new Poliza();
         poliza.setUsuario(usuario);
         poliza.setSede(usuario.getSede());
-        String adjuntoNuevo = archivoStorage.almacenar(dto == null ? null : dto.getContratoAdjunto());
+        byte[] contenidoAdjunto = archivoStorage.almacenar(dto.getContratoAdjunto());
         try {
-            aplicarDatos(poliza, dto, usuario, adjuntoNuevo);
+            aplicarDatos(poliza, dto);
+            poliza.addAdjunto(crearAdjunto(contenidoAdjunto, dto.getContratoAdjunto().getOriginalFilename(),
+                    TipoAdjuntoPoliza.CONTRATO));
             poliza.setEstado(EstadoPoliza.BORRADOR);
             actualizarAprobacionesPorSede(poliza, dto.getIdsSedes(), usuario);
-            return polizaRepository.save(poliza);
+            Poliza polizaGuardada = polizaRepository.save(poliza);
+            publicarNotificacionNuevaPoliza(polizaGuardada, usuario);
+            return polizaGuardada;
         } catch (RuntimeException exception) {
-            archivoStorage.eliminar(adjuntoNuevo);
             throw exception;
         }
     }
@@ -203,6 +235,9 @@ public class PolizaService implements IPolizaService {
     @Transactional
     @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
     public Poliza actualizarDesdeDTO(Integer idPoliza, PolizaDTO dto) {
+        if (dto == null) {
+            throw new IllegalArgumentException("Los datos de la póliza son obligatorios");
+        }
         Usuario usuario = usuarioService.obtenerUsuarioAutenticado();
         Poliza poliza = polizaRepository.findById(idPoliza)
                 .orElseThrow(() -> new IllegalArgumentException("Póliza no encontrada"));
@@ -210,36 +245,35 @@ public class PolizaService implements IPolizaService {
         if (poliza.getEstado() != EstadoPoliza.BORRADOR) {
             throw new IllegalStateException("Solo se pueden editar pólizas en estado BORRADOR");
         }
-        String adjuntoAnterior = poliza.getContratoAdjunto();
-        String nombreAdjuntoAnterior = poliza.getContratoAdjuntoNombre();
+        PolizaAdjunto adjuntoAnterior = poliza.obtenerAdjuntoContrato().orElse(null);
         boolean eliminarAdjunto = dto != null && dto.isEliminarContratoAdjunto();
         boolean hayAdjuntoNuevo = dto != null && dto.getContratoAdjunto() != null
                 && !dto.getContratoAdjunto().isEmpty();
-        if (!hayAdjuntoNuevo && (eliminarAdjunto || isBlank(adjuntoAnterior))) {
+        if (!hayAdjuntoNuevo && (eliminarAdjunto || adjuntoAnterior == null)) {
             throw new IllegalArgumentException("Debe adjuntar el contrato de la póliza en formato PDF");
         }
         if (hayAdjuntoNuevo && adjuntoAnterior != null && !eliminarAdjunto) {
             throw new IllegalArgumentException("Debe eliminar el archivo actual antes de adjuntar otro");
         }
-        String adjuntoNuevo = archivoStorage.almacenar(dto == null ? null : dto.getContratoAdjunto());
+        boolean habiaSedeAprobada = poliza.getAprobacionesPorSede().stream()
+                .anyMatch(aprobacion -> aprobacion.getEstado() == EstadoAprobacionSede.APROBADA);
+        boolean eraMultiSede = poliza.getAprobacionesPorSede().size() > 1;
+        byte[] contenidoAdjunto = hayAdjuntoNuevo ? archivoStorage.almacenar(dto.getContratoAdjunto()) : null;
         try {
-            aplicarDatos(poliza, dto, usuario, adjuntoNuevo);
+            aplicarDatos(poliza, dto);
             actualizarAprobacionesPorSede(poliza, dto.getIdsSedes(), usuario);
-            if (eliminarAdjunto && adjuntoNuevo == null) {
-                poliza.setContratoAdjunto(null);
-                poliza.setContratoAdjuntoNombre(null);
-            } else if (adjuntoNuevo != null) {
-                poliza.setContratoAdjuntoNombre(dto.getContratoAdjunto().getOriginalFilename());
-            } else {
-                poliza.setContratoAdjuntoNombre(nombreAdjuntoAnterior);
+            if (habiaSedeAprobada && (eraMultiSede || poliza.getAprobacionesPorSede().size() > 1)) {
+                poliza.getAprobacionesPorSede().forEach(PolizaSedeAprobacion::reiniciar);
             }
-            Poliza guardada = polizaRepository.save(poliza);
-            if (eliminarAdjunto || adjuntoNuevo != null) {
-                archivoStorage.eliminar(adjuntoAnterior);
+            if (eliminarAdjunto && adjuntoAnterior != null) {
+                poliza.removeAdjunto(adjuntoAnterior);
             }
-            return guardada;
+            if (contenidoAdjunto != null) {
+                poliza.addAdjunto(crearAdjunto(contenidoAdjunto, dto.getContratoAdjunto().getOriginalFilename(),
+                        TipoAdjuntoPoliza.CONTRATO));
+            }
+            return polizaRepository.save(poliza);
         } catch (RuntimeException exception) {
-            archivoStorage.eliminar(adjuntoNuevo);
             throw exception;
         }
     }
@@ -311,34 +345,173 @@ public class PolizaService implements IPolizaService {
     @Override
     @Transactional
     @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
-    public Poliza activarVigente(Integer idPoliza, String numeroPoliza, MultipartFile polizaFisica) {
+    public Poliza activarVigente(Integer idPoliza, String numeroPoliza, List<MultipartFile> polizasFisicas) {
         Usuario usuario = usuarioService.obtenerUsuarioAutenticado();
         Poliza poliza = polizaRepository.findById(idPoliza)
                 .orElseThrow(() -> new IllegalArgumentException("Póliza no encontrada"));
         assertPuedeModificar(poliza, usuario);
-        if (polizaFisica == null || polizaFisica.isEmpty()) {
-            throw new IllegalArgumentException("Debe adjuntar el PDF de la póliza física");
-        }
         if (numeroPoliza == null || numeroPoliza.isBlank()) {
             throw new IllegalArgumentException("El número de póliza es obligatorio");
+        }
+        if (polizasFisicas == null || polizasFisicas.isEmpty()) {
+            throw new IllegalArgumentException("Debe adjuntar al menos un PDF de la póliza física");
+        }
+        if (polizasFisicas.size() > MAX_ADJUNTOS_POLIZA) {
+            throw new IllegalArgumentException("Puede adjuntar máximo 5 archivos PDF por póliza");
         }
         String numeroNormalizado = numeroPoliza.trim();
         validarNumeroPolizaUnico(numeroNormalizado, poliza.getIdPoliza());
 
-        String adjuntoNuevo = archivoStorage.almacenar(polizaFisica);
-        try {
-            poliza.activar(usuario, adjuntoNuevo, polizaFisica.getOriginalFilename(), numeroNormalizado);
-            return polizaRepository.save(poliza);
-        } catch (RuntimeException exception) {
-            archivoStorage.eliminar(adjuntoNuevo);
-            throw exception;
+        List<PolizaAdjunto> adjuntosNuevos = new ArrayList<>();
+        for (MultipartFile archivo : polizasFisicas) {
+            if (archivo == null || archivo.isEmpty()) {
+                throw new IllegalArgumentException("Cada archivo seleccionado debe contener un PDF");
+            }
+            byte[] contenido = archivoStorage.almacenar(archivo);
+
+            adjuntosNuevos.add(crearAdjunto(contenido, archivo.getOriginalFilename(),
+                TipoAdjuntoPoliza.POLIZA_FISICA));
         }
+        poliza.activar(numeroNormalizado, adjuntosNuevos);
+        poliza.setUsuarioActivacion(usuario);
+        return polizaRepository.save(poliza);
+    }
+
+    @Override
+    @Transactional
+    @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
+    public Poliza renovar(Integer idPoliza, RenovarPolizaDTO dto) {
+        Usuario usuario = usuarioService.obtenerUsuarioAutenticado();
+        Poliza poliza = polizaRepository.findWithAprobacionesPorSedeByIdPoliza(idPoliza)
+                .orElseThrow(() -> new IllegalArgumentException("Póliza no encontrada"));
+        assertPuedeModificar(poliza, usuario);
+        if (poliza.getEstado() != EstadoPoliza.VIGENTE || !poliza.estaProximaAVencer()) {
+            throw new IllegalStateException("Solo se pueden renovar pólizas vigentes próximas a vencer en menos de 30 días");
+        }
+        if (dto == null || dto.getFechaInicio() == null || dto.getFechaFin() == null) {
+            throw new IllegalArgumentException("Debe indicar las fechas de inicio y fin de la renovación");
+        }
+        if (poliza.getFechaVencimiento() == null || !dto.getFechaInicio().isAfter(poliza.getFechaVencimiento())) {
+            throw new IllegalArgumentException("La fecha de inicio de la renovación debe ser posterior al vencimiento vigente");
+        }
+        if (!dto.getFechaFin().isAfter(dto.getFechaInicio())) {
+            throw new IllegalArgumentException("La fecha fin debe ser posterior a la fecha de inicio");
+        }
+        List<MultipartFile> archivos = dto.getArchivos() == null ? List.of()
+                : dto.getArchivos().stream().filter(archivo -> archivo != null && !archivo.isEmpty()).toList();
+        if (archivos.isEmpty()) {
+            throw new IllegalArgumentException("Debe adjuntar al menos un PDF de la renovación");
+        }
+        if (archivos.size() > MAX_ADJUNTOS_POLIZA) {
+            throw new IllegalArgumentException("Puede adjuntar máximo 5 archivos PDF por renovación");
+        }
+
+        PolizaRenovacion renovacion = new PolizaRenovacion();
+        renovacion.setPoliza(poliza);
+        renovacion.setFechaInicioAnterior(poliza.getFechaCreacion());
+        renovacion.setFechaFinAnterior(poliza.getFechaVencimiento());
+        renovacion.setFechaInicio(dto.getFechaInicio());
+        renovacion.setFechaFin(dto.getFechaFin());
+        renovacion.setFechaRegistro(LocalDateTime.now());
+        renovacion.setUsuario(usuario);
+        for (MultipartFile archivo : archivos) {
+            byte[] contenido = archivoStorage.almacenar(archivo);
+            PolizaAdjunto adjunto = new PolizaAdjunto();
+            adjunto.setContenido(contenido);
+            adjunto.setNombreOriginal(archivo.getOriginalFilename());
+            adjunto.setFechaCarga(LocalDateTime.now());
+            renovacion.addAdjunto(adjunto);
+        }
+        poliza.getRenovaciones().add(renovacion);
+        poliza.setFechaCreacion(dto.getFechaInicio());
+        poliza.setFechaVencimiento(dto.getFechaFin());
+        return polizaRepository.save(poliza);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
+    public List<PolizaRenovacion> listarRenovaciones(Integer idPoliza) {
+        Poliza poliza = polizaRepository.findWithAprobacionesPorSedeByIdPoliza(idPoliza)
+                .orElseThrow(() -> new IllegalArgumentException("Póliza no encontrada"));
+        assertVisible(poliza, usuarioService.obtenerUsuarioAutenticado());
+        return polizaRenovacionRepository.findByPolizaIdPolizaOrderByFechaInicioAsc(idPoliza);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
+    public PolizaAdjunto obtenerAdjuntoRenovacion(Integer idPoliza, Integer idRenovacion,
+            Integer idAdjunto) {
+        PolizaRenovacion renovacion = polizaRenovacionRepository
+                .findByIdRenovacionAndPolizaIdPoliza(idRenovacion, idPoliza)
+                .orElseThrow(() -> new IllegalArgumentException("Renovación no encontrada"));
+        Poliza poliza = polizaRepository.findWithAprobacionesPorSedeByIdPoliza(idPoliza)
+            .orElseThrow(() -> new IllegalArgumentException("Póliza no encontrada"));
+        assertVisible(poliza, usuarioService.obtenerUsuarioAutenticado());
+        return renovacion.getAdjuntos().stream()
+            .filter(adjunto -> adjunto.getTipoAdjunto() == TipoAdjuntoPoliza.RENOVACION)
+            .filter(adjunto -> idAdjunto.equals(adjunto.getIdAdjuntoPoliza()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Adjunto de renovación no encontrado"));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public byte[] leerAdjuntoRenovacion(PolizaAdjunto adjunto) throws IOException {
+        if (adjunto == null) {
+            throw new IllegalArgumentException("Adjunto de renovación no encontrado");
+        }
+        return archivoStorage.leer(adjunto.getContenido());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
+    public PolizaAdjunto obtenerContratoAdjunto(Integer idPoliza) {
+        Poliza poliza = polizaRepository.findWithRelationsByIdPoliza(idPoliza)
+                .orElseThrow(() -> new IllegalArgumentException("Póliza no encontrada"));
+        assertVisible(poliza, usuarioService.obtenerUsuarioAutenticado());
+        return poliza.obtenerAdjuntoContrato()
+                .orElseThrow(() -> new IllegalArgumentException("La póliza no tiene contrato adjunto"));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public byte[] leerContratoAdjunto(PolizaAdjunto adjunto) throws IOException {
+        if (adjunto == null) {
+            throw new IllegalArgumentException("Contrato adjunto no encontrado");
+        }
+        return archivoStorage.leer(adjunto.getContenido());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
+    public PolizaAdjunto obtenerAdjuntoFisico(Integer idPoliza, Integer idAdjunto) {
+        Poliza poliza = polizaRepository.findWithRelationsByIdPoliza(idPoliza)
+                .orElseThrow(() -> new IllegalArgumentException("Póliza no encontrada"));
+        assertVisible(poliza, usuarioService.obtenerUsuarioAutenticado());
+        return poliza.getAdjuntos().stream()
+                .filter(adjunto -> adjunto.getTipoAdjunto() == TipoAdjuntoPoliza.POLIZA_FISICA)
+                .filter(adjunto -> idAdjunto.equals(adjunto.getIdAdjuntoPoliza()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Documento de póliza no encontrado"));
     }
 
     @Override
     @Transactional
     public int marcarVencidas() {
-        return polizaRepository.marcarVigentesVencidas(LocalDate.now());
+        LocalDate hoy = LocalDate.now();
+        int vencidas = polizaRepository.marcarVigentesVencidas(hoy);
+        polizaRepository.findPendientesNotificacionProximoVencimiento(hoy, hoy.plusDays(30))
+                .forEach(poliza -> {
+                    poliza.setNotificacionProximoVencimientoEn(java.time.LocalDateTime.now());
+                    if (eventPublisher != null) {
+                        eventPublisher.publishEvent(new PolizaProximaAVencerEvent(poliza.getIdPoliza()));
+                    }
+                });
+        return vencidas;
     }
 
     @Override
@@ -350,6 +523,8 @@ public class PolizaService implements IPolizaService {
                 .orElseThrow(() -> new IllegalArgumentException("Póliza no encontrada"));
         assertPuedeAnular(poliza, usuario);
         poliza.anular();
+        poliza.setUsuarioAnulacion(usuario);
+        poliza.setFechaAnulacion(LocalDate.now());
         return polizaRepository.save(poliza);
     }
 
@@ -362,7 +537,9 @@ public class PolizaService implements IPolizaService {
                 .orElseThrow(() -> new IllegalArgumentException("Póliza no encontrada"));
         assertPuedeModificar(poliza, usuario);
         poliza.terminar(usuario, LocalDate.now(), motivoTerminacion);
-        return polizaRepository.save(poliza);
+        Poliza polizaTerminada = polizaRepository.save(poliza);
+        publicarNotificacionPolizaTerminada(polizaTerminada);
+        return polizaTerminada;
     }
 
     private void actualizarAprobacionesPorSede(Poliza poliza, List<Integer> idsSedes, Usuario creador) {
@@ -428,12 +605,37 @@ public class PolizaService implements IPolizaService {
         return aprobacion;
     }
 
-    private void aplicarDatos(Poliza poliza, PolizaDTO dto, Usuario usuario, String adjuntoNuevo) {
+    private void publicarNotificacionNuevaPoliza(Poliza poliza, Usuario creador) {
+        if (eventPublisher == null || poliza == null || poliza.getAprobacionesPorSede() == null) {
+            return;
+        }
+        List<Integer> idsSedes = poliza.getAprobacionesPorSede().stream()
+                .map(PolizaSedeAprobacion::getSede)
+                .filter(java.util.Objects::nonNull)
+                .map(Sede::getIdSede)
+                .filter(java.util.Objects::nonNull)
+                .distinct()
+                .toList();
+        eventPublisher.publishEvent(new NuevaPolizaCreadaEvent(poliza.getIdPoliza(), idsSedes));
+    }
+
+    private void publicarNotificacionPolizaTerminada(Poliza poliza) {
+        if (eventPublisher == null || poliza == null || poliza.getAprobacionesPorSede() == null) {
+            return;
+        }
+        List<Integer> idsSedes = poliza.getAprobacionesPorSede().stream()
+                .map(PolizaSedeAprobacion::getSede)
+                .filter(java.util.Objects::nonNull)
+                .map(Sede::getIdSede)
+                .filter(java.util.Objects::nonNull)
+                .distinct()
+                .toList();
+        eventPublisher.publishEvent(new PolizaTerminadaEvent(poliza.getIdPoliza(), idsSedes));
+    }
+
+    private void aplicarDatos(Poliza poliza, PolizaDTO dto) {
         if (dto == null) {
             throw new IllegalArgumentException("Los datos de la póliza son obligatorios");
-        }
-        if (dto.getIdProveedor() == null) {
-            throw new IllegalArgumentException("El proveedor es obligatorio");
         }
         if (isBlank(dto.getCliente()) || isBlank(dto.getNumeroContrato()) || isBlank(dto.getDescripcion())) {
             throw new IllegalArgumentException("El cliente, el número de contrato y la descripción son obligatorios");
@@ -454,9 +656,7 @@ public class PolizaService implements IPolizaService {
             throw new IllegalArgumentException("La fecha de vencimiento no puede ser anterior a la fecha de creación");
         }
 
-        Proveedor proveedor = proveedorRepository.findById(dto.getIdProveedor().intValue())
-                .orElseThrow(() -> new IllegalArgumentException("El proveedor no existe"));
-        asociarProveedorASede(proveedor.getNit(), usuario.getSede());
+        Proveedor proveedor = resolverProveedor(dto);
 
         poliza.setFechaCreacion(fecha);
         poliza.setFechaVencimiento(fechaVencimiento);
@@ -466,20 +666,41 @@ public class PolizaService implements IPolizaService {
         poliza.setNumeroContrato(dto.getNumeroContrato().trim());
         poliza.setValorPrima(totalPrima);
         poliza.setValorContrato(dto.getValorContrato());
-        if (adjuntoNuevo != null) {
-            poliza.setContratoAdjunto(adjuntoNuevo);
-            poliza.setContratoAdjuntoNombre(dto.getContratoAdjunto().getOriginalFilename());
-        }
     }
 
-    void asociarProveedorASede(Long nit, Sede sede) {
-        if (nit == null || sede == null) {
-            return;
+    private PolizaAdjunto crearAdjunto(byte[] contenido, String nombreOriginal, TipoAdjuntoPoliza tipo) {
+        PolizaAdjunto adjunto = new PolizaAdjunto();
+        adjunto.setContenido(contenido);
+        adjunto.setNombreOriginal(nombreOriginal);
+        adjunto.setFechaCarga(LocalDateTime.now());
+        adjunto.setTipoAdjunto(tipo);
+        return adjunto;
+    }
+
+    /**
+     * En pólizas los proveedores son globales: nunca se crea ni modifica una relación proveedor_sede.
+     */
+    private Proveedor resolverProveedor(PolizaDTO dto) {
+        if (dto.getIdProveedor() != null) {
+            return proveedorRepository.findById(dto.getIdProveedor().intValue())
+                    .orElseThrow(() -> new IllegalArgumentException("El proveedor no existe"));
         }
-        proveedorRepository.findByNit(nit).ifPresent(proveedor -> {
-            if (proveedor.getSedes().add(sede)) {
-                proveedorRepository.save(proveedor);
-            }
+        if (dto.getNitProveedor() == null || isBlank(dto.getNombreProveedor()) || isBlank(dto.getCiudadProveedor())
+                || isBlank(dto.getDireccionProveedor()) || isBlank(dto.getTelefonoProveedor())
+                || isBlank(dto.getCorreoProveedor())) {
+            throw new IllegalArgumentException(
+                    "Seleccione un proveedor o registre NIT, nombre, ciudad, dirección, teléfono y correo.");
+        }
+
+        return proveedorRepository.findByNit(dto.getNitProveedor()).orElseGet(() -> {
+            Proveedor proveedor = new Proveedor();
+            proveedor.setNit(dto.getNitProveedor());
+            proveedor.setNombre(dto.getNombreProveedor().trim());
+            proveedor.setCiudad(dto.getCiudadProveedor().trim());
+            proveedor.setDireccion(dto.getDireccionProveedor().trim());
+            proveedor.setTelefono(dto.getTelefonoProveedor().trim());
+            proveedor.setCorreo(dto.getCorreoProveedor().trim());
+            return proveedorRepository.saveAndFlush(proveedor);
         });
     }
 

@@ -47,6 +47,10 @@ public class Poliza {
     @Column(name = "fecha_vencimiento")
     private LocalDate fechaVencimiento;
 
+    /** Momento en que se notificó al creador el ingreso al rango de 30 días de vencimiento. */
+    @Column(name = "notificacion_proximo_vencimiento_en")
+    private java.time.LocalDateTime notificacionProximoVencimientoEn;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_prov", nullable = false)
     @ToString.Exclude

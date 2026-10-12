@@ -79,7 +79,7 @@ public class CorreoPolizaOutboxService {
                     .orElseThrow(() -> new IllegalStateException("No existe la póliza " + auditoria.getPoliza().getIdPoliza()));
             byte[] pdf = archivoStorage.leer(poliza.getContratoAdjuntoContenido());
             String asunto = emailTemplateService.generarAsuntoPolizaAprobada(poliza);
-            String cuerpo = emailTemplateService.generarCuerpoPolizaAprobada(poliza);
+            String cuerpo = emailTemplateService.generarCorreoPolizaAprobadaContabilidad(poliza);
             emailService.enviarNotificacionPoliza(auditoria.getDestinatario(), asunto, cuerpo, pdf,
                     "Contrato_Poliza_" + poliza.getNumeroContrato() + ".pdf");
 
