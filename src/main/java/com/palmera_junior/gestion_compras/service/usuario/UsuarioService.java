@@ -162,6 +162,16 @@ public class UsuarioService implements IUsuarioService {
    @Override
    public String obtenerVistaLogin(Authentication authentication) {
        if (authentication != null && authentication.isAuthenticated()) {
+           boolean esSuperAdministrador = authentication.getAuthorities().stream()
+                   .anyMatch(authority -> "ROLE_SUPERADMINISTRADOR".equals(authority.getAuthority()));
+           if (esSuperAdministrador) {
+               return "redirect:/admin";
+           }
+           boolean esComercial = authentication.getAuthorities().stream()
+                   .anyMatch(authority -> "ROLE_COMERCIAL".equals(authority.getAuthority()));
+           if (esComercial) {
+               return "redirect:/polizas";
+           }
            return "redirect:/dashboard";
        }
        return "login";

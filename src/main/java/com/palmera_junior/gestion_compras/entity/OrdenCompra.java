@@ -23,8 +23,8 @@ public class OrdenCompra {
     @Column(name = "id_orden")
     private Integer idOrden;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = true)
-    @JoinColumn(name = "id_prov", nullable = true)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_prov", nullable = false)
     @ToString.Exclude
     private Proveedor proveedor;
 

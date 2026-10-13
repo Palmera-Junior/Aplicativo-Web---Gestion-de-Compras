@@ -27,7 +27,7 @@ Aplicación web para administrar órdenes de compra, proveedores, productos, sed
    docker compose -f docker-compose.no-oauth2.yml up --build
    ```
 
-La aplicación queda disponible en `http://localhost`. Para detener los servicios:
+Sin OAuth2, la aplicación queda disponible en `http://localhost`; con OAuth2, en `http://localhost:8080`. Para detener los servicios:
 
 ```powershell
 docker compose down
@@ -46,17 +46,18 @@ Requiere Java 17, PostgreSQL configurado con el esquema `dep_compras` y las cred
 java -jar target\gestion_compras-0.0.1-SNAPSHOT.jar
 ```
 
-## Correo SMTP con Amazon SES
+## Correo con Amazon SES
 
-El envío automático usa SMTP de Amazon SES. Configure en `.env`:
+El envío automático usa Amazon SES API v2. Configure en `.env`:
 
-- `SES_SMTP_HOST`, por ejemplo `email-smtp.us-east-1.amazonaws.com`.
-- `SES_SMTP_PORT`, normalmente `587` con STARTTLS.
-- `SES_SMTP_USERNAME` y `SES_SMTP_PASSWORD`, generados para SMTP en SES.
-- `SES_FROM_EMAIL`, remitente verificado; por defecto `notificaciones@palmerajunior.com`.
+- `AWS_ACCESS_KEY_ID_SES` y `AWS_SECRET_ACCESS_KEY_SES`, o asigne un rol IAM con permiso para enviar mediante SES.
+- `AWS_DEFAULT_REGION_SES`, región de SES; por defecto `us-east-1`.
+- `MAIL_FROM_ADDRESS`, remitente verificado.
+- `MAIL_FROM_NAME`, nombre visible del remitente.
 - `FACTURACION_NOTIFICACION_EMAIL`, destinatario de las notificaciones de facturación.
+- `CONTABILIDAD_NOTIFICACION_EMAIL`, destinatario de avisos de pólizas.
 
-Las credenciales SMTP de SES no son las credenciales generales de AWS. No comparta `.env`; está excluido del control de versiones.
+No comparta `.env`; está excluido del control de versiones. La aplicación inicia sin credenciales SES, pero no enviará correos hasta configurar credenciales o un rol IAM.
 
 ## Estructura relevante
 
@@ -71,4 +72,4 @@ Las credenciales SMTP de SES no son las credenciales generales de AWS. No compar
 
 La suite actual valida la carga del contexto Spring mediante `contextLoads()`. Antes de producción se recomienda ampliar las pruebas para autorización por rol y sede, transiciones de estado, contratos HTTP, cargas de evidencia y envío/reintento de correos.
 
-La carpeta `src/main/resources/db/migration` está vacía y la aplicación usa `spring.jpa.hibernate.ddl-auto=update`. Para instalaciones productivas se recomienda adoptar migraciones versionadas, respaldos y una política de retención para PDFs, evidencias y auditorías.
+La aplicación usa `spring.jpa.hibernate.ddl-auto=update`, que no convierte de forma fiable columnas existentes. `docker/init-db/DDL.sql` solo se ejecuta en una base nueva; para bases existentes, respalde y prepare una migración versionada antes de cambiar tipos como `proveedor.nit` de texto a `BIGINT`. El repositorio no incluye actualmente esa migración. En bases nuevas, el DDL crea el esquema actualizado.

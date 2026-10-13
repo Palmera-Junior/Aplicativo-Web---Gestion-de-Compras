@@ -1,6 +1,5 @@
 package com.palmera_junior.gestion_compras.repository;
 
-import java.util.*;
 import java.util.List;
 import java.util.Optional;
 
@@ -9,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.palmera_junior.gestion_compras.entity.Usuario;
+import com.palmera_junior.gestion_compras.entity.Rol;
 
 /**
  * Repositorio JPA para la entidad {@link Usuario}.
@@ -39,6 +39,9 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
      * A dónde apunta: Tabla `usuario` por `id_sede`.
      */
     List<Usuario> findBySedeIdSede(Integer idSede);
+
+    /** Lista los aprobadores pertenecientes a cualquiera de las sedes indicadas. */
+    List<Usuario> findByRolAndSedeIdSedeIn(Rol rol, List<Integer> idsSedes);
 
     /**
      * Qué hace: Busca un usuario por su correo electrónico exacto.

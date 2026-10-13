@@ -9,6 +9,10 @@ CREATE TABLE sede (
     direccion VARCHAR(255)
 );
 
+INSERT INTO sede (nombre, prefijo_ciudad, direccion)
+VALUES ('Sede Nacional', 'NAC', 'Sede principal')
+ON CONFLICT (prefijo_ciudad) DO NOTHING;
+
 CREATE TABLE centro_costo (
     id_centro_costo SERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
@@ -40,7 +44,7 @@ CREATE TABLE presentacion_producto (
 
 CREATE TABLE proveedor (
     id_prov SERIAL PRIMARY KEY,
-    nit VARCHAR(50) NOT NULL,
+    nit BIGINT NOT NULL UNIQUE,
     nombre VARCHAR(150) NOT NULL,
     correo VARCHAR(150),
     direccion VARCHAR(255),
@@ -69,7 +73,9 @@ CREATE TABLE usuario (
     cargo VARCHAR(100),
     nombre_usuario VARCHAR(50) NOT NULL UNIQUE,
     contraseña VARCHAR(255) NOT NULL,
-    rol VARCHAR(20) NOT NULL CHECK (rol IN ('ADMINISTRADOR', 'APROBADOR', 'SOLICITANTE', 'COMERCIAL')),
+    rol VARCHAR(20) NOT NULL CHECK (rol IN (
+        'SUPERADMINISTRADOR', 'ADMINISTRADOR', 'APROBADOR', 'SOLICITANTE', 'COMERCIAL'
+    )),
     id_sede INT NOT NULL,
     CONSTRAINT fk_usuario_sede FOREIGN KEY (id_sede) REFERENCES sede (id_sede)
 );
@@ -77,21 +83,28 @@ CREATE TABLE usuario (
 CREATE TABLE poliza (
     id_poliza SERIAL PRIMARY KEY,
     fecha_creacion DATE NOT NULL,
+    fecha_vencimiento DATE,
+    notificacion_proximo_vencimiento_en TIMESTAMP,
     id_prov INT NOT NULL,
     cliente VARCHAR(150) NOT NULL,
     descripcion TEXT,
     numero_contrato VARCHAR(50) NOT NULL UNIQUE,
+    numero_poliza VARCHAR(100),
     valor_prima DECIMAL(15, 2) NOT NULL,
     valor_contrato DECIMAL(15, 2) NOT NULL,
-    contrato_adjunto TEXT,
-    contrato_adjunto_nombre VARCHAR(255),
     estado VARCHAR(20) NOT NULL DEFAULT 'BORRADOR' CHECK (estado IN (
-        'BORRADOR', 'APROBADA', 'ANULADA'
+        'BORRADOR', 'APROBADA', 'VIGENTE', 'VENCIDA', 'TERMINADA', 'ANULADA'
     )),
     id_sede INT NOT NULL,
     id_usuario INT NOT NULL,
     id_usuario_aprobacion INT,
     fecha_aprobacion DATE,
+    id_usuario_activacion INT,
+    id_usuario_anulacion INT,
+    fecha_anulacion DATE,
+    id_usuario_terminacion INT,
+    fecha_terminacion DATE,
+    motivo_terminacion TEXT,
     CONSTRAINT fk_poliza_proveedor FOREIGN KEY (id_prov)
         REFERENCES proveedor (id_prov),
     CONSTRAINT fk_poliza_sede FOREIGN KEY (id_sede)
@@ -99,6 +112,12 @@ CREATE TABLE poliza (
     CONSTRAINT fk_poliza_usuario FOREIGN KEY (id_usuario)
         REFERENCES usuario (id_usuario),
     CONSTRAINT fk_poliza_usuario_aprobacion FOREIGN KEY (id_usuario_aprobacion)
+        REFERENCES usuario (id_usuario),
+    CONSTRAINT fk_poliza_usuario_activacion FOREIGN KEY (id_usuario_activacion)
+        REFERENCES usuario (id_usuario),
+    CONSTRAINT fk_poliza_usuario_anulacion FOREIGN KEY (id_usuario_anulacion)
+        REFERENCES usuario (id_usuario),
+    CONSTRAINT fk_poliza_usuario_terminacion FOREIGN KEY (id_usuario_terminacion)
         REFERENCES usuario (id_usuario),
     CONSTRAINT chk_poliza_valor_prima_no_negativo CHECK (valor_prima >= 0),
     CONSTRAINT chk_poliza_valor_contrato_no_negativo CHECK (valor_contrato >= 0)
@@ -108,9 +127,77 @@ CREATE INDEX idx_poliza_sede ON poliza (id_sede);
 CREATE INDEX idx_poliza_estado ON poliza (estado);
 CREATE INDEX idx_poliza_fecha_creacion ON poliza (fecha_creacion);
 
+CREATE TABLE poliza_sede_aprobacion (
+    id_poliza_sede_aprobacion SERIAL PRIMARY KEY,
+    id_poliza INT NOT NULL,
+    id_sede INT NOT NULL,
+    estado_aprobacion VARCHAR(20) NOT NULL DEFAULT 'PENDIENTE' CHECK (
+        estado_aprobacion IN ('PENDIENTE', 'APROBADA', 'RECHAZADA')
+    ),
+    id_usuario_aprobacion INT,
+    fecha_aprobacion DATE,
+    CONSTRAINT uq_poliza_sede_aprobacion UNIQUE (id_poliza, id_sede),
+    CONSTRAINT fk_poliza_sede_aprobacion_poliza FOREIGN KEY (id_poliza)
+        REFERENCES poliza (id_poliza) ON DELETE CASCADE,
+    CONSTRAINT fk_poliza_sede_aprobacion_sede FOREIGN KEY (id_sede)
+        REFERENCES sede (id_sede),
+    CONSTRAINT fk_poliza_sede_aprobacion_usuario FOREIGN KEY (id_usuario_aprobacion)
+        REFERENCES usuario (id_usuario)
+);
+
+CREATE TABLE poliza_adjunto (
+    id_adjunto_poliza SERIAL PRIMARY KEY,
+    id_poliza INT NOT NULL,
+    id_renovacion INT,
+    tipo_adjunto VARCHAR(30) NOT NULL DEFAULT 'POLIZA_FISICA',
+    contenido BYTEA,
+    nombre_original VARCHAR(255) NOT NULL,
+    fecha_carga TIMESTAMP NOT NULL,
+    CONSTRAINT fk_poliza_adjunto_poliza FOREIGN KEY (id_poliza)
+        REFERENCES poliza (id_poliza) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_poliza_adjunto_poliza ON poliza_adjunto (id_poliza);
+
+CREATE TABLE poliza_renovacion (
+    id_renovacion SERIAL PRIMARY KEY,
+    id_poliza INT NOT NULL,
+    fecha_inicio DATE NOT NULL,
+    fecha_fin DATE NOT NULL,
+    fecha_inicio_anterior DATE NOT NULL,
+    fecha_fin_anterior DATE NOT NULL,
+    fecha_registro TIMESTAMP NOT NULL,
+    id_usuario INT NOT NULL,
+    CONSTRAINT fk_poliza_renovacion_poliza FOREIGN KEY (id_poliza)
+        REFERENCES poliza (id_poliza) ON DELETE CASCADE,
+    CONSTRAINT fk_poliza_renovacion_usuario FOREIGN KEY (id_usuario)
+        REFERENCES usuario (id_usuario),
+    CONSTRAINT chk_poliza_renovacion_fechas CHECK (fecha_fin > fecha_inicio),
+    CONSTRAINT chk_poliza_renovacion_fechas_anteriores CHECK (fecha_fin_anterior >= fecha_inicio_anterior)
+);
+
+CREATE INDEX idx_poliza_renovacion_poliza ON poliza_renovacion (id_poliza, fecha_inicio);
+
+ALTER TABLE poliza_adjunto
+    ADD CONSTRAINT fk_poliza_adjunto_renovacion FOREIGN KEY (id_renovacion)
+        REFERENCES poliza_renovacion (id_renovacion) ON DELETE CASCADE;
+CREATE INDEX idx_poliza_adjunto_renovacion ON poliza_adjunto (id_renovacion);
+
+CREATE TABLE detalle_prima (
+    id_detalle_prima SERIAL PRIMARY KEY,
+    id_poliza INT NOT NULL,
+    valor DECIMAL(15, 2) NOT NULL,
+    descripcion VARCHAR(255) NOT NULL,
+    CONSTRAINT fk_detalle_prima_poliza FOREIGN KEY (id_poliza)
+        REFERENCES poliza (id_poliza) ON DELETE CASCADE,
+    CONSTRAINT chk_detalle_prima_valor_no_negativo CHECK (valor >= 0)
+);
+
+CREATE INDEX idx_detalle_prima_poliza ON detalle_prima (id_poliza);
+
 CREATE TABLE orden_compra (
     id_orden SERIAL PRIMARY KEY,
-    id_prov INT,
+    id_prov INT NOT NULL,
     fecha DATE NOT NULL,
     numero_orden VARCHAR(20) UNIQUE,
     estado VARCHAR(20) NOT NULL CHECK (estado IN (
@@ -128,6 +215,8 @@ CREATE TABLE orden_compra (
     id_usuario INT NOT NULL,
     id_usuario_aprobacion INT,
     fecha_aprobacion DATE,
+    id_usuario_anulacion INT,
+    fecha_anulacion DATE,
     numero_factura VARCHAR(100),
     recibido_por VARCHAR(150),
     fecha_recepcion DATE,
@@ -137,12 +226,14 @@ CREATE TABLE orden_compra (
     se_recibio BOOLEAN NOT NULL DEFAULT FALSE,
     se_facturo BOOLEAN NOT NULL DEFAULT FALSE,
     CONSTRAINT fk_orden_proveedor FOREIGN KEY (id_prov)
-        REFERENCES proveedor (id_prov) ON DELETE SET NULL,
+        REFERENCES proveedor (id_prov) ON DELETE RESTRICT,
     CONSTRAINT fk_orden_sede FOREIGN KEY (id_sede) REFERENCES sede (id_sede),
     CONSTRAINT fk_orden_centro_costo FOREIGN KEY (id_centro_costo)
         REFERENCES centro_costo (id_centro_costo),
     CONSTRAINT fk_orden_usuario FOREIGN KEY (id_usuario) REFERENCES usuario (id_usuario),
     CONSTRAINT fk_orden_usuario_aprobacion FOREIGN KEY (id_usuario_aprobacion)
+        REFERENCES usuario (id_usuario),
+    CONSTRAINT fk_orden_usuario_anulacion FOREIGN KEY (id_usuario_anulacion)
         REFERENCES usuario (id_usuario)
 );
 

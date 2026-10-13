@@ -3,10 +3,13 @@ package com.palmera_junior.gestion_compras.security;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
 /**
@@ -18,6 +21,8 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
+
+    private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
 
     private final CustomOAuth2UserService customOAuth2UserService;
 
@@ -34,7 +39,8 @@ public class SecurityConfig {
     /**
      * Qué hace:
      * Retorna un handler de éxito unificado que inspecciona las autoridades del usuario autenticado
-     * y lo redirige a /admin (si tiene rol ROLE_ADMINISTRADOR) o a /dashboard (para los demás roles).
+     * y redirige a /admin solo para SUPERADMINISTRADOR; el rol ADMINISTRADOR entra al dashboard
+     * y los demás roles siguen a /dashboard.
      * 
      * A dónde apunta:
      * - Redirecciones HTTP: /admin o /dashboard
@@ -44,11 +50,58 @@ public class SecurityConfig {
     @Bean
     public AuthenticationSuccessHandler successHandler() {
         return (request, response, authentication) -> {
+            boolean isSuperAdmin = authentication.getAuthorities().stream()
+                    .map(auth -> auth.getAuthority())
+                    .anyMatch(authRole -> authRole.equals("ROLE_SUPERADMINISTRADOR"));
             boolean isAdmin = authentication.getAuthorities().stream()
                     .map(auth -> auth.getAuthority())
                     .anyMatch(authRole -> authRole.equals("ROLE_ADMINISTRADOR"));
-            response.sendRedirect(isAdmin ? "/admin" : "/dashboard");
+            boolean isCommercial = authentication.getAuthorities().stream()
+                    .map(auth -> auth.getAuthority())
+                    .anyMatch(authRole -> authRole.equals("ROLE_COMERCIAL"));
+
+            if (isSuperAdmin) {
+                response.sendRedirect("/admin");
+                return;
+            }
+            if (isCommercial) {
+                response.sendRedirect("/polizas");
+                return;
+            }
+            if (isAdmin) {
+                response.sendRedirect("/dashboard");
+                return;
+            }
+
+            response.sendRedirect("/dashboard");
         };
+    }
+
+    /** Conserva el detalle del fallo OAuth2 únicamente durante la redirección al login. */
+    @Bean
+    public AuthenticationFailureHandler oauth2FailureHandler() {
+        return (request, response, exception) -> {
+            String detalle = detalleOAuth2(exception);
+            log.warn("Falló la autenticación OAuth2: {}", detalle, exception);
+            request.getSession(true).setAttribute("OAUTH2_ERROR_DETAIL", detalle);
+            response.sendRedirect(request.getContextPath() + "/login?oauth2Error");
+        };
+    }
+
+    private String detalleOAuth2(Exception exception) {
+        Throwable causa = exception;
+        while (causa.getCause() != null && causa.getCause() != causa) {
+            causa = causa.getCause();
+        }
+
+        String mensaje = causa.getMessage();
+        if (mensaje == null || mensaje.isBlank()) {
+            mensaje = exception.getMessage();
+        }
+        if (mensaje == null || mensaje.isBlank()) {
+            mensaje = "Sin mensaje proporcionado por el proveedor.";
+        }
+        return exception.getClass().getSimpleName() + ": " + mensaje;
     }
 
     /**
@@ -71,22 +124,29 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/login", "/css/**", "/imgs/**", "/static/**",
-                                "/oauth2/**", "/login/oauth2/**" // rutas del flujo de Google
+                                "/login",
+                                "/css/**",
+                                "/imgs/**",
+                                "/js/**",
+                                "/static/**",
+                                "/oauth2/**",
+                                "/login/oauth2/**",
+                                "/error"
                         ).permitAll()
 
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                         .requestMatchers("/actuator/**").denyAll()
 
-                        .requestMatchers("/admin/**").hasRole("ADMINISTRADOR")
+                        .requestMatchers("/admin/**")
+                        .hasAnyRole("SUPERADMINISTRADOR", "ADMINISTRADOR")
+
+                        .requestMatchers("/polizas", "/polizas/**")
+                        .hasAnyRole("COMERCIAL", "APROBADOR", "ADMINISTRADOR", "SUPERADMINISTRADOR")
 
                         .requestMatchers("/dashboard", "/dashboard/**", "/ordenes/**", "/orden-compra/**", "/api/usuario/**")
-                        .hasAnyRole("SOLICITANTE", "APROBADOR", "ADMINISTRADOR")
+                        .hasAnyRole("SOLICITANTE", "APROBADOR", "ADMINISTRADOR", "SUPERADMINISTRADOR")
 
-                        .requestMatchers("/css/**", "/js/**")
-                        .authenticated()
-
-                        .anyRequest().denyAll())
+                        .anyRequest().authenticated())
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(org.springframework.security.web.csrf.CookieCsrfTokenRepository.withHttpOnlyFalse())
                 )

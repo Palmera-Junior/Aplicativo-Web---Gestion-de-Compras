@@ -1,6 +1,8 @@
 package com.palmera_junior.gestion_compras.security;
 
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.security.core.GrantedAuthority;
@@ -11,6 +13,7 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import com.palmera_junior.gestion_compras.entity.Usuario;
 import com.palmera_junior.gestion_compras.service.usuario.IUsuarioService;
@@ -52,12 +55,12 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             throws OAuth2AuthenticationException {
 
 
-        OAuth2User oAuth2User =
-                super.loadUser(userRequest);
+        OAuth2User oAuth2User = loadProviderUser(userRequest);
 
         String registrationId =
                 userRequest.getClientRegistration()
-                        .getRegistrationId();
+                        .getRegistrationId()
+                        .toLowerCase(Locale.ROOT);
 
         String email;
         String proveedorId;
@@ -65,30 +68,16 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         switch (registrationId.toLowerCase()) {
 
             case "google":
-
-                email =
-                        oAuth2User.getAttribute("email");
-
-                proveedorId =
-                        oAuth2User.getAttribute("sub");
-
+                email = texto(oAuth2User.getAttribute("email"));
+                proveedorId = texto(oAuth2User.getAttribute("sub"));
                 break;
 
             case "microsoft":
-
-                email =
-                        oAuth2User.getAttribute("email");
-
-                if (email == null || email.isBlank()) {
-
-                    email =
-                            oAuth2User.getAttribute(
-                                    "preferred_username");
+                email = extraerCorreoMicrosoft(oAuth2User.getAttributes());
+                proveedorId = texto(oAuth2User.getAttribute("oid"));
+                if (!StringUtils.hasText(proveedorId)) {
+                    proveedorId = texto(oAuth2User.getAttribute("sub"));
                 }
-
-                proveedorId =
-                        oAuth2User.getAttribute("oid");
-
                 break;
 
             default:
@@ -98,40 +87,23 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                                 + registrationId);
         }
 
-        if (email == null || email.isBlank()) {
+        if (!StringUtils.hasText(email)) {
 
             throw new OAuth2AuthenticationException(
                     "No fue posible obtener el correo electrónico.");
         }
 
-        Optional<Usuario> usuarioOpt =
-                usuarioService.buscarPorEmail(email);
+        Usuario usuario = validarYVincularUsuario(registrationId, email, proveedorId);
 
-        if (usuarioOpt.isEmpty()) {
-
-            throw new OAuth2AuthenticationException(
-                    "No existe una cuenta registrada con este correo.");
-        }
-
-        Usuario usuario = usuarioOpt.get();
-
-        if (usuario.getProveedor() == null) {
-
-            usuario.setProveedor(
-                    registrationId);
-
-            usuario.setProveedorId(
-                    proveedorId);
-
-            usuario =
-                    usuarioService.guardar(usuario);
-
-        } else if (!usuario.getProveedor()
-                .equalsIgnoreCase(registrationId)) {
-
-            throw new OAuth2AuthenticationException(
-                    "Esta cuenta ya está vinculada con "
-                            + usuario.getProveedor());
+        String nameAttributeKey;
+        if (oAuth2User.getAttributes().containsKey("sub")) {
+            nameAttributeKey = "sub";
+        } else if (oAuth2User.getAttributes().containsKey("oid")) {
+            nameAttributeKey = "oid";
+        } else if (oAuth2User.getAttributes().containsKey("preferred_username")) {
+            nameAttributeKey = "preferred_username";
+        } else {
+            nameAttributeKey = "email";
         }
 
         GrantedAuthority authority =
@@ -142,10 +114,76 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 new DefaultOAuth2User(
                         List.of(authority),
                         oAuth2User.getAttributes(),
-                        "email");
+                        nameAttributeKey);
 
         return new CustomOAuth2User(
                 oauthUser,
                 usuario);
+    }
+
+    /**
+     * Valida y vincula el usuario local a partir de los claims que entrega el proveedor.
+     * Se comparte con el flujo OIDC de Microsoft, que Spring procesa mediante OidcUserService.
+     */
+    Usuario validarYVincularUsuario(String registrationId, String email, String proveedorId) {
+        if (!StringUtils.hasText(email)) {
+            throw new OAuth2AuthenticationException(
+                    "No fue posible obtener el correo electrónico.");
+        }
+
+        Optional<Usuario> usuarioOpt = usuarioService.buscarPorEmail(email);
+
+        if (usuarioOpt.isEmpty()) {
+
+            throw new OAuth2AuthenticationException(
+                    "No existe una cuenta registrada con este correo.");
+        }
+
+        Usuario usuario = usuarioOpt.get();
+
+        if (!StringUtils.hasText(usuario.getEmail())) {
+            throw new OAuth2AuthenticationException(
+                    "La cuenta registrada no tiene un correo electrónico válido.");
+        }
+
+        if (!StringUtils.hasText(usuario.getProveedor())) {
+
+            usuario.setProveedor(
+                    registrationId);
+
+            usuario.setProveedorId(
+                    proveedorId);
+
+            usuario =
+                    usuarioService.guardar(usuario);
+
+        } else if (!usuario.getProveedor().equalsIgnoreCase(registrationId)) {
+
+            throw new OAuth2AuthenticationException(
+                    "Esta cuenta ya está vinculada con "
+                            + usuario.getProveedor());
+        }
+
+        return usuario;
+    }
+
+    static String extraerCorreoMicrosoft(Map<String, Object> atributos) {
+        return List.of("preferred_username", "email", "mail", "userPrincipalName", "upn")
+                .stream()
+                .map(atributos::get)
+                .map(CustomOAuth2UserService::texto)
+                .filter(StringUtils::hasText)
+                .findFirst()
+                .orElse(null);
+    }
+
+    protected OAuth2User loadProviderUser(OAuth2UserRequest userRequest) {
+        return super.loadUser(userRequest);
+    }
+
+    private static String texto(Object valor) {
+        return valor instanceof String texto && StringUtils.hasText(texto)
+                ? texto.trim()
+                : null;
     }
 }

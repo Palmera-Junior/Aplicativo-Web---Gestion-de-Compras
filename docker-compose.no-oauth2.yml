@@ -3,9 +3,9 @@ services:
    image: postgres:16-alpine
    restart: unless-stopped
    environment:
-     POSTGRES_DB: ${DB_NAME:-palmera_junior}
-     POSTGRES_USER: ${DB_USER:-postgres}
-     POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    POSTGRES_DB: ${DB_NAME:-palmera_junior}
+    POSTGRES_USER: ${DB_USER:-postgres}
+    POSTGRES_PASSWORD: "${DB_PASSWORD:?DB_PASSWORD es obligatorio}"
    volumes:
      - pgdata:/var/lib/postgresql/data
      - ./docker/init-db:/docker-entrypoint-initdb.d:ro
@@ -26,20 +26,19 @@ services:
      db:
        condition: service_healthy
    environment:
-    SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:-jdbc:postgresql://db:5432/palmera_junior}
-    SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME:-postgres}
-    SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-postgres}
+    SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:-jdbc:postgresql://db:5432/${DB_NAME:-palmera_junior}}
+    SPRING_DATASOURCE_USERNAME: ${DB_USER:-postgres}
+    SPRING_DATASOURCE_PASSWORD: "${DB_PASSWORD:?DB_PASSWORD es obligatorio}"
     MICROSOFT_OAUTH2_ENABLED: "false"
-    AWS_ACCESS_KEY_ID_SES: ${AWS_ACCESS_KEY_ID_SES}
-    AWS_SECRET_ACCESS_KEY_SES: ${AWS_SECRET_ACCESS_KEY_SES}
+    SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.security.oauth2.client.autoconfigure.OAuth2ClientAutoConfiguration
+    AWS_ACCESS_KEY_ID_SES: ${AWS_ACCESS_KEY_ID_SES:-}
+    AWS_SECRET_ACCESS_KEY_SES: ${AWS_SECRET_ACCESS_KEY_SES:-}
     AWS_DEFAULT_REGION_SES: ${AWS_DEFAULT_REGION_SES:-us-east-1}
     MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-notificaciones@palmerajunior.com}
     MAIL_FROM_NAME: ${MAIL_FROM_NAME:-Notificaciones Palmera Junior}
     JAVA_OPTS: ${JAVA_OPTS:-"-Xmx2g -Xms512m"}
-    DB_SCHEMA: ${DB_SCHEMA:-dep_compras}
-    SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-true}
-   volumes:
-     - pdf_storage:/app/storage
+    APP_BASE_URL: ${APP_BASE_URL:-http://localhost}
+    SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-false}
    networks:
      - internal
      - web
@@ -64,4 +63,3 @@ networks:
 
 volumes:
  pgdata:
- pdf_storage:

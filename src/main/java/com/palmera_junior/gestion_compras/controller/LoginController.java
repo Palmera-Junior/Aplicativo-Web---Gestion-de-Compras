@@ -6,6 +6,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import com.palmera_junior.gestion_compras.service.usuario.IUsuarioService;
 
 /**
@@ -17,7 +19,7 @@ public class LoginController {
 
     private final IUsuarioService usuarioService;
 
-    @Value("${security.oauth2.microsoft.enabled:true}")
+    @Value("${security.oauth2.microsoft.enabled:false}")
     private boolean microsoftOAuth2Enabled;
 
     /**
@@ -41,8 +43,14 @@ public class LoginController {
      * @return Vista a renderizar o redirección.
      */
     @GetMapping("/login")
-    public String login(Authentication authentication, Model model) {
+    public String login(Authentication authentication, Model model, HttpServletRequest request) {
         model.addAttribute("microsoftOAuth2Enabled", microsoftOAuth2Enabled);
+        Object errorOAuth2 = request.getSession(false) == null ? null
+                : request.getSession(false).getAttribute("OAUTH2_ERROR_DETAIL");
+        if (errorOAuth2 != null) {
+            model.addAttribute("oauth2Error", errorOAuth2);
+            request.getSession(false).removeAttribute("OAUTH2_ERROR_DETAIL");
+        }
         return usuarioService.obtenerVistaLogin(authentication);
     }
 }
