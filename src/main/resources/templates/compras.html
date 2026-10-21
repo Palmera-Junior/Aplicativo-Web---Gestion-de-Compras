@@ -28,10 +28,11 @@
     <header class="navbar">
         <div class="logo">
             <h1><span class="material-symbols">hub</span> SIGO | </h1>
-            <h4> Palmera By Anticimex</h4>
+             <h4> Palmera Junior By ANTICIMEX</h4>
         </div>
         <div class="user-info">
-            <span class="material-symbols">account_circle</span>
+            <span class="user-initials"
+                th:text="${#strings.substring(#authentication.principal.usuario.nombre, 0, 1) + #strings.substring(#authentication.principal.usuario.apellido, 0, 1)}">FC</span>
             <span
                 th:text="${#authentication.principal.usuario.nombre} + ' ' + ${#authentication.principal.usuario.apellido}">Nombre
                 Apellido</span>

@@ -468,8 +468,17 @@
    Tabla de pólizas
    ---------------------------------------------------------- */
 .polizas-table-wrap {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    flex: 0 0 auto;
     margin: 0;
     border-radius: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
 }
 
 .polizas-table th,
@@ -477,19 +486,17 @@
     white-space: nowrap;
 }
 
-/* Anchos estables: los textos largos se truncan y no redimensionan la tabla.
-   "Cliente" se redujo de 17% a 12% (sobra espacio para nombres truncados
-   con cell-ellipsis) y esos 5 puntos se le dieron a "Acciones", que antes
-   recortaba sus íconos. min-width también se bajó un poco para que quepan
-   todas las columnas sin scroll horizontal en pantallas de portátil. */
+/* Mantiene espacio para badges y acciones; en pantallas estrechas
+   el contenedor desplaza la tabla en vez de comprimir las columnas. */
 .polizas-table {
+    width: 100%;
     table-layout: fixed;
-    min-width: 960px;
+    min-width: 1280px;
 }
 
 .polizas-table th:nth-child(1),
 .polizas-table td:nth-child(1) {
-    width: 10%;
+    width: 9%;
 }
 
 .polizas-table th:nth-child(2),
@@ -499,7 +506,7 @@
 
 .polizas-table th:nth-child(3),
 .polizas-table td:nth-child(3) {
-    width: 18%;
+    width: 14%;
 }
 
 .polizas-table th:nth-child(4),
@@ -516,18 +523,22 @@
 
 .polizas-table th:nth-child(7),
 .polizas-table td:nth-child(7) {
-    width: 10%;
+    width: 12%;
 }
 
 .polizas-table th:nth-child(8),
 .polizas-table td:nth-child(8) {
-    width: 6%;
+    width: 5%;
     text-align: center;
 }
 
 .polizas-table th:nth-child(9),
 .polizas-table td:nth-child(9) {
-    width: 10%;
+    width: 14%;
+}
+
+.polizas-table td.poliza-actions {
+    white-space: normal;
 }
 
 .polizas-table .cell-ellipsis {
@@ -761,8 +772,9 @@
     position: fixed;
     top: 50%;
     left: 50%;
-    width: 90%;
+    width: min(1150px, calc(100vw - 32px));
     max-width: 1150px;
+    min-width: 0;
     max-height: calc(100dvh - 32px);
     margin: 0;
     padding: 0;
@@ -816,6 +828,8 @@
 }
 
 .poliza-form {
+    width: 100%;
+    min-width: 0;
     padding: 24px;
     background: #ffffff;
     max-height: calc(100dvh - 32px);
@@ -836,6 +850,9 @@
 }
 
 #poliza-modal .poliza-modal-scroll {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
     min-height: 0;
     flex: 1 1 auto;
     overflow-x: hidden;
@@ -912,8 +929,15 @@
 /* Formulario del modal: grilla de 2 columnas */
 .poliza-form-grid {
     display: grid;
+    min-width: 0;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 16px;
+}
+
+.poliza-form-grid > *,
+.vigencia-grid > * {
+    min-width: 0;
+    max-width: 100%;
 }
 
 .proveedor-poliza-field {
@@ -1258,27 +1282,48 @@
 }
 
 .prima-detalles-wrap {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .prima-detalles-table {
+    width: 100%;
     min-width: 560px;
+    table-layout: fixed;
     margin-bottom: 10px;
 }
 
 .prima-detalles-table th:last-child,
 .prima-detalles-table td:last-child {
-    width: 92px;
+    width: 16%;
     text-align: center;
 }
 
+.prima-detalles-table th:first-child,
+.prima-detalles-table td:first-child {
+    width: 58%;
+}
+
+.prima-detalles-table th:nth-child(2),
+.prima-detalles-table td:nth-child(2) {
+    width: 26%;
+}
+
+.prima-detalles-table .td-input {
+    min-width: 0;
+    max-width: 100%;
+}
+
 .prima-detalles-table .prima-detalle-valor {
-    min-width: 150px;
+    width: 100%;
     text-align: right;
 }
 
 .prima-detalles-table .prima-detalle-descripcion {
-    min-width: 260px;
+    width: 100%;
 }
 
 .prima-detalles-table .delete {
@@ -1396,8 +1441,16 @@
    ========================================================== */
 @media (max-width: 768px) {
     .poliza-modal {
-        width: calc(100% - 20px);
+        width: calc(100vw - 24px);
         max-height: calc(100dvh - 20px);
+    }
+
+    #poliza-modal > #poliza-form {
+        padding: 16px;
+    }
+
+    #poliza-modal .poliza-modal-scroll {
+        padding-inline: 0;
     }
 
     .polizas-container {
@@ -1426,14 +1479,25 @@
     }
 
     .summary-heading {
+        width: 100%;
         align-items: flex-start;
         flex-direction: column;
         gap: 14px;
     }
 
+    .poliza-summary {
+        padding: 22px 18px;
+        box-shadow: 0 20px 26px rgba(0, 0, 0, 0.06);
+    }
+
+    .summary-main {
+        width: 100%;
+    }
+
     .summary-total {
         width: 100%;
         align-items: flex-end;
+        margin-right: 0;
     }
 
     .poliza-status-references {
@@ -1463,6 +1527,11 @@
 
     .poliza-form-grid {
         grid-template-columns: 1fr;
+    }
+
+    .vigencia-grid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 12px;
     }
 
     .proveedor-poliza-card {
@@ -1496,13 +1565,20 @@
         margin: -16px -16px 18px;
         padding: 14px 16px;
     }
+
+    #poliza-modal > #poliza-form > .form-actions {
+        margin-right: -16px;
+        margin-left: -16px;
+        padding-right: 16px;
+        padding-left: 16px;
+    }
 }
 
 @media (max-width: 576px) {
     .poliza-summary {
         gap: 16px;
         padding: 18px 14px;
-        box-shadow: 0 5px 16px rgba(24, 54, 42, .06);
+        box-shadow: 0 20px 26px rgba(0, 0, 0, 0.06);
     }
 
     .poliza-status-references {
@@ -1515,5 +1591,14 @@
 
     .poliza-status-references>div:nth-child(2n+1) {
         border-left: 0;
+    }
+
+    .prima-detalles-section {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .prima-detalles-section > label {
+        grid-column: 1 / -1;
+        min-width: 0;
     }
 }
