@@ -24,7 +24,7 @@
     <header class="navbar">
         <div class="logo">
             <h1><span class="material-symbols">hub</span> SIGO | </h1>
-             <h4> Palmera Junior By ANTICIMEX</h4>
+             <h4> Palmera Junior By <span class="brand-name"> ANTICIMEX</span></h4>
         </div>
         <div class="user-info">
             <span class="user-initials"
@@ -49,7 +49,7 @@
         <!-- Encabezado de la vista: título + botón "Nueva Póliza" -->
         <div class="polizas-header">
             <div class="polizas-header-title">
-                <div class="polizas-title-icon"><span class="material-symbols">policy</span></div>
+                <div class="polizas-title-icon"><span class="material-symbols">verified_user</span></div>
                 <div>
                     <h1>Pólizas</h1>
                     <p>Gestiona las pólizas emitidas para tus clientes.</p>
@@ -245,6 +245,7 @@
                             aria-label="Proveedores coincidentes"></div>
                     </div>
                     <button type="button" id="btn-crear-proveedor-poliza" class="proveedor-poliza-create-link">
+                        <span class="material-symbols" aria-hidden="true">add</span>
                         Nuevo proveedor
                     </button>
                     <div class="proveedor-poliza-new-panel" id="proveedor-poliza-new-panel" hidden>
@@ -333,6 +334,7 @@
                     <input type="hidden" name="eliminarContratoAdjunto" value="false">
                 </div>
             </div>
+            <br>
             <section class="poliza-auditoria" aria-labelledby="poliza-auditoria-title">
                 <h3 id="poliza-auditoria-title" class="section-title">Auditoría</h3>
                 <div class="auditoria-grid poliza-auditoria-grid">

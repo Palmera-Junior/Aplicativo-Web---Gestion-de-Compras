@@ -69,7 +69,7 @@ body::before {
     left: 0;
     right: 0;
     height: 5px;
-    background: linear-gradient(90deg, #0b3d24, #14532d 55%, #198754);
+    background: radial-gradient(ellipse at 70% 50%, #0a2a86, #051e66 60%, #031450);
 }
 
 /* ============================================
@@ -106,11 +106,12 @@ body::before {
 }
 
 .logo p {
-    color: #6c757d;
-    font-size: 12px;
+    color: #060c1b;
+    font-size: 15px;
     font-weight: 600;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
+   
+
+    
 }
 
 #logo1 {
@@ -203,12 +204,7 @@ body::before {
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    background: linear-gradient(135deg,
-            
-            #0a2b17,
-            #175c32,
-            #198754,
-            #0a2b17);
+    background: radial-gradient(ellipse at 70% 50%, #0a2a86, #051e66 60%, #031450);
     color: #ffffff;
     font-size: 15px;
     font-weight: 600;

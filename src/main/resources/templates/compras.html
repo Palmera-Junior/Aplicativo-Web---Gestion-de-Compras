@@ -28,7 +28,7 @@
     <header class="navbar">
         <div class="logo">
             <h1><span class="material-symbols">hub</span> SIGO | </h1>
-             <h4> Palmera Junior By ANTICIMEX</h4>
+             <h4> Palmera Junior By <span class="brand-name"> ANTICIMEX</span></h4>
         </div>
         <div class="user-info">
             <span class="user-initials"
@@ -361,6 +361,7 @@
             <div id="modal-cambios-recepcion" class="modal-recibir-oc-overlay" style="display:none;">
                 <div class="modal-recibir-oc-content">
                     <div class="modal-recibir-oc-header">
+                        <span class="material-symbols modal-title-icon" aria-hidden="true">history</span>
                         <h2>Cambios en Recepción</h2>
                     </div>
                     <div class="modal-recibir-oc-body">
@@ -393,6 +394,7 @@
             <div id="modal-recibir-oc" class="modal-recibir-oc-overlay">
                 <div class="modal-recibir-oc-content">
                     <div class="modal-recibir-oc-header">
+                        <span class="material-symbols modal-title-icon" aria-hidden="true">package_2</span>
                         <h2>Recepción de Orden</h2>
                     </div>
                     <div class="modal-recibir-oc-body">
@@ -467,6 +469,7 @@
             <div id="modal-facturar-oc" class="modal-recibir-oc-overlay">
                 <div class="modal-recibir-oc-content">
                     <div class="modal-recibir-oc-header">
+                        <span class="material-symbols modal-title-icon" aria-hidden="true">receipt_long</span>
                         <h2>Facturar Orden</h2>
                     </div>
                     <div class="modal-recibir-oc-body">
@@ -517,6 +520,7 @@
             <div id="modal-correo-fallido" class="modal-recibir-oc-overlay">
                 <div class="modal-recibir-oc-content">
                     <div class="modal-recibir-oc-header">
+                        <span class="material-symbols modal-title-icon" aria-hidden="true">mail</span>
                         <h2>Marcar Correo como Enviado</h2>
                     </div>
                     <div class="modal-recibir-oc-body">
@@ -574,8 +578,12 @@
          ============================================================ -->
     <div id="modal-orden" class="modal-overlay">
         <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="modal-orden-title">Crear Nueva Orden de Compra</h2>
+            <div class="modal-header modal-orden-header">
+                <span class="material-symbols modal-title-icon" aria-hidden="true">shopping_cart</span>
+                <div class="modal-heading-copy">
+                    <h2 id="modal-orden-title">Crear nueva orden de compra</h2>
+                    <p id="modal-orden-description">Complete los datos y agregue los productos de la orden.</p>
+                </div>
                 <button title="Cerrar Orden" id="btn-cerrar-modal" class="btn-close" type="button">
                     <span class="material-symbols">close</span>
                 </button>
@@ -619,6 +627,7 @@
                                 aria-label="Coincidencias de proveedores"></div>
                         </div>
                         <button type="button" id="btn-crear-proveedor-link" class="proveedor-create-link">
+                            <span class="material-symbols" aria-hidden="true">add</span>
                             Nuevo proveedor
                         </button>
                     </div>
@@ -727,9 +736,9 @@
                             </tbody>
                         </table>
                     </div>
-                    <button title="Agregar Nueva Fila" type="button" id="btn-agregar-fila"
-                        class="btn-secondary add-row-btn">
-                        <i class="fas fa-plus"></i> Agregar Fila
+                    <button title="Agregar fila" type="button" id="btn-agregar-fila"
+                        class="add-row-btn">
+                        <span class="material-symbols">add</span> Agregar fila
                     </button>
 
                     <div class="form-grid-totals">

@@ -217,6 +217,7 @@ function resetFormularioOrden() {
     const ordenRecibidoPor = document.getElementById('orden-recibido-por');
     const ordenFechaRecibido = document.getElementById('orden-fecha-recibido');
     const modalOrdenTitle = document.getElementById('modal-orden-title');
+    const modalOrdenDescription = document.getElementById('modal-orden-description');
 
     if (ordenNumero) { ordenNumero.value = ''; }
     if (ordenEstado) { ordenEstado.value = ''; }
@@ -226,7 +227,10 @@ function resetFormularioOrden() {
     if (ordenRecibidoPor) { ordenRecibidoPor.textContent = ''; }
     if (ordenFechaRecibido) { ordenFechaRecibido.textContent = ''; }
     document.querySelectorAll('.auditoria-anulacion-orden').forEach((campo) => { campo.hidden = true; });
-    if (modalOrdenTitle) { modalOrdenTitle.textContent = 'Crear Nueva Orden de Compra'; }
+    if (modalOrdenTitle) { modalOrdenTitle.textContent = 'Crear nueva orden de compra'; }
+    if (modalOrdenDescription) {
+        modalOrdenDescription.textContent = 'Complete los datos y agregue los productos de la orden.';
+    }
 
     setModalOrdenModoVista(false);
 }
@@ -3108,7 +3112,12 @@ function cargarOrdenEnModal(
     document.querySelectorAll('.auditoria-anulacion-orden').forEach((campo) => {
         campo.hidden = orden.estado !== 'ANULADA';
     });
-    document.getElementById('modal-orden-title').textContent = esVista ? 'Ver Orden de Compra' : 'Editar Orden de Compra';
+    document.getElementById('modal-orden-title').textContent = esVista
+        ? 'Ver orden de compra'
+        : 'Editar orden de compra';
+    document.getElementById('modal-orden-description').textContent = esVista
+        ? 'Consulta la información y los productos de esta orden.'
+        : 'Actualiza los datos y productos de la orden.';
 
     setModalOrdenModoVista(esVista);
 }

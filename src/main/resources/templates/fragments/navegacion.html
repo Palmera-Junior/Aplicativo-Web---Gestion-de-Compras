@@ -27,7 +27,7 @@
                 <a th:href="@{/polizas}" class="sidebar-link js-page-transition" aria-label="Pólizas" title="Pólizas"
                     th:classappend="${vista == 'polizas'} ? ' is-current' : ''"
                     th:attr="aria-current=${vista == 'polizas'} ? 'page' : null">
-                    <span class="material-symbols" aria-hidden="true">policy</span><span>Pólizas</span>
+                    <span class="material-symbols" aria-hidden="true">verified_user</span><span>Pólizas</span>
                 </a>
             </div>
 
@@ -74,7 +74,7 @@
             <a th:href="@{/polizas}" class="view-tab js-page-transition"
                 th:classappend="${vista == 'polizas'} ? ' active' : ''"
                 th:attr="aria-current=${vista == 'polizas'} ? 'page' : null">
-                <span class="material-symbols">policy</span>
+                <span class="material-symbols">verified_user</span>
                 <span>Pólizas</span>
                 <span th:if="${borradoresPolizasSede > 0}" class="view-tab-count"
                     th:title="${'Pólizas pendientes por aprobar: ' + borradoresPolizasSede}"

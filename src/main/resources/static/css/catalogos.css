@@ -172,8 +172,8 @@ body.catalog-drawer-open {
     gap: 12px;
     min-height: 72px;
     padding: 12px 20px;
-    border-bottom: 1px solid #e8eeea;
-    background: #fff;
+    border-bottom: 1px solid #dfe5ef;
+    background: #ffffff;
 }
 
 .catalog-drawer-icon {
@@ -182,21 +182,22 @@ body.catalog-drawer-open {
     height: 40px;
     place-items: center;
     border-radius: 10px;
-    background: color-mix(in srgb, var(--drawer-accent) 13%, white);
-    color: var(--drawer-accent);
+    border: 0;
+    background: #051e66;
+    color: #ffffff;
     font-size: 21px;
 }
 
 .catalog-drawer-heading h2 {
     margin: 0;
-    color: #202a25;
+    color: #051e66;
     font-size: 16px;
     font-weight: 700;
 }
 
 .catalog-drawer-heading p {
     margin: 3px 0 0;
-    color: #7b8580;
+    color: #65738d;
     font-size: 12px;
     line-height: 1.35;
 }
@@ -209,13 +210,13 @@ body.catalog-drawer-open {
     border: 0;
     border-radius: 8px;
     background: transparent;
-    color: #58645e;
+    color: #051e66;
     cursor: pointer;
 }
 
 .catalog-drawer-close:hover {
-    background: #f1f4f2;
-    color: #202a25;
+    background: #f1f4fa;
+    color: #051e66;
 }
 
 .catalog-drawer-close .material-symbols {
@@ -308,8 +309,8 @@ body.catalog-drawer-open {
     bottom: 0;
     margin: auto -22px 0;
     padding: 14px 22px;
-    border-top: 1px solid #e8eeea;
-    background: rgba(255, 255, 255, .98);
+    border-top: 1px solid #e5eaf2;
+    background: rgba(246, 248, 251, .98);
 }
 
 .catalog-drawer .form-actions .btn-primary,
@@ -318,6 +319,30 @@ body.catalog-drawer-open {
     padding: 8px 16px;
     border-radius: 8px;
     font-size: 13px;
+}
+
+.catalog-drawer .form-actions .btn-primary {
+    border: 1px solid #051e66;
+    background: #051e66;
+    color: #ffffff;
+    box-shadow: 0 3px 8px rgba(5, 30, 102, .2);
+}
+
+.catalog-drawer .form-actions .btn-primary:hover {
+    border-color: #03164d;
+    background: #03164d;
+    color: #ffffff;
+}
+
+.catalog-drawer .form-actions .btn-cancel {
+    border: 1px solid #c8d0e0;
+    background: #fff;
+    color: #051e66;
+}
+
+.catalog-drawer .form-actions .btn-cancel:hover {
+    border-color: #3e8e41;
+    background: #f1f7f1;
 }
 
 @keyframes catalog-drawer-enter {
@@ -545,4 +570,3 @@ body.catalog-drawer-open {
         padding-inline: 16px;
     }
 }
-
