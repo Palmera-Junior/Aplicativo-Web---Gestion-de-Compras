@@ -111,7 +111,7 @@ Los scripts de inicialización están en `docker/init-db/`:
 - `01-create-schema.sql`: creación del esquema.
 - `DDL.sql`: tablas, relaciones, índices y restricciones.
 
-`DDL.sql` crea la sede técnica mínima que exige la relación de usuario. `dml.sql` solo crea el usuario `admin` con rol `SUPERADMINISTRADOR`; no carga proveedores ni datos de demostración.
+`DDL.sql` crea la sede técnica mínima. Al iniciar la aplicación, `dml.sql` también garantiza que exista la sede con prefijo `NAC` antes de crear el usuario `admin` con rol `SUPERADMINISTRADOR`. Así funciona tanto con bases inicializadas por Docker como con tablas creadas por Hibernate; no carga proveedores ni datos de demostración.
 
 La configuración actual usa `spring.jpa.hibernate.ddl-auto=update`. Antes de producción, adopte migraciones versionadas y defina una política de respaldo. La carpeta `src/main/resources/db/migration` está actualmente vacía.
 

@@ -4,6 +4,10 @@
 
 SET search_path TO dep_compras;
 
+INSERT INTO sede (nombre, prefijo_ciudad, direccion)
+VALUES ('Sede Nacional', 'NAC', 'Sede principal')
+ON CONFLICT (prefijo_ciudad) DO NOTHING;
+
 INSERT INTO usuario (
     cedula,
     nombre,
