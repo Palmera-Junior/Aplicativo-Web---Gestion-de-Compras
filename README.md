@@ -27,7 +27,16 @@ Aplicación web para administrar órdenes de compra, proveedores, productos, sed
    docker compose -f docker-compose.no-oauth2.yml up --build
    ```
 
-Sin OAuth2, la aplicación queda disponible en `http://localhost`; con OAuth2, en `http://localhost:8080`. Para detener los servicios:
+La base nueva se inicializa con los schemas `core`, `compras` y `polizas`. Si se está reutilizando un volumen PostgreSQL anterior, elimínelo antes del primer arranque para que Docker vuelva a ejecutar los scripts iniciales:
+
+```powershell
+docker compose down -v
+```
+
+Este comando elimina **todos** los datos del volumen PostgreSQL. No lo ejecute si necesita conservar datos.
+Si se inició con `docker-compose.no-oauth2.yml`, use en su lugar `docker compose -f docker-compose.no-oauth2.yml down -v`.
+
+Sin OAuth2, la aplicación queda disponible en `http://localhost`; con OAuth2, en `http://localhost:8080`. Para detener los servicios sin borrar datos:
 
 ```powershell
 docker compose down
@@ -37,14 +46,13 @@ Para eliminar también los datos persistidos, use `docker compose down -v`. Esta
 
 ## Ejecución local
 
-Requiere Java 17, PostgreSQL configurado con el esquema `dep_compras` y las credenciales de conexión correspondientes.
+Requiere Java 17 y una base PostgreSQL vacía ya creada. Configure las credenciales en `.env` y ejecute la aplicación como de costumbre:
 
 ```powershell
-.\mvnw.cmd clean compile
-.\mvnw.cmd test
-.\mvnw.cmd clean package
-java -jar target\gestion_compras-0.0.1-SNAPSHOT.jar
+.\mvnw.cmd spring-boot:run
 ```
+
+Al arrancar, Spring aplica los schemas y tablas definidos en `docker/init-db/`, carga los datos iniciales de `src/main/resources/db/dml.sql` y valida las entidades.
 
 ## Correo con Amazon SES
 
@@ -72,4 +80,4 @@ No comparta `.env`; está excluido del control de versiones. La aplicación inic
 
 La suite actual valida la carga del contexto Spring mediante `contextLoads()`. Antes de producción se recomienda ampliar las pruebas para autorización por rol y sede, transiciones de estado, contratos HTTP, cargas de evidencia y envío/reintento de correos.
 
-La aplicación usa `spring.jpa.hibernate.ddl-auto=update`, que no convierte de forma fiable columnas existentes. `docker/init-db/DDL.sql` solo se ejecuta en una base nueva; para bases existentes, respalde y prepare una migración versionada antes de cambiar tipos como `proveedor.nit` de texto a `BIGINT`. El repositorio no incluye actualmente esa migración. En bases nuevas, el DDL crea el esquema actualizado.
+La aplicación valida el esquema al iniciar (`spring.jpa.hibernate.ddl-auto=validate`); no mueve tablas ni convierte bases existentes. Esta configuración está preparada para una instalación limpia con los schemas `core`, `compras` y `polizas`. No hay migración automática desde el schema anterior `dep_compras`.

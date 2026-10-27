@@ -33,7 +33,7 @@ import lombok.ToString;
 @AllArgsConstructor
 @ToString
 @Entity
-@Table(name = "poliza")
+@Table(name = "poliza", schema = "polizas")
 public class Poliza {
 
     @Id

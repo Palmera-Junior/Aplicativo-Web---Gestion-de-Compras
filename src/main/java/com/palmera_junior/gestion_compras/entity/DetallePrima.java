@@ -20,7 +20,7 @@ import lombok.ToString;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "detalle_prima")
+@Table(name = "detalle_prima", schema = "polizas")
 public class DetallePrima {
 
     @Id

@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "usuario_permiso_override",
+@Table(name = "usuario_permiso", schema = "core",
         uniqueConstraints = @UniqueConstraint(columnNames = {"id_usuario", "id_permiso"}))
 @Getter
 @Setter
@@ -35,6 +35,6 @@ public class PermisoUsuario {
     @JoinColumn(name = "id_permiso", nullable = false)
     private Permiso permiso;
 
-    @Column(nullable = false)
+    @Column(name = "concedido", nullable = false)
     private boolean concedido;
 }

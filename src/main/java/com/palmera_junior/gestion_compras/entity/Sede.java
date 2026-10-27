@@ -13,7 +13,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-@Table(name = "sede")
+@Table(name = "sede", schema = "core")
 public class Sede {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

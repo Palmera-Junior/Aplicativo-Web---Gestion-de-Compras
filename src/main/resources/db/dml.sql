@@ -2,9 +2,7 @@
 -- Se ejecuta al iniciar Spring mediante spring.sql.init.data-locations.
 -- La contraseña de admin no se almacena en texto plano: es un hash BCrypt de admin123.
 
-SET search_path TO dep_compras;
-
-INSERT INTO categoria (codigo, nombre) VALUES
+INSERT INTO compras.categoria (codigo, nombre) VALUES
     ('EPPS', 'EPPS'),
     ('MECANISMOS', 'Mecanismos'),
     ('EQUIPOS', 'Equipos'),
@@ -14,7 +12,7 @@ INSERT INTO categoria (codigo, nombre) VALUES
     ('PRODUCTOS', 'Productos')
 ON CONFLICT (codigo) DO NOTHING;
 
-INSERT INTO rol (codigo) VALUES
+INSERT INTO core.rol (codigo) VALUES
     ('SUPERADMINISTRADOR'),
     ('ADMINISTRADOR'),
     ('APROBADOR'),
@@ -22,7 +20,7 @@ INSERT INTO rol (codigo) VALUES
     ('COMERCIAL')
 ON CONFLICT (codigo) DO NOTHING;
 
-INSERT INTO permiso (codigo, nombre) VALUES
+INSERT INTO core.permiso (codigo, nombre) VALUES
     ('PANEL_ADMINISTRACION', 'Acceder al panel de administración'),
     ('PRODUCTOS_GESTIONAR', 'Gestionar productos'),
     ('PROVEEDORES_GESTIONAR', 'Gestionar proveedores'),
@@ -36,7 +34,7 @@ INSERT INTO permiso (codigo, nombre) VALUES
     ('ORDENES_APROBAR', 'Aprobar órdenes de compra')
 ON CONFLICT (codigo) DO NOTHING;
 
-INSERT INTO rol_permiso (id_rol, id_permiso)
+INSERT INTO core.rol_permiso (id_rol, id_permiso)
 SELECT r.id_rol, p.id_permiso
 FROM (
     VALUES
@@ -72,21 +70,21 @@ FROM (
         ('COMERCIAL', 'POLIZAS_VER'),
         ('COMERCIAL', 'POLIZAS_GESTIONAR')
 ) AS defaults(codigo_rol, codigo_permiso)
-JOIN rol r ON r.codigo = defaults.codigo_rol
-JOIN permiso p ON p.codigo = defaults.codigo_permiso
+JOIN core.rol r ON r.codigo = defaults.codigo_rol
+JOIN core.permiso p ON p.codigo = defaults.codigo_permiso
 WHERE NOT r.permisos_predeterminados_cargados
 ON CONFLICT (id_rol, id_permiso) DO NOTHING;
 
-UPDATE rol
+UPDATE core.rol
 SET permisos_predeterminados_cargados = TRUE
 WHERE codigo IN ('SUPERADMINISTRADOR', 'ADMINISTRADOR', 'APROBADOR', 'SOLICITANTE', 'COMERCIAL')
   AND NOT permisos_predeterminados_cargados;
 
-INSERT INTO sede (nombre, prefijo_ciudad, direccion)
+INSERT INTO core.sede (nombre, prefijo_ciudad, direccion)
 VALUES ('Sede Nacional', 'NAC', 'Sede principal')
 ON CONFLICT (prefijo_ciudad) DO NOTHING;
 
-INSERT INTO usuario (
+INSERT INTO core.usuario (
     cedula,
     nombre,
     apellido,
@@ -107,8 +105,8 @@ SELECT
     '$2a$10$LrFBseqXiuhqWYw1Y5fJA.dhsY2o4KozS/a.9eZ7rrACG.jJTggna',
     r.id_rol,
     s.id_sede
-FROM sede s
-JOIN rol r ON r.codigo = 'SUPERADMINISTRADOR'
+FROM core.sede s
+JOIN core.rol r ON r.codigo = 'SUPERADMINISTRADOR'
 WHERE s.prefijo_ciudad = 'NAC'
 ON CONFLICT (nombre_usuario) DO UPDATE
 SET id_rol = EXCLUDED.id_rol;

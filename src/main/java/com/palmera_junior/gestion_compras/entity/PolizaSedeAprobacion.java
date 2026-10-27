@@ -26,7 +26,7 @@ import lombok.ToString;
 @AllArgsConstructor
 @ToString
 @Entity
-@Table(name = "poliza_sede_aprobacion",
+@Table(name = "poliza_sede_aprobacion", schema = "polizas",
         uniqueConstraints = @UniqueConstraint(columnNames = {"id_poliza", "id_sede"}))
 public class PolizaSedeAprobacion {
 

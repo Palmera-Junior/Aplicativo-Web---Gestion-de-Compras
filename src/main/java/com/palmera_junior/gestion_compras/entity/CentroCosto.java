@@ -9,7 +9,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-@Table(name = "centro_costo")
+@Table(name = "centro_costo", schema = "core")
 public class CentroCosto {
 
     @Id
@@ -44,4 +44,3 @@ public class CentroCosto {
         return getClass().hashCode();
     }
 }
-

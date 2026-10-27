@@ -17,7 +17,7 @@ Navegador: Thymeleaf + JavaScript + CSS
                   |
       Spring Data JPA / Hibernate
                   |
-       PostgreSQL, esquema dep_compras
+       PostgreSQL: schemas core, compras y polizas
 ```
 
 OpenPDF genera documentos en memoria. Nginx funciona como proxy inverso hacia el puerto 8080 de la aplicación. Docker Compose separa aplicación, PostgreSQL y redes interna/externa.
@@ -57,11 +57,19 @@ OpenPDF genera documentos en memoria. Nginx funciona como proxy inverso hacia el
 
 ## 4. Persistencia
 
-El DDL crea el esquema `dep_compras` con tablas para `sede`, `centro_costo`, `categoria`, `producto`, `presentacion_producto`, `proveedor`, `proveedor_sede`, `rol`, `permiso`, `usuario`, `rol_permiso`, `usuario_permiso_override`, `orden_compra`, `detalle_compra` y `auditoria_envio_correo`. `producto` referencia una categoría; cada rol define permisos predeterminados y los usuarios pueden conservar excepciones individuales de concesión o denegación.
+La persistencia se divide por dominio:
+
+| Schema | Tablas |
+|---|---|
+| `core` | `sede`, `centro_costo`, `proveedor`, `proveedor_sede`, `usuario`, `usuario_permiso`, `rol`, `rol_permiso`, `permiso`. |
+| `compras` | `orden_compra`, `detalle_compra`, `auditoria_envio_correo`, `categoria`, `producto`, `presentacion_producto`. |
+| `polizas` | `poliza`, `poliza_sede_aprobacion`, `poliza_renovacion`, `auditoria_envio_correo_poliza`, `detalle_prima`, `poliza_adjunto`. |
+
+Las claves foráneas entre módulos apuntan a las tablas compartidas de `core`; las relaciones de permisos por rol y proveedor por sede también residen en `core`. `usuario_permiso` guarda excepciones individuales de concesión o denegación respecto a los permisos heredados del rol.
 
 Hay restricciones de unicidad para identificadores de negocio y relaciones con cascada para detalles y presentaciones. Las autoridades `PERM_<CODIGO>` se calculan con permisos del rol y excepciones individuales, que prevalecen sobre los valores del rol. La auditoría de correo conserva destinatario, estado, tipo, intentos, fechas y último error.
 
-> `spring.jpa.hibernate.ddl-auto=update` está activo y `src/main/resources/db/migration` está vacío. El DDL inicial de Docker no sustituye migraciones versionadas para bases existentes.
+> `spring.jpa.hibernate.ddl-auto=validate` verifica que los tres schemas y sus tablas estén creados. La aplicación no modifica ni migra bases existentes.
 
 ## 5. Flujo Transactional Outbox
 

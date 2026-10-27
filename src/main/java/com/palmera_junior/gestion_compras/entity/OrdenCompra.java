@@ -14,7 +14,7 @@ import lombok.*;
 @AllArgsConstructor
 @ToString
 @Entity
-@Table(name = "orden_compra")
+@Table(name = "orden_compra", schema = "compras")
 
 public class OrdenCompra {
 

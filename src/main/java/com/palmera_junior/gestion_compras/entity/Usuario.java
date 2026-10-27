@@ -16,7 +16,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-@Table(name = "usuario")
+@Table(name = "usuario", schema = "core")
 
 public class Usuario {
 

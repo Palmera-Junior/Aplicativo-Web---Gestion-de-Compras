@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "rol")
+@Table(name = "rol", schema = "core")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -27,7 +27,7 @@ public class Rol {
     private boolean permisosPredeterminadosCargados;
 
     @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(name = "rol_permiso",
+    @JoinTable(name = "rol_permiso", schema = "core",
             joinColumns = @JoinColumn(name = "id_rol"),
             inverseJoinColumns = @JoinColumn(name = "id_permiso"))
     @ToString.Exclude

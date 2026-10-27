@@ -26,7 +26,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @ToString
 @Entity
-@Table(name = "poliza_renovacion")
+@Table(name = "poliza_renovacion", schema = "polizas")
 public class PolizaRenovacion {
 
     @Id

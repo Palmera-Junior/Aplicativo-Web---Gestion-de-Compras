@@ -12,7 +12,7 @@ import java.util.HashSet;
 @AllArgsConstructor
 @ToString
 @Entity
-@Table(name = "proveedor")
+@Table(name = "proveedor", schema = "core")
 public class Proveedor {
     
     @Id
@@ -41,6 +41,7 @@ public class Proveedor {
    @ManyToMany
    @JoinTable(
        name = "proveedor_sede",
+       schema = "core",
        joinColumns = @JoinColumn(name = "id_prov"),
        inverseJoinColumns = @JoinColumn(name = "id_sede")
    )
@@ -67,4 +68,3 @@ public class Proveedor {
 
 
 }
-

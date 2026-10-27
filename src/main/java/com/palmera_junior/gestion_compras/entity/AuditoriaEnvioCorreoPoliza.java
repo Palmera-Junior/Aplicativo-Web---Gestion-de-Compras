@@ -21,7 +21,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "auditoria_envio_correo_poliza", indexes = {
+@Table(name = "auditoria_envio_correo_poliza", schema = "polizas", indexes = {
         @Index(name = "idx_auditoria_poliza_estado_reintento", columnList = "estado,proximo_intento")
 })
 public class AuditoriaEnvioCorreoPoliza {

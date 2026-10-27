@@ -17,8 +17,7 @@
 
 - Java 17.
 - Maven Wrapper incluido (`mvnw.cmd` en Windows).
-- PostgreSQL accesible.
-- Esquema `dep_compras` creado mediante los scripts SQL.
+- PostgreSQL local activo y una base de datos vacía ya creada.
 
 ## 2. Configurar variables
 
@@ -61,21 +60,57 @@ docker compose up --build
 
 La aplicación queda disponible en `http://localhost:8080`. PostgreSQL no publica un puerto en el host; solo es accesible desde la red interna de Docker.
 
+En un volumen nuevo, PostgreSQL ejecuta automáticamente `docker/init-db/01-create-schema.sql` y `docker/init-db/DDL.sql`. Si necesita reinicializar un volumen anterior con los schemas nuevos, detenga los servicios y elimine el volumen antes de arrancar:
+
+```powershell
+docker compose down -v
+docker compose up --build
+```
+
+La eliminación del volumen es destructiva: borra todos los datos PostgreSQL asociados a ese Compose. Este proyecto no migra tablas de `dep_compras`; utilice este reinicio solo cuando haya confirmado que los datos anteriores pueden descartarse.
+
 El servicio espera que estén definidos `MICROSOFT_CLIENT_ID`, `MICROSOFT_CLIENT_SECRET` y `MICROSOFT_TENANT_ID`.
 
 En **Microsoft Entra ID > Registros de aplicaciones > Autenticación**, agregue como plataforma **Web** el valor de `MICROSOFT_REDIRECT_URI`. Para un despliegue HTTPS, use la URL pública completa, por ejemplo `https://compras.example.com/login/oauth2/code/microsoft`, y defina el mismo valor en `.env`.
 
 ## 4. Instalación sin OAuth2
 
-Para un entorno local sin credenciales Microsoft:
+En Linux, instale Docker Engine y el plugin Docker Compose, clone el repositorio y entre en su directorio. En Ubuntu, por ejemplo, puede instalar Docker desde el repositorio oficial:
 
-```powershell
-docker compose -f docker-compose.no-oauth2.yml up --build
+```bash
+sudo apt-get update
+sudo apt-get install -y ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt-get update
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin git
 ```
 
-Verifique que `.env` defina `DB_NAME`, `DB_USER` y `DB_PASSWORD`. En una base nueva, use una contraseña propia antes del primer arranque. El acceso inicial es `admin` / `admin123`; cambie esa clave después del primer inicio. Si `admin` ya existía, el seed conserva su contraseña y solo garantiza el rol `SUPERADMINISTRADOR`. Para HTTP local, mantenga `SESSION_COOKIE_SECURE=false`; detrás de HTTPS, active `true` y configure `APP_BASE_URL` con la URL pública.
+Clone el repositorio (use la URL SSH si es privado) y configure las variables:
 
-Con `.env.example` copiado a `.env`, cambie `DB_PASSWORD` antes del primer arranque. El acceso inicial es `admin` / `admin123`; cambie esa clave después del primer inicio. Para HTTP local, mantenga `SESSION_COOKIE_SECURE=false`; detrás de HTTPS, active `true` y configure `APP_BASE_URL` con la URL pública.
+```bash
+git clone https://github.com/Palmera-Junior/Aplicativo-Web---Gestion-de-Compras.git
+cd Aplicativo-Web---Gestion-de-Compras
+cp .env.example .env
+openssl rand -hex 32
+nano .env
+```
+
+En `.env`, establezca una contraseña aleatoria propia en `DB_PASSWORD` y ponga `MICROSOFT_OAUTH2_ENABLED=false`. No use la contraseña de ejemplo `postgres`. Para una prueba por HTTP, configure `APP_BASE_URL=http://IP_DEL_SERVIDOR` y `SESSION_COOKIE_SECURE=false`. El Compose publica el puerto 80; configure el firewall del proveedor y del servidor para permitir HTTP. Para producción, ponga HTTPS delante de la aplicación antes de habilitar acceso público y configure `APP_BASE_URL` y las cookies seguras acorde con su proxy TLS.
+
+Guarde el archivo y restrinja sus permisos; luego valide y arranque:
+
+```bash
+chmod 600 .env
+docker compose -f docker-compose.no-oauth2.yml config
+sudo docker compose -f docker-compose.no-oauth2.yml up -d --build
+sudo docker compose -f docker-compose.no-oauth2.yml ps
+sudo docker compose -f docker-compose.no-oauth2.yml logs --tail=100 app
+```
+
+La primera compilación puede tardar varios minutos. PostgreSQL crea las tablas en el volumen nuevo; Spring aplica el esquema, valida las entidades y carga `src/main/resources/db/dml.sql`. El acceso inicial es `admin` / `admin123`; cámbielo después de iniciar sesión.
 
 ## 5. Detener servicios
 
@@ -93,35 +128,30 @@ La eliminación de volúmenes es destructiva.
 
 ## 6. Ejecución local
 
-Configure PostgreSQL con la base `palmera_junior` y el esquema `dep_compras`. En ejecución local, la URL usa `localhost`; el nombre del servicio Docker `db` solo resuelve dentro de Compose. Luego ejecute:
+Requiere Java 17, PostgreSQL activo en `localhost:5432` y una base de datos vacía ya creada. Configure `DB_USER` y `DB_PASSWORD` en `.env` con credenciales válidas para PostgreSQL y ejecute la aplicación normalmente:
 
 ```powershell
-.\mvnw.cmd clean compile
-.\mvnw.cmd test
-.\mvnw.cmd clean package
-java -jar target\gestion_compras-0.0.1-SNAPSHOT.jar
+.\mvnw.cmd spring-boot:run
 ```
 
-La aplicación escucha normalmente en el puerto `8080` cuando se ejecuta directamente.
+Al iniciar, Spring crea los schemas y tablas usando los scripts de `docker/init-db/`, carga los datos iniciales desde `src/main/resources/db/dml.sql` y luego valida el modelo JPA. La aplicación escucha normalmente en el puerto `8080`.
 
 ## 7. Base de datos
 
 Los scripts de inicialización están en `docker/init-db/`:
 
-- `01-create-schema.sql`: creación del esquema.
-- `DDL.sql`: tablas, relaciones, índices y restricciones.
+- `01-create-schema.sql`: creación de los schemas `core`, `compras` y `polizas`.
+- `DDL.sql`: tablas, relaciones, índices y restricciones, con claves foráneas entre schemas.
 
-`DDL.sql` crea la sede técnica mínima. Al iniciar la aplicación, `dml.sql` también garantiza que exista la sede con prefijo `NAC` antes de crear el usuario `admin` con rol `SUPERADMINISTRADOR`. Así funciona tanto con bases inicializadas por Docker como con tablas creadas por Hibernate; no carga proveedores ni datos de demostración.
+`src/main/resources/db/dml.sql` carga los catálogos, roles, permisos, sede inicial y usuario `admin` al iniciar. Sus inserciones son idempotentes, así que los reinicios no duplican esos registros.
 
-Las bases existentes deben migrarse antes de desplegar esta versión: haga un respaldo y ejecute una vez `docker/init-db/migrations/V1__catalogos_roles_y_permisos.sql` sobre la base de datos. El script conserva los valores de categoría y rol y crea las tablas para permisos directos; no es idempotente y no debe ejecutarse en una base nueva. En bases nuevas, `DDL.sql` crea el esquema normalizado.
-
-La configuración actual usa `spring.jpa.hibernate.ddl-auto=update`; los scripts de migración se deben ejecutar explícitamente y en orden en bases existentes antes de iniciar la nueva versión. Si su instalación requiere el cambio de presentaciones opcionales, aplique también su migración V2 después de V1. Para convertir los permisos directos a excepciones individuales y habilitar permisos predeterminados por rol, ejecute `docker/init-db/migrations/V3__permisos_por_rol_y_usuario.sql` después de V1. La V3 preserva los permisos directos existentes como concesiones explícitas. En bases nuevas, el DDL y el DML crean las relaciones de permisos por rol.
+`spring.jpa.hibernate.ddl-auto=validate` comprueba que las entidades coincidan con el DDL. Los scripts de esquema se ejecutan antes de esta validación y están preparados para repetirse en cada inicio. Para tener una base realmente vacía, use una base PostgreSQL nueva; el arranque no borra tablas ni registros existentes.
 
 ## 8. Verificación de instalación
 
 1. Compruebe que PostgreSQL esté saludable.
 2. Compruebe `http://localhost/actuator/health` detrás de Nginx o `http://localhost:8080/actuator/health` en ejecución local.
-3. Abra `/login` y valide el acceso.
+3. Abra `/login`; no podrá autenticarse hasta que agregue usuarios a la base.
 4. Cree una orden de prueba en estado `BORRADOR`.
 5. Verifique que un código inexistente muestre el toast del dashboard.
 6. Pruebe aprobación, generación de PDF y el registro de correo.

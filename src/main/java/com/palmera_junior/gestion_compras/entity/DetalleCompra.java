@@ -11,7 +11,7 @@ import lombok.*;
 @AllArgsConstructor
 @ToString
 @Entity
-@Table(name = "detalle_compra")
+@Table(name = "detalle_compra", schema = "compras")
  
 public class DetalleCompra {
 
