@@ -50,7 +50,7 @@ public class CentroCostoAdminController {
      * @return Redirección a la vista principal de administración.
      */
     @PostMapping("/admin/centros-costo")
-    @PreAuthorize("hasRole('SUPERADMINISTRADOR')")
+    @PreAuthorize("hasAuthority('PERM_CENTROS_COSTO_GESTIONAR')")
     public String guardarCentroCosto(@RequestParam(required = false) Integer idCentroCosto,
             @RequestParam String nombre,
             @RequestParam Integer sedeId,
@@ -83,7 +83,7 @@ public class CentroCostoAdminController {
      * @return {@link ResponseEntity} con mensaje JSON de éxito o error.
      */
     @PostMapping("/admin/centros-costo/delete/{id}")
-    @PreAuthorize("hasRole('SUPERADMINISTRADOR')")
+    @PreAuthorize("hasAuthority('PERM_CENTROS_COSTO_GESTIONAR')")
     public ResponseEntity<?> deleteCentro(@PathVariable Integer id) {
         try {
             if (!centroCostoService.eliminar(id)) {
@@ -97,4 +97,3 @@ public class CentroCostoAdminController {
         }
     }
 }
-

@@ -113,7 +113,9 @@ Los scripts de inicialización están en `docker/init-db/`:
 
 `DDL.sql` crea la sede técnica mínima. Al iniciar la aplicación, `dml.sql` también garantiza que exista la sede con prefijo `NAC` antes de crear el usuario `admin` con rol `SUPERADMINISTRADOR`. Así funciona tanto con bases inicializadas por Docker como con tablas creadas por Hibernate; no carga proveedores ni datos de demostración.
 
-La configuración actual usa `spring.jpa.hibernate.ddl-auto=update`. Antes de producción, adopte migraciones versionadas y defina una política de respaldo. La carpeta `src/main/resources/db/migration` está actualmente vacía.
+Las bases existentes deben migrarse antes de desplegar esta versión: haga un respaldo y ejecute una vez `docker/init-db/migrations/V1__catalogos_roles_y_permisos.sql` sobre la base de datos. El script conserva los valores de categoría y rol y crea las tablas para permisos directos; no es idempotente y no debe ejecutarse en una base nueva. En bases nuevas, `DDL.sql` crea el esquema normalizado.
+
+La configuración actual usa `spring.jpa.hibernate.ddl-auto=update`; los scripts de migración se deben ejecutar explícitamente y en orden en bases existentes antes de iniciar la nueva versión. Si su instalación requiere el cambio de presentaciones opcionales, aplique también su migración V2 después de V1. Para convertir los permisos directos a excepciones individuales y habilitar permisos predeterminados por rol, ejecute `docker/init-db/migrations/V3__permisos_por_rol_y_usuario.sql` después de V1. La V3 preserva los permisos directos existentes como concesiones explícitas. En bases nuevas, el DDL y el DML crean las relaciones de permisos por rol.
 
 ## 8. Verificación de instalación
 

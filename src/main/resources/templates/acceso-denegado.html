@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso restringido | Gestión de Compras</title>
+    <link rel="icon" type="image/png" th:href="@{/imgs/logo1.png}">
+    <link rel="stylesheet" th:href="@{/css/compras.css}">
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+    <link rel="stylesheet" th:href="@{/css/catalogos.css}">
+    <link rel="stylesheet" th:href="@{/css/navigation.css}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+</head>
+<body>
+    <header th:replace="~{fragments/encabezado :: administracion}"></header>
+    <div th:replace="~{fragments/navegacion :: principal('acceso-denegado')}"></div>
+    <main class="dashboard-container catalogo-page access-denied-page">
+        <section class="access-denied-card">
+            <span class="material-symbols" aria-hidden="true">lock</span>
+            <h1>No tienes una página principal asignada</h1>
+            <p>Tu cuenta puede tener permisos de catálogo, pero no cuenta con acceso al Dashboard, Órdenes de compra ni Pólizas.</p>
+            <p>Usa las opciones habilitadas en el menú lateral o solicita al administrador que asigne el acceso correspondiente.</p>
+        </section>
+    </main>
+</body>
+</html>

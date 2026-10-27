@@ -191,10 +191,10 @@ function crearFilaPresentacion(nombre, cantidad, unidad, precio) {
     const row = document.createElement('tr');
     row.className = 'presentacion-row';
     row.innerHTML = `
-        <td><input type="text" name="presentacionNombres" class="input-control pres-nombre" placeholder="Ej: Caja" aria-label="Presentación" value="${nombre || ''}" required></td>
-        <td><input type="number" name="presentacionCantidades" class="input-control pres-cant" placeholder="Ej: 12" aria-label="Cantidad" min="0.01" step="any" value="${cantidad != null ? cantidad : ''}" required></td>
-        <td><input type="text" name="presentacionUnidades" class="input-control pres-unidad" placeholder="Ej: g" aria-label="Unidad" value="${unidad || ''}" required></td>
-        <td><input type="number" step="0.01" name="presentacionPrecios" class="input-control pres-precio" placeholder="Ej: 25000" aria-label="Precio" min="0.01" value="${precio != null ? precio : ''}" required></td>
+        <td><input type="text" name="presentacionNombres" class="input-control pres-nombre" placeholder="Ej: Caja" aria-label="Presentación" value="${nombre || ''}"></td>
+        <td><input type="number" name="presentacionCantidades" class="input-control pres-cant" placeholder="Ej: 12" aria-label="Cantidad" min="0.01" step="any" value="${cantidad != null ? cantidad : ''}"></td>
+        <td><input type="text" name="presentacionUnidades" class="input-control pres-unidad" placeholder="Ej: g" aria-label="Unidad" value="${unidad || ''}"></td>
+        <td><input type="number" step="0.01" name="presentacionPrecios" class="input-control pres-precio" placeholder="Ej: 25000" aria-label="Precio" min="0.01" value="${precio != null ? precio : ''}"></td>
         <td><button type="button" class="btn-icon delete pres-delete" title="Eliminar presentación"><span class="material-symbols">delete</span></button></td>
     `;
     body.appendChild(row);

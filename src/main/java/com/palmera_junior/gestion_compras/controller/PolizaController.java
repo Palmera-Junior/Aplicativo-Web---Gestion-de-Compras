@@ -84,7 +84,7 @@ public class PolizaController {
      * La consulta se ajusta según la sede del usuario para respetar el alcance funcional del rol.
      */
     @GetMapping
-    @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('PERM_POLIZAS_VER', 'PERM_POLIZAS_GESTIONAR', 'PERM_POLIZAS_APROBAR')")
     public String listarPolizas(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int size,
@@ -155,7 +155,7 @@ public class PolizaController {
         model.addAttribute("polizasTerminadas", polizasResumen.stream().filter(p -> p.getEstado() == EstadoPoliza.TERMINADA).count());
         model.addAttribute("usuarioActual", authentication.getName());
         model.addAttribute("usuarioActualId", usuario.getIdUsuario());
-        model.addAttribute("rolUsuarioActual", usuario.getRol().name());
+        model.addAttribute("rolUsuarioActual", usuario.getRol().getCodigo());
         model.addAttribute("polizaCreadorActual", nombreCompleto(usuario));
         model.addAttribute("polizaSedeActual", usuario.getSede() == null ? "Sin información" : usuario.getSede().getNombre());
 
@@ -167,7 +167,7 @@ public class PolizaController {
      */
     @GetMapping("/proveedores/buscar")
     @ResponseBody
-    @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('PERM_POLIZAS_VER', 'PERM_POLIZAS_GESTIONAR', 'PERM_POLIZAS_APROBAR')")
     public List<ProveedorAutocompleteDTO> buscarProveedores(@RequestParam(required = false) String query) {
         if (query == null || query.trim().length() < 3) {
             return List.of();
@@ -197,7 +197,7 @@ public class PolizaController {
      */
     @GetMapping("/correo-estados")
     @ResponseBody
-    @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('PERM_POLIZAS_VER', 'PERM_POLIZAS_GESTIONAR', 'PERM_POLIZAS_APROBAR')")
     public Map<Integer, EstadoEnvioCorreo> estadosCorreoEnVivo(@RequestParam List<Integer> ids) {
         Set<Integer> idsVisibles = polizaService.listarPolizas().stream()
                 .map(Poliza::getIdPoliza)
@@ -214,7 +214,7 @@ public class PolizaController {
      */
     @GetMapping("/{id}/aprobaciones-sedes")
     @ResponseBody
-    @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('PERM_POLIZAS_VER', 'PERM_POLIZAS_GESTIONAR', 'PERM_POLIZAS_APROBAR')")
     public List<Map<String, Object>> aprobacionesPorSede(@PathVariable Integer id) {
         return polizaService.listarAprobacionesPorSede(id).stream().map(aprobacion -> {
             Map<String, Object> item = new java.util.HashMap<>();
@@ -234,7 +234,7 @@ public class PolizaController {
      */
     @GetMapping("/{id}/detalles-prima")
     @ResponseBody
-    @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('PERM_POLIZAS_VER', 'PERM_POLIZAS_GESTIONAR', 'PERM_POLIZAS_APROBAR')")
     public List<DetallePrimaDTO> detallesPrima(@PathVariable Integer id) {
         return polizaService.obtenerPorId(id).getDetallesPrima().stream().map(detalle -> {
             DetallePrimaDTO dto = new DetallePrimaDTO();
@@ -248,7 +248,7 @@ public class PolizaController {
      * Crea una nueva póliza a partir del DTO del formulario y responde de forma compatible con AJAX y submit tradicional.
      */
     @PostMapping
-    @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
+    @PreAuthorize("hasAuthority('PERM_POLIZAS_GESTIONAR')")
     public Object guardarPoliza(@ModelAttribute PolizaDTO dto, RedirectAttributes redirectAttributes,
             HttpServletRequest request) {
         polizaService.guardarDesdeDTO(dto);
@@ -264,7 +264,7 @@ public class PolizaController {
      * Actualiza una póliza existente y mantiene la misma respuesta dual para formularios convencionales y peticiones AJAX.
      */
     @PostMapping("/{id}/editar")
-    @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
+    @PreAuthorize("hasAuthority('PERM_POLIZAS_GESTIONAR')")
     public Object actualizarPoliza(
             @PathVariable Integer id,
             @ModelAttribute PolizaDTO dto,
@@ -282,7 +282,7 @@ public class PolizaController {
      * Aprueba la póliza y deja el flujo listo para continuar con la activación o seguimiento posterior.
      */
     @PostMapping("/{id}/aprobar")
-    @PreAuthorize("hasAnyRole('APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
+    @PreAuthorize("hasAuthority('PERM_POLIZAS_APROBAR')")
     public String aprobarPoliza(@PathVariable Integer id, RedirectAttributes redirectAttributes) {
         polizaService.aprobar(id);
         redirectAttributes.addFlashAttribute("mensajeExito", "Póliza aprobada correctamente.");
@@ -293,7 +293,7 @@ public class PolizaController {
     * Activa la póliza como vigente, adjuntando sus documentos PDF físicos.
      */
     @PostMapping(value = "/{id}/activar", consumes = "multipart/form-data")
-    @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
+    @PreAuthorize("hasAuthority('PERM_POLIZAS_GESTIONAR')")
     public String activarPoliza(
             @PathVariable Integer id,
             @ModelAttribute ActivarPolizaDTO dto,
@@ -305,7 +305,7 @@ public class PolizaController {
 
     @PostMapping(value = "/{id}/renovar", consumes = "multipart/form-data")
     @ResponseBody
-    @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
+    @PreAuthorize("hasAuthority('PERM_POLIZAS_GESTIONAR')")
     public ResponseEntity<Map<String, String>> renovarPoliza(
             @PathVariable Integer id,
             @ModelAttribute RenovarPolizaDTO dto) {
@@ -315,7 +315,7 @@ public class PolizaController {
 
     @GetMapping("/{id}/renovaciones")
     @ResponseBody
-    @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('PERM_POLIZAS_VER', 'PERM_POLIZAS_GESTIONAR', 'PERM_POLIZAS_APROBAR')")
     public Map<String, Object> renovaciones(@PathVariable Integer id) {
         Poliza poliza = polizaService.obtenerPorId(id);
         List<PolizaRenovacion> renovaciones = polizaService.listarRenovaciones(id);
@@ -358,7 +358,7 @@ public class PolizaController {
     }
 
     @GetMapping("/{id}/contrato-adjunto")
-    @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('PERM_POLIZAS_VER', 'PERM_POLIZAS_GESTIONAR', 'PERM_POLIZAS_APROBAR')")
     public ResponseEntity<byte[]> descargarContratoAdjunto(@PathVariable Integer id) throws IOException {
         PolizaAdjunto adjunto = polizaService.obtenerContratoAdjunto(id);
         byte[] contenido = polizaService.leerContratoAdjunto(adjunto);
@@ -370,7 +370,7 @@ public class PolizaController {
     }
 
     @GetMapping("/{id}/adjuntos/{idAdjunto}")
-    @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('PERM_POLIZAS_VER', 'PERM_POLIZAS_GESTIONAR', 'PERM_POLIZAS_APROBAR')")
     public ResponseEntity<byte[]> descargarAdjuntoFisico(@PathVariable Integer id,
             @PathVariable Integer idAdjunto) throws IOException {
         PolizaAdjunto adjunto = polizaService.obtenerAdjuntoFisico(id, idAdjunto);
@@ -383,7 +383,7 @@ public class PolizaController {
     }
 
     @GetMapping("/{id}/renovaciones/{idRenovacion}/adjuntos/{idAdjunto}")
-    @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('PERM_POLIZAS_VER', 'PERM_POLIZAS_GESTIONAR', 'PERM_POLIZAS_APROBAR')")
     public ResponseEntity<byte[]> descargarAdjuntoRenovacion(@PathVariable Integer id,
             @PathVariable Integer idRenovacion, @PathVariable Integer idAdjunto) throws IOException {
         PolizaAdjunto adjunto = polizaService.obtenerAdjuntoRenovacion(id, idRenovacion, idAdjunto);
@@ -399,7 +399,7 @@ public class PolizaController {
      * Anula una póliza cuando se confirma que ya no debe seguir vigente en el sistema.
      */
     @PostMapping("/{id}/anular")
-    @PreAuthorize("hasAnyRole('APROBADOR', 'SUPERADMINISTRADOR')")
+    @PreAuthorize("hasAuthority('PERM_POLIZAS_APROBAR')")
     public String anularPoliza(@PathVariable Integer id, RedirectAttributes redirectAttributes) {
         polizaService.anular(id);
         redirectAttributes.addFlashAttribute("mensajeExito", "Póliza anulada correctamente.");
@@ -410,7 +410,7 @@ public class PolizaController {
      * Finaliza la póliza con un motivo explícito cuando la cobertura ya no está vigente para la operación.
      */
     @PostMapping("/{id}/terminar")
-    @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
+    @PreAuthorize("hasAuthority('PERM_POLIZAS_GESTIONAR')")
     public String terminarPoliza(@PathVariable Integer id,
             @RequestParam String motivoTerminacion,
             RedirectAttributes redirectAttributes) {

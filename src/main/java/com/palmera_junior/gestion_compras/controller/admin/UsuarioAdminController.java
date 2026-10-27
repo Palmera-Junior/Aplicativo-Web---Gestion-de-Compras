@@ -15,9 +15,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.Map;
+import java.util.List;
 
-import com.palmera_junior.gestion_compras.entity.Rol;
+import com.palmera_junior.gestion_compras.entity.Permiso;
 import com.palmera_junior.gestion_compras.entity.Usuario;
+import com.palmera_junior.gestion_compras.repository.PermisoRepository;
+import com.palmera_junior.gestion_compras.repository.RolRepository;
 import com.palmera_junior.gestion_compras.service.usuario.IUsuarioService;
 
 /**
@@ -29,12 +32,132 @@ import com.palmera_junior.gestion_compras.service.usuario.IUsuarioService;
 public class UsuarioAdminController {
 
     private final IUsuarioService usuarioService;
+    private final PermisoRepository permisoRepository;
+    private final RolRepository rolRepository;
 
     /**
      * Constructor para inyección de dependencias del servicio de usuarios.
      */
-    public UsuarioAdminController(IUsuarioService usuarioService) {
+    public UsuarioAdminController(IUsuarioService usuarioService, PermisoRepository permisoRepository,
+            RolRepository rolRepository) {
         this.usuarioService = usuarioService;
+        this.permisoRepository = permisoRepository;
+        this.rolRepository = rolRepository;
+    }
+
+    @GetMapping("/admin/catalogos/permisos")
+    @PreAuthorize("hasRole('SUPERADMINISTRADOR')")
+    public String administrarPermisos(Model model,
+            @RequestParam(required = false) Integer usuarioId,
+            @RequestParam(required = false) Integer rolId,
+            @RequestParam(defaultValue = "usuarios") String vista,
+            @RequestParam(required = false) String success,
+            @RequestParam(required = false) String error) {
+        List<Usuario> usuarios = usuarioService.listarTodos().stream()
+                .sorted(java.util.Comparator.comparing(Usuario::getNombreUsuario,
+                        java.util.Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)))
+                .toList();
+        Usuario usuarioSeleccionado;
+        if (usuarioId == null && !usuarios.isEmpty()) {
+            usuarioSeleccionado = usuarios.get(0);
+        } else {
+            usuarioSeleccionado = usuarios.stream()
+                    .filter(usuario -> usuarioId != null && usuarioId.equals(usuario.getIdUsuario()))
+                    .findFirst()
+                    .orElse(null);
+        }
+        List<com.palmera_junior.gestion_compras.entity.Rol> roles = rolRepository.findAll().stream()
+                .sorted(java.util.Comparator.comparing(com.palmera_junior.gestion_compras.entity.Rol::getCodigo,
+                        java.util.Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)))
+                .toList();
+        var rolSeleccionado = rolId == null
+                ? null
+                : roles.stream().filter(rol -> rolId.equals(rol.getIdRol())).findFirst().orElse(null);
+
+        model.addAttribute("usuarios", usuarios);
+        model.addAttribute("permisos", permisoRepository.findAll().stream()
+                .sorted(java.util.Comparator.comparing(Permiso::getNombre,
+                        java.util.Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)))
+                .toList());
+        model.addAttribute("usuarioSeleccionado", usuarioSeleccionado);
+        model.addAttribute("usuarioId", usuarioSeleccionado == null ? null : usuarioSeleccionado.getIdUsuario());
+        model.addAttribute("roles", roles);
+        model.addAttribute("rolSeleccionado", rolSeleccionado);
+        model.addAttribute("rolId", rolSeleccionado == null ? null : rolSeleccionado.getIdRol());
+        model.addAttribute("vistaPermisos", "roles".equals(vista) ? "roles" : "usuarios");
+        model.addAttribute("catalogoActivo", "permisos");
+        model.addAttribute("successMessage", success);
+        model.addAttribute("errorMessage", error != null
+                ? error
+                : usuarioId != null && usuarioSeleccionado == null ? "El usuario seleccionado no existe."
+                : rolId != null && rolSeleccionado == null ? "El rol seleccionado no existe." : null);
+        return "permisos";
+    }
+
+    @PostMapping("/admin/catalogos/permisos")
+    @PreAuthorize("hasRole('SUPERADMINISTRADOR')")
+    public String guardarPermisos(@RequestParam Integer usuarioId,
+            @RequestParam(required = false) List<Integer> permisoIds,
+            RedirectAttributes redirectAttributes) {
+        try {
+            usuarioService.actualizarPermisos(usuarioId, permisoIds);
+            redirectAttributes.addAttribute("usuarioId", usuarioId);
+            redirectAttributes.addAttribute("vista", "usuarios");
+            redirectAttributes.addAttribute("success", "Permisos actualizados correctamente.");
+        } catch (IllegalArgumentException ex) {
+            redirectAttributes.addAttribute("usuarioId", usuarioId);
+            redirectAttributes.addAttribute("vista", "usuarios");
+            redirectAttributes.addAttribute("error", ex.getMessage());
+        } catch (DataAccessException ex) {
+            redirectAttributes.addAttribute("usuarioId", usuarioId);
+            redirectAttributes.addAttribute("vista", "usuarios");
+            redirectAttributes.addAttribute("error", "No se pudieron actualizar los permisos del usuario.");
+        }
+        return "redirect:/admin/catalogos/permisos";
+    }
+
+    @PostMapping("/admin/catalogos/permisos/roles")
+    @PreAuthorize("hasRole('SUPERADMINISTRADOR')")
+    public String guardarRol(@RequestParam(required = false) Integer rolId,
+            @RequestParam(required = false) String codigo,
+            @RequestParam(required = false) List<Integer> permisoIds,
+            RedirectAttributes redirectAttributes) {
+        try {
+            var rol = usuarioService.guardarRol(rolId, codigo, permisoIds);
+            redirectAttributes.addAttribute("rolId", rol.getIdRol());
+            redirectAttributes.addAttribute("success", rolId == null
+                    ? "Rol creado correctamente."
+                    : "Permisos del rol actualizados correctamente.");
+        } catch (IllegalArgumentException ex) {
+            if (rolId != null) {
+                redirectAttributes.addAttribute("rolId", rolId);
+            }
+            redirectAttributes.addAttribute("error", ex.getMessage());
+        } catch (DataAccessException ex) {
+            if (rolId != null) {
+                redirectAttributes.addAttribute("rolId", rolId);
+            }
+            redirectAttributes.addAttribute("error", "No se pudo guardar el rol.");
+        }
+        redirectAttributes.addAttribute("vista", "roles");
+        return "redirect:/admin/catalogos/permisos";
+    }
+
+    @PostMapping("/admin/catalogos/permisos/roles/delete/{rolId}")
+    @PreAuthorize("hasRole('SUPERADMINISTRADOR')")
+    public String eliminarRol(@PathVariable Integer rolId, RedirectAttributes redirectAttributes) {
+        try {
+            usuarioService.eliminarRol(rolId);
+            redirectAttributes.addAttribute("success", "Rol eliminado correctamente.");
+        } catch (IllegalArgumentException | IllegalStateException ex) {
+            redirectAttributes.addAttribute("rolId", rolId);
+            redirectAttributes.addAttribute("error", ex.getMessage());
+        } catch (DataAccessException ex) {
+            redirectAttributes.addAttribute("rolId", rolId);
+            redirectAttributes.addAttribute("error", "No se pudo eliminar el rol.");
+        }
+        redirectAttributes.addAttribute("vista", "roles");
+        return "redirect:/admin/catalogos/permisos";
     }
 
     /**
@@ -98,13 +221,13 @@ public class UsuarioAdminController {
             @RequestParam String nombreUsuario,
             @RequestParam(required = false) String contrasena,
             @RequestParam String email,
-            @RequestParam Rol rol,
+            @RequestParam Integer rolId,
             @RequestParam Integer sedeId,
             RedirectAttributes redirectAttributes) {
 
         try {
             usuarioService.guardarUsuario(idUsuario, cedula, nombre, apellido, cargo, nombreUsuario, contrasena,
-                    email, rol, sedeId);
+                    email, rolId, sedeId);
             redirectAttributes.addAttribute("success",
                     idUsuario == null ? "Usuario creado correctamente." : "Usuario actualizado correctamente.");
             return "redirect:/admin/catalogos/usuarios";
@@ -142,4 +265,3 @@ public class UsuarioAdminController {
         }
     }
 }
-

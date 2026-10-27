@@ -218,7 +218,7 @@ public class CorreoOrdenOutboxService {
      * @param descripcionFallo Justificación o detalle del envío manual.
      * @return AuditoriaEnvioCorreo actualizada.
      */
-    @PreAuthorize("hasAnyRole('SOLICITANTE', 'APROBADOR', 'ADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('PERM_ORDENES_GESTIONAR', 'PERM_ORDENES_APROBAR')")
     @Transactional
     public AuditoriaEnvioCorreo marcarEnviadoManualmente(Integer idOrden, TipoEnvioCorreo tipoEnvio, String descripcionFallo) {
 

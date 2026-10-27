@@ -5,7 +5,7 @@
     <meta name="_csrf" th:content="${_csrf.token}"><meta name="_csrf_header" th:content="${_csrf.headerName}">
     <title th:text="${'Catálogo de ' + catalogoActivo + ' | Gestión de Compras'}">Catálogos | Gestión de Compras</title>
     <link rel="icon" type="image/png" th:href="@{/imgs/logo1.png}">
-    <link rel="stylesheet" th:href="@{/css/compras.css(v=7)}"><link rel="stylesheet" th:href="@{/css/admin.css(v=3)}"><link rel="stylesheet" th:href="@{/css/catalogos.css(v=8)}"><link rel="stylesheet" th:href="@{/css/navigation.css(v=18)}">
+    <link rel="stylesheet" th:href="@{/css/compras.css}"><link rel="stylesheet" th:href="@{/css/admin.css}"><link rel="stylesheet" th:href="@{/css/catalogos.css}"><link rel="stylesheet" th:href="@{/css/navigation.css}">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 </head>
 <body>
@@ -16,7 +16,7 @@
 <section class="admin-grid">
 
             <!-- ---------- PROVEEDORES ---------- -->
-            <div class="card admin-card" id="section-proveedores"
+            <div sec:authorize="hasAuthority('PERM_PROVEEDORES_GESTIONAR')" class="card admin-card" id="section-proveedores"
                 th:style="${catalogoActivo == 'proveedores'} ? 'display:block;' : 'display:none;'">
                 <div class="section-panel-header accent-green">
                     <span class="material-symbols">local_shipping</span>
@@ -212,9 +212,9 @@
                             </div>
                             <div class="form-group">
                                 <label>Rol</label>
-                                <select id="rol" class="input-control" name="rol" required>
+                                <select id="rol" class="input-control" name="rolId" required>
                                     <option value="" disabled selected>Seleccionar rol</option>
-                                    <option th:each="rol : ${roles}" th:value="${rol}" th:text="${rol}"></option>
+                                    <option th:each="rol : ${roles}" th:value="${rol.idRol}" th:text="${rol.codigo}"></option>
                                 </select>
                             </div>
                             <div class="form-group">
@@ -250,8 +250,8 @@
 
                     <select name="rol" class="input-control filtro-select">
                         <option value="">Todos los roles</option>
-                        <option th:each="rol : ${roles}" th:value="${rol}" th:text="${rol}"
-                            th:selected="${rolUsuario != null and rol.toString().equals(rolUsuario)}"></option>
+                        <option th:each="rol : ${roles}" th:value="${rol.codigo}" th:text="${rol.codigo}"
+                            th:selected="${rolUsuario != null and rol.codigo.equals(rolUsuario)}"></option>
                     </select>
 
                     <select name="sedeId" class="input-control filtro-select">
@@ -286,14 +286,14 @@
                                     <tr th:each="usuario : ${usuariosPage.content}" th:data-id="${usuario.idUsuario}"
                                         th:data-cedula="${usuario.cedula}" th:data-nombre="${usuario.nombre}"
                                         th:data-apellido="${usuario.apellido}" th:data-cargo="${usuario.cargo}"
-                                        th:data-nombre-usuario="${usuario.nombreUsuario}" th:data-rol="${usuario.rol}"
+                                        th:data-nombre-usuario="${usuario.nombreUsuario}" th:data-rol="${usuario.rol.idRol}"
                                         th:data-sede-id="${usuario.sede != null ? usuario.sede.idSede : ''}">
                                         <td class="mono" th:text="${usuario.cedula}"></td>
                                         <td th:text="${usuario.nombre + ' ' + usuario.apellido}"></td>
                                         <td>
                                             <span class="badge-rol"
-                                                th:classappend="${usuario.rol.toString().toLowerCase()}"
-                                                th:text="${usuario.rol}"></span>
+                                                th:classappend="${usuario.rol.codigo.toLowerCase()}"
+                                                th:text="${usuario.rol.codigo}"></span>
                                         </td>
                                         <td th:text="${usuario.sede != null ? usuario.sede.nombre : ''}"></td>
                                         <td class="actions">
@@ -342,7 +342,7 @@
             </div>
 
             <!-- ---------- PRODUCTOS ---------- -->
-            <div class="card admin-card" id="section-productos"
+            <div sec:authorize="hasAuthority('PERM_PRODUCTOS_GESTIONAR')" class="card admin-card" id="section-productos"
                 th:style="${catalogoActivo == 'productos'} ? 'display:block;' : 'display:none;'">
                 <div class="section-panel-header accent-amber">
                     <span class="material-symbols">inventory_2</span>
@@ -371,10 +371,10 @@
                             </div>
                             <div class="form-group">
                                 <label>Categoría</label>
-                                <select id="categoria" class="input-control" name="categoria" required>
+                                <select id="categoria" class="input-control" name="idCategoria" required>
                                     <option value="" disabled selected>Seleccionar categoría</option>
-                                    <option th:each="categoria : ${categorias}" th:value="${categoria}"
-                                        th:text="${categoria}"></option>
+                                    <option th:each="categoria : ${categorias}" th:value="${categoria.idCategoria}"
+                                        th:text="${categoria.nombre}"></option>
                                 </select>
                             </div>
 
@@ -396,13 +396,13 @@
                                     <tbody id="presentacionesTbody">
                                         <tr class="presentacion-row">
                                                 <td><input type="text" name="presentacionNombres"
-                                                    class="input-control pres-nombre" placeholder="Ej: Caja" aria-label="Presentación" required></td>
+                                            class="input-control pres-nombre" placeholder="Ej: Caja" aria-label="Presentación"></td>
                                                 <td><input type="number" name="presentacionCantidades"
-                                                    class="input-control pres-cant" placeholder="Ej: 12" aria-label="Cantidad" min="0.01" step="any" required></td>
+                                            class="input-control pres-cant" placeholder="Ej: 12" aria-label="Cantidad" min="0.01" step="any"></td>
                                                 <td><input type="text" name="presentacionUnidades"
-                                                    class="input-control pres-unidad" placeholder="Ej: g" aria-label="Unidad" required></td>
+                                            class="input-control pres-unidad" placeholder="Ej: g" aria-label="Unidad"></td>
                                                 <td><input type="number" step="0.01" name="presentacionPrecios"
-                                                    class="input-control pres-precio" placeholder="Ej: 25000" aria-label="Precio" min="0.01" required></td>
+                                            class="input-control pres-precio" placeholder="Ej: 25000" aria-label="Precio" min="0.01"></td>
                                             <td>
                                                 <button type="button" class="btn-icon delete pres-delete"
                                                     title="Eliminar presentación">
@@ -440,8 +440,8 @@
                     <select name="categoria" class="input-control filtro-select">
                         <option value="">Todas las categorías</option>
                         <!-- Aquí Thymeleaf cargaría las categorías únicas desde el backend -->
-                        <option th:each="cat : ${categoriasUnicas}" th:value="${cat}" th:text="${cat}"
-                            th:selected="${categoriaProducto != null and cat.equals(categoriaProducto)}"></option>
+                        <option th:each="cat : ${categoriasUnicas}" th:value="${cat.codigo}" th:text="${cat.nombre}"
+                            th:selected="${categoriaProducto != null and cat.codigo.equals(categoriaProducto)}"></option>
                     </select>
 
                     <button type="button" class="btn-secondary btn-limpiar-filtro" data-entity="producto"
@@ -468,7 +468,7 @@
                                     <tr th:each="producto : ${productosPage.content}"
                                         th:data-id="${producto.idProducto}"
                                         th:data-codigo="${producto.codigoInventario}"
-                                        th:data-nombre="${producto.nombre}" th:data-categoria="${producto.categoria}">
+                                        th:data-nombre="${producto.nombre}" th:data-categoria="${producto.categoria.idCategoria}">
                                         <td class="mono" th:text="${producto.codigoInventario}"></td>
                                         <td th:text="${producto.nombre}"></td>
                                         <td>
@@ -479,7 +479,7 @@
                                                     th:text="${pres.cantidad != null ? pres.presentacion + ' (' + pres.cantidad + ' ' + pres.unidad + ')' : pres.presentacion + ' (' + pres.unidad + ')'} + '  |  ' + ( !presStat.last ? ';<br/>' : '' )"></span>
                                             </span>
                                         </td>
-                                        <td th:text="${producto.categoria}"></td>
+                                        <td th:text="${producto.categoria.nombre}"></td>
                                         <td class="actions">
                                             <button type="button" class="btn-icon edit" title="Editar"
                                                 onclick="editEntity('producto', this)">
@@ -526,7 +526,7 @@
             </div>
 
             <!-- ---------- SEDES ---------- -->
-            <div sec:authorize="hasRole('SUPERADMINISTRADOR')" class="card admin-card" id="section-sedes"
+            <div sec:authorize="hasAuthority('PERM_SEDES_GESTIONAR')" class="card admin-card" id="section-sedes"
                 th:style="${catalogoActivo == 'sedes'} ? 'display:block;' : 'display:none;'">
                 <div class="section-panel-header accent-teal">
                     <span class="material-symbols">store</span>
@@ -632,7 +632,7 @@
             </div>
 
             <!-- ---------- CENTROS DE COSTO ---------- -->
-            <div sec:authorize="hasRole('SUPERADMINISTRADOR')" class="card admin-card" id="section-centros"
+            <div sec:authorize="hasAuthority('PERM_CENTROS_COSTO_GESTIONAR')" class="card admin-card" id="section-centros"
                 th:style="${catalogoActivo == 'centros'} ? 'display:block;' : 'display:none;'">
                 <div class="section-panel-header accent-purple">
                     <span class="material-symbols">account_tree</span>
@@ -753,6 +753,6 @@
     <div id="catalog-drawer-backdrop" class="catalog-drawer-backdrop" hidden></div>
     <div id="page-transition-overlay" class="page-transition-overlay" aria-hidden="true"><div class="page-transition-content"><span class="material-symbols">progress_activity</span><p>Un momento por favor, estamos cargando toda la información...</p></div></div>
     <script th:src="@{/js/security.js(v=1)}"></script><script th:src="@{/js/page-transition.js}"></script>
-    <script th:src="@{/js/toast.js(v=1)}"></script><script th:src="@{/js/catalogos.js(v=7)}"></script>
+    <script th:src="@{/js/toast.js(v=1)}"></script><script th:src="@{/js/catalogos.js(v=8)}"></script>
 </body>
 </html>

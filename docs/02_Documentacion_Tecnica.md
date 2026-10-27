@@ -57,9 +57,9 @@ OpenPDF genera documentos en memoria. Nginx funciona como proxy inverso hacia el
 
 ## 4. Persistencia
 
-El DDL crea el esquema `dep_compras` con tablas para `sede`, `centro_costo`, `producto`, `presentacion_producto`, `proveedor`, `proveedor_sede`, `usuario`, `orden_compra`, `detalle_compra` y `auditoria_envio_correo`.
+El DDL crea el esquema `dep_compras` con tablas para `sede`, `centro_costo`, `categoria`, `producto`, `presentacion_producto`, `proveedor`, `proveedor_sede`, `rol`, `permiso`, `usuario`, `rol_permiso`, `usuario_permiso_override`, `orden_compra`, `detalle_compra` y `auditoria_envio_correo`. `producto` referencia una categoría; cada rol define permisos predeterminados y los usuarios pueden conservar excepciones individuales de concesión o denegación.
 
-Hay restricciones de unicidad para identificadores de negocio, checks para estados/roles/tipos y relaciones con cascada para detalles y presentaciones. La auditoría de correo conserva destinatario, estado, tipo, intentos, fechas y último error.
+Hay restricciones de unicidad para identificadores de negocio y relaciones con cascada para detalles y presentaciones. Las autoridades `PERM_<CODIGO>` se calculan con permisos del rol y excepciones individuales, que prevalecen sobre los valores del rol. La auditoría de correo conserva destinatario, estado, tipo, intentos, fechas y último error.
 
 > `spring.jpa.hibernate.ddl-auto=update` está activo y `src/main/resources/db/migration` está vacío. El DDL inicial de Docker no sustituye migraciones versionadas para bases existentes.
 

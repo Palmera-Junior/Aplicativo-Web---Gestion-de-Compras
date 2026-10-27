@@ -9,7 +9,6 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import com.palmera_junior.gestion_compras.entity.Rol;
 import com.palmera_junior.gestion_compras.entity.Poliza;
 import com.palmera_junior.gestion_compras.entity.Usuario;
 import com.palmera_junior.gestion_compras.repository.PolizaRepository;
@@ -38,7 +37,7 @@ public class CorreoNuevaPolizaService {
         Poliza poliza = polizaRepository.findWithRelationsByIdPoliza(idPoliza)
                 .orElseThrow(() -> new IllegalStateException("No existe la póliza " + idPoliza));
 
-        usuarioRepository.findByRolAndSedeIdSedeIn(Rol.APROBADOR, idsSedes).stream()
+        usuarioRepository.findByRolCodigoAndSedeIdSedeIn("APROBADOR", idsSedes).stream()
                 .filter(usuario -> StringUtils.hasText(usuario.getEmail()))
                 .filter(distintosPorCorreo())
                 .forEach(usuario -> {

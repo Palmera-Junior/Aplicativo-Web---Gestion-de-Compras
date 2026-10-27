@@ -1,6 +1,7 @@
 package com.palmera_junior.gestion_compras.security;
 
 import java.util.Collection;
+import java.util.ArrayList;
 import java.util.List;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -28,7 +29,14 @@ public class UsuarioPrincipal implements UserDetails {
      */
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_" + usuario.getRol().name()));
+        List<GrantedAuthority> authorities = new ArrayList<>();
+        if (usuario.getRol() != null) {
+            authorities.add(new SimpleGrantedAuthority("ROLE_" + usuario.getRol().getCodigo()));
+        }
+        usuario.getPermisos().stream()
+                .map(permiso -> new SimpleGrantedAuthority("PERM_" + permiso.getCodigo()))
+                .forEach(authorities::add);
+        return authorities;
     }
 
     @Override
@@ -61,4 +69,3 @@ public class UsuarioPrincipal implements UserDetails {
     @Override
     public boolean isEnabled() { return true; }
 }
-

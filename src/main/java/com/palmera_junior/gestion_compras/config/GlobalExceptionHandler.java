@@ -11,6 +11,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -26,6 +28,8 @@ import org.springframework.web.servlet.ModelAndView;
  */
 @ControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     /**
      * Determina si la solicitud entrante es de tipo AJAX (X-Requested-With o Accept application/json).
@@ -68,12 +72,8 @@ public class GlobalExceptionHandler {
                 message = message + " Detalle: " + causeMsg;
             }
         }
-
-        if (isAjax(request)) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", message));
-        } else {
-            return redirigirConError(request, message);
-        }
+        log.warn("Violación de integridad de datos en {}", request.getRequestURI(), ex);
+        return errorResponse(request, HttpStatus.CONFLICT, message);
     }
 
     /**
@@ -87,11 +87,8 @@ public class GlobalExceptionHandler {
     @ResponseBody
     public Object handleDataAccess(DataAccessException ex, HttpServletRequest request) {
         String message = "Error de acceso a datos.";
-        if (isAjax(request)) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", message));
-        } else {
-            return redirigirConError(request, message);
-        }
+        log.error("Error de acceso a datos en {}", request.getRequestURI(), ex);
+        return errorResponse(request, HttpStatus.INTERNAL_SERVER_ERROR, message);
     }
 
     /**
@@ -183,11 +180,16 @@ public class GlobalExceptionHandler {
     @ResponseBody
     public Object handleAll(Exception ex, HttpServletRequest request) {
         String message = "Ocurrió un error interno. Por favor contacte al administrador.";
+        log.error("Error no controlado en {}", request.getRequestURI(), ex);
+        return errorResponse(request, HttpStatus.INTERNAL_SERVER_ERROR, message);
+    }
+
+    private ResponseEntity<?> errorResponse(HttpServletRequest request, HttpStatus status, String message) {
         if (isAjax(request)) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", message));
-        } else {
-            return redirigirConError(request, message);
+            return ResponseEntity.status(status).body(Map.of("error", message));
         }
+        return ResponseEntity.status(status)
+                .contentType(MediaType.TEXT_PLAIN)
+                .body(message);
     }
 }
-

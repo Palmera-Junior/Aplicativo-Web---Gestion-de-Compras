@@ -34,7 +34,6 @@ import com.palmera_junior.gestion_compras.entity.PolizaAdjunto;
 import com.palmera_junior.gestion_compras.entity.PolizaSedeAprobacion;
 import com.palmera_junior.gestion_compras.entity.PolizaRenovacion;
 import com.palmera_junior.gestion_compras.entity.Proveedor;
-import com.palmera_junior.gestion_compras.entity.Rol;
 import com.palmera_junior.gestion_compras.entity.Sede;
 import com.palmera_junior.gestion_compras.entity.TipoAdjuntoPoliza;
 import com.palmera_junior.gestion_compras.entity.Usuario;
@@ -103,7 +102,7 @@ public class PolizaService implements IPolizaService {
 
     @Override
     @Transactional
-    @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('PERM_POLIZAS_VER', 'PERM_POLIZAS_GESTIONAR', 'PERM_POLIZAS_APROBAR')")
     public Page<Poliza> polizasPaginadas(Pageable pageable, String search, String fechaDesde,
             String fechaHasta, Integer idSede, boolean esNacional, String estado) {
         marcarVencidas();
@@ -167,7 +166,7 @@ public class PolizaService implements IPolizaService {
 
     @Override
     @Transactional(readOnly = true)
-    @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('PERM_POLIZAS_VER', 'PERM_POLIZAS_GESTIONAR', 'PERM_POLIZAS_APROBAR')")
     public List<Poliza> listarPolizas() {
         Usuario usuario = usuarioService.obtenerUsuarioAutenticado();
         if (esNacional(usuario)) {
@@ -186,7 +185,7 @@ public class PolizaService implements IPolizaService {
 
     @Override
     @Transactional(readOnly = true)
-    @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('PERM_POLIZAS_VER', 'PERM_POLIZAS_GESTIONAR', 'PERM_POLIZAS_APROBAR')")
     public Poliza obtenerPorId(Integer idPoliza) {
         Poliza poliza = polizaRepository.findWithRelationsByIdPoliza(idPoliza)
                 .orElseThrow(() -> new IllegalArgumentException("Póliza no encontrada"));
@@ -197,7 +196,7 @@ public class PolizaService implements IPolizaService {
 
     @Override
     @Transactional(readOnly = true)
-    @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('PERM_POLIZAS_VER', 'PERM_POLIZAS_GESTIONAR', 'PERM_POLIZAS_APROBAR')")
     public List<PolizaSedeAprobacion> listarAprobacionesPorSede(Integer idPoliza) {
         Poliza poliza = polizaRepository.findWithAprobacionesPorSedeByIdPoliza(idPoliza)
                 .orElseThrow(() -> new IllegalArgumentException("Póliza no encontrada"));
@@ -207,7 +206,7 @@ public class PolizaService implements IPolizaService {
 
     @Override
     @Transactional
-    @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
+    @PreAuthorize("hasAuthority('PERM_POLIZAS_GESTIONAR')")
     public Poliza guardarDesdeDTO(PolizaDTO dto) {
         if (dto == null || dto.getContratoAdjunto() == null || dto.getContratoAdjunto().isEmpty()) {
             throw new IllegalArgumentException("Debe adjuntar el contrato de la póliza en formato PDF");
@@ -233,7 +232,7 @@ public class PolizaService implements IPolizaService {
 
     @Override
     @Transactional
-    @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
+    @PreAuthorize("hasAuthority('PERM_POLIZAS_GESTIONAR')")
     public Poliza actualizarDesdeDTO(Integer idPoliza, PolizaDTO dto) {
         if (dto == null) {
             throw new IllegalArgumentException("Los datos de la póliza son obligatorios");
@@ -280,7 +279,7 @@ public class PolizaService implements IPolizaService {
 
     @Override
     @Transactional
-    @PreAuthorize("hasAnyRole('APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
+    @PreAuthorize("hasAuthority('PERM_POLIZAS_APROBAR')")
     public Poliza aprobar(Integer idPoliza) {
         Usuario aprobador = usuarioService.obtenerUsuarioAutenticado();
         Poliza poliza = polizaRepository.findById(idPoliza)
@@ -292,7 +291,7 @@ public class PolizaService implements IPolizaService {
 
     @Override
     @Transactional
-    @PreAuthorize("hasAnyRole('APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
+    @PreAuthorize("hasAuthority('PERM_POLIZAS_APROBAR')")
     public Poliza aprobarPorSede(Integer idPoliza, Integer idSede) {
         Usuario aprobador = usuarioService.obtenerUsuarioAutenticado();
         Poliza poliza = polizaRepository.findById(idPoliza)
@@ -344,7 +343,7 @@ public class PolizaService implements IPolizaService {
 
     @Override
     @Transactional
-    @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
+    @PreAuthorize("hasAuthority('PERM_POLIZAS_GESTIONAR')")
     public Poliza activarVigente(Integer idPoliza, String numeroPoliza, List<MultipartFile> polizasFisicas) {
         Usuario usuario = usuarioService.obtenerUsuarioAutenticado();
         Poliza poliza = polizaRepository.findById(idPoliza)
@@ -379,7 +378,7 @@ public class PolizaService implements IPolizaService {
 
     @Override
     @Transactional
-    @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
+    @PreAuthorize("hasAuthority('PERM_POLIZAS_GESTIONAR')")
     public Poliza renovar(Integer idPoliza, RenovarPolizaDTO dto) {
         Usuario usuario = usuarioService.obtenerUsuarioAutenticado();
         Poliza poliza = polizaRepository.findWithAprobacionesPorSedeByIdPoliza(idPoliza)
@@ -430,7 +429,7 @@ public class PolizaService implements IPolizaService {
 
     @Override
     @Transactional(readOnly = true)
-    @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('PERM_POLIZAS_VER', 'PERM_POLIZAS_GESTIONAR', 'PERM_POLIZAS_APROBAR')")
     public List<PolizaRenovacion> listarRenovaciones(Integer idPoliza) {
         Poliza poliza = polizaRepository.findWithAprobacionesPorSedeByIdPoliza(idPoliza)
                 .orElseThrow(() -> new IllegalArgumentException("Póliza no encontrada"));
@@ -440,7 +439,7 @@ public class PolizaService implements IPolizaService {
 
     @Override
     @Transactional(readOnly = true)
-    @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('PERM_POLIZAS_VER', 'PERM_POLIZAS_GESTIONAR', 'PERM_POLIZAS_APROBAR')")
     public PolizaAdjunto obtenerAdjuntoRenovacion(Integer idPoliza, Integer idRenovacion,
             Integer idAdjunto) {
         PolizaRenovacion renovacion = polizaRenovacionRepository
@@ -467,7 +466,7 @@ public class PolizaService implements IPolizaService {
 
     @Override
     @Transactional(readOnly = true)
-    @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('PERM_POLIZAS_VER', 'PERM_POLIZAS_GESTIONAR', 'PERM_POLIZAS_APROBAR')")
     public PolizaAdjunto obtenerContratoAdjunto(Integer idPoliza) {
         Poliza poliza = polizaRepository.findWithRelationsByIdPoliza(idPoliza)
                 .orElseThrow(() -> new IllegalArgumentException("Póliza no encontrada"));
@@ -487,7 +486,7 @@ public class PolizaService implements IPolizaService {
 
     @Override
     @Transactional(readOnly = true)
-    @PreAuthorize("hasAnyRole('COMERCIAL', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('PERM_POLIZAS_VER', 'PERM_POLIZAS_GESTIONAR', 'PERM_POLIZAS_APROBAR')")
     public PolizaAdjunto obtenerAdjuntoFisico(Integer idPoliza, Integer idAdjunto) {
         Poliza poliza = polizaRepository.findWithRelationsByIdPoliza(idPoliza)
                 .orElseThrow(() -> new IllegalArgumentException("Póliza no encontrada"));
@@ -516,7 +515,7 @@ public class PolizaService implements IPolizaService {
 
     @Override
     @Transactional
-    @PreAuthorize("hasAnyRole('APROBADOR', 'SUPERADMINISTRADOR')")
+    @PreAuthorize("hasAuthority('PERM_POLIZAS_APROBAR')")
     public Poliza anular(Integer idPoliza) {
         Usuario usuario = usuarioService.obtenerUsuarioAutenticado();
         Poliza poliza = polizaRepository.findById(idPoliza)
@@ -530,7 +529,7 @@ public class PolizaService implements IPolizaService {
 
     @Override
     @Transactional
-    @PreAuthorize("hasAnyRole('APROBADOR', 'SUPERADMINISTRADOR', 'COMERCIAL', 'ADMINISTRADOR')")
+    @PreAuthorize("hasAuthority('PERM_POLIZAS_GESTIONAR')")
     public Poliza terminar(Integer idPoliza, String motivoTerminacion) {
         Usuario usuario = usuarioService.obtenerUsuarioAutenticado();
         Poliza poliza = polizaRepository.findById(idPoliza)
@@ -734,7 +733,7 @@ public class PolizaService implements IPolizaService {
         if (usuario == null) {
             throw new SecurityException("Debe estar autenticado para gestionar pólizas");
         }
-        if (usuario.getRol() == Rol.SUPERADMINISTRADOR || usuario.getRol() == Rol.ADMINISTRADOR) {
+        if (tienePermiso(usuario, "PANEL_ADMINISTRACION")) {
             return;
         }
         if (usuario.getSede() == null) {
@@ -753,7 +752,7 @@ public class PolizaService implements IPolizaService {
     }
 
     private void assertPuedeModificar(Poliza poliza, Usuario usuario) {
-        if (usuario != null && usuario.getRol() == Rol.SUPERADMINISTRADOR) {
+        if (tienePermiso(usuario, "POLIZAS_GESTIONAR")) {
             return;
         }
         boolean esCreador = usuario != null && usuario.getIdUsuario() != null
@@ -765,7 +764,7 @@ public class PolizaService implements IPolizaService {
     }
 
     private void assertPuedeAnular(Poliza poliza, Usuario usuario) {
-        if (usuario == null || (usuario.getRol() != Rol.SUPERADMINISTRADOR
+        if (usuario == null || (!tienePermiso(usuario, "POLIZAS_GESTIONAR")
                 && !esAprobadorDeSedeInvolucrada(poliza, usuario))) {
             throw new SecurityException(
                 "Solo un superadministrador o el aprobador de una sede involucrada puede anular la póliza.");
@@ -773,7 +772,8 @@ public class PolizaService implements IPolizaService {
     }
 
     private boolean esAprobadorDeSedeInvolucrada(Poliza poliza, Usuario usuario) {
-        if (poliza == null || usuario == null || usuario.getRol() != Rol.APROBADOR
+        if (poliza == null || usuario == null
+                || !tienePermiso(usuario, "POLIZAS_APROBAR")
                 || usuario.getSede() == null || usuario.getSede().getIdSede() == null) {
             return false;
         }
@@ -791,7 +791,7 @@ public class PolizaService implements IPolizaService {
     }
 
     private void assertPuedeAprobar(Poliza poliza, Usuario usuario, Integer idSedeAprobador) {
-        if (usuario != null && usuario.getRol() == Rol.SUPERADMINISTRADOR) {
+        if (tienePermiso(usuario, "PANEL_ADMINISTRACION")) {
             return;
         }
         if (usuario == null || usuario.getSede() == null || idSedeAprobador == null) {
@@ -835,8 +835,12 @@ public class PolizaService implements IPolizaService {
     }
 
     private boolean esNacional(Usuario usuario) {
-        return usuario != null && (usuario.getRol() == Rol.SUPERADMINISTRADOR
-                || usuario.getRol() == Rol.ADMINISTRADOR);
+        return tienePermiso(usuario, "PANEL_ADMINISTRACION");
+    }
+
+    private boolean tienePermiso(Usuario usuario, String codigo) {
+        return usuario != null && usuario.getPermisos() != null
+                && usuario.getPermisos().stream().anyMatch(permiso -> codigo.equals(permiso.getCodigo()));
     }
 
     private boolean esSedeNacional(Usuario usuario) {

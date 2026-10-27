@@ -2,6 +2,10 @@ package com.palmera_junior.gestion_compras.entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.HashSet;
+import java.util.Set;
+import java.util.LinkedHashSet;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -50,14 +54,55 @@ public class Usuario {
     @Column(nullable = false, length = 255)
     private String contraseña;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "id_rol", nullable = false)
     private Rol rol;
+
+    @OneToMany(mappedBy = "usuario", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
+    private Set<PermisoUsuario> permisosDirectos = new HashSet<>();
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_sede", nullable = false)
     @ToString.Exclude
     private Sede sede;
+
+    public Set<Permiso> getPermisos() {
+        Set<Permiso> permisosEfectivos = new LinkedHashSet<>();
+        if (rol != null && rol.getPermisos() != null) {
+            permisosEfectivos.addAll(rol.getPermisos());
+        }
+        for (PermisoUsuario permisoUsuario : permisosDirectos == null ? Set.<PermisoUsuario>of() : permisosDirectos) {
+            if (permisoUsuario.isConcedido()) {
+                permisosEfectivos.add(permisoUsuario.getPermiso());
+            } else {
+                permisosEfectivos.remove(permisoUsuario.getPermiso());
+            }
+        }
+        return permisosEfectivos;
+    }
+
+    public void setPermisos(Set<Permiso> permisos) {
+        if (permisosDirectos == null) {
+            permisosDirectos = new HashSet<>();
+        }
+        permisosDirectos.clear();
+        if (permisos == null) {
+            return;
+        }
+        for (Permiso permiso : permisos) {
+            PermisoUsuario override = new PermisoUsuario();
+            override.setUsuario(this);
+            override.setPermiso(permiso);
+            override.setConcedido(true);
+            permisosDirectos.add(override);
+        }
+    }
+
+    public void setPermisosDirectos(Set<PermisoUsuario> permisosDirectos) {
+        this.permisosDirectos = permisosDirectos == null ? new HashSet<>() : permisosDirectos;
+        this.permisosDirectos.forEach(permisoUsuario -> permisoUsuario.setUsuario(this));
+    }
 
     @Override
     public boolean equals(Object o) {

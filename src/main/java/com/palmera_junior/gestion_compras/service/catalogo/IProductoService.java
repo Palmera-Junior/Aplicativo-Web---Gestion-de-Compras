@@ -13,7 +13,7 @@ public interface IProductoService {
     Page<Producto> paginar(int page, int size);
     Producto buscarPorCodigo(String codigo);
     List<Producto> buscarPorTermino(String termino);
-    Producto guardarProducto(Integer idProducto, String codigoInventario, String nombre, String categoria,
+    Producto guardarProducto(Integer idProducto, String codigoInventario, String nombre, Integer idCategoria,
             List<String> presentacionNombres, List<Integer> presentacionCantidades, List<String> presentacionUnidades,
             List<BigDecimal> presentacionPrecios);
     boolean eliminarProducto(Integer id);

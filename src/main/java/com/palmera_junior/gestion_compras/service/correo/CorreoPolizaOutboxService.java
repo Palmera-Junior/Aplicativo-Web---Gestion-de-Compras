@@ -106,7 +106,7 @@ public class CorreoPolizaOutboxService {
         return auditoriaRepository.liberarProcesamientosAtascados(ahora.minusMinutes(15), ahora);
     }
 
-    @PreAuthorize("hasAnyRole('APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')")
+    @PreAuthorize("hasAuthority('PERM_POLIZAS_APROBAR')")
     @Transactional
     public AuditoriaEnvioCorreoPoliza marcarEnviadoManualmente(Long idAuditoria, String descripcion) {
         if (!StringUtils.hasText(descripcion)) {

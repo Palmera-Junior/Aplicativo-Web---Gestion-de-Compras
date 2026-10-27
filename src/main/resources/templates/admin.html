@@ -50,7 +50,7 @@
                 <p>Crear y administrar proveedores, usuarios, productos, sedes y centros de costo.</p>
             </div>
             <div class="dashboard-header-actions">
-                <form sec:authorize="hasAnyRole('ADMINISTRADOR', 'SUPERADMINISTRADOR')" class="metricas-fecha-filtro" method="get" th:action="@{/admin}">
+                <form sec:authorize="hasAuthority('PERM_PANEL_ADMINISTRACION')" class="metricas-fecha-filtro" method="get" th:action="@{/admin}">
                     <details class="metricas-fecha-dropdown" th:open="${mostrarFiltroFecha}">
                         <summary class="metricas-fecha-trigger">
                             <span class="material-symbols">calendar_today</span>
@@ -79,7 +79,7 @@
         </div>
 
         <div th:if="${catalogoActivo == null}">
-        <section sec:authorize="hasAnyRole('ADMINISTRADOR', 'SUPERADMINISTRADOR')" class="admin-kpi-grid" aria-label="Indicadores generales">
+        <section sec:authorize="hasAuthority('PERM_PANEL_ADMINISTRACION')" class="admin-kpi-grid" aria-label="Indicadores generales">
             <a th:href="@{/dashboard}" class="admin-kpi-card js-page-transition">
                 <div class="admin-kpi-topline">
                     <span class="admin-kpi-icon"><span class="material-symbols">layers</span></span>
@@ -139,7 +139,7 @@
              calcular en el Controller y pasar como atributos al modelo —
              es más eficiente si la lista es grande.
              ============================================ -->
-        <section sec:authorize="hasAnyRole('ADMINISTRADOR', 'SUPERADMINISTRADOR')" class="orders-summary" th:with="ordenesBorrador=${ordenesCompraTarjeta.?[estado.name() == 'BORRADOR'].size()},
+        <section sec:authorize="hasAuthority('PERM_PANEL_ADMINISTRACION')" class="orders-summary" th:with="ordenesBorrador=${ordenesCompraTarjeta.?[estado.name() == 'BORRADOR'].size()},
                       ordenesAprobadas=${ordenesCompraTarjeta.?[estado.name() == 'APROBADA'].size()},
                       ordenesFacturadas=${ordenesCompraTarjeta.?[estado.name() == 'FACTURADA'].size()},
                       ordenesRecibidas=${ordenesCompraTarjeta.?[estado.name() == 'RECIBIDA'].size()},
@@ -242,7 +242,7 @@
             
         </section>
 
-        <section sec:authorize="hasAnyRole('ADMINISTRADOR', 'SUPERADMINISTRADOR')" class="sede-total-card" aria-labelledby="sede-total-title">
+        <section sec:authorize="hasAuthority('PERM_PANEL_ADMINISTRACION')" class="sede-total-card" aria-labelledby="sede-total-title">
             <div class="sede-total-copy" th:if="${!ordenesPorSede.isEmpty()}">
                 <h2 id="sede-total-title">Valor de órdenes distribuido por sede</h2>
                 <div class="sede-legend" aria-label="Detalle de valor y participación por sede">

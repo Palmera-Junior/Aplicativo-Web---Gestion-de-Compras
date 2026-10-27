@@ -12,6 +12,7 @@ import org.springframework.util.StringUtils;
 import com.palmera_junior.gestion_compras.entity.PresentacionProducto;
 import com.palmera_junior.gestion_compras.entity.Producto;
 import com.palmera_junior.gestion_compras.repository.ProductoRepository;
+import com.palmera_junior.gestion_compras.repository.CategoriaRepository;
 import com.palmera_junior.gestion_compras.entity.Categoria;
 
 /**
@@ -24,14 +25,16 @@ public class ProductoService implements IProductoService {
 
    private final ProductoRepository productoRepository;
    private final PresentacionProductoService presentacionProductoService;
+   private final CategoriaRepository categoriaRepository;
 
    /**
     * Constructor con inyección de repositorios y servicios de catálogo.
     */
    public ProductoService(ProductoRepository productoRepository,
-           PresentacionProductoService presentacionProductoService) {
+           PresentacionProductoService presentacionProductoService, CategoriaRepository categoriaRepository) {
        this.productoRepository = productoRepository;
        this.presentacionProductoService = presentacionProductoService;
+       this.categoriaRepository = categoriaRepository;
    }
 
    /**
@@ -98,7 +101,7 @@ public class ProductoService implements IProductoService {
     */
    @Override
    @Transactional
-   public Producto guardarProducto(Integer idProducto, String codigoInventario, String nombre, String categoria,
+   public Producto guardarProducto(Integer idProducto, String codigoInventario, String nombre, Integer idCategoria,
            List<String> presentacionNombres, List<Integer> presentacionCantidades, List<String> presentacionUnidades,
            List<BigDecimal> presentacionPrecios) {
        codigoInventario = normalizar(codigoInventario);
@@ -106,6 +109,11 @@ public class ProductoService implements IProductoService {
        if (!StringUtils.hasText(codigoInventario) || !StringUtils.hasText(nombre)) {
            throw new IllegalArgumentException("El código de inventario y el nombre del producto son obligatorios.");
        }
+       if (idCategoria == null) {
+           throw new IllegalArgumentException("La categoría del producto es obligatoria.");
+       }
+       Categoria categoria = categoriaRepository.findById(idCategoria)
+               .orElseThrow(() -> new IllegalArgumentException("La categoría seleccionada no es válida."));
 
        if (idProducto == null) {
            if (productoRepository.findByCodigoInventario(codigoInventario).isPresent()) {
@@ -114,7 +122,7 @@ public class ProductoService implements IProductoService {
            Producto producto = new Producto();
            producto.setCodigoInventario(codigoInventario);
            producto.setNombre(nombre);
-           producto.setCategoria(categoria != null ? Categoria.valueOf(categoria) : null);
+           producto.setCategoria(categoria);
            productoRepository.save(producto);
            aplicarPresentaciones(producto, presentacionNombres, presentacionCantidades, presentacionUnidades,
                    presentacionPrecios);
@@ -129,7 +137,7 @@ public class ProductoService implements IProductoService {
        }
        producto.setCodigoInventario(codigoInventario);
        producto.setNombre(nombre);
-       producto.setCategoria(categoria != null ? Categoria.valueOf(categoria) : null);
+       producto.setCategoria(categoria);
        producto.getPresentaciones().clear();
        aplicarPresentaciones(producto, presentacionNombres, presentacionCantidades, presentacionUnidades,
                presentacionPrecios);

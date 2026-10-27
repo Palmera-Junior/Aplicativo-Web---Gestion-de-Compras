@@ -606,6 +606,7 @@ body {
    ============================================ */
 .filtros-section {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 10px;
     margin-bottom: 20px;
@@ -663,6 +664,47 @@ body {
 
 .fecha-input {
     width: 180px;
+}
+
+.filtros-section > .buscar-input,
+.polizas-filters > .buscar-input {
+    flex: 1 1 260px;
+    min-width: 0;
+    width: auto;
+}
+
+.filtros-section > .estado-select,
+.polizas-filters > .estado-select {
+    flex: 1 1 220px;
+    min-width: 0;
+    max-width: none;
+    width: auto;
+}
+
+.filtros-section > .fecha-input,
+.polizas-filters > .fecha-input {
+    flex: 1 1 145px;
+    min-width: 0;
+    max-width: none;
+    width: auto;
+}
+
+.filtros-section > .filtro-icon,
+.polizas-filters > .filtro-icon {
+    flex: 0 0 38px;
+}
+
+.filtros-section > .filter-switch-label {
+    flex: 0 0 auto;
+}
+
+.filtros-section > .btn-buscar,
+.polizas-filters > .btn-buscar,
+.filtros-section > .btn-limpiar,
+.polizas-filters > .btn-limpiar {
+    flex: 0 0 42px;
+    min-width: 42px;
+    padding: 0;
 }
 
 .btn-secondary {
@@ -729,76 +771,34 @@ body {
    RESPONSIVE - FILTROS
    ============================================ */
 
-/* Tablets (≤992px): los inputs empiezan a apretarse.
-   Estas reglas aplican por igual a .filtros-section (Órdenes)
-   y .polizas-filters (Pólizas) para mantener las mismas
-   proporciones en ambas pestañas. */
-@media (max-width: 992px) {
-
-    .filtros-section,
-    .polizas-filters {
-        flex-wrap: wrap;
-    }
-
-    .buscar-input {
-        min-width: 220px;
-        flex: 1 1 220px;
-    }
-
-    .estado-select {
-        width: 100%;
-        max-width: 280px;
-        flex: 1 1 200px;
-    }
-
-    .fecha-input {
-        width: 100%;
-        max-width: 160px;
-        flex: 1 1 140px;
-    }
-}
-
-/* Móviles (≤576px): todo apilado en columna.
-   Igual que arriba, compartido entre ambas pestañas. */
+/* En móviles los campos conservan bases más pequeñas para compartir filas. */
 @media (max-width: 576px) {
 
     .filtros-section,
     .polizas-filters {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 12px;
+        flex-direction: row;
+        align-items: center;
+        gap: 8px;
         padding: 12px;
     }
 
     .filtro-icon {
-        align-self: flex-start;
+        align-self: center;
     }
 
-    .buscar-input,
-    .estado-select,
-    .fecha-input {
-        width: 100%;
-        max-width: 100%;
-        min-width: 0;
-        flex: 1 1 auto;
+    .filtros-section > .buscar-input,
+    .polizas-filters > .buscar-input {
+        flex-basis: 180px;
     }
 
-    .input-control {
-        width: 100%;
+    .filtros-section > .estado-select,
+    .polizas-filters > .estado-select {
+        flex-basis: 180px;
     }
 
-    /* Botones de acción (buscar / limpiar) en fila propia */
-    .filtros-section>.btn-secondary,
-    .filtros-section>.btn-buscar {
-        align-self: flex-end;
-    }
-
-    /* Si buscar y limpiar están agrupados en un div, se ponen en fila */
-    .filtros-acciones {
-        display: flex;
-        gap: 8px;
-        justify-content: flex-end;
-        width: 100%;
+    .filtros-section > .fecha-input,
+    .polizas-filters > .fecha-input {
+        flex-basis: 125px;
     }
 }
 
@@ -853,10 +853,28 @@ body {
 }
 
 /* La grilla de órdenes mantiene anchos predecibles aunque lleguen datos extensos. */
+.ordenes-table-wrap {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    flex: 0 0 auto;
+    margin: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+.ordenes-table th,
+.ordenes-table td {
+    white-space: nowrap;
+}
+
 .ordenes-table {
     table-layout: fixed;
     width: 100%;
-    min-width: 0;
+    min-width: 1280px;
 }
 
 .ordenes-table th:nth-child(1), .ordenes-table td:nth-child(1) { width: 11%; }
@@ -3030,14 +3048,6 @@ body {
         gap: 8px;
     }
 
-    .buscar-input,
-    .estado-select,
-    .fecha-input {
-        min-width: 0;
-        max-width: none;
-        width: 100%;
-    }
-
     .modal-recibir-oc-overlay,
     .modal-overlay {
         padding: 10px;
@@ -3139,59 +3149,6 @@ body {
         padding: 8px 16px 16px;
     }
 
-    .filtros-section,
-    .polizas-filters {
-        display: flex;
-        flex-direction: row;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .filtros-section .filtro-icon,
-    .polizas-filters .filtro-icon,
-    .filtros-section>.btn-buscar,
-    .polizas-filters>.btn-buscar,
-    .filtros-section>.btn-limpiar,
-    .polizas-filters>.btn-limpiar,
-    .filtros-section>.btn-limpiar-filtro {
-        order: 0;
-        flex: 0 0 auto;
-    }
-
-    .filtros-section .filtro-icon,
-    .polizas-filters .filtro-icon {
-        align-self: center;
-    }
-
-    .filtros-section>.buscar-input,
-    .polizas-filters>.buscar-input,
-    .filtros-section>.filtro-busqueda,
-    .filtros-section>.estado-select,
-    .polizas-filters>.estado-select,
-    .filtros-section>.fecha-input,
-    .polizas-filters>.fecha-input,
-    .filtros-section>.filter-switch-label {
-        order: 1;
-        flex: 1 0 100%;
-        width: 100%;
-        max-width: none;
-    }
-
-    .filtros-section>.btn-buscar,
-    .polizas-filters>.btn-buscar,
-    .filtros-section>.btn-limpiar,
-    .polizas-filters>.btn-limpiar,
-    .filtros-section>.btn-limpiar-filtro {
-        width: 38px;
-        min-width: 38px;
-        height: 38px;
-        padding: 0;
-    }
-
-    .filtros-section>.filter-switch-label {
-        justify-content: flex-start;
-    }
 }
 
 /* ==========================================

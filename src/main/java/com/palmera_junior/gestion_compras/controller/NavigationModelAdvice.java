@@ -3,7 +3,6 @@ package com.palmera_junior.gestion_compras.controller;
 import com.palmera_junior.gestion_compras.entity.EstadoOrdenCompra;
 import com.palmera_junior.gestion_compras.entity.EstadoAprobacionSede;
 import com.palmera_junior.gestion_compras.entity.EstadoPoliza;
-import com.palmera_junior.gestion_compras.entity.Rol;
 import com.palmera_junior.gestion_compras.entity.Usuario;
 import com.palmera_junior.gestion_compras.repository.OrdenCompraRepository;
 import com.palmera_junior.gestion_compras.repository.PolizaRepository;
@@ -46,7 +45,10 @@ public class NavigationModelAdvice {
         }
 
         Usuario usuario = usuarioService.obtenerUsuarioAutenticado(authentication);
-        if (usuario == null || usuario.getRol() != Rol.APROBADOR || usuario.getSede() == null
+        boolean tienePermisoAprobacion = usuario != null && usuario.getPermisos() != null
+                && usuario.getPermisos().stream()
+                .anyMatch(permiso -> "ORDENES_APROBAR".equals(permiso.getCodigo()));
+        if (usuario == null || !tienePermisoAprobacion || usuario.getSede() == null
                 || usuario.getSede().getIdSede() == null) {
             return;
         }

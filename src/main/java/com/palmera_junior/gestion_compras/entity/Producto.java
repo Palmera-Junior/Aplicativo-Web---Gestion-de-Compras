@@ -26,8 +26,8 @@ public class Producto {
     @Column(nullable = false, length = 150)
     private String nombre;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_categoria", nullable = false)
     private Categoria categoria;
 
     @OneToMany(mappedBy = "producto", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -57,4 +57,3 @@ public class Producto {
     }
 
 }
-

@@ -106,13 +106,17 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             nameAttributeKey = "email";
         }
 
-        GrantedAuthority authority =
-                new SimpleGrantedAuthority(
-                        "ROLE_" + usuario.getRol().name());
+        List<GrantedAuthority> authorities = new java.util.ArrayList<>();
+        if (usuario.getRol() != null) {
+            authorities.add(new SimpleGrantedAuthority("ROLE_" + usuario.getRol().getCodigo()));
+        }
+        usuario.getPermisos().stream()
+                .map(permiso -> new SimpleGrantedAuthority("PERM_" + permiso.getCodigo()))
+                .forEach(authorities::add);
 
         OAuth2User oauthUser =
                 new DefaultOAuth2User(
-                        List.of(authority),
+                        authorities,
                         oAuth2User.getAttributes(),
                         nameAttributeKey);
 

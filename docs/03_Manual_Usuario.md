@@ -75,7 +75,7 @@ Al pulsar la cruz se abre un formulario. Escriba la descripción del fallo y con
 
 ## 8. Administración
 
-El administrador puede gestionar usuarios, proveedores, productos, sedes y centros de costo. Mantenga códigos de producto únicos, correos válidos, asociaciones de sede correctas y roles acordes con las responsabilidades.
+El superadministrador puede gestionar usuarios, proveedores, productos, sedes y centros de costo. Desde **Configuración > Permisos** puede administrar los permisos predeterminados de cada rol y las excepciones de cada usuario. Al editar un usuario se muestran activos los permisos de su rol; al guardar, las diferencias se conservan como concesiones o denegaciones individuales. Los cambios de acceso se aplican cuando el usuario inicia sesión nuevamente. No es posible eliminar un rol que tenga usuarios asignados.
 
 ## 9. Problemas frecuentes
 

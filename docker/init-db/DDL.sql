@@ -22,13 +22,18 @@ CREATE TABLE centro_costo (
     CONSTRAINT fk_centro_costo_sede FOREIGN KEY (id_sede) REFERENCES sede (id_sede)
 );
 
+CREATE TABLE categoria (
+    id_categoria SERIAL PRIMARY KEY,
+    codigo VARCHAR(30) NOT NULL UNIQUE,
+    nombre VARCHAR(60) NOT NULL
+);
+
 CREATE TABLE producto (
     id_producto SERIAL PRIMARY KEY,
     codigo_inventario VARCHAR(50) NOT NULL UNIQUE,
     nombre VARCHAR(150) NOT NULL,
-    categoria VARCHAR(30) NOT NULL CHECK (categoria IN (
-        'EPPS', 'MECANISMOS', 'EQUIPOS', 'PAPELERIA', 'DOTACION', 'REPUESTOS', 'PRODUCTOS'
-    ))
+    id_categoria INT NOT NULL,
+    CONSTRAINT fk_producto_categoria FOREIGN KEY (id_categoria) REFERENCES categoria (id_categoria)
 );
 
 CREATE TABLE presentacion_producto (
@@ -62,6 +67,18 @@ CREATE TABLE proveedor_sede (
         REFERENCES sede (id_sede) ON DELETE CASCADE
 );
 
+CREATE TABLE rol (
+    id_rol SERIAL PRIMARY KEY,
+    codigo VARCHAR(30) NOT NULL UNIQUE,
+    permisos_predeterminados_cargados BOOLEAN NOT NULL DEFAULT FALSE
+);
+
+CREATE TABLE permiso (
+    id_permiso SERIAL PRIMARY KEY,
+    codigo VARCHAR(60) NOT NULL UNIQUE,
+    nombre VARCHAR(120) NOT NULL
+);
+
 CREATE TABLE usuario (
     id_usuario SERIAL PRIMARY KEY,
     cedula VARCHAR(20) NOT NULL UNIQUE,
@@ -73,11 +90,32 @@ CREATE TABLE usuario (
     cargo VARCHAR(100),
     nombre_usuario VARCHAR(50) NOT NULL UNIQUE,
     contraseña VARCHAR(255) NOT NULL,
-    rol VARCHAR(20) NOT NULL CHECK (rol IN (
-        'SUPERADMINISTRADOR', 'ADMINISTRADOR', 'APROBADOR', 'SOLICITANTE', 'COMERCIAL'
-    )),
+    id_rol INT NOT NULL,
     id_sede INT NOT NULL,
+    CONSTRAINT fk_usuario_rol FOREIGN KEY (id_rol) REFERENCES rol (id_rol),
     CONSTRAINT fk_usuario_sede FOREIGN KEY (id_sede) REFERENCES sede (id_sede)
+);
+
+CREATE TABLE rol_permiso (
+    id_rol INT NOT NULL,
+    id_permiso INT NOT NULL,
+    PRIMARY KEY (id_rol, id_permiso),
+    CONSTRAINT fk_rol_permiso_rol FOREIGN KEY (id_rol)
+        REFERENCES rol (id_rol) ON DELETE CASCADE,
+    CONSTRAINT fk_rol_permiso_permiso FOREIGN KEY (id_permiso)
+        REFERENCES permiso (id_permiso) ON DELETE CASCADE
+);
+
+CREATE TABLE usuario_permiso_override (
+    id_usuario_permiso SERIAL PRIMARY KEY,
+    id_usuario INT NOT NULL,
+    id_permiso INT NOT NULL,
+    concedido BOOLEAN NOT NULL,
+    CONSTRAINT uq_usuario_permiso_override UNIQUE (id_usuario, id_permiso),
+    CONSTRAINT fk_usuario_permiso_override_usuario FOREIGN KEY (id_usuario)
+        REFERENCES usuario (id_usuario) ON DELETE CASCADE,
+    CONSTRAINT fk_usuario_permiso_override_permiso FOREIGN KEY (id_permiso)
+        REFERENCES permiso (id_permiso) ON DELETE CASCADE
 );
 
 CREATE TABLE poliza (

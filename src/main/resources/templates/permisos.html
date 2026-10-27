@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
+    <title>Roles y permisos | Gestión de Compras</title>
+    <link rel="icon" type="image/png" th:href="@{/imgs/logo1.png}">
+    <link rel="stylesheet" th:href="@{/css/compras.css}">
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+    <link rel="stylesheet" th:href="@{/css/catalogos.css}">
+    <link rel="stylesheet" th:href="@{/css/navigation.csss}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+</head>
+<body>
+    <header th:replace="~{fragments/encabezado :: administracion}"></header>
+    <div th:replace="~{fragments/navegacion :: principal('admin')}"></div>
+
+    <main class="dashboard-container catalogo-page permission-management-page">
+        <div th:replace="~{fragments/encabezado :: mensajes}"></div>
+
+        <section class="admin-grid">
+            <article class="card admin-card">
+                <nav class="permission-tabs view-tabs" aria-label="Administrar roles o permisos">
+                    <a th:href="@{/admin/catalogos/permisos(vista='usuarios')}" class="view-tab"
+                        th:classappend="${vistaPermisos == 'usuarios' ? ' active' : ''}"
+                        th:attr="aria-current=${vistaPermisos == 'usuarios' ? 'page' : null}">
+                        <span class="material-symbols" aria-hidden="true">group</span>
+                        Permisos por usuario
+                    </a>
+                    <a th:href="@{/admin/catalogos/permisos(vista='roles')}" class="view-tab"
+                        th:classappend="${vistaPermisos == 'roles' ? ' active' : ''}"
+                        th:attr="aria-current=${vistaPermisos == 'roles' ? 'page' : null}">
+                        <span class="material-symbols" aria-hidden="true">badge</span>
+                        Roles
+                    </a>
+                </nav>
+                <div class="section-panel-header accent-blue">
+                    <span class="material-symbols" aria-hidden="true">admin_panel_settings</span>
+                    <div class="section-panel-copy">
+                        <h1>Roles y permisos</h1>
+                        <p>Define permisos predeterminados por rol y excepciones para cada usuario.</p>
+                    </div>
+                </div>
+
+                <div class="permission-management-content">
+                    <section th:if="${vistaPermisos == 'usuarios'}" class="permission-tab-panel">
+                        <form class="permission-user-picker" method="get" th:action="@{/admin/catalogos/permisos}">
+                            <input type="hidden" name="vista" value="usuarios">
+                            <div class="permission-user-picker-field">
+                                <label for="usuarioId">Seleccionar usuario</label>
+                                <select id="usuarioId" name="usuarioId" class="input-control" required>
+                                    <option value="" disabled th:selected="${usuarioSeleccionado == null}">Selecciona un usuario</option>
+                                    <option th:each="usuario : ${usuarios}" th:value="${usuario.idUsuario}"
+                                        th:selected="${usuarioSeleccionado != null and usuarioSeleccionado.idUsuario == usuario.idUsuario}"
+                                        th:text="${usuario.nombre + ' ' + usuario.apellido + ' (' + usuario.nombreUsuario + ')'}">
+                                    </option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn-secondary">
+                                <span class="material-symbols" aria-hidden="true">manage_search</span>
+                                Cargar permisos
+                            </button>
+                        </form>
+
+                        <div th:if="${usuarios.isEmpty()}" class="permission-empty-state">
+                            <span class="material-symbols" aria-hidden="true">person_off</span>
+                            <h2>No hay usuarios registrados</h2>
+                            <p>Crea un usuario antes de asignarle permisos.</p>
+                        </div>
+
+                        <form th:if="${usuarioSeleccionado != null}" th:action="@{/admin/catalogos/permisos}" method="post"
+                            class="permission-assignment-form">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                            <input type="hidden" name="usuarioId" th:value="${usuarioSeleccionado.idUsuario}">
+
+                            <div class="permission-user-summary">
+                                <span class="permission-user-avatar material-symbols" aria-hidden="true">person</span>
+                                <div>
+                                    <strong th:text="${usuarioSeleccionado.nombre + ' ' + usuarioSeleccionado.apellido}">Nombre del usuario</strong>
+                                    <span th:text="${usuarioSeleccionado.nombreUsuario + ' · ' + usuarioSeleccionado.rol.codigo}">usuario · ROL</span>
+                                </div>
+                                <span class="permission-role-badge" th:text="${usuarioSeleccionado.rol.codigo}">ROL</span>
+                            </div>
+
+                            <fieldset class="user-permissions">
+                                <legend>Permisos efectivos del usuario</legend>
+                                <p class="user-permissions-description">
+                                    Los permisos marcados vienen del rol. Puedes concederlos o quitarlos solo para este usuario;
+                                    esas excepciones se mantienen aunque cambien los permisos del rol.
+                                </p>
+                                <div class="user-permissions-grid">
+                                    <label th:each="permiso : ${permisos}" class="permission-toggle">
+                                        <input type="checkbox" name="permisoIds" th:value="${permiso.idPermiso}"
+                                            th:checked="${usuarioSeleccionado.permisos.contains(permiso)}">
+                                        <span class="permission-toggle-slider" aria-hidden="true"></span>
+                                        <span class="permission-toggle-name" th:text="${permiso.nombre}">Permiso</span>
+                                    </label>
+                                </div>
+                            </fieldset>
+
+                            <div class="permission-assignment-actions">
+                                <a th:href="@{/admin/catalogos/usuarios}" class="btn-cancel">Volver a usuarios</a>
+                                <button type="submit" class="btn-primary">
+                                    <span class="material-symbols" aria-hidden="true">save</span>
+                                    Guardar permisos
+                                </button>
+                            </div>
+                        </form>
+                    </section>
+
+                    <section th:if="${vistaPermisos == 'roles'}" class="permission-tab-panel role-management-panel">
+                        <div class="role-management-intro">
+                            <span class="material-symbols" aria-hidden="true">info</span>
+                            <p>Los permisos del rol aplican a sus usuarios. Las excepciones configuradas en la pestaña de usuario prevalecen.</p>
+                        </div>
+
+                        <div class="role-management-layout">
+                            <aside class="role-list-panel">
+                                <div class="role-list-heading">
+                                    <h2>Roles existentes</h2>
+                                    <a th:href="@{/admin/catalogos/permisos(vista='roles')}" class="btn-secondary">
+                                        <span class="material-symbols" aria-hidden="true">add</span>
+                                        Nuevo
+                                    </a>
+                                </div>
+                                <div th:if="${roles.isEmpty()}" class="permission-empty-state">
+                                    <h3>No hay roles registrados</h3>
+                                </div>
+                                <a th:each="rol : ${roles}"
+                                    th:href="@{/admin/catalogos/permisos(vista='roles',rolId=${rol.idRol})}"
+                                    class="role-list-item"
+                                    th:classappend="${rolSeleccionado != null and rolSeleccionado.idRol == rol.idRol ? ' is-selected' : ''}">
+                                    <span class="material-symbols" aria-hidden="true">badge</span>
+                                    <span th:text="${rol.codigo}">ROL</span>
+                                    <span class="material-symbols role-list-chevron" aria-hidden="true">chevron_right</span>
+                                </a>
+                            </aside>
+
+                            <form th:action="@{/admin/catalogos/permisos/roles}" method="post" class="role-editor-form">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                                <input th:if="${rolSeleccionado != null}" type="hidden" name="rolId" th:value="${rolSeleccionado.idRol}">
+
+                                <div class="role-editor-heading">
+                                    <span class="material-symbols" aria-hidden="true">tune</span>
+                                    <div>
+                                        <h2 th:text="${rolSeleccionado == null ? 'Crear rol' : 'Permisos del rol'}">Crear rol</h2>
+                                        <p th:text="${rolSeleccionado == null ? 'Elige un nombre y sus permisos predeterminados.' : 'Actualiza los accesos predeterminados de este rol.'}">Configuración del rol</p>
+                                    </div>
+                                </div>
+
+                                <div class="permission-user-picker-field role-code-field">
+                                    <label for="codigoRol">Nombre del rol</label>
+                                    <input th:if="${rolSeleccionado == null}" id="codigoRol" name="codigo" class="input-control"
+                                        maxlength="30" pattern="[A-Za-z0-9_ ]{2,30}" placeholder="Ej. AUDITOR" required>
+                                    <input th:if="${rolSeleccionado != null}" id="codigoRol" class="input-control"
+                                        th:value="${rolSeleccionado.codigo}" readonly>
+                                </div>
+
+                                <fieldset class="user-permissions">
+                                    <legend>Permisos predeterminados</legend>
+                                    <div class="user-permissions-grid">
+                                        <label th:each="permiso : ${permisos}" class="permission-toggle">
+                                            <input type="checkbox" name="permisoIds" th:value="${permiso.idPermiso}"
+                                                th:checked="${rolSeleccionado != null and rolSeleccionado.permisos.contains(permiso)}">
+                                            <span class="permission-toggle-slider" aria-hidden="true"></span>
+                                            <span class="permission-toggle-name" th:text="${permiso.nombre}">Permiso</span>
+                                        </label>
+                                    </div>
+                                </fieldset>
+
+                                <div class="permission-assignment-actions role-editor-actions">
+                                    <button type="submit" class="btn-primary">
+                                        <span class="material-symbols" aria-hidden="true">save</span>
+                                        <span th:text="${rolSeleccionado == null ? 'Crear rol' : 'Guardar permisos'}">Guardar</span>
+                                    </button>
+                                    <button th:if="${rolSeleccionado != null}" type="submit" form="deleteSelectedRole"
+                                        class="btn-cancel role-delete-button">
+                                        <span class="material-symbols" aria-hidden="true">delete</span>
+                                        Eliminar rol
+                                    </button>
+                                </div>
+                            </form>
+                            <form th:if="${rolSeleccionado != null}" id="deleteSelectedRole"
+                                th:action="@{/admin/catalogos/permisos/roles/delete/{id}(id=${rolSeleccionado.idRol})}"
+                                method="post" class="role-delete-form js-confirm-role-delete">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                            </form>
+                        </div>
+                    </section>
+                </div>
+            </article>
+        </section>
+    </main>
+    <script th:src="@{/js/security.js(v=1)}"></script>
+    <script>
+        document.addEventListener('submit', async (event) => {
+            const form = event.target;
+            if (!(form instanceof HTMLFormElement) || !form.matches('.js-confirm-role-delete')) {
+                return;
+            }
+
+            event.preventDefault();
+            const confirmado = await mostrarConfirmacion(
+                'Esta acción no se puede deshacer.',
+                '¿Eliminar este rol?'
+            );
+            if (confirmado) {
+                HTMLFormElement.prototype.submit.call(form);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -7,7 +7,6 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.context.ApplicationEventPublisher;
@@ -28,7 +27,6 @@ import com.palmera_junior.gestion_compras.entity.DetalleCompra;
 import com.palmera_junior.gestion_compras.entity.EstadoOrdenCompra;
 import com.palmera_junior.gestion_compras.entity.OrdenCompra;
 import com.palmera_junior.gestion_compras.entity.Producto;
-import com.palmera_junior.gestion_compras.entity.Rol;
 import com.palmera_junior.gestion_compras.entity.Sede;
 import com.palmera_junior.gestion_compras.entity.Usuario;
 import com.palmera_junior.gestion_compras.events.OrdenCompraAprobadaEvent;
@@ -480,7 +478,7 @@ public class OrdenCompraService implements IOrdenCompraService {
      * - Event Publisher: {@link ApplicationEventPublisher#publishEvent}
      */
     @Override
-    @PreAuthorize("hasAnyRole('APROBADOR', 'SUPERADMINISTRADOR')")
+    @PreAuthorize("hasAuthority('PERM_ORDENES_APROBAR')")
     @Transactional
     public OrdenCompra aprobarOrden(Integer idOrden) {
 
@@ -494,7 +492,8 @@ public class OrdenCompraService implements IOrdenCompraService {
 
         Usuario usuarioAprobador = usuarioService.obtenerUsuarioAutenticado();
 
-        boolean esSuperAdministrador = usuarioAprobador.getRol() == Rol.SUPERADMINISTRADOR;
+        boolean esSuperAdministrador = usuarioAprobador.getPermisos().stream()
+                .anyMatch(permiso -> "PANEL_ADMINISTRACION".equals(permiso.getCodigo()));
 
         boolean mismaSede = orden.getSede().getIdSede()
                 .equals(usuarioAprobador.getSede().getIdSede());

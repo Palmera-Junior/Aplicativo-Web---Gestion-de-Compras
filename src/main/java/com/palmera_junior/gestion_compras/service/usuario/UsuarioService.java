@@ -8,17 +8,23 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.palmera_junior.gestion_compras.entity.Rol;
+import com.palmera_junior.gestion_compras.entity.Permiso;
+import com.palmera_junior.gestion_compras.entity.PermisoUsuario;
 import com.palmera_junior.gestion_compras.entity.Sede;
 import com.palmera_junior.gestion_compras.entity.Usuario;
 import com.palmera_junior.gestion_compras.repository.SedeRepository;
 import com.palmera_junior.gestion_compras.repository.UsuarioRepository;
+import com.palmera_junior.gestion_compras.repository.RolRepository;
+import com.palmera_junior.gestion_compras.repository.PermisoRepository;
 import com.palmera_junior.gestion_compras.security.CustomOAuth2User;
+import com.palmera_junior.gestion_compras.security.RutaInicialUsuario;
 import com.palmera_junior.gestion_compras.security.UsuarioPrincipal;
 
 /**
@@ -32,15 +38,19 @@ public class UsuarioService implements IUsuarioService {
    private final UsuarioRepository usuarioRepository;
    private final SedeRepository sedeRepository;
    private final PasswordEncoder passwordEncoder;
+   private final RolRepository rolRepository;
+   private final PermisoRepository permisoRepository;
 
    /**
     * Constructor con inyección de repositorios y codificador de contraseñas.
     */
    public UsuarioService(UsuarioRepository usuarioRepository, SedeRepository sedeRepository,
-           PasswordEncoder passwordEncoder) {
+           PasswordEncoder passwordEncoder, RolRepository rolRepository, PermisoRepository permisoRepository) {
        this.usuarioRepository = usuarioRepository;
        this.sedeRepository = sedeRepository;
        this.passwordEncoder = passwordEncoder;
+       this.rolRepository = rolRepository;
+       this.permisoRepository = permisoRepository;
    }
 
    /**
@@ -161,18 +171,9 @@ public class UsuarioService implements IUsuarioService {
     */
    @Override
    public String obtenerVistaLogin(Authentication authentication) {
-       if (authentication != null && authentication.isAuthenticated()) {
-           boolean esSuperAdministrador = authentication.getAuthorities().stream()
-                   .anyMatch(authority -> "ROLE_SUPERADMINISTRADOR".equals(authority.getAuthority()));
-           if (esSuperAdministrador) {
-               return "redirect:/admin";
-           }
-           boolean esComercial = authentication.getAuthorities().stream()
-                   .anyMatch(authority -> "ROLE_COMERCIAL".equals(authority.getAuthority()));
-           if (esComercial) {
-               return "redirect:/polizas";
-           }
-           return "redirect:/dashboard";
+       if (authentication != null && authentication.isAuthenticated()
+               && !(authentication instanceof AnonymousAuthenticationToken)) {
+           return "redirect:" + RutaInicialUsuario.resolver(authentication).orElse("/acceso-denegado");
        }
        return "login";
    }
@@ -184,7 +185,7 @@ public class UsuarioService implements IUsuarioService {
    @Override
    @Transactional
    public Usuario guardarUsuario(Integer idUsuario, String cedula, String nombre, String apellido, String cargo,
-           String nombreUsuario, String contrasena, String email, Rol rol, Integer sedeId) {
+           String nombreUsuario, String contrasena, String email, Integer rolId, Integer sedeId) {
        final String cedulaTrim = normalizar(cedula);
        final String nombreTrim = normalizar(nombre);
        final String apellidoTrim = normalizar(apellido);
@@ -193,9 +194,12 @@ public class UsuarioService implements IUsuarioService {
        final String contrasenaTrim = normalizar(contrasena);
 
        if (!StringUtils.hasText(cedulaTrim) || !StringUtils.hasText(nombreTrim) || !StringUtils.hasText(apellidoTrim)
-               || !StringUtils.hasText(nombreUsuarioTrim) || !StringUtils.hasText(emailTrim) || sedeId == null) {
+               || !StringUtils.hasText(nombreUsuarioTrim) || !StringUtils.hasText(emailTrim) || sedeId == null
+               || rolId == null) {
            throw new IllegalArgumentException("Todos los campos del usuario son obligatorios, excepto la contraseña al editar.");
        }
+       Rol rol = rolRepository.findById(rolId)
+               .orElseThrow(() -> new IllegalArgumentException("El rol seleccionado no es válido."));
 
        if (idUsuario == null) {
            if (usuarioRepository.existsByCedula(cedulaTrim)) {
@@ -250,6 +254,102 @@ public class UsuarioService implements IUsuarioService {
        usuario.setRol(rol);
        usuario.setSede(sede);
        return usuarioRepository.save(usuario);
+   }
+
+   @Override
+   @Transactional
+   public Usuario actualizarPermisos(Integer idUsuario, List<Integer> permisoIds) {
+       if (idUsuario == null) {
+           throw new IllegalArgumentException("Debe seleccionar un usuario.");
+       }
+
+       Usuario usuario = usuarioRepository.findById(idUsuario)
+               .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado."));
+       java.util.Set<Integer> idsUnicos = permisoIds == null
+               ? java.util.Set.of()
+               : new java.util.HashSet<>(permisoIds);
+       List<Permiso> permisosDisponibles = permisoRepository.findAll();
+       java.util.Map<Integer, Permiso> permisosPorId = permisosDisponibles.stream()
+               .collect(java.util.stream.Collectors.toMap(Permiso::getIdPermiso, permiso -> permiso));
+       if (!permisosPorId.keySet().containsAll(idsUnicos)) {
+           throw new IllegalArgumentException("La lista de permisos contiene opciones no válidas.");
+       }
+
+       java.util.Set<Integer> permisosDelRol = usuario.getRol().getPermisos().stream()
+               .map(Permiso::getIdPermiso)
+               .collect(java.util.stream.Collectors.toSet());
+       java.util.Map<Integer, PermisoUsuario> overridesExistentes = usuario.getPermisosDirectos().stream()
+               .collect(java.util.stream.Collectors.toMap(
+                       override -> override.getPermiso().getIdPermiso(), override -> override));
+       for (Permiso permiso : permisosDisponibles) {
+           Integer permisoId = permiso.getIdPermiso();
+           boolean concedidoPorUsuario = idsUnicos.contains(permisoId);
+           boolean concedidoPorRol = permisosDelRol.contains(permisoId);
+           PermisoUsuario existente = overridesExistentes.remove(permisoId);
+           if (concedidoPorUsuario == concedidoPorRol) {
+               if (existente != null) {
+                   usuario.getPermisosDirectos().remove(existente);
+               }
+               continue;
+           }
+           if (existente == null) {
+               existente = new PermisoUsuario();
+               existente.setUsuario(usuario);
+               existente.setPermiso(permiso);
+               usuario.getPermisosDirectos().add(existente);
+           }
+           existente.setConcedido(concedidoPorUsuario);
+       }
+       usuario.getPermisosDirectos().removeAll(overridesExistentes.values());
+       return usuarioRepository.save(usuario);
+   }
+
+   @Override
+   @Transactional
+   public Rol guardarRol(Integer rolId, String codigo, List<Integer> permisoIds) {
+       Rol rol;
+       if (rolId == null) {
+           String codigoNormalizado = normalizar(codigo);
+           if (!StringUtils.hasText(codigoNormalizado)) {
+               throw new IllegalArgumentException("El nombre del rol es obligatorio.");
+           }
+           codigoNormalizado = codigoNormalizado.toUpperCase(java.util.Locale.ROOT).replaceAll("\\s+", "_");
+           if (!codigoNormalizado.matches("[A-Z0-9_]{2,30}")) {
+               throw new IllegalArgumentException("Usa de 2 a 30 letras, números o guiones bajos para el código del rol.");
+           }
+           if (rolRepository.existsByCodigoIgnoreCase(codigoNormalizado)) {
+               throw new IllegalArgumentException("Ya existe un rol con ese nombre.");
+           }
+           rol = new Rol();
+           rol.setCodigo(codigoNormalizado);
+       } else {
+           rol = rolRepository.findById(rolId)
+                   .orElseThrow(() -> new IllegalArgumentException("El rol seleccionado no existe."));
+       }
+
+       java.util.Set<Integer> idsUnicos = permisoIds == null
+               ? java.util.Set.of()
+               : new java.util.HashSet<>(permisoIds);
+       List<Permiso> permisos = idsUnicos.isEmpty() ? List.of() : permisoRepository.findAllById(idsUnicos);
+       if (permisos.size() != idsUnicos.size()) {
+           throw new IllegalArgumentException("La lista de permisos contiene opciones no válidas.");
+       }
+       rol.setPermisos(new java.util.HashSet<>(permisos));
+       return rolRepository.save(rol);
+   }
+
+   @Override
+   @Transactional
+   public void eliminarRol(Integer rolId) {
+       if (rolId == null) {
+           throw new IllegalArgumentException("Debe seleccionar un rol.");
+       }
+       Rol rol = rolRepository.findById(rolId)
+               .orElseThrow(() -> new IllegalArgumentException("El rol seleccionado no existe."));
+       if (usuarioRepository.existsByRolIdRol(rolId)) {
+           throw new IllegalStateException("No se puede eliminar el rol porque está asignado a uno o más usuarios.");
+       }
+       rolRepository.delete(rol);
    }
 
    /**

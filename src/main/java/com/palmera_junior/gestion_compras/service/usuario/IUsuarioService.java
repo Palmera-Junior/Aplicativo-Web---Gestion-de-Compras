@@ -7,8 +7,8 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.security.core.Authentication;
 
-import com.palmera_junior.gestion_compras.entity.Rol;
 import com.palmera_junior.gestion_compras.entity.Usuario;
+import com.palmera_junior.gestion_compras.entity.Rol;
 
 /**
  * Contrato de servicio para la gestión de usuarios, sesiones y seguridad de cuentas.
@@ -74,7 +74,17 @@ public interface IUsuarioService {
      * A dónde apunta: Tablas `usuario`, `sede`.
      */
     Usuario guardarUsuario(Integer idUsuario, String cedula, String nombre, String apellido, String cargo,
-            String nombreUsuario, String contrasena, String email, Rol rol, Integer sedeId);
+            String nombreUsuario, String contrasena, String email, Integer rolId, Integer sedeId);
+
+    /**
+     * Reemplaza los permisos directos asignados a un usuario.
+     * Una lista vacía elimina todos los permisos directos.
+     */
+    Usuario actualizarPermisos(Integer idUsuario, List<Integer> permisoIds);
+
+    Rol guardarRol(Integer rolId, String codigo, List<Integer> permisoIds);
+
+    void eliminarRol(Integer rolId);
 
     /**
      * Qué hace: Elimina una cuenta de usuario por su ID si no tiene órdenes de compra asociadas.
@@ -82,4 +92,3 @@ public interface IUsuarioService {
      */
     boolean eliminar(Integer id);
 }
-

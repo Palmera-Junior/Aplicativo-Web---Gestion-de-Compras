@@ -8,12 +8,7 @@ html {
     font-family: var(--font-family);
 }
 
-.approver-tabs-shell {
-    width: 100%;
-    margin: -18px 0 0;
-}
-
-.view-tab-count {
+.sidebar-pending-count {
     display: inline-grid;
     min-width: 20px;
     height: 20px;
@@ -25,6 +20,7 @@ html {
     font-family: var(--font-family);
     font-size: 11px;
     line-height: 1;
+    margin-left: auto;
 }
 
 .app-sidebar {
@@ -77,6 +73,10 @@ html {
     font-weight: 500;
     text-decoration: none;
     transition: background .2s ease, color .2s ease, transform .2s ease;
+}
+
+.sidebar-link:has(.sidebar-pending-count) {
+    position: relative;
 }
 
 .sidebar-link:hover {
@@ -207,7 +207,7 @@ body:has(.app-sidebar) .navbar {
     }
 
     body:has(.app-sidebar) .app-sidebar:not(:hover):not(:focus-within):not(.is-mobile-expanded) .sidebar-label,
-    body:has(.app-sidebar) .app-sidebar:not(:hover):not(:focus-within):not(.is-mobile-expanded) .sidebar-link>span:not(.material-symbols),
+    body:has(.app-sidebar) .app-sidebar:not(:hover):not(:focus-within):not(.is-mobile-expanded) .sidebar-link>span:not(.material-symbols):not(.sidebar-pending-count),
     body:has(.app-sidebar) .app-sidebar:not(:hover):not(:focus-within):not(.is-mobile-expanded) .sidebar-chevron {
         display: none;
     }
@@ -216,6 +216,16 @@ body:has(.app-sidebar) .navbar {
         justify-content: center;
         gap: 0;
         padding-inline: 0;
+    }
+
+    body:has(.app-sidebar) .app-sidebar:not(:hover):not(:focus-within):not(.is-mobile-expanded) .sidebar-pending-count {
+        position: absolute;
+        top: 0;
+        right: 0;
+        min-width: 16px;
+        height: 16px;
+        padding-inline: 3px;
+        font-size: 9px;
     }
 
     body:has(.app-sidebar) .app-sidebar:not(:hover):not(:focus-within):not(.is-mobile-expanded) .sidebar-submenu {
@@ -252,7 +262,7 @@ body:has(.app-sidebar) .navbar {
 @media (hover: none) and (min-width: 901px) {
 
     body:has(.app-sidebar) .app-sidebar:not(.is-mobile-expanded) .sidebar-label,
-    body:has(.app-sidebar) .app-sidebar:not(.is-mobile-expanded) .sidebar-link>span:not(.material-symbols),
+    body:has(.app-sidebar) .app-sidebar:not(.is-mobile-expanded) .sidebar-link>span:not(.material-symbols):not(.sidebar-pending-count),
     body:has(.app-sidebar) .app-sidebar:not(.is-mobile-expanded) .sidebar-chevron,
     body:has(.app-sidebar) .app-sidebar:not(.is-mobile-expanded) .sidebar-submenu {
         display: none;
@@ -262,6 +272,16 @@ body:has(.app-sidebar) .navbar {
         justify-content: center;
         gap: 0;
         padding-inline: 0;
+    }
+
+    body:has(.app-sidebar) .app-sidebar:not(.is-mobile-expanded) .sidebar-pending-count {
+        position: absolute;
+        top: 0;
+        right: 0;
+        min-width: 16px;
+        height: 16px;
+        padding-inline: 3px;
+        font-size: 9px;
     }
 
     .sidebar-mobile-toggle {
@@ -309,7 +329,7 @@ body:has(.app-sidebar) .navbar {
     }
 
     .app-sidebar:not(.is-mobile-expanded) .sidebar-label,
-    .app-sidebar:not(.is-mobile-expanded) .sidebar-link>span:not(.material-symbols),
+    .app-sidebar:not(.is-mobile-expanded) .sidebar-link>span:not(.material-symbols):not(.sidebar-pending-count),
     .app-sidebar:not(.is-mobile-expanded) .sidebar-chevron {
         display: none;
     }
@@ -320,6 +340,16 @@ body:has(.app-sidebar) .navbar {
         justify-content: center;
         gap: 0;
         padding-inline: 0;
+    }
+
+    .app-sidebar:not(.is-mobile-expanded) .sidebar-pending-count {
+        position: absolute;
+        top: 0;
+        right: 0;
+        min-width: 16px;
+        height: 16px;
+        padding-inline: 3px;
+        font-size: 9px;
     }
 
     .app-sidebar:not(.is-mobile-expanded) .sidebar-submenu {
@@ -412,21 +442,5 @@ body:has(.app-sidebar) .navbar {
         padding: 10px;
         white-space: normal;
         overflow-wrap: anywhere;
-    }
-}
-
-@media (max-width: 560px) {
-    .approver-tabs-shell {
-        width: calc(100% - 24px);
-    }
-
-    .view-tab {
-        min-width: 0;
-        flex: 1;
-        padding-inline: 10px;
-    }
-
-    .view-tab>span:nth-child(2) {
-        font-size: 11px;
     }
 }

@@ -50,8 +50,6 @@
     <div th:replace="~{fragments/navegacion :: principal('compras')}"></div>
     <br>
     <main class="dashboard-container">
-        <div th:replace="~{fragments/navegacion :: pestanasAprobador('compras')}"></div>
-
         <!-- Encabezado de la vista: título + botón "Nueva Orden" -->
         <div class="dashboard-header">
             <div class="dashboard-header-left">
@@ -61,7 +59,7 @@
                 <h1>Órdenes de Compra</h1>
             </div>
             <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; justify-content: flex-end;">
-                <button sec:authorize="hasAnyRole('SOLICITANTE', 'APROBADOR', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')"
+                <button sec:authorize="hasAuthority('PERM_ORDENES_GESTIONAR')"
                     title="Crear Orden de Compra" type="button" id="btn-nueva-orden" class="btn-primary">
                     <span class="material-symbols">add</span> Nueva Orden
                 </button>
@@ -211,7 +209,7 @@
         </form>
 
         <!-- Tabla principal de órdenes de compra -->
-        <div class="table-responsive">
+        <div class="table-responsive ordenes-table-wrap">
             <table class="data-table ordenes-table">
                 <thead>
                     <tr>
@@ -317,7 +315,7 @@
                                 <span class="material-symbols">visibility</span>
                             </button>
                             <button title="Aprobar Orden de Compra"
-                                sec:authorize="hasAnyRole('APROBADOR', 'SUPERADMINISTRADOR')"
+                                sec:authorize="hasAuthority('PERM_ORDENES_APROBAR')"
                                 th:if="${orden.estado.name() == 'BORRADOR'}" class="btn-icon approve"
                                 th:data-id="${orden.idOrden}">
                                 <span class="material-symbols">person_check</span>
@@ -345,7 +343,7 @@
                                 <span class="material-symbols">receipt_long</span>
                             </button>
                             <button title="Anular Orden de Compra"
-                                sec:authorize="hasAnyRole('APROBADOR', 'SUPERADMINISTRADOR')"
+                                sec:authorize="hasAuthority('PERM_ORDENES_APROBAR')"
                                 th:if="${orden.estado.name() == 'BORRADOR' or orden.estado.name() == 'APROBADA'}"
                                 class="btn-icon delete-orden" th:data-id="${orden.idOrden}"
                                 th:data-numero-orden="${orden.numeroOrden}">

@@ -31,13 +31,13 @@ public class LoginController {
 
     /**
      * Qué hace:
-     * Evalúa el estado de autenticación del usuario; si ya está autenticado, lo redirige al dashboard (/dashboard);
+     * Evalúa el estado de autenticación del usuario; si ya está autenticado, lo redirige a su módulo autorizado;
      * de lo contrario, muestra la página de inicio de sesión (/login).
      * 
      * A dónde apunta:
      * - Ruta HTTP: GET /login
      * - Servicio delegado: {@link IUsuarioService#obtenerVistaLogin(Authentication)}
-     * - Vistas renderizadas: "login" (templates/login.html) o redirección "redirect:/dashboard".
+     * - Vista renderizada: "login" (templates/login.html) o la ruta inicial correspondiente al usuario.
      * 
      * @param authentication Objeto de autenticación del contexto de seguridad de Spring.
      * @return Vista a renderizar o redirección.
@@ -54,4 +54,3 @@ public class LoginController {
         return usuarioService.obtenerVistaLogin(authentication);
     }
 }
-

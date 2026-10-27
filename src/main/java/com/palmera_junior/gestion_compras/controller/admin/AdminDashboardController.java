@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.time.format.DateTimeParseException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -30,9 +29,12 @@ import com.palmera_junior.gestion_compras.entity.OrdenCompra;
 import com.palmera_junior.gestion_compras.entity.Producto;
 import com.palmera_junior.gestion_compras.entity.Poliza;
 import com.palmera_junior.gestion_compras.entity.Proveedor;
-import com.palmera_junior.gestion_compras.entity.Rol;
 import com.palmera_junior.gestion_compras.entity.Sede;
 import com.palmera_junior.gestion_compras.entity.Usuario;
+import com.palmera_junior.gestion_compras.entity.Permiso;
+import com.palmera_junior.gestion_compras.repository.CategoriaRepository;
+import com.palmera_junior.gestion_compras.repository.RolRepository;
+import com.palmera_junior.gestion_compras.repository.PermisoRepository;
 import com.palmera_junior.gestion_compras.service.catalogo.IProductoService;
 import com.palmera_junior.gestion_compras.service.catalogo.IProveedorService;
 import com.palmera_junior.gestion_compras.service.orden.IOrdenCompraService;
@@ -61,13 +63,18 @@ public class AdminDashboardController {
     private final ICentroCostoService centroCostoService;
     private final IOrdenCompraService ordenCompraService;
     private final IPolizaService polizaService;
+    private final CategoriaRepository categoriaRepository;
+    private final RolRepository rolRepository;
+    private final PermisoRepository permisoRepository;
 
     /**
      * Constructor para inyección de dependencias de todos los servicios de administración.
      */
     public AdminDashboardController(IProveedorService proveedorService, IUsuarioService usuarioService,
             IProductoService productoService, ISedeService sedeService, ICentroCostoService centroCostoService,
-            IOrdenCompraService ordenCompraService, IPolizaService polizaService) {
+            IOrdenCompraService ordenCompraService, IPolizaService polizaService,
+            CategoriaRepository categoriaRepository, RolRepository rolRepository,
+            PermisoRepository permisoRepository) {
         this.proveedorService = proveedorService;
         this.usuarioService = usuarioService;
         this.productoService = productoService;
@@ -75,6 +82,9 @@ public class AdminDashboardController {
         this.centroCostoService = centroCostoService;
         this.ordenCompraService = ordenCompraService;
         this.polizaService = polizaService;
+        this.categoriaRepository = categoriaRepository;
+        this.rolRepository = rolRepository;
+        this.permisoRepository = permisoRepository;
     }
 
     /**
@@ -113,7 +123,12 @@ public class AdminDashboardController {
      * @return Nombre de la plantilla ("admin").
      */
     @GetMapping({ "/admin", "/admin/catalogos/{catalogo}" })
-    @PreAuthorize("hasAnyRole('SUPERADMINISTRADOR', 'ADMINISTRADOR')")
+    @PreAuthorize("(#catalogo == null and hasAuthority('PERM_PANEL_ADMINISTRACION'))"
+            + " or (#catalogo == 'usuarios' and hasRole('SUPERADMINISTRADOR'))"
+            + " or (#catalogo == 'productos' and hasAuthority('PERM_PRODUCTOS_GESTIONAR'))"
+            + " or (#catalogo == 'proveedores' and hasAuthority('PERM_PROVEEDORES_GESTIONAR'))"
+            + " or (#catalogo == 'sedes' and hasAuthority('PERM_SEDES_GESTIONAR'))"
+            + " or (#catalogo == 'centros' and hasAuthority('PERM_CENTROS_COSTO_GESTIONAR'))")
     public String mostrarPanelAdministracion(Model model,
 
             @PathVariable(value = "catalogo", required = false) String catalogo,
@@ -237,7 +252,7 @@ public class AdminDashboardController {
                         || (u.getNombreUsuario() != null && u.getNombreUsuario().toLowerCase().contains(s));
             }
             if (ok && rolUsuario != null && !rolUsuario.trim().isEmpty()) {
-                ok = u.getRol() != null && u.getRol().toString().equalsIgnoreCase(rolUsuario);
+                ok = u.getRol() != null && u.getRol().getCodigo().equalsIgnoreCase(rolUsuario);
             }
             if (ok && sedeIdUsuario != null) {
                 ok = u.getSede() != null && u.getSede().getIdSede().equals(sedeIdUsuario);
@@ -253,7 +268,7 @@ public class AdminDashboardController {
                         || (p.getCodigoInventario() != null && p.getCodigoInventario().toLowerCase().contains(s));
             }
             if (ok && categoriaProducto != null && !categoriaProducto.trim().isEmpty()) {
-                ok = p.getCategoria() != null && p.getCategoria().toString().equalsIgnoreCase(categoriaProducto);
+                ok = p.getCategoria() != null && p.getCategoria().getCodigo().equalsIgnoreCase(categoriaProducto);
             }
             return ok;
         }).collect(Collectors.toList());
@@ -322,9 +337,12 @@ public class AdminDashboardController {
         model.addAttribute("pageSedes", pageSedes);
         model.addAttribute("pageCentros", pageCentros);
         model.addAttribute("size", size);
-        model.addAttribute("roles", Arrays.asList(Rol.values()));
-        model.addAttribute("categorias", Arrays.asList(Categoria.values()));
-        model.addAttribute("categoriasUnicas", Arrays.asList(Categoria.values()));
+        model.addAttribute("roles", rolRepository.findAll());
+        List<Categoria> categorias = categoriaRepository.findAll();
+        model.addAttribute("categorias", categorias);
+        model.addAttribute("categoriasUnicas", categorias);
+        List<Permiso> permisos = permisoRepository.findAll();
+        model.addAttribute("permisos", permisos);
 
         // Mantener valores de filtros en la vista
         model.addAttribute("searchProveedores", searchProveedores);

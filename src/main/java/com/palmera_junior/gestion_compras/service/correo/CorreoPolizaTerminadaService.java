@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import com.palmera_junior.gestion_compras.entity.Poliza;
-import com.palmera_junior.gestion_compras.entity.Rol;
 import com.palmera_junior.gestion_compras.entity.Usuario;
 import com.palmera_junior.gestion_compras.repository.PolizaRepository;
 import com.palmera_junior.gestion_compras.repository.UsuarioRepository;
@@ -44,7 +43,7 @@ public class CorreoPolizaTerminadaService {
             Set<String> correos = ConcurrentHashMap.newKeySet();
             notificarUsuario(poliza.getUsuario(), poliza, correos);
             if (idsSedes != null && !idsSedes.isEmpty()) {
-                usuarioRepository.findByRolAndSedeIdSedeIn(Rol.APROBADOR, idsSedes)
+                usuarioRepository.findByRolCodigoAndSedeIdSedeIn("APROBADOR", idsSedes)
                         .forEach(aprobador -> notificarUsuario(aprobador, poliza, correos));
             }
         } catch (Exception exception) {

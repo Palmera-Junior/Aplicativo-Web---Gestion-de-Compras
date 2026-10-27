@@ -56,7 +56,7 @@ public class ProductoAdminController {
     * @return Fragmento Thymeleaf `catalogos :: productosFragment`.
      */
     @GetMapping("/admin/productos/pagina")
-    @PreAuthorize("hasAnyRole('SUPERADMINISTRADOR', 'ADMINISTRADOR')")
+    @PreAuthorize("hasAuthority('PERM_PRODUCTOS_GESTIONAR')")
     public String paginaProductos(Model model,
             @RequestParam(defaultValue = "0") int pageProductos,
             @RequestParam(defaultValue = "10") int size) {
@@ -93,11 +93,11 @@ public class ProductoAdminController {
      * @return Redirección a la vista de administración.
      */
     @PostMapping("/admin/productos")
-    @PreAuthorize("hasAnyRole('SUPERADMINISTRADOR', 'ADMINISTRADOR')")
+    @PreAuthorize("hasAuthority('PERM_PRODUCTOS_GESTIONAR')")
     public String guardarProducto(@RequestParam(required = false) Integer idProducto,
             @RequestParam String codigoInventario,
             @RequestParam String nombre,
-            @RequestParam(required = false) String categoria,
+            @RequestParam Integer idCategoria,
             RedirectAttributes redirectAttributes,
             @RequestParam(required = false) List<String> presentacionNombres,
             @RequestParam(required = false) List<Integer> presentacionCantidades,
@@ -105,7 +105,7 @@ public class ProductoAdminController {
             @RequestParam(required = false) List<BigDecimal> presentacionPrecios) {
 
         try {
-            productoService.guardarProducto(idProducto, codigoInventario, nombre, categoria, presentacionNombres,
+            productoService.guardarProducto(idProducto, codigoInventario, nombre, idCategoria, presentacionNombres,
                     presentacionCantidades, presentacionUnidades, presentacionPrecios);
             redirectAttributes.addAttribute("success",
                     idProducto == null ? "Producto creado correctamente." : "Producto actualizado correctamente.");
@@ -141,7 +141,7 @@ public class ProductoAdminController {
      * @return {@link ResponseEntity} indicando el resultado.
      */
     @PostMapping("/admin/productos/delete/{id}")
-    @PreAuthorize("hasAnyRole('SUPERADMINISTRADOR', 'ADMINISTRADOR')")
+    @PreAuthorize("hasAuthority('PERM_PRODUCTOS_GESTIONAR')")
     public ResponseEntity<?> deleteProducto(@PathVariable Integer id) {
         try {
             if (!productoService.eliminarProducto(id)) {
@@ -169,10 +169,9 @@ public class ProductoAdminController {
      * @return Lista JSON de presentaciones.
      */
     @GetMapping("/admin/producto/{id}/presentaciones")
-    @PreAuthorize("hasAnyRole('SUPERADMINISTRADOR', 'ADMINISTRADOR')")
+    @PreAuthorize("hasAuthority('PERM_PRODUCTOS_GESTIONAR')")
     @ResponseBody
     public List<PresentacionProducto> obtenerPresentacionesProducto(@PathVariable Integer id) {
         return productoService.obtenerPresentacionesProducto(id);
     }
 }
-

@@ -50,30 +50,8 @@ public class SecurityConfig {
     @Bean
     public AuthenticationSuccessHandler successHandler() {
         return (request, response, authentication) -> {
-            boolean isSuperAdmin = authentication.getAuthorities().stream()
-                    .map(auth -> auth.getAuthority())
-                    .anyMatch(authRole -> authRole.equals("ROLE_SUPERADMINISTRADOR"));
-            boolean isAdmin = authentication.getAuthorities().stream()
-                    .map(auth -> auth.getAuthority())
-                    .anyMatch(authRole -> authRole.equals("ROLE_ADMINISTRADOR"));
-            boolean isCommercial = authentication.getAuthorities().stream()
-                    .map(auth -> auth.getAuthority())
-                    .anyMatch(authRole -> authRole.equals("ROLE_COMERCIAL"));
-
-            if (isSuperAdmin) {
-                response.sendRedirect("/admin");
-                return;
-            }
-            if (isCommercial) {
-                response.sendRedirect("/polizas");
-                return;
-            }
-            if (isAdmin) {
-                response.sendRedirect("/dashboard");
-                return;
-            }
-
-            response.sendRedirect("/dashboard");
+            String destino = RutaInicialUsuario.resolver(authentication).orElse("/acceso-denegado");
+            response.sendRedirect(request.getContextPath() + destino);
         };
     }
 
@@ -138,13 +116,35 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/**").denyAll()
 
                         .requestMatchers("/admin/**")
-                        .hasAnyRole("SUPERADMINISTRADOR", "ADMINISTRADOR")
+                        .hasAnyAuthority(
+                                "PERM_PANEL_ADMINISTRACION",
+                                "PERM_PRODUCTOS_GESTIONAR", "PERM_PROVEEDORES_GESTIONAR",
+                                "PERM_SEDES_GESTIONAR", "PERM_CENTROS_COSTO_GESTIONAR")
 
                         .requestMatchers("/polizas", "/polizas/**")
-                        .hasAnyRole("COMERCIAL", "APROBADOR", "ADMINISTRADOR", "SUPERADMINISTRADOR")
+                        .hasAnyAuthority(
+                                "PERM_POLIZAS_VER", "PERM_POLIZAS_GESTIONAR", "PERM_POLIZAS_APROBAR")
 
-                        .requestMatchers("/dashboard", "/dashboard/**", "/ordenes/**", "/orden-compra/**", "/api/usuario/**")
-                        .hasAnyRole("SOLICITANTE", "APROBADOR", "ADMINISTRADOR", "SUPERADMINISTRADOR")
+                        .requestMatchers("/orden-compra/*/aprobar")
+                        .hasAuthority("PERM_ORDENES_APROBAR")
+
+                        .requestMatchers(
+                                "/orden-compra/*/detalles",
+                                "/orden-compra/*/has-diferencias-recepcion",
+                                "/orden-compra/has-diferencias",
+                                "/orden-compra/*/pdf")
+                        .hasAnyAuthority(
+                                "PERM_ORDENES_VER", "PERM_ORDENES_GESTIONAR", "PERM_ORDENES_APROBAR")
+
+                        .requestMatchers("/dashboard", "/dashboard/**")
+                        .hasAnyAuthority(
+                                "PERM_ORDENES_VER", "PERM_ORDENES_GESTIONAR", "PERM_ORDENES_APROBAR")
+
+                        .requestMatchers("/ordenes/**", "/orden-compra/**")
+                        .hasAnyAuthority(
+                                "PERM_ORDENES_GESTIONAR", "PERM_ORDENES_APROBAR")
+
+                        .requestMatchers("/api/usuario/**").authenticated()
 
                         .anyRequest().authenticated())
                 .csrf(csrf -> csrf
@@ -174,4 +174,3 @@ public class SecurityConfig {
         return http.build();
     }
 }
-

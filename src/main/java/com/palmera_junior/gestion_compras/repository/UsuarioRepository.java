@@ -8,7 +8,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.palmera_junior.gestion_compras.entity.Usuario;
-import com.palmera_junior.gestion_compras.entity.Rol;
 
 /**
  * Repositorio JPA para la entidad {@link Usuario}.
@@ -41,7 +40,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
     List<Usuario> findBySedeIdSede(Integer idSede);
 
     /** Lista los aprobadores pertenecientes a cualquiera de las sedes indicadas. */
-    List<Usuario> findByRolAndSedeIdSedeIn(Rol rol, List<Integer> idsSedes);
+    List<Usuario> findByRolCodigoAndSedeIdSedeIn(String codigo, List<Integer> idsSedes);
 
     /**
      * Qué hace: Busca un usuario por su correo electrónico exacto.
@@ -66,5 +65,6 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
      * A dónde apunta: Tabla `usuario`.
      */
     Optional<Usuario> findByCedula(String cedula);
-}
 
+    boolean existsByRolIdRol(Integer idRol);
+}

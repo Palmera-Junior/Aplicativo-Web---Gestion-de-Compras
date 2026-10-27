@@ -453,6 +453,7 @@
    ---------------------------------------------------------- */
 .polizas-filters {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 10px;
     margin: 0 0 20px;
