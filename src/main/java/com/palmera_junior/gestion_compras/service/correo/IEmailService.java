@@ -25,7 +25,7 @@ public interface IEmailService {
 
     /**
      * Qué hace:
-     * Construye y envía un correo electrónico MIME de texto plano con el PDF de la orden
+     * Construye y envía un correo electrónico MIME con cuerpo HTML y el PDF de la orden
      * (incluye la evidencia de factura ya embebida) adjunto.
      * 
      * A dónde apunta:
@@ -33,7 +33,7 @@ public interface IEmailService {
      * 
      * @param destinatario Dirección de correo fija de notificación de facturación.
      * @param asunto Asunto del mensaje (incluye el número de orden).
-     * @param cuerpo Cuerpo del mensaje en texto plano.
+     * @param cuerpo Cuerpo del mensaje en formato HTML.
      * @param pdf Arreglo de bytes con el PDF de la orden facturada.
         * @throws Exception Si ocurre un fallo en SES o en el armado del mensaje MIME.
      */

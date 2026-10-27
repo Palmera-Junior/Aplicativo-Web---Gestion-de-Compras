@@ -129,7 +129,7 @@ public class CorreoOrdenOutboxService {
                 // El PDF de la orden ya incluye la evidencia de factura adjuntada por el proveedor
                 byte[] pdf = pdfService.generarPdfOrdenCompra(orden);
                 String asunto = emailTemplateService.generarAsuntoFacturacion(orden);
-                String cuerpo = emailTemplateService.generarCuerpoFacturacion(orden);
+                String cuerpo = emailTemplateService.generarCorreoFacturacion(orden);
                 emailService.enviarNotificacionFacturacion(auditoria.getDestinatario(), asunto, cuerpo, pdf);
             } else {
                 byte[] pdf = pdfService.generarPdfOrdenCompra(orden);

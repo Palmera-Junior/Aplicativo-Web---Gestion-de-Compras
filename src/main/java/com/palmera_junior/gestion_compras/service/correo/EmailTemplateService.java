@@ -6,6 +6,7 @@ import java.text.NumberFormat;
 import java.util.Locale;
 import java.util.List;
 import java.time.temporal.ChronoUnit;
+import java.time.format.DateTimeFormatter;
 
 import com.palmera_junior.gestion_compras.entity.OrdenCompra;
 import com.palmera_junior.gestion_compras.entity.Poliza;
@@ -195,24 +196,47 @@ public class EmailTemplateService {
      * @return Asunto del correo.
      */
     public String generarAsuntoFacturacion(OrdenCompra orden) {
-        return "Orden de Compra Facturada para " + (orden.getCentroCosto().getNombre()) +" - " +orden.getNumeroOrden();
+        String centroCosto = orden.getCentroCosto() == null ? "N/A" : orden.getCentroCosto().getNombre();
+        return "Orden de Compra Facturada para " + centroCosto + " - " + orden.getNumeroOrden();
     }
 
     /**
      * Qué hace:
-     * Construye el cuerpo en texto plano del correo de notificación de facturación.
+     * Construye el cuerpo HTML de notificación de facturación reutilizando la plantilla verde de pólizas.
      * 
      * @param orden Entidad {@link OrdenCompra} recién facturada.
-     * @return Cuerpo del mensaje en texto plano.
+     * @return Cuerpo HTML del mensaje.
      */
-    public String generarCuerpoFacturacion(OrdenCompra orden) {
-        String proveedor = orden.getProveedor() != null ? orden.getProveedor().getNombre() : "N/A";
-        String numeroFactura = orden.getNumeroFactura() != null ? orden.getNumeroFactura() : "N/A";
+    public String generarCorreoFacturacion(OrdenCompra orden) {
+        Context context = new Context(new Locale("es", "CO"));
+        String numeroOrden = orden.getNumeroOrden() == null ? "N/A" : orden.getNumeroOrden();
+        String proveedor = orden.getProveedor() == null ? "N/A" : orden.getProveedor().getNombre();
+        String sede = orden.getSede() == null ? "N/A" : orden.getSede().getNombre();
+        String centroCosto = orden.getCentroCosto() == null ? "N/A" : orden.getCentroCosto().getNombre();
+        String fechaOrden = orden.getFecha() == null ? "N/A"
+                : orden.getFecha().format(DateTimeFormatter.ofPattern("dd/MM/yyyy", new Locale("es", "CO")));
 
-        return "Se registró correctamente la facturación de la Orden de Compra N° " + orden.getNumeroOrden() + ".\n\n"
-                + "Proveedor: " + proveedor + "\n"
-                + "N° Factura proveedor: " + numeroFactura + "\n\n"
-                + "Se adjunta la evidencia digital del soporte de factura del proveedor.";
+        context.setVariable("numeroContrato", numeroOrden);
+        context.setVariable("etiquetaNumero", "Número de orden");
+        context.setVariable("numeroFactura", orden.getNumeroFactura() == null ? "N/A" : orden.getNumeroFactura());
+        context.setVariable("tituloResumen", "Orden de compra facturada");
+        context.setVariable("proveedor", proveedor);
+        context.setVariable("sede", sede);
+        context.setVariable("etiquetaSede", "Sede");
+        context.setVariable("centroCosto", centroCosto);
+        context.setVariable("totalOrden", formatearPesos(orden.getTotal()));
+        context.setVariable("fechaOrden", fechaOrden);
+        context.setVariable("mostrarVigencia", false);
+        context.setVariable("mostrarCreacion", false);
+        context.setVariable("mostrarSaludo", false);
+        context.setVariable("mostrarEnlace", false);
+        context.setVariable("encabezado", "SISTEMA DE GESTIÓN · COMPRAS");
+        context.setVariable("etiqueta", "✓  FACTURADA · GESTIÓN CONTABLE");
+        context.setVariable("mensaje", "La orden de compra fue registrada como facturada. Encontrará el resumen y el soporte disponible para continuar con la gestión contable.");
+        context.setVariable("advertencia", "Se adjunta el PDF de la orden de compra con la evidencia de factura disponible.");
+        context.setVariable("tipoAviso", "info");
+        context.setVariable("iconoAviso", "ℹ");
+        return templateEngine.process("poliza-pendiente-aprobacion", context);
     }
 
         public String generarAsuntoPolizaAprobada(Poliza poliza) {

@@ -43,11 +43,17 @@
                                         <span th:text="${tituloResumen}">Nueva Póliza</span></td>
                                 </tr>
                                 <tr>
-                                    <td style="padding:16px 18px 5px;color:#667a6f;font-size:13px;">Contrato</td>
+                                    <td style="padding:16px 18px 5px;color:#667a6f;font-size:13px;"
+                                        th:text="${etiquetaNumero != null ? etiquetaNumero : 'Contrato'}">Contrato</td>
                                     <td align="right" style="padding:16px 18px 5px;font-size:13px;font-weight:700;"
                                         th:text="${numeroContrato}">POL-2026-0148</td>
                                 </tr>
-                                <tr>
+                                <tr th:if="${numeroFactura != null}">
+                                    <td style="padding:5px 18px;color:#667a6f;font-size:13px;">Número de factura</td>
+                                    <td align="right" style="padding:5px 18px;font-size:13px;font-weight:700;"
+                                        th:text="${numeroFactura}">FAC-2026-001</td>
+                                </tr>
+                                <tr th:if="${cliente != null}">
                                     <td style="padding:5px 18px;color:#667a6f;font-size:13px;">Cliente</td>
                                     <td align="right" style="padding:5px 18px;font-size:13px;font-weight:700;"
                                         th:text="${cliente}">HARINA PAN</td>
@@ -57,19 +63,35 @@
                                     <td align="right" style="padding:5px 18px;font-size:13px;font-weight:700;"
                                         th:text="${proveedor}">Proveedor S.A.S.</td>
                                 </tr>
-                                <tr>
-                                    <td style="padding:5px 18px;color:#667a6f;font-size:13px;">Sede a aprobar</td>
+                                <tr th:if="${sede != null}">
+                                    <td style="padding:5px 18px;color:#667a6f;font-size:13px;"
+                                        th:text="${etiquetaSede != null ? etiquetaSede : 'Sede a aprobar'}">Sede a aprobar</td>
                                     <td align="right" style="padding:5px 18px;font-size:13px;font-weight:700;"
                                         th:text="${sede}">Sede Nacional</td>
                                 </tr>
-                                <tr>
+                                <tr th:if="${centroCosto != null}">
+                                    <td style="padding:5px 18px;color:#667a6f;font-size:13px;">Centro de costo</td>
+                                    <td align="right" style="padding:5px 18px;font-size:13px;font-weight:700;"
+                                        th:text="${centroCosto}">Centro de costo</td>
+                                </tr>
+                                <tr th:if="${totalOrden != null}">
+                                    <td style="padding:5px 18px;color:#667a6f;font-size:13px;">Total de la orden</td>
+                                    <td align="right" style="padding:5px 18px;font-size:13px;font-weight:700;"
+                                        th:text="${totalOrden}">$0</td>
+                                </tr>
+                                <tr th:if="${fechaOrden != null}">
+                                    <td style="padding:5px 18px;color:#667a6f;font-size:13px;">Fecha de la orden</td>
+                                    <td align="right" style="padding:5px 18px;font-size:13px;font-weight:700;"
+                                        th:text="${fechaOrden}">10/10/2026</td>
+                                </tr>
+                                <tr th:if="${mostrarVigencia != false}">
                                     <td style="padding:5px 18px 14px;color:#667a6f;font-size:13px;">Vigencia</td>
                                     <td align="right" style="padding:5px 18px 14px;font-size:13px;font-weight:700;">
                                         <span th:text="${fechaInicio}">10/10/2026</span> — <span
                                             th:text="${fechaFin}">19/11/2026</span>
                                     </td>
                                 </tr>
-                                <tr>
+                                <tr th:if="${mostrarCreacion != false}">
                                     <td colspan="2"
                                         style="padding:13px 18px;border-top:1px solid #d9e2dc;font-size:12px;"><span
                                             style="color:#667a6f;">Creada por</span><span
@@ -93,9 +115,9 @@
                             <p th:if="${mostrarEnlace != false}" style="margin:0 0 24px;text-align:center;color:#87958e;font-size:11px;">Si el botón no
                                 funciona, copie este enlace en su navegador: <span
                                     th:text="${urlRevision}">https://sigo.com/polizas</span></p>
-                            <div
-                                style="padding:14px 16px;border:1px solid #f0d9a5;border-radius:8px;background:#fffcf4;color:#76510a;font-size:12px;line-height:1.5;">
-                                ⚠&nbsp; <span th:text="${advertencia}">Esta póliza permanecerá en estado Borrador hasta que sea
+                            <div th:if="${advertencia != null}"
+                                th:style="${tipoAviso == 'info' ? 'padding:14px 16px;border:1px solid #cfe5d8;border-radius:8px;background:#f3faf6;color:#285b40;font-size:12px;line-height:1.5;' : 'padding:14px 16px;border:1px solid #f0d9a5;border-radius:8px;background:#fffcf4;color:#76510a;font-size:12px;line-height:1.5;'}">
+                                <span th:text="${iconoAviso != null ? iconoAviso : '⚠'}">⚠</span>&nbsp; <span th:text="${advertencia}">Esta póliza permanecerá en estado Borrador hasta que sea
                                 aprobada. Si no se gestiona a tiempo, puede afectar el inicio de la vigencia del
                                 contrato.</span></div>
                         </td>

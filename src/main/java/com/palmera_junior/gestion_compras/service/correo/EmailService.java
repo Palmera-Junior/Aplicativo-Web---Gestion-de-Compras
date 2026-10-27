@@ -82,7 +82,7 @@ public class EmailService implements IEmailService {
 
         /**
          * Qué hace:
-         * Genera un mensaje MIME UTF-8 de texto plano con el PDF de la orden (incluye la evidencia
+         * Genera un mensaje MIME UTF-8 con cuerpo HTML y PDF de la orden (incluye la evidencia
          * de factura ya embebida) adjunto y lo despacha a través del servidor SMTP configurado.
          *
          * A dónde apunta:
@@ -117,7 +117,7 @@ public class EmailService implements IEmailService {
 
                 helper.setText(
                                 cuerpo,
-                                false);
+                                true);
 
                 helper.addAttachment(
                                 "Orden_Compra.pdf",
