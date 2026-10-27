@@ -23,9 +23,9 @@ COPY --from=build /app/target/*.jar /app/app.jar
 RUN mkdir -p /app/storage && chown -R spring:spring /app
 
 USER spring
-EXPOSE 8080
+EXPOSE 8081
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
-  CMD wget -qO- http://localhost:8080/actuator/health | grep -q '"status":"UP"' || exit 1
+  CMD wget -qO- http://localhost:8081/actuator/health | grep -q '"status":"UP"' || exit 1
 
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /app/app.jar"]

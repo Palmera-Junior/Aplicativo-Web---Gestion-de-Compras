@@ -20,7 +20,7 @@ Navegador: Thymeleaf + JavaScript + CSS
        PostgreSQL: schemas core, compras y polizas
 ```
 
-OpenPDF genera documentos en memoria. Nginx funciona como proxy inverso hacia el puerto 8080 de la aplicación. Docker Compose separa aplicación, PostgreSQL y redes interna/externa.
+OpenPDF genera documentos en memoria. Nginx funciona como proxy inverso hacia el puerto 8081 de la aplicación. Docker Compose separa aplicación, PostgreSQL y redes interna/externa.
 
 ## 2. Organización del código
 

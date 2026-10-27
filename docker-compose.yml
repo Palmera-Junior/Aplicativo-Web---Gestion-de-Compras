@@ -34,7 +34,7 @@ services:
     SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_MICROSOFT_CLIENT_SECRET: "${MICROSOFT_CLIENT_SECRET:?MICROSOFT_CLIENT_SECRET es obligatorio}"
     SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_MICROSOFT_SCOPE: openid,profile,email
     SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_MICROSOFT_PROVIDER: microsoft
-    MICROSOFT_REDIRECT_URI: ${MICROSOFT_REDIRECT_URI:-http://localhost:8080/login/oauth2/code/microsoft}
+    MICROSOFT_REDIRECT_URI: ${MICROSOFT_REDIRECT_URI:-http://localhost:8081/login/oauth2/code/microsoft}
     SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_MICROSOFT_ISSUER_URI: "https://login.microsoftonline.com/${MICROSOFT_TENANT_ID:?MICROSOFT_TENANT_ID es obligatorio}/v2.0"
     AWS_ACCESS_KEY_ID_SES: ${AWS_ACCESS_KEY_ID_SES:-}
     AWS_SECRET_ACCESS_KEY_SES: ${AWS_SECRET_ACCESS_KEY_SES:-}
@@ -42,13 +42,13 @@ services:
     MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-notificaciones@palmerajunior.com}
     MAIL_FROM_NAME: ${MAIL_FROM_NAME:-Notificaciones Palmera Junior}
     JAVA_OPTS: ${JAVA_OPTS:-"-Xmx2g -Xms512m"}
-    APP_BASE_URL: ${APP_BASE_URL:-http://localhost:8080}
+    APP_BASE_URL: ${APP_BASE_URL:-http://localhost:8081}
     SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-false}
    networks:
      - internal
      - web
    expose:
-     - "8080"
+     - "8081"
 
  nginx:
    image: nginx:1.27-alpine
@@ -56,7 +56,7 @@ services:
    depends_on:
      - app
    ports:
-    - "8080:80"
+    - "8081:80"
    volumes:
      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
    networks:

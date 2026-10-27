@@ -37,13 +37,13 @@ services:
     MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-notificaciones@palmerajunior.com}
     MAIL_FROM_NAME: ${MAIL_FROM_NAME:-Notificaciones Palmera Junior}
     JAVA_OPTS: ${JAVA_OPTS:-"-Xmx2g -Xms512m"}
-    APP_BASE_URL: ${APP_BASE_URL:-http://localhost}
+    APP_BASE_URL: ${APP_BASE_URL:-http://localhost:8081}
     SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-false}
    networks:
      - internal
      - web
    expose:
-     - "8080"
+     - "8081"
 
  nginx:
    image: nginx:1.27-alpine

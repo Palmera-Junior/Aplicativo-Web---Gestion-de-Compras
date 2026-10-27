@@ -41,7 +41,7 @@ Complete, como mínimo, según el escenario:
 | `MICROSOFT_CLIENT_ID` | Identificador de la aplicación Microsoft. |
 | `MICROSOFT_CLIENT_SECRET` | Secreto de la aplicación Microsoft. |
 | `MICROSOFT_TENANT_ID` | Tenant de Microsoft Entra ID. |
-| `MICROSOFT_REDIRECT_URI` | URI de retorno registrado en Microsoft Entra ID. En local con el Compose OAuth2: `http://localhost:8080/login/oauth2/code/microsoft`. |
+| `MICROSOFT_REDIRECT_URI` | URI de retorno registrado en Microsoft Entra ID. En local con el Compose OAuth2: `http://localhost:8081/login/oauth2/code/microsoft`. |
 | `AWS_ACCESS_KEY_ID_SES` / `AWS_SECRET_ACCESS_KEY_SES` | Credenciales AWS opcionales; alternativamente use un rol IAM. |
 | `AWS_DEFAULT_REGION_SES` | Región de Amazon SES. |
 | `MAIL_FROM_ADDRESS` / `MAIL_FROM_NAME` | Remitente verificado y nombre visible. |
@@ -60,7 +60,7 @@ La recuperación de contraseña también usa Amazon SES. Asegúrese de que `APP_
 docker compose up --build
 ```
 
-La aplicación queda disponible en `http://localhost:8080`. PostgreSQL no publica un puerto en el host; solo es accesible desde la red interna de Docker.
+La aplicación queda disponible en `http://localhost:8081`. PostgreSQL no publica un puerto en el host; solo es accesible desde la red interna de Docker.
 
 En un volumen nuevo, PostgreSQL ejecuta automáticamente `docker/init-db/01-create-schema.sql` y `docker/init-db/DDL.sql`. Si necesita reinicializar un volumen anterior con los schemas nuevos, detenga los servicios y elimine el volumen antes de arrancar:
 
@@ -136,7 +136,7 @@ Requiere Java 17, PostgreSQL activo en `localhost:5432` y una base de datos vac�
 .\mvnw.cmd spring-boot:run
 ```
 
-Al iniciar, Spring crea los schemas y tablas usando los scripts de `docker/init-db/`, carga los datos iniciales desde `src/main/resources/db/dml.sql` y luego valida el modelo JPA. La aplicación escucha normalmente en el puerto `8080`.
+Al iniciar, Spring crea los schemas y tablas usando los scripts de `docker/init-db/`, carga los datos iniciales desde `src/main/resources/db/dml.sql` y luego valida el modelo JPA. La aplicación escucha normalmente en el puerto `8081`.
 
 ## 7. Base de datos
 
@@ -152,7 +152,7 @@ Los scripts de inicialización están en `docker/init-db/`:
 ## 8. Verificación de instalación
 
 1. Compruebe que PostgreSQL esté saludable.
-2. Compruebe `http://localhost/actuator/health` detrás de Nginx o `http://localhost:8080/actuator/health` en ejecución local.
+2. Compruebe `http://localhost:8081/actuator/health` detrás de Nginx o `http://localhost:8081/actuator/health` en ejecución local.
 3. Abra `/login`; no podrá autenticarse hasta que agregue usuarios a la base.
 4. Cree una orden de prueba en estado `BORRADOR`.
 5. Verifique que un código inexistente muestre el toast del dashboard.

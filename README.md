@@ -36,7 +36,7 @@ docker compose down -v
 Este comando elimina **todos** los datos del volumen PostgreSQL. No lo ejecute si necesita conservar datos.
 Si se inició con `docker-compose.no-oauth2.yml`, use en su lugar `docker compose -f docker-compose.no-oauth2.yml down -v`.
 
-Sin OAuth2, la aplicación queda disponible en `http://localhost`; con OAuth2, en `http://localhost:8080`. Para detener los servicios sin borrar datos:
+Sin OAuth2 o con OAuth2, la aplicación queda disponible en `http://localhost:8081`. Para detener los servicios sin borrar datos:
 
 ```powershell
 docker compose down
