@@ -3,6 +3,9 @@ package com.palmera_junior.gestion_compras.service.usuario;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Locale;
+import jakarta.mail.internet.AddressException;
+import jakarta.mail.internet.InternetAddress;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -190,13 +193,17 @@ public class UsuarioService implements IUsuarioService {
        final String nombreTrim = normalizar(nombre);
        final String apellidoTrim = normalizar(apellido);
        final String nombreUsuarioTrim = normalizar(nombreUsuario);
-       final String emailTrim = normalizar(email);
+       final String emailOriginal = normalizar(email);
+       final String emailTrim = emailOriginal == null ? null : emailOriginal.toLowerCase(Locale.ROOT);
        final String contrasenaTrim = normalizar(contrasena);
 
        if (!StringUtils.hasText(cedulaTrim) || !StringUtils.hasText(nombreTrim) || !StringUtils.hasText(apellidoTrim)
                || !StringUtils.hasText(nombreUsuarioTrim) || !StringUtils.hasText(emailTrim) || sedeId == null
                || rolId == null) {
            throw new IllegalArgumentException("Todos los campos del usuario son obligatorios, excepto la contraseña al editar.");
+       }
+       if (emailTrim.length() > 100 || !correoValido(emailTrim)) {
+           throw new IllegalArgumentException("Debe registrar un correo electrónico válido de máximo 100 caracteres.");
        }
        Rol rol = rolRepository.findById(rolId)
                .orElseThrow(() -> new IllegalArgumentException("El rol seleccionado no es válido."));
@@ -211,7 +218,7 @@ public class UsuarioService implements IUsuarioService {
            if (!StringUtils.hasText(contrasenaTrim)) {
                throw new IllegalArgumentException("La contraseña es obligatoria para crear un usuario.");
            }
-           if (usuarioRepository.findByEmail(emailTrim).isPresent()) {
+           if (usuarioRepository.findByEmailIgnoreCase(emailTrim).isPresent()) {
                throw new IllegalArgumentException("El correo electrónico ya está en uso.");
            }
            Sede sede = sedeRepository.findById(sedeId)
@@ -237,19 +244,25 @@ public class UsuarioService implements IUsuarioService {
        if (usuarioRepository.findByNombreUsuario(nombreUsuarioTrim).filter(u -> !u.getIdUsuario().equals(idUsuario)).isPresent()) {
            throw new IllegalArgumentException("El nombre de usuario ya está en uso.");
        }
-       if (usuarioRepository.findByEmail(emailTrim).filter(u -> !u.getIdUsuario().equals(idUsuario)).isPresent()) {
+       if (usuarioRepository.findByEmailIgnoreCase(emailTrim).filter(u -> !u.getIdUsuario().equals(idUsuario)).isPresent()) {
            throw new IllegalArgumentException("El correo electrónico ya está en uso.");
        }
+
        Sede sede = sedeRepository.findById(sedeId)
                .orElseThrow(() -> new IllegalArgumentException("La sede seleccionada no es válida."));
        usuario.setCedula(cedulaTrim);
        usuario.setNombre(nombreTrim);
        usuario.setApellido(apellidoTrim);
        usuario.setCargo(cargo);
+       boolean cambioCredencial = !emailTrim.equalsIgnoreCase(usuario.getEmail())
+               || StringUtils.hasText(contrasenaTrim);
        usuario.setEmail(emailTrim);
        usuario.setNombreUsuario(nombreUsuarioTrim);
        if (StringUtils.hasText(contrasenaTrim)) {
            usuario.setContraseña(passwordEncoder.encode(contrasenaTrim));
+       }
+       if (cambioCredencial) {
+           usuarioRepository.eliminarTokensRecuperacionPendientes(idUsuario);
        }
        usuario.setRol(rol);
        usuario.setSede(sede);
@@ -369,5 +382,15 @@ public class UsuarioService implements IUsuarioService {
 
    private String normalizar(String value) {
        return value == null ? null : value.trim();
+   }
+
+   private boolean correoValido(String email) {
+       try {
+           InternetAddress address = new InternetAddress(email, true);
+           address.validate();
+           return email.equals(address.getAddress());
+       } catch (AddressException ex) {
+           return false;
+       }
    }
 }

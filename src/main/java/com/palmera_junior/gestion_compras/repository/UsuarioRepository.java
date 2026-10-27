@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.repository.query.Param;
 
 import com.palmera_junior.gestion_compras.entity.Usuario;
@@ -29,7 +30,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
                 SELECT u
                 FROM Usuario u
                 LEFT JOIN FETCH u.sede
-                WHERE u.email = :email
+                WHERE LOWER(u.email) = LOWER(:email)
             """)
     Optional<Usuario> findByEmailConSede(@Param("email") String email);
 
@@ -47,6 +48,15 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
      * A dónde apunta: Tabla `usuario`.
      */
     Optional<Usuario> findByEmail(String email);
+
+    Optional<Usuario> findByEmailIgnoreCase(String email);
+
+    @Modifying
+    @Query(value = """
+            DELETE FROM core.password_reset_token
+            WHERE id_usuario = :idUsuario AND usado_en IS NULL
+            """, nativeQuery = true)
+    int eliminarTokensRecuperacionPendientes(@Param("idUsuario") Integer idUsuario);
 
     /**
      * Qué hace: Verifica si ya existe un usuario con el nombre de usuario dado.

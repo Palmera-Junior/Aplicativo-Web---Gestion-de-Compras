@@ -52,6 +52,8 @@ Complete, como mínimo, según el escenario:
 
 El envío usa SES API v2, no SMTP. No comparta `.env`.
 
+La recuperación de contraseña también usa Amazon SES. Asegúrese de que `APP_BASE_URL` sea la dirección pública correcta y use HTTPS en producción (`SESSION_COOKIE_SECURE=true`). Para cuentas existentes, el superadministrador debe mantener actualizado el correo único de cada usuario. El DDL crea las tablas de tokens y límites en instalaciones nuevas y en los siguientes arranques de bases existentes.
+
 ## 3. Instalación con Docker y OAuth2
 
 ```powershell

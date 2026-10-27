@@ -219,6 +219,25 @@ body::before {
     transform: translateY(-1px);
 }
 
+.password-recovery-link {
+    display: block;
+    margin-top: 18px;
+    color: #08236f;
+    text-align: center;
+    font-size: 13px;
+    text-decoration: none;
+}
+
+.password-recovery-link:hover {
+    text-decoration: underline;
+}
+
+.password-help {
+    margin: -8px 0 14px;
+    color: #495057;
+    font-size: 12px;
+}
+
 /* ============================================
    DIVISOR "o continúa con"
    ============================================ */

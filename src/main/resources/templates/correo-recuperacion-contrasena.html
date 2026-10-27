@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recuperación de contraseña</title>
+</head>
+<body style="font-family: Arial, sans-serif; color: #172033; line-height: 1.6;">
+    <h2>Recuperación de contraseña</h2>
+    <p>Hola <span th:text="${nombre}">usuario</span>,</p>
+    <p>Recibimos una solicitud para cambiar la contraseña de tu cuenta.</p>
+    <p>
+        <a th:href="${urlRestablecimiento}"
+           style="display:inline-block;padding:12px 20px;background:#08236f;color:#fff;text-decoration:none;border-radius:6px;">
+            Definir nueva contraseña
+        </a>
+    </p>
+    <p>Este enlace es de un solo uso y vence en <span th:text="${minutosValidez}">20</span> minutos.</p>
+    <p>Si no solicitaste este cambio, ignora este correo. Tu contraseña actual no cambiará.</p>
+</body>
+</html>

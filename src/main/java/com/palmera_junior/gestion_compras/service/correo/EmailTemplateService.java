@@ -35,6 +35,7 @@ public class EmailTemplateService {
         if (numeroPoliza == null || numeroPoliza.isBlank()) {
             numeroPoliza = "Contrato " + poliza.getNumeroContrato();
         }
+
         String creador = poliza.getUsuario() == null ? "Un usuario"
                 : (poliza.getUsuario().getNombre() + " " + poliza.getUsuario().getApellido()).trim();
 
@@ -56,6 +57,18 @@ public class EmailTemplateService {
         context.setVariable("textoBoton", "Revisar y aprobar póliza");
         context.setVariable("advertencia", "Esta póliza permanecerá en estado Borrador hasta que sea aprobada. Si no se gestiona a tiempo, puede afectar el inicio de la vigencia del contrato.");
         return templateEngine.process("poliza-pendiente-aprobacion", context);
+    }
+
+    public String urlRestablecimiento(String token) {
+        return plataformaUrl.replaceAll("/$", "") + "/password/reset?token=" + token;
+    }
+
+    public String generarCorreoRecuperacion(String nombre, String urlRestablecimiento) {
+        Context context = new Context(new Locale("es", "CO"));
+        context.setVariable("nombre", nombre);
+        context.setVariable("urlRestablecimiento", urlRestablecimiento);
+        context.setVariable("minutosValidez", 20);
+        return templateEngine.process("correo-recuperacion-contrasena", context);
     }
 
     /** Reutiliza la plantilla de pólizas para advertir el próximo vencimiento al creador. */

@@ -44,6 +44,11 @@
             <span>Sesión cerrada correctamente.</span>
         </div>
 
+        <div th:if="${passwordReset}" class="alert-success">
+            <span class="material-symbols-outlined">check_circle</span>
+            <span>Tu contraseña se actualizó correctamente. Inicia sesión con la nueva contraseña.</span>
+        </div>
+
         <form th:action="@{/login}" method="POST">
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
 
@@ -60,6 +65,8 @@
             <button type="submit" class="btn-login">
                 Iniciar Sesión
             </button>
+
+            <a class="password-recovery-link" th:href="@{/password/forgot}">¿Olvidaste tu contraseña?</a>
 
             <div class="divider" th:if="${microsoftOAuth2Enabled}">
                 <span>o continúa con</span>

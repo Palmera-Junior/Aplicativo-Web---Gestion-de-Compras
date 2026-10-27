@@ -45,6 +45,7 @@ public class LoginController {
     @GetMapping("/login")
     public String login(Authentication authentication, Model model, HttpServletRequest request) {
         model.addAttribute("microsoftOAuth2Enabled", microsoftOAuth2Enabled);
+        model.addAttribute("passwordReset", request.getParameter("passwordReset") != null);
         Object errorOAuth2 = request.getSession(false) == null ? null
                 : request.getSession(false).getAttribute("OAUTH2_ERROR_DETAIL");
         if (errorOAuth2 != null) {

@@ -69,6 +69,26 @@ CREATE TABLE IF NOT EXISTS core.usuario (
         REFERENCES core.sede (id_sede)
 );
 
+CREATE TABLE IF NOT EXISTS core.password_reset_token (
+    id_password_reset_token BIGSERIAL PRIMARY KEY,
+    id_usuario INT NOT NULL,
+    token_hash CHAR(64) NOT NULL UNIQUE,
+    creado_en TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expira_en TIMESTAMPTZ NOT NULL,
+    usado_en TIMESTAMPTZ,
+    CONSTRAINT fk_password_reset_token_usuario FOREIGN KEY (id_usuario)
+        REFERENCES core.usuario (id_usuario) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_password_reset_token_usuario
+    ON core.password_reset_token (id_usuario);
+
+CREATE TABLE IF NOT EXISTS core.password_reset_rate_limit (
+    key_hash CHAR(64) PRIMARY KEY,
+    window_start TIMESTAMPTZ NOT NULL,
+    request_count INT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS core.rol_permiso (
     id_rol INT NOT NULL,
     id_permiso INT NOT NULL,

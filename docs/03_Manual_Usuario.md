@@ -14,6 +14,15 @@
 
 Use **Salir** para cerrar sesión. No comparta sus credenciales.
 
+### Recuperar contraseña
+
+1. En la pantalla de inicio de sesión, seleccione **¿Olvidaste tu contraseña?**.
+2. Escriba el correo que registró el superadministrador para su cuenta.
+3. Si la cuenta existe y el correo está habilitado para recibir mensajes, recibirá un enlace de recuperación.
+4. Abra el enlace y defina una contraseña nueva de al menos 12 caracteres. El enlace vence a los 20 minutos y solo se puede usar una vez.
+
+La aplicación siempre muestra la misma confirmación, aunque el correo no corresponda a una cuenta. Si no recibe el mensaje, revise con el superadministrador que el correo de su cuenta esté actualizado. Este proceso cambia la contraseña local de la aplicación; no cambia la contraseña de Microsoft.
+
 ## 2. Crear una orden
 
 1. Abra **Nueva orden de compra**.
@@ -75,7 +84,7 @@ Al pulsar la cruz se abre un formulario. Escriba la descripción del fallo y con
 
 ## 8. Administración
 
-El superadministrador puede gestionar usuarios, proveedores, productos, sedes y centros de costo. Desde **Configuración > Permisos** puede administrar los permisos predeterminados de cada rol y las excepciones de cada usuario. Al editar un usuario se muestran activos los permisos de su rol; al guardar, las diferencias se conservan como concesiones o denegaciones individuales. Los cambios de acceso se aplican cuando el usuario inicia sesión nuevamente. No es posible eliminar un rol que tenga usuarios asignados.
+El superadministrador registra y actualiza usuarios, incluido su correo único de recuperación, y puede gestionar proveedores, productos, sedes y centros de costo. Desde **Configuración > Permisos** puede administrar los permisos predeterminados de cada rol y las excepciones de cada usuario. Al editar un usuario se muestran activos los permisos de su rol; al guardar, las diferencias se conservan como concesiones o denegaciones individuales. Los cambios de acceso se aplican cuando el usuario inicia sesión nuevamente. No es posible eliminar un rol que tenga usuarios asignados.
 
 ## 9. Problemas frecuentes
 

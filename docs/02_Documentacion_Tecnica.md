@@ -61,7 +61,7 @@ La persistencia se divide por dominio:
 
 | Schema | Tablas |
 |---|---|
-| `core` | `sede`, `centro_costo`, `proveedor`, `proveedor_sede`, `usuario`, `usuario_permiso`, `rol`, `rol_permiso`, `permiso`. |
+| `core` | `sede`, `centro_costo`, `proveedor`, `proveedor_sede`, `usuario`, `usuario_permiso`, `rol`, `rol_permiso`, `permiso`, `password_reset_token`, `password_reset_rate_limit`. |
 | `compras` | `orden_compra`, `detalle_compra`, `auditoria_envio_correo`, `categoria`, `producto`, `presentacion_producto`. |
 | `polizas` | `poliza`, `poliza_sede_aprobacion`, `poliza_renovacion`, `auditoria_envio_correo_poliza`, `detalle_prima`, `poliza_adjunto`. |
 
@@ -87,6 +87,10 @@ El pool asíncrono utiliza cuatro hilos base, ocho máximos y una cola de 50 tar
 ## 6. Seguridad
 
 - BCrypt para contraseñas.
+- Recuperación de contraseña: token aleatorio de 256 bits, hash SHA-256 persistido, uso único y expiración de 20 minutos.
+- Rate limiting compartido por PostgreSQL: máximo cinco solicitudes por correo y 20 por IP cada 15 minutos; los identificadores se persisten únicamente como hashes.
+- El restablecimiento requiere al menos 12 caracteres y limita la contraseña a 72 bytes UTF-8 para evitar truncamiento de BCrypt.
+- Las respuestas de solicitud no confirman si un correo corresponde a una cuenta. Los enlaces no se almacenan en claro ni se escriben en los logs de acceso de Nginx.
 - CSRF mediante cookie accesible por JavaScript.
 - Cambio del identificador de sesión, cookie `HttpOnly`, `SameSite=Lax` y timeout de 30 minutos.
 - OAuth2 Microsoft opcional y restringido a usuarios previamente registrados.
@@ -104,4 +108,4 @@ El pool asíncrono utiliza cuatro hilos base, ocho máximos y una cola de 50 tar
 
 ## 7. Pruebas actuales
 
-La suite contiene `GestionComprasApplicationTests`, que actualmente verifica `contextLoads()`. La compilación y el contexto Spring se validan, pero no existe cobertura automatizada suficiente para todos los flujos críticos.
+La suite incluye una prueba unitaria de la política de longitud de las contraseñas nuevas. Aún se requiere ampliar la cobertura con pruebas de autorización, contratos HTTP, transiciones de estado, expiración y consumo único de tokens, límites de solicitudes e integración con el proveedor de correo.
