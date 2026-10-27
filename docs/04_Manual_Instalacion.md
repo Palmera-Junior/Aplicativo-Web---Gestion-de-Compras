@@ -98,7 +98,7 @@ openssl rand -hex 32
 nano .env
 ```
 
-En `.env`, establezca una contraseña aleatoria propia en `DB_PASSWORD` y ponga `MICROSOFT_OAUTH2_ENABLED=false`. No use la contraseña de ejemplo `postgres`. Para una prueba por HTTP, configure `APP_BASE_URL=http://IP_DEL_SERVIDOR` y `SESSION_COOKIE_SECURE=false`. El Compose publica el puerto 80; configure el firewall del proveedor y del servidor para permitir HTTP. Para producción, ponga HTTPS delante de la aplicación antes de habilitar acceso público y configure `APP_BASE_URL` y las cookies seguras acorde con su proxy TLS.
+En `.env`, establezca una contraseña aleatoria propia en `DB_PASSWORD` y ponga `MICROSOFT_OAUTH2_ENABLED=false`. No use la contraseña de ejemplo `postgres`. Para una prueba por HTTP, configure `APP_BASE_URL=http://IP_DEL_SERVIDOR:8081` y `SESSION_COOKIE_SECURE=false`. El Compose publica el puerto `8081`; configure el firewall del proveedor y del servidor para permitirlo. Para producción, ponga HTTPS delante de la aplicación antes de habilitar acceso público y configure `APP_BASE_URL` y las cookies seguras acorde con su proxy TLS.
 
 Guarde el archivo y restrinja sus permisos; luego valide y arranque:
 
@@ -110,7 +110,7 @@ sudo docker compose -f docker-compose.no-oauth2.yml ps
 sudo docker compose -f docker-compose.no-oauth2.yml logs --tail=100 app
 ```
 
-La primera compilación puede tardar varios minutos. PostgreSQL crea las tablas en el volumen nuevo; Spring aplica el esquema, valida las entidades y carga `src/main/resources/db/dml.sql`. El acceso inicial es `admin` / `admin123`; cámbielo después de iniciar sesión.
+La primera compilación puede tardar varios minutos. PostgreSQL crea las tablas en el volumen nuevo; Spring aplica el esquema, valida las entidades y carga `src/main/resources/db/dml.sql`. El acceso inicial es `admin` / `admin123`; cámbielo después de iniciar sesión. Acceda en `http://IP_DEL_SERVIDOR:8081`.
 
 ## 5. Detener servicios
 
