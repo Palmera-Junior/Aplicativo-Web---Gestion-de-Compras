@@ -286,7 +286,8 @@
                                     <tr th:each="usuario : ${usuariosPage.content}" th:data-id="${usuario.idUsuario}"
                                         th:data-cedula="${usuario.cedula}" th:data-nombre="${usuario.nombre}"
                                         th:data-apellido="${usuario.apellido}" th:data-cargo="${usuario.cargo}"
-                                        th:data-nombre-usuario="${usuario.nombreUsuario}" th:data-rol="${usuario.rol.idRol}"
+                                        th:data-nombre-usuario="${usuario.nombreUsuario}" th:data-email="${usuario.email}"
+                                        th:data-rol="${usuario.rol.idRol}"
                                         th:data-sede-id="${usuario.sede != null ? usuario.sede.idSede : ''}">
                                         <td class="mono" th:text="${usuario.cedula}"></td>
                                         <td th:text="${usuario.nombre + ' ' + usuario.apellido}"></td>

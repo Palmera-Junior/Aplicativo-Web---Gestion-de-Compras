@@ -317,6 +317,7 @@ function editEntity(entity, element) {
         document.getElementById('apellido').value = row.dataset.apellido || '';
         document.getElementById('cargo').value = row.dataset.cargo || '';
         document.getElementById('nombreUsuario').value = row.dataset.nombreUsuario || '';
+        document.getElementById('email').value = row.dataset.email || '';
         document.getElementById('rol').value = row.dataset.rol || '';
         document.getElementById('sedeUsuario').value = row.dataset.sedeId || '';
         document.getElementById('contrasena').required = false;
