@@ -8,6 +8,8 @@ services:
     POSTGRES_PASSWORD: "${DB_PASSWORD:?DB_PASSWORD es obligatorio}"
    volumes:
      - pgdata:/var/lib/postgresql/data
+   ports:
+     - "5433:5432"
    networks:
      - internal
    healthcheck:
