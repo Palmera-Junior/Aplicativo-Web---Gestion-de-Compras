@@ -38,6 +38,22 @@
                 </a>
             </div>
 
+            <div class="sidebar-section">
+                <p class="sidebar-label">Recursos Humanos</p>
+                <a th:href="@{/recursos-humanos/dashboard}" class="sidebar-link js-page-transition"
+                    aria-label="Dashboard RRHH" title="Dashboard RRHH"
+                    th:classappend="${vista == 'rrhh-dashboard'} ? ' is-current' : ''"
+                    th:attr="aria-current=${vista == 'rrhh-dashboard'} ? 'page' : null">
+                    <span class="material-symbols" aria-hidden="true">dashboard</span><span>Dashboard RRHH</span>
+                </a>
+                <a th:href="@{/recursos-humanos/principal}" class="sidebar-link js-page-transition"
+                    aria-label="Principal" title="Principal"
+                    th:classappend="${vista == 'rrhh-principal'} ? ' is-current' : ''"
+                    th:attr="aria-current=${vista == 'rrhh-principal'} ? 'page' : null">
+                    <span class="material-symbols" aria-hidden="true">groups</span><span>Principal</span>
+                </a>
+            </div>
+
             <div class="sidebar-section sidebar-system">
                 <p class="sidebar-label">Sistema</p>
                 <div class="sidebar-system-group"

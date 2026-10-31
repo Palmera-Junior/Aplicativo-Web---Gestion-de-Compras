@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard RRHH | GestiÃ³n de Compras</title>
+    <link rel="stylesheet" th:href="@{/css/compras.css}">
+    <link rel="stylesheet" th:href="@{/css/navigation.css}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap">
+</head>
+<body>
+    <header th:replace="~{fragments/encabezado :: administracion}"></header>
+    <div th:replace="~{fragments/navegacion :: principal('rrhh-dashboard')}"></div>
+    <main class="dashboard-container">
+        <h1>VISTA DASHBOARD</h1>
+    </main>
+</body>
+</html>
