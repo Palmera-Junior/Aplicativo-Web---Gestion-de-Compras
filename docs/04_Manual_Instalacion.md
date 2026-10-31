@@ -62,14 +62,7 @@ docker compose up --build
 
 La aplicación queda disponible en `http://localhost:8081`. PostgreSQL no publica un puerto en el host; solo es accesible desde la red interna de Docker.
 
-En un volumen nuevo, PostgreSQL ejecuta automáticamente `docker/init-db/01-create-schema.sql` y `docker/init-db/DDL.sql`. Si necesita reinicializar un volumen anterior con los schemas nuevos, detenga los servicios y elimine el volumen antes de arrancar:
-
-```powershell
-docker compose down -v
-docker compose up --build
-```
-
-La eliminación del volumen es destructiva: borra todos los datos PostgreSQL asociados a ese Compose. Este proyecto no migra tablas de `dep_compras`; utilice este reinicio solo cuando haya confirmado que los datos anteriores pueden descartarse.
+En una base vacía, al iniciar la aplicación Flyway ejecuta las migraciones versionadas en `src/main/resources/db/migration/`. Para una base existente sin historial Flyway, se crea automáticamente un baseline en V1 y se omite esa migración; esto solo es correcto si la base ya contiene el esquema actual. Haga un respaldo y verifique las tablas antes del primer arranque con esta versión. No elimine el volumen para instalar Flyway si necesita conservar los datos.
 
 El servicio espera que estén definidos `MICROSOFT_CLIENT_ID`, `MICROSOFT_CLIENT_SECRET` y `MICROSOFT_TENANT_ID`.
 
@@ -112,7 +105,7 @@ sudo docker compose -f docker-compose.no-oauth2.yml ps
 sudo docker compose -f docker-compose.no-oauth2.yml logs --tail=100 app
 ```
 
-La primera compilación puede tardar varios minutos. PostgreSQL crea las tablas en el volumen nuevo; Spring aplica el esquema, valida las entidades y carga `src/main/resources/db/dml.sql`. El acceso inicial es `admin` / `admin123`; cámbielo después de iniciar sesión. Acceda en `http://IP_DEL_SERVIDOR:8081`.
+La primera compilación puede tardar varios minutos. Flyway crea los schemas, tablas y datos semilla, y luego Hibernate valida las entidades. El acceso inicial en una base nueva es `admin` / `admin123`; cámbielo después de iniciar sesión. Acceda en `http://IP_DEL_SERVIDOR:8081`.
 
 ## 5. Detener servicios
 
@@ -130,24 +123,19 @@ La eliminación de volúmenes es destructiva.
 
 ## 6. Ejecución local
 
-Requiere Java 17, PostgreSQL activo en `localhost:5432` y una base de datos vacía ya creada. Configure `DB_USER` y `DB_PASSWORD` en `.env` con credenciales válidas para PostgreSQL y ejecute la aplicación normalmente:
+Requiere Java 17, PostgreSQL activo en `localhost:5432` y una base de datos creada. Configure `DB_USER` y `DB_PASSWORD` en `.env` con credenciales válidas para PostgreSQL y ejecute la aplicación normalmente:
 
 ```powershell
 .\mvnw.cmd spring-boot:run
 ```
 
-Al iniciar, Spring crea los schemas y tablas usando los scripts de `docker/init-db/`, carga los datos iniciales desde `src/main/resources/db/dml.sql` y luego valida el modelo JPA. La aplicación escucha normalmente en el puerto `8081`.
+Al iniciar, Flyway aplica las migraciones pendientes y luego Hibernate valida el modelo JPA. La aplicación escucha normalmente en el puerto `8081`.
 
 ## 7. Base de datos
 
-Los scripts de inicialización están en `docker/init-db/`:
+Las migraciones están en `src/main/resources/db/migration/`. `V1__esquema_inicial_y_datos_semilla.sql` crea los schemas `core`, `compras` y `polizas`, sus tablas, relaciones, índices y restricciones, y carga los catálogos, roles, permisos, sede inicial y usuario `admin`. Flyway las ejecuta una sola vez y registra su versión en `core.flyway_schema_history`; cada cambio futuro debe agregarse en una nueva migración, sin modificar las ya aplicadas.
 
-- `01-create-schema.sql`: creación de los schemas `core`, `compras` y `polizas`.
-- `DDL.sql`: tablas, relaciones, índices y restricciones, con claves foráneas entre schemas.
-
-`src/main/resources/db/dml.sql` carga los catálogos, roles, permisos, sede inicial y usuario `admin` al iniciar. Sus inserciones son idempotentes, así que los reinicios no duplican esos registros.
-
-`spring.jpa.hibernate.ddl-auto=validate` comprueba que las entidades coincidan con el DDL. Los scripts de esquema se ejecutan antes de esta validación y están preparados para repetirse en cada inicio. Para tener una base realmente vacía, use una base PostgreSQL nueva; el arranque no borra tablas ni registros existentes.
+`spring.jpa.hibernate.ddl-auto=validate` comprueba que las entidades coincidan con el esquema migrado. La configuración de baseline marca una base existente no vacía como V1 y omite el SQL de V1; antes de usarla, confirme que ya tiene el esquema completo actual. No migra tablas desde `dep_compras`.
 
 ## 8. Verificación de instalación
 

@@ -63,6 +63,18 @@
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
 		</dependency>
 
+		<!-- Flyway versiona el esquema PostgreSQL y aplica las migraciones al iniciar. -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-flyway</artifactId>
+		</dependency>
+
+		<!-- Soporte de Flyway para PostgreSQL, separado del motor principal. -->
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-database-postgresql</artifactId>
+		</dependency>
+
 		<!-- Spring Web: controladores REST, MVC y servidor web embebido. -->
 		<dependency>
     		<groupId>org.springframework.boot</groupId>
@@ -132,19 +144,6 @@
 	</dependencies>
 
 	<build>
-		<resources>
-			<resource>
-				<directory>src/main/resources</directory>
-			</resource>
-			<resource>
-				<directory>docker/init-db</directory>
-				<targetPath>db-init</targetPath>
-				<includes>
-					<include>01-create-schema.sql</include>
-					<include>DDL.sql</include>
-				</includes>
-			</resource>
-		</resources>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>

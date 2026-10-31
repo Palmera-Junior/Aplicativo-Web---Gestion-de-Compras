@@ -27,14 +27,7 @@ Aplicación web para administrar órdenes de compra, proveedores, productos, sed
    docker compose -f docker-compose.no-oauth2.yml up --build
    ```
 
-La base nueva se inicializa con los schemas `core`, `compras` y `polizas`. Si se está reutilizando un volumen PostgreSQL anterior, elimínelo antes del primer arranque para que Docker vuelva a ejecutar los scripts iniciales:
-
-```powershell
-docker compose down -v
-```
-
-Este comando elimina **todos** los datos del volumen PostgreSQL. No lo ejecute si necesita conservar datos.
-Si se inició con `docker-compose.no-oauth2.yml`, use en su lugar `docker compose -f docker-compose.no-oauth2.yml down -v`.
+Flyway aplica las migraciones en orden al iniciar la aplicación. En una base vacía, `V1` crea los schemas, las tablas y los datos semilla. En una base existente sin historial Flyway, la configuración registra un baseline en V1 y asume que el esquema actual ya está instalado; revise esa base y haga un respaldo antes del primer arranque.
 
 Sin OAuth2 o con OAuth2, la aplicación queda disponible en `http://localhost:8081`. Para detener los servicios sin borrar datos:
 
@@ -52,7 +45,7 @@ Requiere Java 17 y una base PostgreSQL vacía ya creada. Configure las credencia
 .\mvnw.cmd spring-boot:run
 ```
 
-Al arrancar, Spring aplica los schemas y tablas definidos en `docker/init-db/`, carga los datos iniciales de `src/main/resources/db/dml.sql` y valida las entidades.
+Al arrancar, Flyway aplica las migraciones de `src/main/resources/db/migration/` y Hibernate valida las entidades.
 
 ## Correo con Amazon SES
 
@@ -73,11 +66,11 @@ No comparta `.env`; está excluido del control de versiones. La aplicación inic
 - `src/main/resources/templates`: vistas Thymeleaf y plantilla de correo.
 - `src/main/resources/static/css`: hojas de estilos.
 - `src/main/resources/static/js`: lógica del navegador.
-- `docker/init-db`: creación del esquema y DDL inicial de PostgreSQL.
+- `src/main/resources/db/migration`: migraciones versionadas de PostgreSQL (por ejemplo, `V1__esquema_inicial_y_datos_semilla.sql`).
 - `nginx`: configuración del proxy inverso.
 
 ## Estado de pruebas y consideraciones
 
 La suite actual valida la carga del contexto Spring mediante `contextLoads()`. Antes de producción se recomienda ampliar las pruebas para autorización por rol y sede, transiciones de estado, contratos HTTP, cargas de evidencia y envío/reintento de correos.
 
-La aplicación valida el esquema al iniciar (`spring.jpa.hibernate.ddl-auto=validate`); no mueve tablas ni convierte bases existentes. Esta configuración está preparada para una instalación limpia con los schemas `core`, `compras` y `polizas`. No hay migración automática desde el schema anterior `dep_compras`.
+La aplicación valida el esquema al iniciar (`spring.jpa.hibernate.ddl-auto=validate`). Las instalaciones existentes con los schemas actuales se registran como baseline V1; esto no transforma ni repara un esquema distinto. No hay migración automática desde el schema anterior `dep_compras`.

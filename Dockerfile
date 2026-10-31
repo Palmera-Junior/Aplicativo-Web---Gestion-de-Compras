@@ -6,7 +6,6 @@ COPY pom.xml ./
 RUN mvn -B -q dependency:go-offline
 
 COPY src ./src
-COPY docker/init-db ./docker/init-db
 RUN mvn -B -DskipTests clean package
 
 # ---------- Etapa 2: runtime ----------

@@ -69,7 +69,7 @@ Las claves foráneas entre módulos apuntan a las tablas compartidas de `core`; 
 
 Hay restricciones de unicidad para identificadores de negocio y relaciones con cascada para detalles y presentaciones. Las autoridades `PERM_<CODIGO>` se calculan con permisos del rol y excepciones individuales, que prevalecen sobre los valores del rol. La auditoría de correo conserva destinatario, estado, tipo, intentos, fechas y último error.
 
-> `spring.jpa.hibernate.ddl-auto=validate` verifica que los tres schemas y sus tablas estén creados. La aplicación no modifica ni migra bases existentes.
+Flyway ejecuta las migraciones ubicadas en `src/main/resources/db/migration/` antes de que Hibernate valide las entidades con `spring.jpa.hibernate.ddl-auto=validate`. La configuración usa `core`, `compras` y `polizas`, y guarda en `core.flyway_schema_history` el estado aplicado. Una base existente sin historial Flyway se registra en baseline V1; esto presupone que su esquema ya coincide con el contenido de V1 y no transforma esquemas antiguos o incompletos.
 
 ## 5. Flujo Transactional Outbox
 
