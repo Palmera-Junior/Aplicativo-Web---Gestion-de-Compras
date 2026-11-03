@@ -17,7 +17,7 @@ Navegador: Thymeleaf + JavaScript + CSS
                   |
       Spring Data JPA / Hibernate
                   |
-       PostgreSQL: schemas core, compras y polizas
+       PostgreSQL: schemas core, compras, polizas y rrhh
 ```
 
 OpenPDF genera documentos en memoria. Nginx funciona como proxy inverso hacia el puerto 8081 de la aplicación. Docker Compose separa aplicación, PostgreSQL y redes interna/externa.
@@ -61,15 +61,22 @@ La persistencia se divide por dominio:
 
 | Schema | Tablas |
 |---|---|
-| `core` | `sede`, `centro_costo`, `proveedor`, `proveedor_sede`, `usuario`, `usuario_permiso`, `rol`, `rol_permiso`, `permiso`, `password_reset_token`, `password_reset_rate_limit`. |
+| `core` | `sede`, `centro_costo`, `proveedor`, `proveedor_sede`, `empleado`, `usuario`, `usuario_permiso`, `rol`, `rol_permiso`, `permiso`, `password_reset_token`, `password_reset_rate_limit`. |
 | `compras` | `orden_compra`, `detalle_compra`, `auditoria_envio_correo`, `categoria`, `producto`, `presentacion_producto`. |
 | `polizas` | `poliza`, `poliza_sede_aprobacion`, `poliza_renovacion`, `auditoria_envio_correo_poliza`, `detalle_prima`, `poliza_adjunto`. |
+| `rrhh` | `area`, `cargo`, `nivel_educativo`, `tipo_contrato`, `tipo_pago`, `entidad_bancaria`, `eps`, `afp`, `arl`, `caja_compensacion`, `contrato_empleado`, `tipo_adjunto_empleado`, `empleado_adjunto_requerido`, `empleado_adjunto`. |
 
-Las claves foráneas entre módulos apuntan a las tablas compartidas de `core`; las relaciones de permisos por rol y proveedor por sede también residen en `core`. `usuario_permiso` guarda excepciones individuales de concesión o denegación respecto a los permisos heredados del rol.
+`core.empleado` es la fuente de verdad para identidad y ficha general, con catálogos de área, cargo y nivel educativo en `rrhh`, y centro de costo en `core`. `core.usuario.id_empleado` es nullable y único: permite empleados sin cuenta y cuentas técnicas sin empleado, y asocia como máximo una cuenta por empleado. La migración V3 mueve a `core.empleado` la cédula, nombre, apellido y cargo de las cuentas existentes antes de retirar esos campos de `core.usuario`. Los códigos permitidos para tipo de documento son `CEDULA_CIUDADANIA`, `CEDULA_EXTRANJERIA`, `TARJETA_IDENTIDAD`, `REGISTRO_CIVIL`, `PASAPORTE` y `PERMISO_PROTECCION_TEMPORAL`; grupo sanguíneo acepta `A`, `B`, `AB` u `O`, y RH `POSITIVO` o `NEGATIVO`. Se validan mediante restricciones CHECK.
+
+`rrhh.contrato_empleado` mantiene el historial contractual por empleado, con fechas de ingreso/fin, salario básico, tipo de contrato/pago, banco y cuenta, afiliaciones y tarifa porcentual ARL. Las afiliaciones EPS, AFP, ARL y caja son editables mientras el contrato está en borrador, pero obligatorias para marcarlo vigente. Solo puede existir un contrato vigente por empleado. Cada catálogo RRHH se administra independientemente y comienza vacío para que la empresa defina sus valores. Los campos opcionales de auxilio de transporte, auxilio de rodamiento y bonificación no salarial tienen un indicador de aplicación y un valor no negativo requerido al activarlos; condiciones especiales funciona igual con texto no vacío. Si se desactiva cada indicador, su valor/texto debe quedar nulo. La duración se obtiene de las fechas, no se almacena duplicada.
+
+`rrhh.tipo_adjunto_empleado` cataloga los documentos de ingreso, vehículo, afiliaciones, evaluaciones y retiro; `rrhh.empleado_adjunto_requerido` guarda la checklist configurable por empleado. Una fila por empleado y tipo significa que ese documento se exige a esa persona. `rrhh.empleado_adjunto` guarda una fila por archivo, su contenido PostgreSQL `BYTEA`, nombre original, MIME, tamaño y fecha de carga. El archivo siempre pertenece a un empleado y puede asociarse opcionalmente a un contrato de ese mismo empleado. Las versiones anteriores se conservan marcándolas no vigentes. El catálogo indica qué tipos admiten varios archivos vigentes y un trigger impide excederlo para los demás. La checklist se considera cumplida cuando existe al menos un adjunto vigente de cada tipo requerido; el cálculo y la validación del flujo corresponden al servicio RRHH.
+
+Las tablas de negocio de `compras` y `polizas` referencian las entidades compartidas de `core`, no tablas entre módulos. `core.empleado` referencia los catálogos del dominio RRHH según el modelo acordado. Las relaciones de permisos por rol y proveedor por sede también residen en `core`. `usuario_permiso` guarda excepciones individuales de concesión o denegación respecto a los permisos heredados del rol.
 
 Hay restricciones de unicidad para identificadores de negocio y relaciones con cascada para detalles y presentaciones. Las autoridades `PERM_<CODIGO>` se calculan con permisos del rol y excepciones individuales, que prevalecen sobre los valores del rol. La auditoría de correo conserva destinatario, estado, tipo, intentos, fechas y último error.
 
-Flyway ejecuta las migraciones ubicadas en `src/main/resources/db/migration/` antes de que Hibernate valide las entidades con `spring.jpa.hibernate.ddl-auto=validate`. La configuración usa `core`, `compras` y `polizas`, y guarda en `core.flyway_schema_history` el estado aplicado. Una base existente sin historial Flyway se registra en baseline V1; esto presupone que su esquema ya coincide con el contenido de V1 y no transforma esquemas antiguos o incompletos.
+Flyway ejecuta las migraciones ubicadas en `src/main/resources/db/migration/` antes de que Hibernate valide las entidades con `spring.jpa.hibernate.ddl-auto=validate`. La configuración administra `core`, `compras`, `polizas` y `rrhh`, y guarda en `core.flyway_schema_history` el estado aplicado. Una base existente sin historial Flyway se registra en baseline V1; esto presupone que su esquema ya coincide con el contenido de V1 y no transforma esquemas antiguos o incompletos.
 
 ## 5. Flujo Transactional Outbox
 

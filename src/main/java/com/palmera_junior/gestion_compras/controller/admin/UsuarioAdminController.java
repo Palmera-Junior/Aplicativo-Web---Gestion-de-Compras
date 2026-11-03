@@ -19,6 +19,7 @@ import java.util.List;
 
 import com.palmera_junior.gestion_compras.entity.Permiso;
 import com.palmera_junior.gestion_compras.entity.Usuario;
+import com.palmera_junior.gestion_compras.repository.EmpleadoRepository;
 import com.palmera_junior.gestion_compras.repository.PermisoRepository;
 import com.palmera_junior.gestion_compras.repository.RolRepository;
 import com.palmera_junior.gestion_compras.service.usuario.IUsuarioService;
@@ -34,15 +35,17 @@ public class UsuarioAdminController {
     private final IUsuarioService usuarioService;
     private final PermisoRepository permisoRepository;
     private final RolRepository rolRepository;
+    private final EmpleadoRepository empleadoRepository;
 
     /**
      * Constructor para inyección de dependencias del servicio de usuarios.
      */
     public UsuarioAdminController(IUsuarioService usuarioService, PermisoRepository permisoRepository,
-            RolRepository rolRepository) {
+            RolRepository rolRepository, EmpleadoRepository empleadoRepository) {
         this.usuarioService = usuarioService;
         this.permisoRepository = permisoRepository;
         this.rolRepository = rolRepository;
+        this.empleadoRepository = empleadoRepository;
     }
 
     @GetMapping("/admin/catalogos/permisos")
@@ -182,6 +185,7 @@ public class UsuarioAdminController {
             @RequestParam(defaultValue = "10") int size) {
         Page<Usuario> usuariosPage = usuarioService.paginar(pageUsuarios, size);
         model.addAttribute("usuariosPage", usuariosPage);
+        model.addAttribute("empleados", empleadoRepository.findAllByOrderByPrimerApellidoAscPrimerNombreAsc());
         model.addAttribute("pageUsuarios", pageUsuarios);
         model.addAttribute("size", size);
         return "catalogos :: usuariosFragment";
@@ -189,8 +193,7 @@ public class UsuarioAdminController {
 
     /**
      * Qué hace:
-     * Crea un nuevo usuario o actualiza sus datos de perfil (cédula, nombre, apellido, cargo, nombreUsuario,
-     * email, rol, sede y contraseña encriptada con BCrypt).
+     * Crea un usuario asociado a un empleado o actualiza sus credenciales, correo, rol y sede.
      * 
      * A dónde apunta:
      * - Ruta HTTP: POST /admin/usuarios
@@ -199,10 +202,7 @@ public class UsuarioAdminController {
      * - Redirección: "redirect:/admin" con mensajes flash de éxito o error.
      * 
      * @param idUsuario ID del usuario si es actualización; null si es creación.
-     * @param cedula Número de identificación / cédula.
-     * @param nombre Nombres del usuario.
-     * @param apellido Apellidos del usuario.
-     * @param cargo Cargo o función en la empresa.
+     * @param empleadoId ID del empleado asociado a la cuenta.
      * @param nombreUsuario Nombre de usuario único para login.
      * @param contrasena Contraseña en texto plano (se encripta si se proporciona).
      * @param email Correo electrónico institucional.
@@ -214,10 +214,7 @@ public class UsuarioAdminController {
     @PostMapping("/admin/usuarios")
     @PreAuthorize("hasRole('SUPERADMINISTRADOR')")
     public String guardarUsuario(@RequestParam(required = false) Integer idUsuario,
-            @RequestParam String cedula,
-            @RequestParam String nombre,
-            @RequestParam String apellido,
-            @RequestParam(required = false) String cargo,
+            @RequestParam Integer empleadoId,
             @RequestParam String nombreUsuario,
             @RequestParam(required = false) String contrasena,
             @RequestParam String email,
@@ -226,7 +223,7 @@ public class UsuarioAdminController {
             RedirectAttributes redirectAttributes) {
 
         try {
-            usuarioService.guardarUsuario(idUsuario, cedula, nombre, apellido, cargo, nombreUsuario, contrasena,
+            usuarioService.guardarUsuario(idUsuario, empleadoId, nombreUsuario, contrasena,
                     email, rolId, sedeId);
             redirectAttributes.addAttribute("success",
                     idUsuario == null ? "Usuario creado correctamente." : "Usuario actualizado correctamente.");

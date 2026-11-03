@@ -187,20 +187,13 @@
                         <input type="hidden" id="idUsuario" name="idUsuario">
                         <div class="form-grid-2">
                             <div class="form-group">
-                                <label>Cédula</label>
-                                <input type="text" id="cedula" class="input-control" name="cedula" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Nombre</label>
-                                <input type="text" id="nombreUsuarioField" class="input-control" name="nombre" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Apellido</label>
-                                <input type="text" id="apellido" class="input-control" name="apellido" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Cargo</label>
-                                <input type="text" id="cargo" class="input-control" name="cargo" required>
+                                <label for="empleadoUsuario">Empleado</label>
+                                <select id="empleadoUsuario" class="input-control" name="empleadoId" required>
+                                    <option value="" disabled selected>Seleccionar empleado</option>
+                                    <option th:each="empleado : ${empleados}" th:value="${empleado.idEmpleado}"
+                                        th:text="${empleado.numeroDocumento + ' - ' + empleado.primerNombre + ' ' + empleado.primerApellido}">
+                                    </option>
+                                </select>
                             </div>
                             <div class="form-group">
                                 <label>Usuario</label>
@@ -284,8 +277,7 @@
                                 </thead>
                                 <tbody>
                                     <tr th:each="usuario : ${usuariosPage.content}" th:data-id="${usuario.idUsuario}"
-                                        th:data-cedula="${usuario.cedula}" th:data-nombre="${usuario.nombre}"
-                                        th:data-apellido="${usuario.apellido}" th:data-cargo="${usuario.cargo}"
+                                        th:data-empleado-id="${usuario.empleado != null ? usuario.empleado.idEmpleado : ''}"
                                         th:data-nombre-usuario="${usuario.nombreUsuario}" th:data-email="${usuario.email}"
                                         th:data-rol="${usuario.rol.idRol}"
                                         th:data-sede-id="${usuario.sede != null ? usuario.sede.idSede : ''}">

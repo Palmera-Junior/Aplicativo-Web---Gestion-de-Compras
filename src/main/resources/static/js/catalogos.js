@@ -218,7 +218,7 @@ function resetForm(entity) {
             ['idCentroCosto', ''], ['codigoCentro', ''], ['nombreCentro', ''], ['sedeCentro', ''], ['direccionCentro', '']
         ],
         usuario: [
-            ['idUsuario', ''], ['cedula', ''], ['nombreUsuarioField', ''], ['apellido', ''], ['cargo', ''],
+            ['idUsuario', ''], ['empleadoUsuario', ''],
             ['nombreUsuario', ''], ['contrasena', ''], ['rol', ''], ['sedeUsuario', '']
         ],
         proveedor: [
@@ -312,10 +312,7 @@ function editEntity(entity, element) {
         setButtonLabel('centroSubmitButton', 'save', 'Guardar cambios');
     } else if (entity === 'usuario') {
         document.getElementById('idUsuario').value = row.dataset.id || '';
-        document.getElementById('cedula').value = row.dataset.cedula || '';
-        document.getElementById('nombreUsuarioField').value = row.dataset.nombre || '';
-        document.getElementById('apellido').value = row.dataset.apellido || '';
-        document.getElementById('cargo').value = row.dataset.cargo || '';
+        document.getElementById('empleadoUsuario').value = row.dataset.empleadoId || '';
         document.getElementById('nombreUsuario').value = row.dataset.nombreUsuario || '';
         document.getElementById('email').value = row.dataset.email || '';
         document.getElementById('rol').value = row.dataset.rol || '';

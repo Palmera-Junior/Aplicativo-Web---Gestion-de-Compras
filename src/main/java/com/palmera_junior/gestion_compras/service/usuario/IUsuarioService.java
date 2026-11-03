@@ -69,12 +69,8 @@ public interface IUsuarioService {
      */
     String obtenerVistaLogin(Authentication authentication);
 
-    /**
-     * Qué hace: Crea o actualiza un usuario con contraseña hasheada en BCrypt y validación de unicidad de cédula, email y username.
-     * A dónde apunta: Tablas `usuario`, `sede`.
-     */
-    Usuario guardarUsuario(Integer idUsuario, String cedula, String nombre, String apellido, String cargo,
-            String nombreUsuario, String contrasena, String email, Integer rolId, Integer sedeId);
+    Usuario guardarUsuario(Integer idUsuario, Integer empleadoId, String nombreUsuario,
+            String contrasena, String email, Integer rolId, Integer sedeId);
 
     /**
      * Reemplaza los permisos directos asignados a un usuario.

@@ -1,6 +1,7 @@
 package com.palmera_junior.gestion_compras.entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -25,26 +26,14 @@ public class Usuario {
     @Column(name = "id_usuario")
     private Integer idUsuario;
 
-    @Column(nullable = false, length = 20, unique = true)
-    private String cedula;
-
-    @Column(nullable = false, length = 100)
-    private String nombre;
-
-    @Column(nullable = false, length = 100)
-    private String apellido;
-
     @Column(name = "email", length = 100, unique = true)
     private String email;
 
-    @Column (length = 100)
+    @Column(length = 100)
     private String proveedor;
 
     @Column(length = 100)
     private String proveedorId;
-
-    @Column(length = 100)
-    private String cargo;
 
     @Column(name = "nombre_usuario" ,nullable = false, length = 50, unique = true)
     private String nombreUsuario;
@@ -66,6 +55,45 @@ public class Usuario {
     @JoinColumn(name = "id_sede", nullable = false)
     @ToString.Exclude
     private Sede sede;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_empleado", unique = true)
+    @JsonIgnore
+    @ToString.Exclude
+    private Empleado empleado;
+
+    @Transient
+    public String getNombre() {
+        return empleado == null
+                ? nombreUsuario
+                : unirNombres(empleado.getPrimerNombre(), empleado.getSegundoNombre());
+    }
+
+    @Transient
+    public String getApellido() {
+        return empleado == null
+                ? ""
+                : unirNombres(empleado.getPrimerApellido(), empleado.getSegundoApellido());
+    }
+
+    @Transient
+    public String getCedula() {
+        return empleado == null ? null : empleado.getNumeroDocumento();
+    }
+
+    @Transient
+    public String getCargo() {
+        return empleado == null || empleado.getCargo() == null
+                ? null
+                : empleado.getCargo().getNombre();
+    }
+
+    private static String unirNombres(String primero, String segundo) {
+        if (primero == null || primero.isBlank()) {
+            return segundo == null ? "" : segundo;
+        }
+        return segundo == null || segundo.isBlank() ? primero : primero + " " + segundo;
+    }
 
     public Set<Permiso> getPermisos() {
         Set<Permiso> permisosEfectivos = new LinkedHashSet<>();
