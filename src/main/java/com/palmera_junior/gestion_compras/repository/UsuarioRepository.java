@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.repository.query.Param;
@@ -20,12 +21,20 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
      * Qué hace: Busca un usuario por su nombre de usuario de inicio de sesión.
      * A dónde apunta: Tabla `usuario`.
      */
+    @EntityGraph(attributePaths = {
+            "rol", "rol.permisos", "permisosDirectos", "permisosDirectos.permiso",
+            "empleado", "empleado.cargo"
+    })
     Optional<Usuario> findByNombreUsuario(String nombreUsuario);
 
     /**
      * Qué hace: Carga un usuario por su correo electrónico uniendo tempranamente (JOIN FETCH) su sede.
      * A dónde apunta: Tablas `usuario` y `sede`.
      */
+    @EntityGraph(attributePaths = {
+            "rol", "rol.permisos", "permisosDirectos", "permisosDirectos.permiso",
+            "empleado", "empleado.cargo"
+    })
     @Query("""
                 SELECT u
                 FROM Usuario u
@@ -64,17 +73,9 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
      */
     boolean existsByNombreUsuario(String nombreUsuario);
 
-    /**
-     * Qué hace: Verifica si ya existe un usuario con la cédula dada.
-     * A dónde apunta: Tabla `usuario`.
-     */
-    boolean existsByCedula(String cedula);
+    boolean existsByEmpleado_IdEmpleado(Integer idEmpleado);
 
-    /**
-     * Qué hace: Busca un usuario por su número de cédula.
-     * A dónde apunta: Tabla `usuario`.
-     */
-    Optional<Usuario> findByCedula(String cedula);
+    boolean existsByEmpleado_IdEmpleadoAndIdUsuarioNot(Integer idEmpleado, Integer idUsuario);
 
     boolean existsByRolIdRol(Integer idRol);
 }

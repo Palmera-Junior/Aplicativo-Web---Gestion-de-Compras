@@ -20,8 +20,10 @@ import org.springframework.util.StringUtils;
 import com.palmera_junior.gestion_compras.entity.Rol;
 import com.palmera_junior.gestion_compras.entity.Permiso;
 import com.palmera_junior.gestion_compras.entity.PermisoUsuario;
+import com.palmera_junior.gestion_compras.entity.Empleado;
 import com.palmera_junior.gestion_compras.entity.Sede;
 import com.palmera_junior.gestion_compras.entity.Usuario;
+import com.palmera_junior.gestion_compras.repository.EmpleadoRepository;
 import com.palmera_junior.gestion_compras.repository.SedeRepository;
 import com.palmera_junior.gestion_compras.repository.UsuarioRepository;
 import com.palmera_junior.gestion_compras.repository.RolRepository;
@@ -39,6 +41,7 @@ import com.palmera_junior.gestion_compras.security.UsuarioPrincipal;
 public class UsuarioService implements IUsuarioService {
 
    private final UsuarioRepository usuarioRepository;
+   private final EmpleadoRepository empleadoRepository;
    private final SedeRepository sedeRepository;
    private final PasswordEncoder passwordEncoder;
    private final RolRepository rolRepository;
@@ -47,9 +50,11 @@ public class UsuarioService implements IUsuarioService {
    /**
     * Constructor con inyección de repositorios y codificador de contraseñas.
     */
-   public UsuarioService(UsuarioRepository usuarioRepository, SedeRepository sedeRepository,
-           PasswordEncoder passwordEncoder, RolRepository rolRepository, PermisoRepository permisoRepository) {
+   public UsuarioService(UsuarioRepository usuarioRepository, EmpleadoRepository empleadoRepository,
+           SedeRepository sedeRepository, PasswordEncoder passwordEncoder, RolRepository rolRepository,
+           PermisoRepository permisoRepository) {
        this.usuarioRepository = usuarioRepository;
+       this.empleadoRepository = empleadoRepository;
        this.sedeRepository = sedeRepository;
        this.passwordEncoder = passwordEncoder;
        this.rolRepository = rolRepository;
@@ -182,24 +187,20 @@ public class UsuarioService implements IUsuarioService {
    }
 
    /**
-    * Qué hace: Crea o actualiza un usuario con cifrado BCrypt y chequeos de unicidad para cédula, usuario y correo.
-    * A dónde apunta: {@link UsuarioRepository}, {@link SedeRepository}, {@link PasswordEncoder}.
+    * Qué hace: Crea o actualiza un usuario vinculado a un empleado, validando unicidad de empleado, usuario y correo.
+    * A dónde apunta: {@link UsuarioRepository}, {@link EmpleadoRepository}, {@link SedeRepository}, {@link PasswordEncoder}.
     */
    @Override
    @Transactional
-   public Usuario guardarUsuario(Integer idUsuario, String cedula, String nombre, String apellido, String cargo,
-           String nombreUsuario, String contrasena, String email, Integer rolId, Integer sedeId) {
-       final String cedulaTrim = normalizar(cedula);
-       final String nombreTrim = normalizar(nombre);
-       final String apellidoTrim = normalizar(apellido);
+   public Usuario guardarUsuario(Integer idUsuario, Integer empleadoId, String nombreUsuario,
+           String contrasena, String email, Integer rolId, Integer sedeId) {
        final String nombreUsuarioTrim = normalizar(nombreUsuario);
        final String emailOriginal = normalizar(email);
        final String emailTrim = emailOriginal == null ? null : emailOriginal.toLowerCase(Locale.ROOT);
        final String contrasenaTrim = normalizar(contrasena);
 
-       if (!StringUtils.hasText(cedulaTrim) || !StringUtils.hasText(nombreTrim) || !StringUtils.hasText(apellidoTrim)
-               || !StringUtils.hasText(nombreUsuarioTrim) || !StringUtils.hasText(emailTrim) || sedeId == null
-               || rolId == null) {
+       if (empleadoId == null || !StringUtils.hasText(nombreUsuarioTrim)
+               || !StringUtils.hasText(emailTrim) || sedeId == null || rolId == null) {
            throw new IllegalArgumentException("Todos los campos del usuario son obligatorios, excepto la contraseña al editar.");
        }
        if (emailTrim.length() > 100 || !correoValido(emailTrim)) {
@@ -207,10 +208,12 @@ public class UsuarioService implements IUsuarioService {
        }
        Rol rol = rolRepository.findById(rolId)
                .orElseThrow(() -> new IllegalArgumentException("El rol seleccionado no es válido."));
+       Empleado empleado = empleadoRepository.findById(empleadoId)
+               .orElseThrow(() -> new IllegalArgumentException("El empleado seleccionado no es válido."));
 
        if (idUsuario == null) {
-           if (usuarioRepository.existsByCedula(cedulaTrim)) {
-               throw new IllegalArgumentException("Ya existe un usuario registrado con esa cédula.");
+           if (usuarioRepository.existsByEmpleado_IdEmpleado(empleadoId)) {
+               throw new IllegalArgumentException("El empleado seleccionado ya tiene una cuenta de usuario.");
            }
            if (usuarioRepository.existsByNombreUsuario(nombreUsuarioTrim)) {
                throw new IllegalArgumentException("El nombre de usuario ya está en uso.");
@@ -224,10 +227,7 @@ public class UsuarioService implements IUsuarioService {
            Sede sede = sedeRepository.findById(sedeId)
                    .orElseThrow(() -> new IllegalArgumentException("La sede seleccionada no es válida."));
            Usuario usuario = new Usuario();
-           usuario.setCedula(cedulaTrim);
-           usuario.setNombre(nombreTrim);
-           usuario.setApellido(apellidoTrim);
-           usuario.setCargo(cargo);
+           usuario.setEmpleado(empleado);
            usuario.setNombreUsuario(nombreUsuarioTrim);
            usuario.setEmail(emailTrim);
            usuario.setContraseña(passwordEncoder.encode(contrasenaTrim));
@@ -238,8 +238,8 @@ public class UsuarioService implements IUsuarioService {
 
        Usuario usuario = usuarioRepository.findById(idUsuario)
                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado para actualizar."));
-       if (usuarioRepository.findByCedula(cedulaTrim).filter(u -> !u.getIdUsuario().equals(idUsuario)).isPresent()) {
-           throw new IllegalArgumentException("Ya existe un usuario registrado con esa cédula.");
+       if (usuarioRepository.existsByEmpleado_IdEmpleadoAndIdUsuarioNot(empleadoId, idUsuario)) {
+           throw new IllegalArgumentException("El empleado seleccionado ya tiene otra cuenta de usuario.");
        }
        if (usuarioRepository.findByNombreUsuario(nombreUsuarioTrim).filter(u -> !u.getIdUsuario().equals(idUsuario)).isPresent()) {
            throw new IllegalArgumentException("El nombre de usuario ya está en uso.");
@@ -250,10 +250,7 @@ public class UsuarioService implements IUsuarioService {
 
        Sede sede = sedeRepository.findById(sedeId)
                .orElseThrow(() -> new IllegalArgumentException("La sede seleccionada no es válida."));
-       usuario.setCedula(cedulaTrim);
-       usuario.setNombre(nombreTrim);
-       usuario.setApellido(apellidoTrim);
-       usuario.setCargo(cargo);
+       usuario.setEmpleado(empleado);
        boolean cambioCredencial = !emailTrim.equalsIgnoreCase(usuario.getEmail())
                || StringUtils.hasText(contrasenaTrim);
        usuario.setEmail(emailTrim);

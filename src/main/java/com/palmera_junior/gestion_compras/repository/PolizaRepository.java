@@ -27,8 +27,23 @@ public interface PolizaRepository extends JpaRepository<Poliza, Integer>, JpaSpe
      * proxies perezosos una vez haya terminado la transacción del servicio.
      */
     @Override
-    @EntityGraph(attributePaths = { "proveedor", "sede", "usuario", "usuarioAprobacion", "usuarioActivacion", "usuarioAnulacion", "aprobacionesPorSede.sede", "aprobacionesPorSede.usuarioAprobacion" })
+    @EntityGraph(attributePaths = {
+            "proveedor", "sede",
+            "usuario", "usuario.empleado",
+            "usuarioAprobacion", "usuarioAprobacion.empleado",
+            "usuarioActivacion", "usuarioActivacion.empleado",
+            "usuarioAnulacion", "usuarioAnulacion.empleado",
+            "usuarioTerminacion", "usuarioTerminacion.empleado"
+    })
     Page<Poliza> findAll(Specification<Poliza> specification, Pageable pageable);
+
+    @Query("""
+            select p.idPoliza, adjunto.nombreOriginal
+            from Poliza p join p.adjuntos adjunto
+            where p.idPoliza in :ids
+              and adjunto.tipoAdjunto = com.palmera_junior.gestion_compras.entity.TipoAdjuntoPoliza.CONTRATO
+            """)
+    List<Object[]> findNombresContratoPorPolizaIds(@Param("ids") List<Integer> ids);
 
     Optional<Poliza> findByNumeroContrato(String numeroContrato);
 
@@ -51,7 +66,15 @@ public interface PolizaRepository extends JpaRepository<Poliza, Integer>, JpaSpe
             @Param("idSede") Integer idSede,
             @Param("estadoAprobacion") EstadoAprobacionSede estadoAprobacion);
 
-    @EntityGraph(attributePaths = { "proveedor", "sede", "usuario", "usuarioAprobacion", "detallesPrima" })
+    @EntityGraph(attributePaths = {
+            "proveedor", "sede",
+            "usuario", "usuario.empleado",
+            "usuarioAprobacion", "usuarioAprobacion.empleado",
+            "usuarioActivacion", "usuarioActivacion.empleado",
+            "usuarioAnulacion", "usuarioAnulacion.empleado",
+            "usuarioTerminacion", "usuarioTerminacion.empleado",
+            "detallesPrima"
+    })
     @Query("select p from Poliza p where p.idPoliza = :idPoliza")
     Optional<Poliza> findWithRelationsByIdPoliza(@Param("idPoliza") Integer idPoliza);
 
@@ -60,7 +83,12 @@ public interface PolizaRepository extends JpaRepository<Poliza, Integer>, JpaSpe
      * No se combina con detallesPrima porque ambas asociaciones son listas y Hibernate
      * no permite cargar dos colecciones tipo bag con fetch join en la misma consulta.
      */
-    @EntityGraph(attributePaths = { "sede", "aprobacionesPorSede.sede", "aprobacionesPorSede.usuarioAprobacion" })
+    @EntityGraph(attributePaths = {
+            "sede",
+            "aprobacionesPorSede.sede",
+            "aprobacionesPorSede.usuarioAprobacion",
+            "aprobacionesPorSede.usuarioAprobacion.empleado"
+    })
     @Query("select p from Poliza p where p.idPoliza = :idPoliza")
     Optional<Poliza> findWithAprobacionesPorSedeByIdPoliza(@Param("idPoliza") Integer idPoliza);
 

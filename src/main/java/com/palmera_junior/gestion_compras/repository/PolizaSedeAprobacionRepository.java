@@ -10,9 +10,9 @@ import com.palmera_junior.gestion_compras.entity.PolizaSedeAprobacion;
 
 public interface PolizaSedeAprobacionRepository extends JpaRepository<PolizaSedeAprobacion, Integer> {
 
-    @EntityGraph(attributePaths = { "sede", "usuarioAprobacion" })
+    @EntityGraph(attributePaths = { "sede", "usuarioAprobacion", "usuarioAprobacion.empleado" })
     List<PolizaSedeAprobacion> findByPolizaIdPoliza(Integer idPoliza);
 
-    @EntityGraph(attributePaths = { "sede", "usuarioAprobacion" })
+    @EntityGraph(attributePaths = { "sede", "usuarioAprobacion", "usuarioAprobacion.empleado" })
     Optional<PolizaSedeAprobacion> findByPolizaIdPolizaAndSedeIdSede(Integer idPoliza, Integer idSede);
 }

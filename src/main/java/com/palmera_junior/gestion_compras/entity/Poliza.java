@@ -76,6 +76,7 @@ public class Poliza {
     private List<DetallePrima> detallesPrima = new ArrayList<>();
 
     @OneToMany(mappedBy = "poliza", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 50)
     @ToString.Exclude
     private List<PolizaSedeAprobacion> aprobacionesPorSede = new ArrayList<>();
 
@@ -205,7 +206,21 @@ public class Poliza {
     }
 
     @Transient
+    private String contratoAdjuntoNombreListado;
+
+    @Transient
+    private boolean contratoAdjuntoNombreCargado;
+
+    public void setContratoAdjuntoNombreListado(String nombre) {
+        this.contratoAdjuntoNombreListado = nombre;
+        this.contratoAdjuntoNombreCargado = true;
+    }
+
+    @Transient
     public String getContratoAdjunto() {
+        if (contratoAdjuntoNombreCargado) {
+            return contratoAdjuntoNombreListado;
+        }
         return obtenerAdjuntoContrato().map(PolizaAdjunto::getNombreOriginal).orElse(null);
     }
 
@@ -216,6 +231,9 @@ public class Poliza {
 
     @Transient
     public String getContratoAdjuntoNombre() {
+        if (contratoAdjuntoNombreCargado) {
+            return contratoAdjuntoNombreListado;
+        }
         return obtenerAdjuntoContrato().map(PolizaAdjunto::getNombreOriginal).orElse(null);
     }
 

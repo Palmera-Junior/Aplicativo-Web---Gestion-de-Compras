@@ -7,8 +7,10 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.springframework.data.domain.Page;
@@ -48,6 +50,7 @@ import com.palmera_junior.gestion_compras.events.PolizaTerminadaEvent;
 import com.palmera_junior.gestion_compras.service.correo.CorreoPolizaOutboxService;
 import com.palmera_junior.gestion_compras.service.usuario.IUsuarioService;
 import org.springframework.web.multipart.MultipartFile;
+import org.hibernate.Hibernate;
 
 @Service
 public class PolizaService implements IPolizaService {
@@ -157,11 +160,24 @@ public class PolizaService implements IPolizaService {
         Pageable pageableOrdenado = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
                 Sort.by(Sort.Direction.DESC, "idPoliza"));
         Page<Poliza> pagina = polizaRepository.findAll(specification, pageableOrdenado);
-        // La plantilla consulta el nombre del contrato desde la nueva relación. Se
-        // inicializa aquí, dentro de la transacción, para que la vista no dependa de
-        // Open Session in View y no falle al renderizar las acciones de cada fila.
-        pagina.getContent().forEach(poliza -> poliza.getAdjuntos().size());
+        // El estado por sede se inicializa en lotes, fuera del JOIN de la página,
+        // para evitar duplicar filas y paginar en memoria.
+        pagina.getContent().forEach(poliza -> Hibernate.initialize(poliza.getAprobacionesPorSede()));
+        cargarNombresContrato(pagina.getContent());
         return pagina;
+    }
+
+    private void cargarNombresContrato(List<Poliza> polizas) {
+        if (polizas.isEmpty()) {
+            return;
+        }
+        List<Integer> ids = polizas.stream().map(Poliza::getIdPoliza).toList();
+        Map<Integer, String> nombres = new HashMap<>();
+        for (Object[] fila : polizaRepository.findNombresContratoPorPolizaIds(ids)) {
+            nombres.put((Integer) fila[0], (String) fila[1]);
+        }
+        polizas.forEach(poliza -> poliza.setContratoAdjuntoNombreListado(
+                nombres.get(poliza.getIdPoliza())));
     }
 
     @Override
@@ -201,7 +217,7 @@ public class PolizaService implements IPolizaService {
         Poliza poliza = polizaRepository.findWithAprobacionesPorSedeByIdPoliza(idPoliza)
                 .orElseThrow(() -> new IllegalArgumentException("Póliza no encontrada"));
         assertVisible(poliza, usuarioService.obtenerUsuarioAutenticado());
-        return polizaSedeAprobacionRepository.findByPolizaIdPoliza(idPoliza);
+        return poliza.getAprobacionesPorSede();
     }
 
     @Override
