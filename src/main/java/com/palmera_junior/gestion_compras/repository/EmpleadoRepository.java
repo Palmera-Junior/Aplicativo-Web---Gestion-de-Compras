@@ -13,6 +13,10 @@ public interface EmpleadoRepository extends JpaRepository<Empleado, Integer> {
     @EntityGraph(attributePaths = {"cargo", "area", "centroCosto"})
     java.util.List<Empleado> findAllByOrderByPrimerApellidoAscPrimerNombreAsc();
 
+    @Override
+    @EntityGraph(attributePaths = {"cargo", "area", "centroCosto", "nivelEducativo"})
+    Optional<Empleado> findById(Integer id);
+
     Optional<Empleado> findByTipoDocumentoAndNumeroDocumento(
             TipoDocumentoEmpleado tipoDocumento, String numeroDocumento);
 

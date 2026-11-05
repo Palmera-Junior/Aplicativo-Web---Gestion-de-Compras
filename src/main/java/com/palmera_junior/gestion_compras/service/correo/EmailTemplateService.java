@@ -10,6 +10,7 @@ import java.time.format.DateTimeFormatter;
 
 import com.palmera_junior.gestion_compras.entity.OrdenCompra;
 import com.palmera_junior.gestion_compras.entity.Poliza;
+import com.palmera_junior.gestion_compras.entity.Empleado;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -61,6 +62,19 @@ public class EmailTemplateService {
 
     public String urlRestablecimiento(String token) {
         return plataformaUrl.replaceAll("/$", "") + "/password/reset?token=" + token;
+    }
+
+    public String generarCorreoNuevoEmpleado(Empleado empleado, String rutaRevision) {
+        Context context = new Context(new Locale("es", "CO"));
+        String nombre = List.of(empleado.getPrimerNombre(), empleado.getPrimerApellido()).stream()
+                .filter(valor -> valor != null && !valor.isBlank())
+                .collect(java.util.stream.Collectors.joining(" "));
+        context.setVariable("nombre", nombre);
+        String documento = empleado.getNumeroDocumento();
+        context.setVariable("numeroDocumento", documento == null || documento.length() <= 4
+                ? "••••" : "••••" + documento.substring(documento.length() - 4));
+        context.setVariable("urlRevision", plataformaUrl.replaceAll("/$", "") + rutaRevision);
+        return templateEngine.process("correo-nuevo-empleado-aprobacion", context);
     }
 
     public String generarCorreoRecuperacion(String nombre, String urlRestablecimiento) {

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Nuevo registro de empleado</title>
+</head>
+<body style="margin:0;padding:24px;background:#f4f6f8;font-family:Arial,sans-serif;color:#243746">
+    <main style="max-width:620px;margin:0 auto;padding:28px;background:#fff;border:1px solid #e3e8ed;border-radius:10px">
+        <p style="margin:0 0 8px;color:#176b48;font-size:12px;font-weight:bold">RECURSOS HUMANOS</p>
+        <h1 style="margin:0 0 18px;font-size:22px">Nuevo empleado para revisión</h1>
+        <p>Se creó un registro inicial que requiere revisión y aprobación de RR. HH.</p>
+        <p><strong>Empleado:</strong> <span th:text="${nombre}">Nombre</span></p>
+        <p><strong>Documento:</strong> <span th:text="${numeroDocumento}">Documento</span></p>
+        <p style="margin:24px 0">
+            <a th:href="${urlRevision}" style="display:inline-block;padding:12px 18px;background:#176b48;color:#fff;text-decoration:none;border-radius:6px">
+                Abrir directorio de empleados
+            </a>
+        </p>
+        <p style="color:#687782;font-size:12px">El registro permanecerá en estado Registro inicial hasta que se apruebe.</p>
+    </main>
+</body>
+</html>

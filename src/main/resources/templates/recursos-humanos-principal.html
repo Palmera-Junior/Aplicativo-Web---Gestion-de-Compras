@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Empleados | Gestión de Compras</title>
+    <link rel="icon" type="image/png" th:href="@{/imgs/logo1.png}">
     <link rel="stylesheet" th:href="@{/css/compras.css}">
     <link rel="stylesheet" th:href="@{/css/recursos-humanos.css}">
     <link rel="stylesheet" th:href="@{/css/catalogos.css}">
@@ -13,6 +14,8 @@
 <body>
     <header th:replace="~{fragments/encabezado :: administracion}"></header>
     <div th:replace="~{fragments/navegacion :: principal('rrhh-principal')}"></div>
+    <div class="alert-success" role="status" th:if="${mensajeExito}" th:text="${mensajeExito}"></div>
+    <div class="alerta alerta-error" role="alert" th:if="${mensajeError}" th:text="${mensajeError}"></div>
     <main class="dashboard-container rrhh-container permission-management-page">
         <div class="rrhh-header">
             <div class="rrhh-heading">
@@ -22,7 +25,7 @@
                     <p class="rrhh-subtitle">Gestiona el registro, la contratación, la actividad y el retiro del personal.</p>
                 </div>
             </div>
-            <a href="#registro-empleado" class="btn-primary rrhh-create-button" id="btn-nuevo-empleado">
+            <a th:if="${puedeGestionar}" href="#registro-empleado" class="btn-primary rrhh-create-button" id="btn-nuevo-empleado">
                 <span class="material-symbols" aria-hidden="true">person_add</span>
                 Nuevo empleado
             </a>
@@ -147,10 +150,20 @@
                                       th:text="${empleado.estado.etiqueta}">Estado</span>
                             </td>
                             <td class="rrhh-row-actions">
-                                <a class="btn-icon" th:if="${empleado.estado.name() == 'REGISTRO_INICIAL' or empleado.estado.name() == 'PROCESO_CONTRATACION'}"
-                                   href="#registro-empleado" title="Editar registro" aria-label="Editar empleado">
+                                <a class="btn-icon"
+                                   th:if="${(empleado.estado.name() == 'REGISTRO_INICIAL' and (puedeEditarRegistro or puedeGestionar)) or (empleado.estado.name() == 'PROCESO_CONTRATACION' and puedeGestionar)}"
+                                   th:href="@{/recursos-humanos/principal(editarEmpleadoId=${empleado.idEmpleado})} + '#registro-empleado'"
+                                   th:title="${empleado.estado.name() == 'PROCESO_CONTRATACION' ? 'Completar contratación' : 'Editar registro'}"
+                                   th:attr="aria-label=${empleado.estado.name() == 'PROCESO_CONTRATACION' ? 'Completar contratación del empleado' : 'Editar empleado'}">
                                     <span class="material-symbols" aria-hidden="true">edit</span>
                                 </a>
+                                <form th:if="${empleado.estado.name() == 'REGISTRO_INICIAL' and puedeAprobar}"
+                                      th:action="@{/recursos-humanos/empleados/{id}/aprobar(id=${empleado.idEmpleado})}"
+                                      method="post" class="rrhh-inline-action">
+                                    <button class="btn-icon" type="submit" title="Aprobar registro" aria-label="Aprobar empleado">
+                                        <span class="material-symbols" aria-hidden="true">check_circle</span>
+                                    </button>
+                                </form>
                                 <a class="btn-icon"
                                    th:if="${empleado.estado.name() == 'ACTIVO' or empleado.estado.name() == 'RETIRADO'}"
                                    th:href="@{/recursos-humanos/principal(empleadoId=${empleado.idEmpleado})} + '#ficha-empleado'"
@@ -543,15 +556,17 @@
         </div>
     </section>
 
-    <section class="rrhh-registration-view" id="registro-empleado" aria-labelledby="rrhh-registration-title">
+    <section class="rrhh-registration-view" id="registro-empleado" aria-labelledby="rrhh-registration-title"
+             th:if="${puedeGestionar or empleadoEditar != null}">
         <div class="rrhh-registration-shell permission-management-page">
             <header class="rrhh-registration-header">
                 <div class="rrhh-registration-heading">
                     <span class="rrhh-registration-heading-icon material-symbols" aria-hidden="true">person_add</span>
                     <div>
                         <span class="rrhh-registration-eyebrow">Recursos humanos / Empleados</span>
-                        <h1 id="rrhh-registration-title">Registro de nuevo empleado</h1>
-                        <p>Completa datos personales, configuración y adjuntos para crear el empleado en Registro inicial.</p>
+                        <h1 id="rrhh-registration-title"
+                            th:text="${esEdicionContratacion ? 'Completar contratación del empleado' : (empleadoEditar != null ? 'Editar registro de empleado' : 'Registro de nuevo empleado')}">Registro de nuevo empleado</h1>
+                        <p th:text="${esEdicionContratacion ? 'Los datos personales aprobados están bloqueados. Completa la información del contrato y sus documentos requeridos.' : 'Completa datos personales, configuración y adjuntos del empleado en Registro inicial.'}">Completa datos personales, configuración y adjuntos del empleado en Registro inicial.</p>
                     </div>
                 </div>
                 <a class="rrhh-registration-close" href="#directorio-empleados" aria-label="Cerrar registro" title="Cerrar">
@@ -559,21 +574,34 @@
                 </a>
             </header>
 
-            <div class="rrhh-prototype-notice" role="note">
+            <div class="rrhh-prototype-notice" role="note" th:unless="${esEdicionContratacion}">
                 <span class="material-symbols" aria-hidden="true">info</span>
                 <span>Al guardar se crea el empleado en el directorio con estado Registro inicial y se notifica a los aprobadores de RR. HH.</span>
             </div>
+            <div class="rrhh-prototype-notice" role="note" th:if="${esEdicionContratacion}">
+                <span class="material-symbols" aria-hidden="true">lock</span>
+                <span>Los datos personales y de configuración no se modifican en esta etapa. Al completar los datos y requisitos de contratación, el empleado pasará a Activo.</span>
+            </div>
 
-            <div class="rrhh-registration-form" id="rrhh-registration-form">
-                <input class="rrhh-step-radio" type="radio" name="paso-registro" id="rrhh-step-config">
-                <input class="rrhh-step-radio" type="radio" name="paso-registro" id="rrhh-step-contract" disabled>
+            <form class="rrhh-registration-form" id="rrhh-registration-form"
+                  th:action="@{/recursos-humanos/empleados}" th:object="${registroEmpleado}"
+                  method="post" enctype="multipart/form-data"
+                  th:attr="data-adjuntos-vigentes=${tiposAdjuntosVigentes},data-edicion-contratacion=${esEdicionContratacion}">
+                <input type="hidden" th:field="*{idEmpleado}">
+                <input type="hidden" th:field="*{version}">
+                <input class="rrhh-step-radio" type="radio" name="paso-registro" id="rrhh-step-config"
+                       th:disabled="${esEdicionContratacion}">
+                <input class="rrhh-step-radio" type="radio" name="paso-registro" id="rrhh-step-contract"
+                       th:disabled="${!esEdicionContratacion}" th:checked="${esEdicionContratacion}">
                 <input class="rrhh-step-radio" type="radio" name="paso-registro" id="rrhh-step-files">
-                <input class="rrhh-step-radio" type="radio" name="paso-registro" id="rrhh-step-personal" checked>
+                <input class="rrhh-step-radio" type="radio" name="paso-registro" id="rrhh-step-personal"
+                       th:disabled="${esEdicionContratacion}" th:checked="${!esEdicionContratacion}">
 
                 <nav class="permission-tabs view-tabs rrhh-registration-tabs" aria-label="Pasos del registro de empleado">
-                    <label class="view-tab" for="rrhh-step-personal"><span class="material-symbols" aria-hidden="true">badge</span>Datos personales</label>
-                    <label class="view-tab" for="rrhh-step-config"><span class="material-symbols" aria-hidden="true">tune</span>Configuración</label>
-                    <label class="view-tab rrhh-tab-locked" for="rrhh-step-contract" aria-disabled="true" title="Se habilita después de la aprobación de RR. HH."><span class="material-symbols" aria-hidden="true">lock</span>Contratación <span class="rrhh-tab-lock-label">Bloqueada</span></label>
+                    <label class="view-tab" for="rrhh-step-personal" th:unless="${esEdicionContratacion}"><span class="material-symbols" aria-hidden="true">badge</span>Datos personales</label>
+                    <label class="view-tab" for="rrhh-step-config" th:unless="${esEdicionContratacion}"><span class="material-symbols" aria-hidden="true">tune</span>Configuración</label>
+                    <label class="view-tab rrhh-tab-locked" for="rrhh-step-contract" th:unless="${esEdicionContratacion}" aria-disabled="true" title="Se habilita después de la aprobación de RR. HH."><span class="material-symbols" aria-hidden="true">lock</span>Contratación <span class="rrhh-tab-lock-label">Bloqueada</span></label>
+                    <label class="view-tab" for="rrhh-step-contract" th:if="${esEdicionContratacion}"><span class="material-symbols" aria-hidden="true">contract</span>Contratación</label>
                     <label class="view-tab" for="rrhh-step-files"><span class="material-symbols" aria-hidden="true">description</span>Adjuntos</label>
                 </nav>
 
@@ -582,38 +610,38 @@
                         <div class="rrhh-step-heading"><div><span class="rrhh-step-kicker">Pestaña 1</span><h2 id="rrhh-personal-heading">Datos personales</h2><p>Información de identificación, ubicación, contacto y formación del empleado.</p></div></div>
                         <fieldset class="rrhh-form-section"><legend>Identificación</legend>
                             <div class="rrhh-form-grid rrhh-form-grid-three">
-                                <div class="rrhh-form-field"><label for="tipo-documento">Tipo de documento <span>*</span></label><select class="input-control" id="tipo-documento" name="tipoDocumento" required><option value="">Selecciona</option><option>Cédula de ciudadanía</option><option>Cédula de extranjería</option><option>Tarjeta de identidad</option><option>Registro civil</option><option>Pasaporte</option><option>Permiso por protección temporal</option></select></div>
-                                <div class="rrhh-form-field"><label for="numero-documento">Número de documento <span>*</span></label><input class="input-control" id="numero-documento" name="numeroDocumento" maxlength="30" required placeholder="Número sin separadores"></div>
-                                <div class="rrhh-form-field"><label for="fecha-expedicion">Fecha de expedición</label><input class="input-control" id="fecha-expedicion" name="fechaExpedicion" type="date"></div>
-                                <div class="rrhh-form-field"><label for="lugar-expedicion">Lugar de expedición</label><input class="input-control" id="lugar-expedicion" name="lugarExpedicion" maxlength="150" placeholder="Ciudad, departamento"></div>
+                                <div class="rrhh-form-field"><label for="tipo-documento">Tipo de documento <span>*</span></label><select class="input-control" id="tipo-documento" th:field="*{tipoDocumento}" required><option value="">Selecciona</option><option th:each="tipo : ${tiposDocumento}" th:value="${tipo}" th:text="${#strings.replace(tipo.name(), '_', ' ')}"></option></select></div>
+                                <div class="rrhh-form-field"><label for="numero-documento">Número de documento <span>*</span></label><input class="input-control" id="numero-documento" th:field="*{numeroDocumento}" maxlength="30" required placeholder="Número sin separadores"></div>
+                                <div class="rrhh-form-field"><label for="fecha-expedicion">Fecha de expedición</label><input class="input-control" id="fecha-expedicion" th:field="*{fechaExpedicion}" type="date"></div>
+                                <div class="rrhh-form-field"><label for="lugar-expedicion">Lugar de expedición</label><input class="input-control" id="lugar-expedicion" th:field="*{lugarExpedicion}" maxlength="150" placeholder="Ciudad, departamento"></div>
                             </div>
                         </fieldset>
                         <fieldset class="rrhh-form-section"><legend>Nombres y nacimiento</legend>
                             <div class="rrhh-form-grid rrhh-form-grid-three">
-                                <div class="rrhh-form-field"><label for="primer-nombre">Primer nombre <span>*</span></label><input class="input-control" id="primer-nombre" name="primerNombre" maxlength="100" required></div>
-                                <div class="rrhh-form-field"><label for="segundo-nombre">Segundo nombre</label><input class="input-control" id="segundo-nombre" name="segundoNombre" maxlength="100"></div>
-                                <div class="rrhh-form-field"><label for="primer-apellido">Primer apellido <span>*</span></label><input class="input-control" id="primer-apellido" name="primerApellido" maxlength="100" required></div>
-                                <div class="rrhh-form-field"><label for="segundo-apellido">Segundo apellido</label><input class="input-control" id="segundo-apellido" name="segundoApellido" maxlength="100"></div>
-                                <div class="rrhh-form-field"><label for="fecha-nacimiento">Fecha de nacimiento</label><input class="input-control" id="fecha-nacimiento" name="fechaNacimiento" type="date"></div>
-                                <div class="rrhh-form-field"><label for="lugar-nacimiento">Lugar de nacimiento</label><input class="input-control" id="lugar-nacimiento" name="lugarNacimiento" maxlength="150"></div>
-                                <div class="rrhh-form-field"><label for="tipo-sangre">Grupo sanguíneo</label><select class="input-control" id="tipo-sangre" name="tipoSangre"><option value="">Selecciona</option><option>A</option><option>B</option><option>AB</option><option>O</option></select></div>
-                                <div class="rrhh-form-field"><label for="rh">Factor RH</label><select class="input-control" id="rh" name="rh"><option value="">Selecciona</option><option value="POSITIVO">Positivo (+)</option><option value="NEGATIVO">Negativo (-)</option></select></div>
+                                <div class="rrhh-form-field"><label for="primer-nombre">Primer nombre <span>*</span></label><input class="input-control" id="primer-nombre" th:field="*{primerNombre}" maxlength="100" required></div>
+                                <div class="rrhh-form-field"><label for="segundo-nombre">Segundo nombre</label><input class="input-control" id="segundo-nombre" th:field="*{segundoNombre}" maxlength="100"></div>
+                                <div class="rrhh-form-field"><label for="primer-apellido">Primer apellido <span>*</span></label><input class="input-control" id="primer-apellido" th:field="*{primerApellido}" maxlength="100" required></div>
+                                <div class="rrhh-form-field"><label for="segundo-apellido">Segundo apellido</label><input class="input-control" id="segundo-apellido" th:field="*{segundoApellido}" maxlength="100"></div>
+                                <div class="rrhh-form-field"><label for="fecha-nacimiento">Fecha de nacimiento</label><input class="input-control" id="fecha-nacimiento" th:field="*{fechaNacimiento}" type="date"></div>
+                                <div class="rrhh-form-field"><label for="lugar-nacimiento">Lugar de nacimiento</label><input class="input-control" id="lugar-nacimiento" th:field="*{lugarNacimiento}" maxlength="150"></div>
+                                <div class="rrhh-form-field"><label for="tipo-sangre">Grupo sanguíneo</label><select class="input-control" id="tipo-sangre" th:field="*{tipoSangre}"><option value="">Selecciona</option><option th:each="tipo : ${tiposSangre}" th:value="${tipo}" th:text="${tipo}"></option></select></div>
+                                <div class="rrhh-form-field"><label for="rh">Factor RH</label><select class="input-control" id="rh" th:field="*{rh}"><option value="">Selecciona</option><option th:each="factor : ${factoresRh}" th:value="${factor}" th:text="${factor == T(com.palmera_junior.gestion_compras.entity.Rh).POSITIVO ? 'Positivo (+)' : 'Negativo (-)'}"></option></select></div>
                             </div>
                         </fieldset>
                         <fieldset class="rrhh-form-section"><legend>Contacto y residencia</legend>
                             <div class="rrhh-form-grid rrhh-form-grid-three">
-                                <div class="rrhh-form-field"><label for="celular">Celular</label><input class="input-control" id="celular" name="celular" type="tel" maxlength="30" placeholder="300 000 0000"></div>
-                                <div class="rrhh-form-field"><label for="correo">Correo electrónico</label><input class="input-control" id="correo" name="correoElectronico" type="email" maxlength="150" placeholder="nombre@correo.com"></div>
-                                <div class="rrhh-form-field"><label for="direccion">Dirección de residencia</label><input class="input-control" id="direccion" name="direccionResidencia" maxlength="255"></div>
-                                <div class="rrhh-form-field"><label for="barrio">Barrio</label><input class="input-control" id="barrio" name="barrio" maxlength="100"></div>
-                                <div class="rrhh-form-field"><label for="municipio">Municipio</label><input class="input-control" id="municipio" name="municipio" maxlength="100"></div>
-                                <div class="rrhh-form-field"><label for="departamento">Departamento</label><input class="input-control" id="departamento" name="departamento" maxlength="100"></div>
+                                <div class="rrhh-form-field"><label for="celular">Celular</label><input class="input-control" id="celular" th:field="*{celular}" type="tel" maxlength="30" placeholder="300 000 0000"></div>
+                                <div class="rrhh-form-field"><label for="correo">Correo electrónico</label><input class="input-control" id="correo" th:field="*{correoElectronico}" type="email" maxlength="150" placeholder="nombre@correo.com"></div>
+                                <div class="rrhh-form-field"><label for="direccion">Dirección de residencia</label><input class="input-control" id="direccion" th:field="*{direccionResidencia}" maxlength="255"></div>
+                                <div class="rrhh-form-field"><label for="barrio">Barrio</label><input class="input-control" id="barrio" th:field="*{barrio}" maxlength="100"></div>
+                                <div class="rrhh-form-field"><label for="municipio">Municipio</label><input class="input-control" id="municipio" th:field="*{municipio}" maxlength="100"></div>
+                                <div class="rrhh-form-field"><label for="departamento">Departamento</label><input class="input-control" id="departamento" th:field="*{departamento}" maxlength="100"></div>
                             </div>
                         </fieldset>
                         <fieldset class="rrhh-form-section"><legend>Educación y profesión</legend>
                             <div class="rrhh-form-grid rrhh-form-grid-three">
-                                <div class="rrhh-form-field"><label for="nivel-educativo">Nivel educativo</label><select class="input-control" id="nivel-educativo" name="nivelEducativo"><option value="">Selecciona</option><option>Primaria</option><option>Bachillerato</option><option>Técnico</option><option>Tecnólogo</option><option>Universitario</option><option>Especialización</option><option>Maestría</option><option>Doctorado</option></select></div>
-                                <div class="rrhh-form-field rrhh-field-span-two"><label for="profesion">Profesión</label><input class="input-control" id="profesion" name="profesion" maxlength="150" placeholder="Título o profesión"></div>
+                                <div class="rrhh-form-field"><label for="nivel-educativo">Nivel educativo</label><select class="input-control" id="nivel-educativo" th:field="*{nivelEducativoId}"><option value="">Selecciona</option><option th:each="nivel : ${nivelesEducativos}" th:value="${nivel.id}" th:text="${nivel.nombre}"></option></select></div>
+                                <div class="rrhh-form-field rrhh-field-span-two"><label for="profesion">Profesión</label><input class="input-control" id="profesion" th:field="*{profesion}" maxlength="150" placeholder="Título o profesión"></div>
                             </div>
                         </fieldset>
                         <div class="rrhh-step-actions"><a class="btn-cancel" href="#directorio-empleados">Cancelar</a><label class="btn-primary rrhh-step-next" for="rrhh-step-config">Continuar a configuración <span class="material-symbols" aria-hidden="true">arrow_forward</span></label></div>
@@ -624,10 +652,10 @@
                             <div><span class="rrhh-step-kicker">Pestaña 2</span><h2 id="rrhh-config-heading">Configuración del empleado</h2><p>Asigna su área, cargo y centro de costo; define los adjuntos requeridos para el registro inicial.</p></div>
                         </div>
                         <div class="rrhh-form-grid rrhh-form-grid-three">
-                            <div class="rrhh-form-field"><label for="nuevo-area">Área <span>*</span></label><select class="input-control" id="nuevo-area" name="area" required><option value="">Selecciona un área</option><option>Administrativa</option><option>Comercial</option><option>Operaciones</option><option>Recursos Humanos</option></select></div>
-                            <div class="rrhh-form-field"><label for="nuevo-cargo">Cargo <span>*</span></label><select class="input-control" id="nuevo-cargo" name="cargo" required><option value="">Selecciona un cargo</option><option>Analista de compras</option><option>Asesor comercial</option><option>Coordinador de operaciones</option><option>Técnico de servicio</option><option>Auxiliar de bodega</option></select></div>
-                            <div class="rrhh-form-field"><label for="nuevo-centro-costo">Centro de costo <span>*</span></label><select class="input-control" id="nuevo-centro-costo" name="centroCosto" required><option value="">Selecciona un centro</option><option>Administración Bogotá</option><option>Operaciones Medellín</option><option>Operaciones Cali</option></select></div>
-                            <div class="rrhh-form-field"><label for="nuevo-subcentro">Subcentro</label><input class="input-control" id="nuevo-subcentro" name="subcentro" maxlength="100" placeholder="Ej. Servicios técnicos"></div>
+                            <div class="rrhh-form-field"><label for="nuevo-area">Área <span>*</span></label><select class="input-control" id="nuevo-area" th:field="*{areaId}" required><option value="">Selecciona un área</option><option th:each="area : ${areas}" th:value="${area.id}" th:text="${area.nombre}"></option></select></div>
+                            <div class="rrhh-form-field"><label for="nuevo-cargo">Cargo <span>*</span></label><select class="input-control" id="nuevo-cargo" th:field="*{cargoId}" required><option value="">Selecciona un cargo</option><option th:each="cargo : ${cargos}" th:value="${cargo.id}" th:text="${cargo.nombre}"></option></select></div>
+                            <div class="rrhh-form-field"><label for="nuevo-centro-costo">Centro de costo <span>*</span></label><select class="input-control" id="nuevo-centro-costo" th:field="*{centroCostoId}" required><option value="">Selecciona un centro</option><option th:each="centro : ${centrosCosto}" th:value="${centro.idCentroCosto}" th:text="${centro.nombre}"></option></select></div>
+                            <div class="rrhh-form-field"><label for="nuevo-subcentro">Subcentro</label><input class="input-control" id="nuevo-subcentro" th:field="*{subcentro}" maxlength="100" placeholder="Ej. Servicios técnicos"></div>
                         </div>
 
                         <fieldset class="rrhh-checklist-section">
@@ -637,47 +665,27 @@
                                 <fieldset class="rrhh-checklist-group">
                                     <legend>Documentos de ingreso</legend>
                                     <div class="rrhh-checklist-grid">
-                                        <label class="rrhh-check-option"><input id="concepto-ficha" type="checkbox" name="conceptos" value="ficha" checked><span class="rrhh-checkmark"></span><span>Ficha de ingreso (F4-PRH01)</span></label>
-                                        <label class="rrhh-check-option"><input id="concepto-hoja-vida" type="checkbox" name="conceptos" value="hoja-vida" checked><span class="rrhh-checkmark"></span><span>Hoja de vida</span></label>
-                                        <label class="rrhh-check-option"><input id="concepto-cedula" type="checkbox" name="conceptos" value="cedula" checked><span class="rrhh-checkmark"></span><span>Documento de identidad</span></label>
-                                        <label class="rrhh-check-option"><input id="concepto-experiencia" type="checkbox" name="conceptos" value="experiencia"><span class="rrhh-checkmark"></span><span>Certificaciones laborales</span></label>
-                                        <label class="rrhh-check-option"><input id="concepto-estudios" type="checkbox" name="conceptos" value="estudios"><span class="rrhh-checkmark"></span><span>Certificados de estudio</span></label>
-                                        <label class="rrhh-check-option"><input id="concepto-tarjeta-profesional" type="checkbox" name="conceptos" value="tarjeta-profesional"><span class="rrhh-checkmark"></span><span>Tarjeta profesional</span></label>
-                                        <label class="rrhh-check-option"><input id="concepto-antecedentes" type="checkbox" name="conceptos" value="antecedentes"><span class="rrhh-checkmark"></span><span>Consulta de antecedentes</span></label>
-                                        <label class="rrhh-check-option"><input id="concepto-examen-ingreso" type="checkbox" name="conceptos" value="examen-ingreso"><span class="rrhh-checkmark"></span><span>Exámenes médicos de ingreso</span></label>
-                                        <label class="rrhh-check-option"><input id="concepto-certificado-bancario" type="checkbox" name="conceptos" value="certificado-bancario"><span class="rrhh-checkmark"></span><span>Certificado bancario de nómina</span></label>
+                                        <label class="rrhh-check-option" th:each="tipo : ${tiposAdjuntoIngreso}">
+                                            <input type="checkbox" name="tiposAdjuntoRequeridos"
+                                                   th:value="${tipo.idTipoAdjuntoEmpleado}"
+                                                   th:checked="${tiposSeleccionados.contains(tipo.idTipoAdjuntoEmpleado)}"
+                                                   data-adjunto-requerido>
+                                            <span class="rrhh-checkmark"></span>
+                                            <span th:text="${tipo.descripcion}">Documento</span>
+                                        </label>
                                     </div>
                                 </fieldset>
                                 <fieldset class="rrhh-checklist-group">
                                     <legend>Requisitos para vehículo o moto</legend>
                                     <div class="rrhh-checklist-grid">
-                                        <label class="rrhh-check-option"><input id="concepto-licencia" type="checkbox" name="conceptos" value="licencia"><span class="rrhh-checkmark"></span><span>Licencia de conducción</span></label>
-                                        <label class="rrhh-check-option"><input id="concepto-soat" type="checkbox" name="conceptos" value="soat"><span class="rrhh-checkmark"></span><span>SOAT vigente</span></label>
-                                        <label class="rrhh-check-option"><input id="concepto-tecnomecanica" type="checkbox" name="conceptos" value="tecnomecanica"><span class="rrhh-checkmark"></span><span>Revisión técnico-mecánica</span></label>
-                                        <label class="rrhh-check-option"><input id="concepto-tarjeta-propiedad" type="checkbox" name="conceptos" value="tarjeta-propiedad"><span class="rrhh-checkmark"></span><span>Licencia de tránsito de la moto</span></label>
-                                        <label class="rrhh-check-option"><input id="concepto-simit" type="checkbox" name="conceptos" value="simit"><span class="rrhh-checkmark"></span><span>Consulta de multas SIMIT</span></label>
-                                        <label class="rrhh-check-option"><input id="concepto-declaracion-moto" type="checkbox" name="conceptos" value="declaracion-moto"><span class="rrhh-checkmark"></span><span>Declaración de propiedad de la moto</span></label>
-                                        <label class="rrhh-check-option"><input id="concepto-autorizacion-moto" type="checkbox" name="conceptos" value="autorizacion-moto"><span class="rrhh-checkmark"></span><span>Autorización de uso de moto</span></label>
-                                        <label class="rrhh-check-option"><input id="concepto-pruebas-conduccion" type="checkbox" name="conceptos" value="pruebas-conduccion"><span class="rrhh-checkmark"></span><span>Pruebas teóricas y prácticas</span></label>
-                                    </div>
-                                </fieldset>
-                                <fieldset class="rrhh-checklist-group">
-                                    <legend>Afiliaciones y formación</legend>
-                                    <div class="rrhh-checklist-grid">
-                                        <label class="rrhh-check-option"><input id="concepto-afiliacion-arl" type="checkbox" name="conceptos" value="afiliacion-arl"><span class="rrhh-checkmark"></span><span>Afiliación ARL</span></label>
-                                        <label class="rrhh-check-option"><input id="concepto-certificado-eps" type="checkbox" name="conceptos" value="certificado-eps"><span class="rrhh-checkmark"></span><span>Certificado EPS</span></label>
-                                        <label class="rrhh-check-option"><input id="concepto-afiliacion-eps" type="checkbox" name="conceptos" value="afiliacion-eps"><span class="rrhh-checkmark"></span><span>Afiliación EPS</span></label>
-                                        <label class="rrhh-check-option"><input id="concepto-certificado-pension" type="checkbox" name="conceptos" value="certificado-pension"><span class="rrhh-checkmark"></span><span>Certificado de pensión</span></label>
-                                        <label class="rrhh-check-option"><input id="concepto-afiliacion-pension" type="checkbox" name="conceptos" value="afiliacion-pension"><span class="rrhh-checkmark"></span><span>Afiliación a pensión</span></label>
-                                        <label class="rrhh-check-option"><input id="concepto-afiliacion-caja" type="checkbox" name="conceptos" value="afiliacion-caja"><span class="rrhh-checkmark"></span><span>Afiliación a caja de compensación</span></label>
-                                        <label class="rrhh-check-option"><input id="concepto-beneficiarios" type="checkbox" name="conceptos" value="beneficiarios"><span class="rrhh-checkmark"></span><span>Documentos de beneficiarios</span></label>
-                                        <label class="rrhh-check-option"><input id="concepto-contrato-firmado" type="checkbox" name="conceptos" value="contrato-firmado"><span class="rrhh-checkmark"></span><span>Contrato de trabajo firmado</span></label>
-                                        <label class="rrhh-check-option"><input id="concepto-induccion" type="checkbox" name="conceptos" value="induccion"><span class="rrhh-checkmark"></span><span>Registro de inducción</span></label>
-                                        <label class="rrhh-check-option"><input id="concepto-evaluacion-ingreso" type="checkbox" name="conceptos" value="evaluacion-ingreso"><span class="rrhh-checkmark"></span><span>Evaluación de personal nuevo</span></label>
-                                        <label class="rrhh-check-option"><input id="concepto-evaluacion-induccion" type="checkbox" name="conceptos" value="evaluacion-induccion"><span class="rrhh-checkmark"></span><span>Evaluación de la inducción</span></label>
-                                        <label class="rrhh-check-option"><input id="concepto-evaluacion-desempeno" type="checkbox" name="conceptos" value="evaluacion-desempeno"><span class="rrhh-checkmark"></span><span>Evaluación de desempeño</span></label>
-                                        <label class="rrhh-check-option"><input id="concepto-evaluacion-habilidades" type="checkbox" name="conceptos" value="evaluacion-habilidades"><span class="rrhh-checkmark"></span><span>Evaluación de habilidades</span></label>
-                                        <label class="rrhh-check-option"><input id="concepto-curso-alturas" type="checkbox" name="conceptos" value="curso-alturas"><span class="rrhh-checkmark"></span><span>Certificado de curso de alturas</span></label>
+                                        <label class="rrhh-check-option" th:each="tipo : ${tiposAdjuntoVehiculo}">
+                                            <input type="checkbox" name="tiposAdjuntoRequeridos"
+                                                   th:value="${tipo.idTipoAdjuntoEmpleado}"
+                                                   th:checked="${tiposSeleccionados.contains(tipo.idTipoAdjuntoEmpleado)}"
+                                                   data-adjunto-requerido>
+                                            <span class="rrhh-checkmark"></span>
+                                            <span th:text="${tipo.descripcion}">Documento</span>
+                                        </label>
                                     </div>
                                 </fieldset>
                             </div>
@@ -702,47 +710,97 @@
                     </section>
 
                     <section class="rrhh-registration-step step-contract" aria-labelledby="rrhh-contract-heading">
-                        <div class="rrhh-step-heading"><div><span class="rrhh-step-kicker">Disponible después de aprobar</span><h2 id="rrhh-contract-heading">Datos de contratación</h2><p>Al aprobar el registro, se habilita esta pestaña. Los datos personales y de configuración quedan bloqueados.</p></div></div>
+                        <div class="rrhh-step-heading">
+                            <div><span class="rrhh-step-kicker">Datos bloqueados después de aprobar</span><h2 id="rrhh-contract-heading">Datos de contratación</h2><p>Completa la información necesaria para activar el empleado. El estado del contrato se calcula con sus fechas.</p></div>
+                        </div>
+                        <fieldset class="rrhh-checklist-section">
+                            <legend><span class="material-symbols" aria-hidden="true">folder_open</span> Conceptos documentales de contratación</legend>
+                            <p class="rrhh-checklist-description">Selecciona los documentos requeridos para afiliaciones y evaluaciones; sus campos aparecerán en Adjuntos.</p>
+                            <div class="rrhh-checklist-grid">
+                                <label class="rrhh-check-option" th:each="tipo : ${tiposAdjuntoContratacion}">
+                                    <input type="checkbox" name="tiposAdjuntoRequeridos"
+                                           th:value="${tipo.idTipoAdjuntoEmpleado}"
+                                           th:checked="${tiposSeleccionados.contains(tipo.idTipoAdjuntoEmpleado)}"
+                                           data-adjunto-requerido>
+                                    <span class="rrhh-checkmark"></span>
+                                    <span th:text="${tipo.descripcion}">Documento de contratación</span>
+                                </label>
+                            </div>
+                        </fieldset>
                         <fieldset class="rrhh-form-section"><legend>Vigencia y modalidad</legend>
                             <div class="rrhh-form-grid rrhh-form-grid-three">
-                                <div class="rrhh-form-field"><label for="tipo-contrato">Tipo de contrato</label><select class="input-control" id="tipo-contrato" name="tipoContrato"><option value="">Selecciona</option><option>Término indefinido</option><option>Término fijo</option><option>Obra o labor</option><option>Aprendizaje</option><option>Prestación de servicios</option></select></div>
-                                <div class="rrhh-form-field"><label for="tipo-pago">Tipo de pago</label><select class="input-control" id="tipo-pago" name="tipoPago"><option value="">Selecciona</option><option>Mensual</option><option>Quincenal</option><option>Semanal</option></select></div>
-                                <div class="rrhh-contract-state-note"><span class="material-symbols" aria-hidden="true">event_repeat</span><span>Estado calculado automáticamente a partir de las fechas: Programado, Vigente o Vencido. La terminación o anulación requiere una acción autorizada.</span></div>
-                                <div class="rrhh-form-field"><label for="fecha-ingreso">Fecha de ingreso <span>*</span></label><input class="input-control" id="fecha-ingreso" name="fechaIngreso" type="date" required></div>
-                                <div class="rrhh-form-field"><label for="fecha-fin">Fecha de finalización</label><input class="input-control" id="fecha-fin" name="fechaFin" type="date"></div>
-                                <div class="rrhh-form-field"><label for="salario">Salario básico <span>*</span></label><div class="rrhh-input-prefix"><span>$</span><input class="input-control" id="salario" name="salarioBasico" type="number" min="0" step="1000" required placeholder="0"></div></div>
+                                <div class="rrhh-form-field"><label for="tipo-contrato">Tipo de contrato <span>*</span></label><select class="input-control" id="tipo-contrato" th:field="*{tipoContratoId}" required><option value="">Selecciona</option><option th:each="tipo : ${tiposContrato}" th:value="${tipo.id}" th:text="${tipo.nombre}"></option></select></div>
+                                <div class="rrhh-form-field"><label for="tipo-pago">Tipo de pago <span>*</span></label><select class="input-control" id="tipo-pago" th:field="*{tipoPagoId}" required><option value="">Selecciona</option><option th:each="tipo : ${tiposPago}" th:value="${tipo.id}" th:text="${tipo.nombre}"></option></select></div>
+                                <div class="rrhh-contract-state-note"><span class="material-symbols" aria-hidden="true">event_repeat</span><span>Estado calculado automáticamente a partir de las fechas: Programado, Vigente o Vencido.</span></div>
+                                <div class="rrhh-form-field"><label for="fecha-ingreso">Fecha de ingreso <span>*</span></label><input class="input-control" id="fecha-ingreso" th:field="*{fechaIngreso}" type="date" required></div>
+                                <div class="rrhh-form-field"><label for="fecha-fin">Fecha de finalización</label><input class="input-control" id="fecha-fin" th:field="*{fechaFin}" type="date"></div>
+                                <div class="rrhh-form-field"><label for="salario">Salario básico <span>*</span></label><div class="rrhh-input-prefix"><span>$</span><input class="input-control" id="salario" th:field="*{salarioBasico}" type="number" min="0" step="1000" required placeholder="0"></div></div>
                             </div>
                         </fieldset>
                         <fieldset class="rrhh-form-section"><legend>Auxilios y bonificaciones</legend>
                             <div class="rrhh-compensation-grid">
-                                <div class="rrhh-compensation-card"><label class="rrhh-inline-check"><input type="checkbox" name="auxilioTransporteAplica"><span>Aplica auxilio de transporte</span></label><div class="rrhh-form-field"><label for="auxilio-transporte">Valor mensual</label><div class="rrhh-input-prefix"><span>$</span><input class="input-control" id="auxilio-transporte" name="auxilioTransporteValor" type="number" min="0" step="1000" placeholder="0"></div></div></div>
-                                <div class="rrhh-compensation-card"><label class="rrhh-inline-check"><input type="checkbox" name="auxilioRodamientoAplica"><span>Aplica auxilio de rodamiento</span></label><div class="rrhh-form-field"><label for="auxilio-rodamiento">Valor mensual</label><div class="rrhh-input-prefix"><span>$</span><input class="input-control" id="auxilio-rodamiento" name="auxilioRodamientoValor" type="number" min="0" step="1000" placeholder="0"></div></div></div>
-                                <div class="rrhh-compensation-card"><label class="rrhh-inline-check"><input type="checkbox" name="bonificacionNoSalarialAplica"><span>Aplica bonificación no salarial</span></label><div class="rrhh-form-field"><label for="bonificacion">Valor mensual</label><div class="rrhh-input-prefix"><span>$</span><input class="input-control" id="bonificacion" name="bonificacionNoSalarialValor" type="number" min="0" step="1000" placeholder="0"></div></div></div>
+                                <div class="rrhh-compensation-card"><label class="rrhh-inline-check"><input type="checkbox" th:field="*{auxilioTransporteAplica}" data-requiere-valor="auxilio-transporte"><span>Aplica auxilio de transporte</span></label><div class="rrhh-form-field"><label for="auxilio-transporte">Valor mensual</label><div class="rrhh-input-prefix"><span>$</span><input class="input-control" id="auxilio-transporte" th:field="*{auxilioTransporteValor}" data-valor-para="auxilio-transporte" type="number" min="0" step="1000" placeholder="0"></div></div></div>
+                                <div class="rrhh-compensation-card"><label class="rrhh-inline-check"><input type="checkbox" th:field="*{auxilioRodamientoAplica}" data-requiere-valor="auxilio-rodamiento"><span>Aplica auxilio de rodamiento</span></label><div class="rrhh-form-field"><label for="auxilio-rodamiento">Valor mensual</label><div class="rrhh-input-prefix"><span>$</span><input class="input-control" id="auxilio-rodamiento" th:field="*{auxilioRodamientoValor}" data-valor-para="auxilio-rodamiento" type="number" min="0" step="1000" placeholder="0"></div></div></div>
+                                <div class="rrhh-compensation-card"><label class="rrhh-inline-check"><input type="checkbox" th:field="*{bonificacionNoSalarialAplica}" data-requiere-valor="bonificacion"><span>Aplica bonificación no salarial</span></label><div class="rrhh-form-field"><label for="bonificacion">Valor mensual</label><div class="rrhh-input-prefix"><span>$</span><input class="input-control" id="bonificacion" th:field="*{bonificacionNoSalarialValor}" data-valor-para="bonificacion" type="number" min="0" step="1000" placeholder="0"></div></div></div>
                             </div>
                         </fieldset>
                         <fieldset class="rrhh-form-section"><legend>Afiliaciones y seguridad social</legend>
                             <div class="rrhh-form-grid rrhh-form-grid-three">
-                                <div class="rrhh-form-field"><label for="eps">EPS</label><select class="input-control" id="eps" name="eps"><option value="">Selecciona EPS</option><option>Sanitas</option><option>Sura</option><option>Compensar</option><option>Salud Total</option></select></div>
-                                <div class="rrhh-form-field"><label for="afp">Fondo de pensión (AFP)</label><select class="input-control" id="afp" name="afp"><option value="">Selecciona fondo</option><option>Colpensiones</option><option>Protección</option><option>Porvenir</option><option>Colfondos</option><option>Skandia</option></select></div>
-                                <div class="rrhh-form-field"><label for="arl">ARL</label><select class="input-control" id="arl" name="arl"><option value="">Selecciona ARL</option><option>Sura</option><option>Positiva</option><option>Colmena</option><option>Bolívar</option></select></div>
-                                <div class="rrhh-form-field"><label for="tarifa-arl">Tarifa ARL (%)</label><input class="input-control" id="tarifa-arl" name="tarifaArlPorcentaje" type="number" min="0" max="100" step="0.001" placeholder="0.000"></div>
-                                <div class="rrhh-form-field"><label for="caja-compensacion">Caja de compensación</label><select class="input-control" id="caja-compensacion" name="cajaCompensacion"><option value="">Selecciona caja</option><option>Compensar</option><option>Colsubsidio</option><option>Comfama</option><option>Comfenalco</option></select></div>
+                                <div class="rrhh-form-field"><label for="eps">EPS <span>*</span></label><select class="input-control" id="eps" th:field="*{epsId}" required><option value="">Selecciona EPS</option><option th:each="entidad : ${epsCatalogo}" th:value="${entidad.id}" th:text="${entidad.nombre}"></option></select></div>
+                                <div class="rrhh-form-field"><label for="afp">Fondo de pensión (AFP) <span>*</span></label><select class="input-control" id="afp" th:field="*{afpId}" required><option value="">Selecciona fondo</option><option th:each="entidad : ${afpCatalogo}" th:value="${entidad.id}" th:text="${entidad.nombre}"></option></select></div>
+                                <div class="rrhh-form-field"><label for="arl">ARL <span>*</span></label><select class="input-control" id="arl" th:field="*{arlId}" required><option value="">Selecciona ARL</option><option th:each="entidad : ${arlCatalogo}" th:value="${entidad.id}" th:text="${entidad.nombre}"></option></select></div>
+                                <div class="rrhh-form-field"><label for="tarifa-arl">Tarifa ARL (%)</label><input class="input-control" id="tarifa-arl" th:field="*{tarifaArlPorcentaje}" type="number" min="0" max="100" step="0.001" placeholder="0.000"></div>
+                                <div class="rrhh-form-field"><label for="caja-compensacion">Caja de compensación <span>*</span></label><select class="input-control" id="caja-compensacion" th:field="*{cajaCompensacionId}" required><option value="">Selecciona caja</option><option th:each="entidad : ${cajasCompensacion}" th:value="${entidad.id}" th:text="${entidad.nombre}"></option></select></div>
                             </div>
                         </fieldset>
                         <fieldset class="rrhh-form-section"><legend>Pago y condiciones especiales</legend>
                             <div class="rrhh-form-grid rrhh-form-grid-three">
-                                <div class="rrhh-form-field"><label for="entidad-bancaria">Entidad bancaria</label><select class="input-control" id="entidad-bancaria" name="entidadBancaria"><option value="">Selecciona banco</option><option>Bancolombia</option><option>Banco de Bogotá</option><option>Davivienda</option><option>BBVA</option><option>Nequi</option></select></div>
-                                <div class="rrhh-form-field rrhh-field-span-two"><label for="numero-cuenta">Número de cuenta bancaria</label><input class="input-control" id="numero-cuenta" name="numeroCuentaBancaria" maxlength="50"></div>
-                                <div class="rrhh-form-field rrhh-field-span-three"><label class="rrhh-inline-check"><input type="checkbox" name="condicionesEspecialesAplica"><span>Este contrato tiene condiciones especiales</span></label><label for="condiciones-especiales">Describe las condiciones</label><textarea class="input-control rrhh-textarea" id="condiciones-especiales" name="condicionesEspeciales" rows="3" placeholder="Especifica las condiciones acordadas"></textarea></div>
+                                <div class="rrhh-form-field"><label for="entidad-bancaria">Entidad bancaria</label><select class="input-control" id="entidad-bancaria" th:field="*{entidadBancariaId}"><option value="">Selecciona banco</option><option th:each="entidad : ${entidadesBancarias}" th:value="${entidad.id}" th:text="${entidad.nombre}"></option></select></div>
+                                <div class="rrhh-form-field rrhh-field-span-two"><label for="numero-cuenta">Número de cuenta bancaria</label><input class="input-control" id="numero-cuenta" th:field="*{numeroCuentaBancaria}" maxlength="50"></div>
+                                <div class="rrhh-form-field rrhh-field-span-three"><label class="rrhh-inline-check"><input type="checkbox" th:field="*{condicionesEspecialesAplica}" data-requiere-valor="condiciones"><span>Este contrato tiene condiciones especiales</span></label><label for="condiciones-especiales">Describe las condiciones</label><textarea class="input-control rrhh-textarea" id="condiciones-especiales" th:field="*{condicionesEspeciales}" data-valor-para="condiciones" rows="3" placeholder="Especifica las condiciones acordadas"></textarea></div>
                             </div>
                         </fieldset>
-                        <div class="rrhh-step-actions"><label class="btn-secondary rrhh-step-back" for="rrhh-step-personal"><span class="material-symbols" aria-hidden="true">arrow_back</span> Anterior</label><label class="btn-primary rrhh-step-next" for="rrhh-step-files">Continuar a adjuntos <span class="material-symbols" aria-hidden="true">arrow_forward</span></label></div>
+                        <div class="rrhh-step-actions"><label class="btn-primary rrhh-step-next" for="rrhh-step-files">Continuar a adjuntos <span class="material-symbols" aria-hidden="true">arrow_forward</span></label></div>
                     </section>
 
                     <section class="rrhh-registration-step step-files" aria-labelledby="rrhh-files-heading">
-                        <div class="rrhh-step-heading"><div><span class="rrhh-step-kicker">Pestaña 4</span><h2 id="rrhh-files-heading">Adjuntos del registro inicial</h2><p>Adjunta los documentos seleccionados como requeridos en Configuración. El resto de documentos se solicita durante contratación.</p></div><span class="rrhh-files-counter"><span class="material-symbols" aria-hidden="true">picture_as_pdf</span> PDF</span></div>
-                        <div class="rrhh-upload-summary"><span class="material-symbols" aria-hidden="true">fact_check</span><span>Al guardar, el empleado queda en Registro inicial. La aprobación no se habilita hasta completar los requisitos iniciales.</span></div>
+                        <div class="rrhh-step-heading"><div><span class="rrhh-step-kicker">Adjuntos</span><h2 id="rrhh-files-heading" th:text="${esEdicionContratacion ? 'Adjuntos de contratación' : 'Adjuntos del registro inicial'}">Adjuntos del registro inicial</h2><p th:text="${esEdicionContratacion ? 'Adjunta los documentos de contratación que seleccionaste. Los datos personales aprobados permanecen bloqueados.' : 'Adjunta los documentos seleccionados como requeridos en Configuración. El resto de documentos se solicita durante contratación.'}">Adjunta los documentos seleccionados como requeridos en Configuración.</p></div><span class="rrhh-files-counter"><span class="material-symbols" aria-hidden="true">picture_as_pdf</span> PDF</span></div>
+                        <div class="rrhh-upload-summary" th:unless="${esEdicionContratacion}"><span class="material-symbols" aria-hidden="true">fact_check</span><span>Al guardar, el empleado queda en Registro inicial. La aprobación no se habilita hasta completar los requisitos iniciales.</span></div>
+                        <div class="rrhh-upload-summary" th:if="${esEdicionContratacion}"><span class="material-symbols" aria-hidden="true">fact_check</span><span>Al completar el registro con todos los datos y adjuntos requeridos, el empleado pasará a Activo.</span></div>
+                        <div class="rrhh-upload-summary" id="rrhh-upload-error" role="alert" hidden></div>
+                        <div class="rrhh-upload-summary" th:if="${!#lists.isEmpty(adjuntosEmpleado)}">
+                            <span class="material-symbols" aria-hidden="true">folder</span>
+                            <span>Archivos ya guardados:
+                                <span th:each="adjunto, estado : ${adjuntosEmpleado}">
+                                    <span th:text="${adjunto.tipoAdjunto.descripcion + ' — ' + adjunto.nombreOriginal + (adjunto.vigente ? ' (vigente)' : ' (reemplazado)')}">Documento.pdf</span><span th:if="${!estado.last}">, </span>
+                                </span>
+                            </span>
+                        </div>
                         <div class="rrhh-upload-grid">
+                            <label class="rrhh-upload-item rrhh-upload-item-dynamic"
+                                   th:each="tipo : ${tiposAdjuntoIniciales}"
+                                   th:data-tipo-adjunto="${tipo.idTipoAdjuntoEmpleado}">
+                                <span class="rrhh-upload-icon material-symbols" aria-hidden="true">description</span>
+                                <span class="rrhh-upload-copy">
+                                    <strong th:text="${tipo.descripcion}">Documento</strong>
+                                    <small>PDF · Máximo 10 MB</small>
+                                </span>
+                                <input type="file" accept="application/pdf"
+                                       th:id="'archivo-' + ${tipo.idTipoAdjuntoEmpleado}"
+                                       th:name="'archivo-' + ${tipo.idTipoAdjuntoEmpleado}"
+                                       th:if="${!tipo.permiteMultiplesVigentes}">
+                                <input type="file" accept="application/pdf" multiple
+                                       th:id="'archivo-' + ${tipo.idTipoAdjuntoEmpleado}"
+                                       th:name="'archivo-' + ${tipo.idTipoAdjuntoEmpleado}"
+                                       th:if="${tipo.permiteMultiplesVigentes}">
+                                <span class="rrhh-upload-button">Adjuntar PDF</span>
+                                <span class="rrhh-upload-selection" aria-live="polite">Ningún archivo seleccionado</span>
+                            </label>
+                            <p id="rrhh-no-adjuntos">
+                                No hay conceptos seleccionados. Selecciónalos en la pestaña Configuración.
+                            </p>
+                        </div>
+                        <div th:remove="all">
                             <label class="rrhh-upload-item" data-concepto="ficha" for="archivo-ficha"><span class="rrhh-upload-icon material-symbols" aria-hidden="true">description</span><span class="rrhh-upload-copy"><strong>Ficha de ingreso (F4-PRH01)</strong><small>PDF · Obligatorio</small></span><input id="archivo-ficha" type="file" name="archivoFicha" accept="application/pdf"><span class="rrhh-upload-button">Adjuntar PDF</span></label>
                             <label class="rrhh-upload-item" data-concepto="hoja-vida" for="archivo-hoja-vida"><span class="rrhh-upload-icon material-symbols" aria-hidden="true">article</span><span class="rrhh-upload-copy"><strong>Hoja de vida</strong><small>PDF · Obligatorio</small></span><input id="archivo-hoja-vida" type="file" name="archivoHojaVida" accept="application/pdf"><span class="rrhh-upload-button">Adjuntar PDF</span></label>
                             <label class="rrhh-upload-item" data-concepto="cedula" for="archivo-cedula"><span class="rrhh-upload-icon material-symbols" aria-hidden="true">id_card</span><span class="rrhh-upload-copy"><strong>Documento de identidad</strong><small>PDF · Obligatorio</small></span><input id="archivo-cedula" type="file" name="archivoCedula" accept="application/pdf"><span class="rrhh-upload-button">Adjuntar PDF</span></label>
@@ -775,11 +833,124 @@
                             <label class="rrhh-upload-item" data-concepto="evaluacion-habilidades" for="archivo-evaluacion-habilidades"><span class="rrhh-upload-icon material-symbols" aria-hidden="true">fact_check</span><span class="rrhh-upload-copy"><strong>Evaluación de habilidades</strong><small>PDF · Obligatorio</small></span><input id="archivo-evaluacion-habilidades" type="file" name="archivoEvaluacionHabilidades" accept="application/pdf" multiple><span class="rrhh-upload-button">Adjuntar PDF</span></label>
                             <label class="rrhh-upload-item" data-concepto="curso-alturas" for="archivo-curso-alturas"><span class="rrhh-upload-icon material-symbols" aria-hidden="true">height</span><span class="rrhh-upload-copy"><strong>Certificado de curso de alturas</strong><small>PDF · Obligatorio</small></span><input id="archivo-curso-alturas" type="file" name="archivoCursoAlturas" accept="application/pdf"><span class="rrhh-upload-button">Adjuntar PDF</span></label>
                         </div>
-                        <div class="rrhh-step-actions"><label class="btn-secondary rrhh-step-back" for="rrhh-step-config"><span class="material-symbols" aria-hidden="true">arrow_back</span> Anterior</label><div class="rrhh-final-actions"><button class="btn-primary" type="button"><span class="material-symbols" aria-hidden="true">save</span> Guardar empleado</button></div></div>
+                        <div class="rrhh-step-actions"><label class="btn-secondary rrhh-step-back" th:for="${esEdicionContratacion ? 'rrhh-step-contract' : 'rrhh-step-config'}"><span class="material-symbols" aria-hidden="true">arrow_back</span> Anterior</label><div class="rrhh-final-actions"><p class="rrhh-completion-hint" id="rrhh-completion-hint" th:if="${esEdicionContratacion}" aria-live="polite">Completa los datos obligatorios y adjunta los conceptos seleccionados para habilitar el botón.</p><button class="btn-primary" type="submit" formnovalidate data-completar-registro th:disabled="${esEdicionContratacion}"><span class="material-symbols" aria-hidden="true">save</span><span th:text="${esEdicionContratacion ? 'Completar registro' : (empleadoEditar != null ? 'Guardar cambios' : 'Guardar empleado')}">Guardar empleado</span></button></div></div>
                     </section>
                 </div>
-            </div>
+            </form>
         </div>
     </section>
+    <script>
+        (() => {
+            const form = document.getElementById("rrhh-registration-form");
+            if (!form) return;
+
+            const error = document.getElementById("rrhh-upload-error");
+            const mensajeVacio = document.getElementById("rrhh-no-adjuntos");
+            const botonCompletar = form.dataset.edicionContratacion === "true"
+                ? form.querySelector("[data-completar-registro]") : null;
+            const avisoCompletar = document.getElementById("rrhh-completion-hint");
+            const selectors = form.querySelectorAll("[data-adjunto-requerido]");
+            const archivos = form.querySelectorAll('input[type="file"][name^="archivo-"]');
+            const camposContratacion = form.querySelectorAll(
+                ".step-contract input, .step-contract select, .step-contract textarea"
+            );
+            const tiposAdjuntosVigentes = new Set(
+                (form.dataset.adjuntosVigentes || "").split(",").filter(Boolean)
+            );
+            const maximoArchivo = 10 * 1024 * 1024;
+            const maximoSolicitud = 50 * 1024 * 1024;
+
+            const actualizarAdjuntos = () => {
+                const seleccionados = new Set(
+                    Array.from(selectors).filter((control) => control.checked).map((control) => control.value)
+                );
+                form.querySelectorAll("[data-tipo-adjunto]").forEach((concepto) => {
+                    const visible = seleccionados.has(concepto.dataset.tipoAdjunto);
+                    concepto.hidden = !visible;
+                    const input = concepto.querySelector('input[type="file"]');
+                    if (!visible) input.value = "";
+                    actualizarNombreArchivo(concepto, input);
+                });
+                mensajeVacio.hidden = seleccionados.size > 0;
+            };
+
+            const actualizarEstadoCompletar = () => {
+                if (!botonCompletar) return;
+
+                form.querySelectorAll("[data-valor-para]").forEach((campo) => {
+                    const checkbox = form.querySelector(
+                        `[data-requiere-valor="${campo.dataset.valorPara}"]`
+                    );
+                    campo.required = checkbox.checked;
+                });
+
+                const fechaIngreso = form.querySelector("#fecha-ingreso");
+                const fechaFin = form.querySelector("#fecha-fin");
+                fechaFin.setCustomValidity(
+                    fechaIngreso.value && fechaFin.value && fechaFin.value < fechaIngreso.value
+                        ? "La fecha de finalización debe ser igual o posterior a la fecha de ingreso."
+                        : ""
+                );
+
+                const datosCompletos = Array.from(camposContratacion)
+                    .every((campo) => campo.checkValidity());
+                const documentosCompletos = Array.from(
+                    form.querySelectorAll(".step-contract [data-adjunto-requerido]:checked")
+                ).every((concepto) => {
+                    const archivo = form.querySelector(`[name="archivo-${concepto.value}"]`);
+                    return tiposAdjuntosVigentes.has(concepto.value)
+                        || archivo.files.length > 0
+                            && Array.from(archivo.files).every((item) =>
+                                item.name.toLowerCase().endsWith(".pdf"));
+                });
+
+                botonCompletar.disabled = !(datosCompletos && documentosCompletos);
+                if (avisoCompletar) avisoCompletar.hidden = !botonCompletar.disabled;
+            };
+
+            const actualizarNombreArchivo = (concepto, input) => {
+                const estado = concepto.querySelector(".rrhh-upload-selection");
+                if (!estado) return;
+                const seleccionados = Array.from(input.files || []);
+                estado.textContent = seleccionados.length === 0
+                    ? "Ningún archivo seleccionado"
+                    : seleccionados.length === 1
+                        ? seleccionados[0].name
+                        : `${seleccionados.length} archivos: ${seleccionados.map((archivo) => archivo.name).join(", ")}`;
+            };
+
+            selectors.forEach((control) => control.addEventListener("change", () => {
+                actualizarAdjuntos();
+                actualizarEstadoCompletar();
+            }));
+            form.querySelectorAll("[data-tipo-adjunto] input[type='file']").forEach((input) => {
+                input.addEventListener("change", () => {
+                    actualizarNombreArchivo(input.closest("[data-tipo-adjunto]"), input);
+                    error.hidden = true;
+                    actualizarEstadoCompletar();
+                });
+            });
+            camposContratacion.forEach((campo) => {
+                campo.addEventListener("input", actualizarEstadoCompletar);
+                campo.addEventListener("change", actualizarEstadoCompletar);
+            });
+            actualizarAdjuntos();
+            actualizarEstadoCompletar();
+
+            form.addEventListener("submit", (event) => {
+                const seleccionados = Array.from(archivos)
+                    .flatMap((control) => Array.from(control.files));
+                const excedeIndividual = seleccionados.some((archivo) => archivo.size > maximoArchivo);
+                const total = seleccionados.reduce((suma, archivo) => suma + archivo.size, 0);
+                if (excedeIndividual || total > maximoSolicitud) {
+                    event.preventDefault();
+                    error.hidden = false;
+                    error.textContent = excedeIndividual
+                        ? "Cada PDF debe pesar máximo 10 MB."
+                        : "El total de archivos adjuntos no puede superar 50 MB. Reduce el tamaño o divide la carga.";
+                }
+            });
+        })();
+    </script>
 </body>
 </html>

@@ -398,6 +398,10 @@
     margin: 0 2px;
 }
 
+.rrhh-row-actions .rrhh-inline-action {
+    display: inline;
+}
+
 @media (max-width: 1000px) {
     .rrhh-status-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1074,6 +1078,16 @@ body:has(.rrhh-registration-view:target) {
     font-size: 9px;
 }
 
+.rrhh-upload-selection {
+    grid-column: 2 / 4;
+    min-width: 0;
+    overflow: hidden;
+    color: #315f96;
+    font-size: 9px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .rrhh-upload-item input[type="file"] {
     position: absolute;
     width: 1px;
@@ -1103,38 +1117,12 @@ body:has(.rrhh-registration-view:target) {
     content: "upload_file";
 }
 
-#rrhh-registration-form:has(#concepto-ficha:checked) [data-concepto="ficha"],
-#rrhh-registration-form:has(#concepto-hoja-vida:checked) [data-concepto="hoja-vida"],
-#rrhh-registration-form:has(#concepto-cedula:checked) [data-concepto="cedula"],
-#rrhh-registration-form:has(#concepto-experiencia:checked) [data-concepto="experiencia"],
-#rrhh-registration-form:has(#concepto-estudios:checked) [data-concepto="estudios"],
-#rrhh-registration-form:has(#concepto-tarjeta-profesional:checked) [data-concepto="tarjeta-profesional"],
-#rrhh-registration-form:has(#concepto-antecedentes:checked) [data-concepto="antecedentes"],
-#rrhh-registration-form:has(#concepto-examen-ingreso:checked) [data-concepto="examen-ingreso"],
-#rrhh-registration-form:has(#concepto-certificado-bancario:checked) [data-concepto="certificado-bancario"],
-#rrhh-registration-form:has(#concepto-licencia:checked) [data-concepto="licencia"],
-#rrhh-registration-form:has(#concepto-soat:checked) [data-concepto="soat"],
-#rrhh-registration-form:has(#concepto-tecnomecanica:checked) [data-concepto="tecnomecanica"],
-#rrhh-registration-form:has(#concepto-tarjeta-propiedad:checked) [data-concepto="tarjeta-propiedad"],
-#rrhh-registration-form:has(#concepto-simit:checked) [data-concepto="simit"],
-#rrhh-registration-form:has(#concepto-declaracion-moto:checked) [data-concepto="declaracion-moto"],
-#rrhh-registration-form:has(#concepto-autorizacion-moto:checked) [data-concepto="autorizacion-moto"],
-#rrhh-registration-form:has(#concepto-pruebas-conduccion:checked) [data-concepto="pruebas-conduccion"],
-#rrhh-registration-form:has(#concepto-afiliacion-arl:checked) [data-concepto="afiliacion-arl"],
-#rrhh-registration-form:has(#concepto-certificado-eps:checked) [data-concepto="certificado-eps"],
-#rrhh-registration-form:has(#concepto-afiliacion-eps:checked) [data-concepto="afiliacion-eps"],
-#rrhh-registration-form:has(#concepto-certificado-pension:checked) [data-concepto="certificado-pension"],
-#rrhh-registration-form:has(#concepto-afiliacion-pension:checked) [data-concepto="afiliacion-pension"],
-#rrhh-registration-form:has(#concepto-afiliacion-caja:checked) [data-concepto="afiliacion-caja"],
-#rrhh-registration-form:has(#concepto-beneficiarios:checked) [data-concepto="beneficiarios"],
-#rrhh-registration-form:has(#concepto-contrato-firmado:checked) [data-concepto="contrato-firmado"],
-#rrhh-registration-form:has(#concepto-induccion:checked) [data-concepto="induccion"],
-#rrhh-registration-form:has(#concepto-evaluacion-ingreso:checked) [data-concepto="evaluacion-ingreso"],
-#rrhh-registration-form:has(#concepto-evaluacion-induccion:checked) [data-concepto="evaluacion-induccion"],
-#rrhh-registration-form:has(#concepto-evaluacion-desempeno:checked) [data-concepto="evaluacion-desempeno"],
-#rrhh-registration-form:has(#concepto-evaluacion-habilidades:checked) [data-concepto="evaluacion-habilidades"],
-#rrhh-registration-form:has(#concepto-curso-alturas:checked) [data-concepto="curso-alturas"] {
+.rrhh-upload-item-dynamic {
     display: grid;
+}
+
+.rrhh-upload-item[hidden] {
+    display: none !important;
 }
 
 .rrhh-step-actions {
@@ -1173,8 +1161,22 @@ body:has(.rrhh-registration-view:target) {
 
 .rrhh-final-actions {
     display: flex;
+    align-items: center;
     gap: 8px;
     margin-left: auto;
+}
+
+.rrhh-completion-hint {
+    max-width: 290px;
+    margin: 0;
+    color: #64748b;
+    font-size: 10px;
+    line-height: 1.4;
+}
+
+.rrhh-final-actions .btn-primary:disabled {
+    cursor: not-allowed;
+    opacity: .55;
 }
 
 @media (max-width: 900px) {

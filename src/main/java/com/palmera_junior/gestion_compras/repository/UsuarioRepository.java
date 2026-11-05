@@ -52,6 +52,15 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
     /** Lista los aprobadores pertenecientes a cualquiera de las sedes indicadas. */
     List<Usuario> findByRolCodigoAndSedeIdSedeIn(String codigo, List<Integer> idsSedes);
 
+    @Query("""
+            SELECT u
+            FROM Usuario u
+            WHERE u.rol.codigo = 'APROBADOR_RRHH'
+              AND u.email IS NOT NULL
+              AND TRIM(u.email) <> ''
+            """)
+    List<Usuario> buscarAprobadoresRrhhConCorreo();
+
     /**
      * Qué hace: Busca un usuario por su correo electrónico exacto.
      * A dónde apunta: Tabla `usuario`.

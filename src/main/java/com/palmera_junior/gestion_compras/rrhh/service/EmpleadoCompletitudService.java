@@ -38,6 +38,15 @@ public class EmpleadoCompletitudService {
         agregarSiVacio(faltantes, "Número de documento", empleado.getNumeroDocumento());
         agregarSiVacio(faltantes, "Primer nombre", empleado.getPrimerNombre());
         agregarSiVacio(faltantes, "Primer apellido", empleado.getPrimerApellido());
+        if (empleado.getArea() == null) {
+            faltantes.add("Área");
+        }
+        if (empleado.getCargo() == null) {
+            faltantes.add("Cargo");
+        }
+        if (empleado.getCentroCosto() == null) {
+            faltantes.add("Centro de costo");
+        }
         agregarAdjuntosFaltantes(empleado, EtapaAdjuntoEmpleado.REGISTRO_INICIAL, faltantes);
         return List.copyOf(faltantes);
     }

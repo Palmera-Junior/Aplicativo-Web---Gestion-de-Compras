@@ -3,6 +3,9 @@ package com.palmera_junior.gestion_compras.service.correo;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.palmera_junior.gestion_compras.rrhh.service.CorreoEmpleadoAsyncProcessor;
+import com.palmera_junior.gestion_compras.rrhh.service.CorreoEmpleadoOutboxService;
+
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -16,6 +19,8 @@ public class CorreoOrdenOutboxScheduler {
     private final CorreoOrdenAsyncProcessor correoOrdenAsyncProcessor;
     private final CorreoPolizaOutboxService correoPolizaOutboxService;
     private final CorreoPolizaAsyncProcessor correoPolizaAsyncProcessor;
+    private final CorreoEmpleadoOutboxService correoEmpleadoOutboxService;
+    private final CorreoEmpleadoAsyncProcessor correoEmpleadoAsyncProcessor;
 
     /**
      * Qué hace:
@@ -34,6 +39,9 @@ public class CorreoOrdenOutboxScheduler {
         correoPolizaOutboxService.liberarProcesamientosAtascados();
         correoPolizaOutboxService.pendientesParaProcesar()
             .forEach(auditoria -> correoPolizaAsyncProcessor.procesar(auditoria.getId()));
+        correoEmpleadoOutboxService.liberarProcesamientosAtascados();
+        correoEmpleadoOutboxService.pendientesParaProcesar()
+                .forEach(auditoria -> correoEmpleadoAsyncProcessor.procesar(
+                        auditoria.getIdAuditoriaCorreoEmpleado()));
     }
 }
-
