@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.palmera_junior.gestion_compras.rrhh.entity.ContratoEmpleado;
+import com.palmera_junior.gestion_compras.entity.Usuario;
 
 public interface IContratoEmpleadoService {
 
@@ -12,4 +13,10 @@ public interface IContratoEmpleadoService {
     Optional<ContratoEmpleado> buscarPorId(Integer idContratoEmpleado);
 
     ContratoEmpleado guardar(ContratoEmpleado contrato);
+
+    int sincronizarEstados();
+
+    ContratoEmpleado terminar(Integer idContratoEmpleado, Usuario actor, String motivo);
+
+    ContratoEmpleado anular(Integer idContratoEmpleado, Usuario actor, String motivo);
 }

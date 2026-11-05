@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import com.palmera_junior.gestion_compras.entity.Empleado;
+import com.palmera_junior.gestion_compras.entity.Usuario;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -17,6 +18,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import jakarta.persistence.Version;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -120,4 +122,74 @@ public class ContratoEmpleado {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private EstadoContratoEmpleado estado = EstadoContratoEmpleado.BORRADOR;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "terminado_por")
+    @ToString.Exclude
+    private Usuario terminadoPor;
+
+    @Column(name = "terminado_en")
+    private LocalDate terminadoEn;
+
+    @Column(name = "motivo_terminacion", columnDefinition = "TEXT")
+    private String motivoTerminacion;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "anulado_por")
+    @ToString.Exclude
+    private Usuario anuladoPor;
+
+    @Column(name = "anulado_en")
+    private LocalDate anuladoEn;
+
+    @Column(name = "motivo_anulacion", columnDefinition = "TEXT")
+    private String motivoAnulacion;
+
+    @Version
+    @Column(nullable = false)
+    private Long version;
+
+    public boolean sincronizarEstado(LocalDate fechaActual) {
+        if (estado == EstadoContratoEmpleado.BORRADOR
+                || estado == EstadoContratoEmpleado.TERMINADO
+                || estado == EstadoContratoEmpleado.ANULADO) {
+            return false;
+        }
+        EstadoContratoEmpleado estadoCalculado =
+                EstadoContratoEmpleado.calcular(fechaIngreso, fechaFin, fechaActual);
+        if (estado == estadoCalculado) {
+            return false;
+        }
+        estado = estadoCalculado;
+        return true;
+    }
+
+    public void terminar(Usuario usuario, LocalDate fechaEfectiva, String motivo) {
+        if (usuario == null || fechaEfectiva == null || motivo == null || motivo.isBlank()) {
+            throw new IllegalArgumentException("Usuario, fecha y motivo son obligatorios para terminar el contrato");
+        }
+        if (estado == EstadoContratoEmpleado.BORRADOR
+                || estado == EstadoContratoEmpleado.TERMINADO
+                || estado == EstadoContratoEmpleado.ANULADO) {
+            throw new IllegalStateException("El contrato no se puede terminar desde su estado actual");
+        }
+        estado = EstadoContratoEmpleado.TERMINADO;
+        terminadoPor = usuario;
+        terminadoEn = fechaEfectiva;
+        motivoTerminacion = motivo.trim();
+    }
+
+    public void anular(Usuario usuario, LocalDate fechaEfectiva, String motivo) {
+        if (usuario == null || fechaEfectiva == null || motivo == null || motivo.isBlank()) {
+            throw new IllegalArgumentException("Usuario, fecha y motivo son obligatorios para anular el contrato");
+        }
+        if (estado == EstadoContratoEmpleado.TERMINADO
+                || estado == EstadoContratoEmpleado.ANULADO) {
+            throw new IllegalStateException("El contrato no se puede anular desde su estado actual");
+        }
+        estado = EstadoContratoEmpleado.ANULADO;
+        anuladoPor = usuario;
+        anuladoEn = fechaEfectiva;
+        motivoAnulacion = motivo.trim();
+    }
 }

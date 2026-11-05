@@ -4,6 +4,7 @@ import java.time.LocalDate;
 
 import com.palmera_junior.gestion_compras.rrhh.entity.Area;
 import com.palmera_junior.gestion_compras.rrhh.entity.Cargo;
+import com.palmera_junior.gestion_compras.rrhh.entity.EstadoEmpleado;
 import com.palmera_junior.gestion_compras.rrhh.entity.NivelEducativo;
 
 import jakarta.persistence.Column;
@@ -17,6 +18,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -117,4 +119,28 @@ public class Empleado {
 
     @Column(length = 150)
     private String profesion;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 30)
+    private EstadoEmpleado estado = EstadoEmpleado.REGISTRO_INICIAL;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "aprobado_por")
+    @ToString.Exclude
+    private Usuario aprobadoPor;
+
+    @Column(name = "aprobado_en")
+    private java.time.OffsetDateTime aprobadoEn;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "completado_por")
+    @ToString.Exclude
+    private Usuario completadoPor;
+
+    @Column(name = "completado_en")
+    private java.time.OffsetDateTime completadoEn;
+
+    @Version
+    @Column(nullable = false)
+    private Long version;
 }

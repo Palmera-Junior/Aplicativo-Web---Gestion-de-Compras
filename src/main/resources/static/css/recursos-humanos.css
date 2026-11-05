@@ -1,0 +1,3064 @@
+.rrhh-container {
+    padding-top: 4px;
+}
+
+.rrhh-header,
+.rrhh-heading,
+.rrhh-section-heading,
+.rrhh-directory-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.rrhh-header {
+    padding: 18px 0 22px;
+    border-bottom: 1px solid #e8edf0;
+}
+
+.rrhh-heading {
+    justify-content: flex-start;
+    gap: 14px;
+}
+
+.rrhh-heading-icon {
+    display: grid;
+    width: 48px;
+    height: 48px;
+    flex: 0 0 48px;
+    place-items: center;
+    border-radius: 10px;
+    background: #e6f2ec;
+    color: #176b48;
+    font-size: 27px;
+}
+
+.rrhh-heading h1 {
+    margin: 0;
+    color: #172a35;
+    font-size: 26px;
+    font-weight: 700;
+}
+
+.rrhh-subtitle,
+.rrhh-section-heading p{
+    margin: 3px 0 0;
+    color: #697780;
+    font-size: 13px;
+}
+
+.rrhh-directory-heading {
+    margin-bottom: 12px;
+}
+
+.rrhh-directory-heading h2 {
+    margin: 0;
+    color: #20313a;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.rrhh-directory-heading p {
+    margin: 3px 0 0;
+    color: #697780;
+    font-size: 13px;
+}
+
+.rrhh-create-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 42px;
+    white-space: nowrap;
+}
+
+.rrhh-summary {
+    padding: 22px 0 20px;
+}
+
+.rrhh-section-heading {
+    margin-bottom: 14px;
+}
+
+.rrhh-section-heading h2 {
+    margin: 0;
+    color: #20313a;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.rrhh-total {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.rrhh-total strong {
+    color: #1d353f;
+    font-size: 23px;
+}
+
+.rrhh-total span {
+    color: #7a878d;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.rrhh-status-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.rrhh-status-card {
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr);
+    align-items: center;
+    column-gap: 11px;
+    min-height: 88px;
+    padding: 14px;
+    border: 1px solid #e6ebed;
+    border-left: 3px solid var(--rrhh-status-color);
+    border-radius: 7px;
+    background: #fff;
+}
+
+.rrhh-status-card.registro { --rrhh-status-color: #2672a0; --rrhh-status-bg: #e7f2f8; }
+.rrhh-status-card.contratacion { --rrhh-status-color: #b87518; --rrhh-status-bg: #fbf1df; }
+.rrhh-status-card.activo { --rrhh-status-color: #19805b; --rrhh-status-bg: #e5f3ec; }
+.rrhh-status-card.retirado { --rrhh-status-color: #687b86; --rrhh-status-bg: #edf1f3; }
+
+.rrhh-status-icon {
+    display: grid;
+    width: 36px;
+    height: 36px;
+    place-items: center;
+    border-radius: 8px;
+    background: var(--rrhh-status-bg);
+    color: var(--rrhh-status-color);
+    font-size: 21px;
+}
+
+.rrhh-status-card > div {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.rrhh-status-card > div strong {
+    color: #20313a;
+    font-size: 21px;
+    line-height: 1.1;
+}
+
+.rrhh-status-card > div span {
+    color: #3d4d55;
+    font-size: 12px;
+    font-weight: 650;
+}
+
+.rrhh-status-detail {
+    grid-column: 2;
+    margin-top: 3px;
+    color: #75828a;
+    font-size: 10px;
+    line-height: 1.35;
+}
+
+.rrhh-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    padding: 12px;
+    border: 1px solid #e9ecef;
+    border-left: 4px solid #198754;
+    border-right: 4px solid #198754;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.rrhh-filter-title {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    border-radius: 8px;
+    background: #e6f6ec;
+    color: #198754;
+}
+
+.rrhh-filter-title .material-symbols {
+    color: #198754;
+    font-size: 22px;
+}
+
+.rrhh-filter-title span:last-child {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+}
+
+.rrhh-search-field {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex: 1 1 280px;
+    min-width: 190px;
+    height: 38px;
+    padding: 0 10px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    background: #fff;
+    color: #738188;
+}
+
+.rrhh-search-field:focus-within {
+    border-color: #198754;
+    box-shadow: 0 0 0 3px rgba(25, 135, 84, .15);
+}
+
+.rrhh-search-field .material-symbols {
+    font-size: 19px;
+}
+
+.rrhh-search-field input {
+    width: 100%;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: #26363d;
+    font: inherit;
+    font-size: 12px;
+}
+
+.rrhh-filter-control {
+    width: auto;
+    min-width: 0;
+    flex: 1 1 220px;
+    height: 38px;
+    padding-top: 0;
+    padding-bottom: 0;
+    font-size: 12px;
+}
+
+.rrhh-filter-actions {
+    display: flex;
+    gap: 6px;
+    flex: 0 0 auto;
+}
+
+.rrhh-search-button,
+.rrhh-clear-button {
+    display: inline-grid;
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    place-items: center;
+    padding: 0;
+}
+
+.rrhh-directory {
+    padding-top: 2px;
+}
+
+
+
+.rrhh-results-count {
+    color: #748188;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.rrhh-table-wrap {
+    border: 1px solid #e4e9eb;
+    border-radius: 7px;
+}
+
+.rrhh-table {
+    min-width: 850px;
+}
+
+.rrhh-table thead th {
+    padding: 12px 13px;
+    color: #596970;
+    font-size: 10px;
+    letter-spacing: 0;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.rrhh-table tbody td {
+    padding: 12px 13px;
+    color: #34454d;
+    font-size: 12px;
+    vertical-align: middle;
+}
+
+.rrhh-employee-cell {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 170px;
+}
+
+.rrhh-avatar {
+    display: grid;
+    width: 32px;
+    height: 32px;
+    flex: 0 0 32px;
+    place-items: center;
+    border-radius: 50%;
+    background: #e8f1ec;
+    color: #27704d;
+    font-size: 18px;
+}
+
+.rrhh-employee-name,
+.rrhh-job-title,
+.rrhh-area {
+    display: block;
+}
+
+.rrhh-employee-name,
+.rrhh-job-title {
+    color: #263941;
+    font-weight: 650;
+}
+
+.rrhh-area {
+    margin-top: 3px;
+    color: #77848a;
+    font-size: 11px;
+}
+
+.rrhh-document {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.rrhh-state-badge {
+    display: inline-flex;
+    align-items: center;
+    max-width: 180px;
+    padding: 5px 8px;
+    border-radius: 4px;
+    background: #edf1f3;
+    color: #586a73;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: capitalize;
+    white-space: nowrap;
+}
+
+.rrhh-state-badge.estado-registro_inicial { background: #e7f2f8; color: #24698f; }
+.rrhh-state-badge.estado-proceso_contratacion { background: #fbf1df; color: #94600f; }
+.rrhh-state-badge.estado-activo { background: #e5f3ec; color: #176b48; }
+.rrhh-state-badge.estado-retirado { background: #edf1f3; color: #586a73; }
+
+.rrhh-tab-locked {
+    color: #8490a0 !important;
+    cursor: not-allowed !important;
+    opacity: .7;
+    pointer-events: none;
+}
+
+.rrhh-tab-lock-label {
+    padding: 3px 6px;
+    border-radius: 10px;
+    background: #edf1f3;
+    color: #64748b;
+    font-size: 8px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.rrhh-actions-heading,
+.rrhh-row-actions {
+    text-align: center;
+    white-space: nowrap;
+}
+
+.rrhh-row-actions {
+    display: table-cell;
+}
+
+.rrhh-row-actions .btn-icon {
+    margin: 0 2px;
+}
+
+@media (max-width: 1000px) {
+    .rrhh-status-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .rrhh-filters {
+        flex-wrap: wrap;
+    }
+
+    .rrhh-search-field {
+        flex-basis: calc(100% - 90px);
+    }
+
+    .rrhh-filter-control {
+        flex: 1 1 160px;
+    }
+}
+
+@media (max-width: 600px) {
+    .rrhh-container {
+        width: calc(100% - 20px);
+        padding: 0 14px 20px;
+    }
+
+    .rrhh-header {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 15px;
+        padding: 16px 0;
+    }
+
+    .rrhh-heading h1 {
+        font-size: 22px;
+    }
+
+    .rrhh-subtitle {
+        max-width: 290px;
+        line-height: 1.45;
+    }
+
+    .rrhh-create-button {
+        width: 100%;
+    }
+
+    .rrhh-summary {
+        padding: 18px 0;
+    }
+
+    .rrhh-status-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .rrhh-status-card {
+        min-height: 76px;
+    }
+
+    .rrhh-filter-title {
+        width: 38px;
+    }
+
+    .rrhh-search-field {
+        flex-basis: 100%;
+    }
+
+    .rrhh-filter-control {
+        flex: 1 1 100%;
+    }
+
+    .rrhh-filter-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    .rrhh-results-count {
+        padding-top: 3px;
+    }
+}
+
+.rrhh-create-button {
+    text-decoration: none;
+}
+
+.rrhh-registration-view {
+    display: none;
+}
+
+.rrhh-registration-view:target {
+    position: fixed;
+    z-index: 1000;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 18px;
+    background: rgba(15, 29, 42, .62);
+    backdrop-filter: blur(3px);
+}
+
+body:has(.rrhh-registration-view:target) {
+    overflow: hidden;
+}
+
+.rrhh-registration-shell {
+    display: flex;
+    width: min(1240px, 100%);
+    max-height: min(940px, 100%);
+    flex-direction: column;
+    overflow: auto;
+    border: 1px solid #e1e7ee;
+    border-radius: 16px;
+    background: #f7f9fc;
+    box-shadow: 0 24px 80px rgba(13, 30, 48, .3);
+}
+
+.rrhh-registration-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 24px 28px 20px;
+    background: #fff;
+}
+
+.rrhh-registration-heading {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.rrhh-registration-heading-icon {
+    display: grid;
+    width: 48px;
+    height: 48px;
+    flex: 0 0 48px;
+    place-items: center;
+    border-radius: 12px;
+    background: #eaf2fd;
+    color: #2763b5;
+    font-size: 25px;
+}
+
+.rrhh-registration-eyebrow,
+.rrhh-step-kicker {
+    color: #2763b5;
+    font-size: 10px;
+    font-weight: 750;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+}
+
+.rrhh-registration-heading h1 {
+    margin: 3px 0 0;
+    color: #24334a;
+    font-size: 22px;
+    font-weight: 750;
+}
+
+.rrhh-registration-heading p {
+    margin: 4px 0 0;
+    color: #718096;
+    font-size: 12px;
+}
+
+.rrhh-registration-close {
+    display: grid;
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    place-items: center;
+    border: 1px solid #e1e7ee;
+    border-radius: 9px;
+    color: #66758a;
+    text-decoration: none;
+}
+
+.rrhh-registration-close:hover {
+    border-color: #cbd5e1;
+    background: #f3f6fa;
+    color: #24334a;
+}
+
+.rrhh-prototype-notice {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 0 28px 18px;
+    padding: 11px 14px;
+    border: 1px solid #dce8f8;
+    border-radius: 9px;
+    background: #f1f7ff;
+    color: #425b79;
+    font-size: 11px;
+}
+
+.rrhh-prototype-notice .material-symbols {
+    color: #2763b5;
+    font-size: 18px;
+}
+
+.rrhh-registration-form {
+    min-width: 0;
+    padding: 0 28px 26px;
+}
+
+.rrhh-step-radio {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+}
+
+#rrhh-step-config:focus-visible ~ .rrhh-registration-tabs label[for="rrhh-step-config"],
+#rrhh-step-personal:focus-visible ~ .rrhh-registration-tabs label[for="rrhh-step-personal"],
+#rrhh-step-contract:focus-visible ~ .rrhh-registration-tabs label[for="rrhh-step-contract"],
+#rrhh-step-files:focus-visible ~ .rrhh-registration-tabs label[for="rrhh-step-files"],
+.rrhh-registration-tabs .view-tab:focus-visible,
+.rrhh-step-next:focus-visible,
+.rrhh-step-back:focus-visible {
+    outline: 3px solid rgba(39, 99, 181, .28);
+    outline-offset: 2px;
+}
+
+.rrhh-registration-panels {
+    min-height: 340px;
+    padding: 22px;
+    border: 1px solid #e2e8f0;
+    border-radius: 0 0 12px 12px;
+    background: #fff;
+}
+
+.rrhh-registration-step {
+    display: none;
+    gap: 18px;
+}
+
+#rrhh-step-config:checked ~ .rrhh-registration-panels .step-config,
+#rrhh-step-personal:checked ~ .rrhh-registration-panels .step-personal,
+#rrhh-step-contract:checked ~ .rrhh-registration-panels .step-contract,
+#rrhh-step-files:checked ~ .rrhh-registration-panels .step-files {
+    display: grid;
+}
+
+.rrhh-step-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.rrhh-step-heading h2 {
+    margin: 4px 0 0;
+    color: #25364d;
+    font-size: 17px;
+    font-weight: 750;
+}
+
+.rrhh-step-heading p {
+    margin: 5px 0 0;
+    color: #758297;
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+.rrhh-contract-state-note {
+    display: flex;
+    min-height: 39px;
+    grid-column: span 2;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border: 1px solid #dce8f8;
+    border-radius: 7px;
+    background: #f5f9ff;
+    color: #536782;
+    font-size: 9px;
+    line-height: 1.45;
+}
+
+.rrhh-contract-state-note .material-symbols {
+    flex: 0 0 auto;
+    color: #3974ac;
+    font-size: 17px;
+}
+
+.rrhh-form-grid {
+    display: grid;
+    gap: 14px;
+}
+
+.rrhh-form-grid-three {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.rrhh-form-field {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.rrhh-form-field > label,
+.rrhh-form-field > label:not(.rrhh-inline-check) {
+    color: #40516a;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.rrhh-form-field > label > span {
+    color: #cf4c4c;
+}
+
+.rrhh-form-field .input-control {
+    min-width: 0;
+    height: 39px;
+    font-size: 11px;
+}
+
+.rrhh-field-span-two {
+    grid-column: span 2;
+}
+
+.rrhh-field-span-three {
+    grid-column: 1 / -1;
+}
+
+.rrhh-form-section,
+.rrhh-checklist-section {
+    min-width: 0;
+    margin: 0;
+    padding: 16px;
+    border: 1px solid #e5eaf1;
+    border-radius: 11px;
+    background: #fff;
+}
+
+.rrhh-form-section > legend,
+.rrhh-checklist-section > legend {
+    padding: 0 7px;
+    color: #2f4058;
+    font-size: 12px;
+    font-weight: 750;
+}
+
+.rrhh-checklist-section > legend {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.rrhh-checklist-section > legend .material-symbols {
+    color: #2763b5;
+    font-size: 18px;
+}
+
+.rrhh-checklist-description {
+    margin: -4px 0 13px;
+    color: #7a8799;
+    font-size: 10px;
+    line-height: 1.5;
+}
+
+.rrhh-concept-groups {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.rrhh-checklist-group {
+    min-width: 0;
+    margin: 0;
+    padding: 12px;
+    border: 1px solid #e9edf3;
+    border-radius: 9px;
+    background: #fbfcfe;
+}
+
+.rrhh-checklist-group > legend {
+    padding: 0 5px;
+    color: #52627a;
+    font-size: 10px;
+    font-weight: 750;
+}
+
+.rrhh-checklist-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 5px 8px;
+}
+
+.rrhh-check-option {
+    display: flex;
+    min-height: 34px;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 7px;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    color: #506078;
+    cursor: pointer;
+    font-size: 9px;
+    line-height: 1.35;
+}
+
+.rrhh-check-option:hover,
+.rrhh-check-option:has(input:checked) {
+    border-color: #d4e4f8;
+    background: #f1f7ff;
+    color: #315d91;
+}
+
+.rrhh-check-option input,
+.rrhh-tool-option input,
+.rrhh-inline-check input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+}
+
+.rrhh-checkmark {
+    display: grid;
+    width: 16px;
+    height: 16px;
+    flex: 0 0 16px;
+    place-items: center;
+    border: 1.5px solid #b9c5d4;
+    border-radius: 4px;
+    background: #fff;
+}
+
+.rrhh-check-option input:checked + .rrhh-checkmark {
+    border-color: #2874c8;
+    background: #2874c8;
+}
+
+.rrhh-check-option input:checked + .rrhh-checkmark::after {
+    width: 7px;
+    height: 4px;
+    border-bottom: 2px solid #fff;
+    border-left: 2px solid #fff;
+    content: "";
+    transform: translateY(-1px) rotate(-45deg);
+}
+
+.rrhh-check-option:has(input:focus-visible),
+.rrhh-tool-option:has(input:focus-visible),
+.rrhh-inline-check:has(input:focus-visible) {
+    outline: 3px solid rgba(39, 99, 181, .24);
+    outline-offset: 2px;
+}
+
+.rrhh-tools-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.rrhh-tool-option {
+    position: relative;
+    display: flex;
+    min-height: 66px;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 5px;
+    padding: 10px;
+    border: 1px solid #e3e9f1;
+    border-radius: 9px;
+    background: #fff;
+    color: #5c6b80;
+    cursor: pointer;
+    font-size: 9px;
+    font-weight: 650;
+}
+
+.rrhh-tool-option > .material-symbols {
+    color: #8190a4;
+    font-size: 19px;
+}
+
+.rrhh-tool-option:has(input:checked) {
+    border-color: #c8dafa;
+    background: #f1f6ff;
+    color: #315d91;
+}
+
+.rrhh-tool-option:has(input:checked) > .material-symbols {
+    color: #2763b5;
+}
+
+.rrhh-extra-tool {
+    max-width: 420px;
+    margin-top: 12px;
+}
+
+.rrhh-inline-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #43536a;
+    cursor: pointer;
+    font-size: 10px;
+    font-weight: 650;
+}
+
+.rrhh-inline-check > span:first-of-type {
+    position: relative;
+    padding-left: 24px;
+}
+
+.rrhh-inline-check > span:first-of-type::before {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 16px;
+    height: 16px;
+    border: 1.5px solid #b9c5d4;
+    border-radius: 4px;
+    background: #fff;
+    content: "";
+    transform: translateY(-50%);
+}
+
+.rrhh-inline-check input:checked + span::before {
+    border-color: #2874c8;
+    background: #2874c8;
+}
+
+.rrhh-inline-check input:checked + span::after {
+    position: absolute;
+    top: 50%;
+    left: 4px;
+    width: 7px;
+    height: 4px;
+    border-bottom: 2px solid #fff;
+    border-left: 2px solid #fff;
+    content: "";
+    transform: translateY(-65%) rotate(-45deg);
+}
+
+.rrhh-compensation-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.rrhh-compensation-card {
+    display: grid;
+    gap: 14px;
+    padding: 13px;
+    border: 1px solid #e6ebf2;
+    border-radius: 9px;
+    background: #fbfcfe;
+}
+
+.rrhh-input-prefix {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.rrhh-input-prefix > span {
+    color: #6a788b;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.rrhh-input-prefix .input-control {
+    flex: 1;
+}
+
+.rrhh-textarea {
+    min-height: 76px;
+    height: auto !important;
+    padding: 10px 12px !important;
+    resize: vertical;
+}
+
+.rrhh-upload-summary {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 12px 14px;
+    border: 1px solid #dce8f8;
+    border-radius: 9px;
+    background: #f5f9ff;
+    color: #536782;
+    font-size: 10px;
+    line-height: 1.5;
+}
+
+.rrhh-upload-summary .material-symbols {
+    color: #2763b5;
+    font-size: 19px;
+}
+
+.rrhh-files-counter {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 9px;
+    border: 1px solid #f3d9d9;
+    border-radius: 20px;
+    background: #fff7f7;
+    color: #a74242;
+    font-size: 9px;
+    font-weight: 750;
+}
+
+.rrhh-files-counter .material-symbols {
+    font-size: 15px;
+}
+
+.rrhh-upload-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+}
+
+.rrhh-upload-item {
+    position: relative;
+    display: none;
+    min-width: 0;
+    min-height: 68px;
+    grid-template-columns: 34px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 9px;
+    background: #fff;
+    cursor: pointer;
+    transition: border-color .18s ease, background .18s ease;
+}
+
+.rrhh-upload-item:hover,
+.rrhh-upload-item:focus-within {
+    border-color: #b7cfee;
+    background: #f9fbff;
+}
+
+.rrhh-upload-icon {
+    display: grid;
+    width: 34px;
+    height: 34px;
+    place-items: center;
+    border-radius: 8px;
+    background: #edf4ff;
+    color: #3974bd;
+    font-size: 19px;
+}
+
+.rrhh-upload-copy {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.rrhh-upload-copy strong {
+    overflow: hidden;
+    color: #3d4d63;
+    font-size: 10px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+}
+
+.rrhh-upload-copy small {
+    color: #8793a4;
+    font-size: 9px;
+}
+
+.rrhh-upload-item input[type="file"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+}
+
+.rrhh-upload-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 9px;
+    border: 1px solid #d7e3f2;
+    border-radius: 7px;
+    background: #fff;
+    color: #315f96;
+    font-size: 9px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.rrhh-upload-button::before {
+    font-family: "Material Symbols Outlined";
+    font-size: 15px;
+    content: "upload_file";
+}
+
+#rrhh-registration-form:has(#concepto-ficha:checked) [data-concepto="ficha"],
+#rrhh-registration-form:has(#concepto-hoja-vida:checked) [data-concepto="hoja-vida"],
+#rrhh-registration-form:has(#concepto-cedula:checked) [data-concepto="cedula"],
+#rrhh-registration-form:has(#concepto-experiencia:checked) [data-concepto="experiencia"],
+#rrhh-registration-form:has(#concepto-estudios:checked) [data-concepto="estudios"],
+#rrhh-registration-form:has(#concepto-tarjeta-profesional:checked) [data-concepto="tarjeta-profesional"],
+#rrhh-registration-form:has(#concepto-antecedentes:checked) [data-concepto="antecedentes"],
+#rrhh-registration-form:has(#concepto-examen-ingreso:checked) [data-concepto="examen-ingreso"],
+#rrhh-registration-form:has(#concepto-certificado-bancario:checked) [data-concepto="certificado-bancario"],
+#rrhh-registration-form:has(#concepto-licencia:checked) [data-concepto="licencia"],
+#rrhh-registration-form:has(#concepto-soat:checked) [data-concepto="soat"],
+#rrhh-registration-form:has(#concepto-tecnomecanica:checked) [data-concepto="tecnomecanica"],
+#rrhh-registration-form:has(#concepto-tarjeta-propiedad:checked) [data-concepto="tarjeta-propiedad"],
+#rrhh-registration-form:has(#concepto-simit:checked) [data-concepto="simit"],
+#rrhh-registration-form:has(#concepto-declaracion-moto:checked) [data-concepto="declaracion-moto"],
+#rrhh-registration-form:has(#concepto-autorizacion-moto:checked) [data-concepto="autorizacion-moto"],
+#rrhh-registration-form:has(#concepto-pruebas-conduccion:checked) [data-concepto="pruebas-conduccion"],
+#rrhh-registration-form:has(#concepto-afiliacion-arl:checked) [data-concepto="afiliacion-arl"],
+#rrhh-registration-form:has(#concepto-certificado-eps:checked) [data-concepto="certificado-eps"],
+#rrhh-registration-form:has(#concepto-afiliacion-eps:checked) [data-concepto="afiliacion-eps"],
+#rrhh-registration-form:has(#concepto-certificado-pension:checked) [data-concepto="certificado-pension"],
+#rrhh-registration-form:has(#concepto-afiliacion-pension:checked) [data-concepto="afiliacion-pension"],
+#rrhh-registration-form:has(#concepto-afiliacion-caja:checked) [data-concepto="afiliacion-caja"],
+#rrhh-registration-form:has(#concepto-beneficiarios:checked) [data-concepto="beneficiarios"],
+#rrhh-registration-form:has(#concepto-contrato-firmado:checked) [data-concepto="contrato-firmado"],
+#rrhh-registration-form:has(#concepto-induccion:checked) [data-concepto="induccion"],
+#rrhh-registration-form:has(#concepto-evaluacion-ingreso:checked) [data-concepto="evaluacion-ingreso"],
+#rrhh-registration-form:has(#concepto-evaluacion-induccion:checked) [data-concepto="evaluacion-induccion"],
+#rrhh-registration-form:has(#concepto-evaluacion-desempeno:checked) [data-concepto="evaluacion-desempeno"],
+#rrhh-registration-form:has(#concepto-evaluacion-habilidades:checked) [data-concepto="evaluacion-habilidades"],
+#rrhh-registration-form:has(#concepto-curso-alturas:checked) [data-concepto="curso-alturas"] {
+    display: grid;
+}
+
+.rrhh-step-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 2px;
+    padding-top: 16px;
+    border-top: 1px solid #edf0f5;
+}
+
+.rrhh-step-actions .btn-cancel,
+.rrhh-step-actions .btn-secondary,
+.rrhh-step-actions .btn-primary {
+    display: inline-flex;
+    min-height: 38px;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 0 14px;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 10px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.rrhh-step-next {
+    margin-left: auto;
+}
+
+.rrhh-step-back {
+    cursor: pointer;
+}
+
+.rrhh-final-actions {
+    display: flex;
+    gap: 8px;
+    margin-left: auto;
+}
+
+@media (max-width: 900px) {
+    .rrhh-registration-view:target {
+        padding: 10px;
+    }
+
+    .rrhh-registration-header {
+        padding: 18px 20px 16px;
+    }
+
+    .rrhh-prototype-notice {
+        margin: 0 20px 14px;
+    }
+
+    .rrhh-registration-form {
+        padding: 0 20px 20px;
+    }
+
+    .rrhh-registration-panels {
+        padding: 16px;
+    }
+
+    .rrhh-tools-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 600px) {
+    .rrhh-registration-view:target {
+        padding: 0;
+    }
+
+    .rrhh-registration-shell {
+        width: 100%;
+        height: 100%;
+        max-height: 100%;
+        border: 0;
+        border-radius: 0;
+    }
+
+    .rrhh-registration-header {
+        padding: 14px;
+    }
+
+    .rrhh-registration-heading {
+        gap: 9px;
+    }
+
+    .rrhh-registration-heading-icon {
+        width: 38px;
+        height: 38px;
+        flex-basis: 38px;
+        font-size: 20px;
+    }
+
+    .rrhh-registration-heading h1 {
+        font-size: 16px;
+    }
+
+    .rrhh-registration-heading p {
+        font-size: 10px;
+    }
+
+    .rrhh-registration-eyebrow {
+        font-size: 8px;
+    }
+
+    .rrhh-prototype-notice {
+        margin: 0 14px 12px;
+        font-size: 9px;
+    }
+
+    .rrhh-registration-form {
+        padding: 0 10px 14px;
+    }
+
+    .rrhh-registration-panels {
+        padding: 12px 10px;
+    }
+
+    .rrhh-registration-step {
+        gap: 13px;
+    }
+
+    .rrhh-step-heading h2 {
+        font-size: 15px;
+    }
+
+    .rrhh-form-grid-three,
+    .rrhh-concept-groups,
+    .rrhh-checklist-grid,
+    .rrhh-compensation-grid,
+    .rrhh-upload-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .rrhh-field-span-two,
+    .rrhh-field-span-three {
+        grid-column: auto;
+    }
+
+    .rrhh-form-section,
+    .rrhh-checklist-section {
+        padding: 12px 10px;
+    }
+
+    .rrhh-tools-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .rrhh-upload-item {
+        grid-template-columns: 30px minmax(0, 1fr) auto;
+        gap: 7px;
+        padding: 8px;
+    }
+
+    .rrhh-upload-button {
+        padding: 6px;
+        font-size: 8px;
+    }
+
+    .rrhh-step-actions {
+        flex-wrap: wrap;
+    }
+
+    .rrhh-step-actions .btn-cancel,
+    .rrhh-step-actions .btn-secondary,
+    .rrhh-step-actions .btn-primary {
+        min-height: 36px;
+        padding-inline: 9px;
+        font-size: 9px;
+    }
+
+    .rrhh-final-actions {
+        flex: 1 1 100%;
+        justify-content: flex-end;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .rrhh-upload-item {
+        transition: none;
+    }
+}
+
+.rrhh-registration-shell.permission-management-page .rrhh-registration-tabs {
+    margin: 0 0 18px;
+}
+
+#rrhh-step-config:checked ~ .rrhh-registration-tabs label[for="rrhh-step-config"],
+#rrhh-step-personal:checked ~ .rrhh-registration-tabs label[for="rrhh-step-personal"],
+#rrhh-step-contract:checked ~ .rrhh-registration-tabs label[for="rrhh-step-contract"],
+#rrhh-step-files:checked ~ .rrhh-registration-tabs label[for="rrhh-step-files"] {
+    border-color: transparent;
+    border-bottom: 0;
+    background: #fff;
+    color: #1a7cd8;
+    box-shadow: none;
+    animation: permissionTabActivate .25s ease;
+}
+
+#rrhh-step-config:checked ~ .rrhh-registration-tabs label[for="rrhh-step-config"]::after,
+#rrhh-step-personal:checked ~ .rrhh-registration-tabs label[for="rrhh-step-personal"]::after,
+#rrhh-step-contract:checked ~ .rrhh-registration-tabs label[for="rrhh-step-contract"]::after,
+#rrhh-step-files:checked ~ .rrhh-registration-tabs label[for="rrhh-step-files"]::after {
+    transform: scaleX(1);
+}
+
+#rrhh-step-config:checked ~ .rrhh-registration-tabs label[for="rrhh-step-config"] .material-symbols,
+#rrhh-step-personal:checked ~ .rrhh-registration-tabs label[for="rrhh-step-personal"] .material-symbols,
+#rrhh-step-contract:checked ~ .rrhh-registration-tabs label[for="rrhh-step-contract"] .material-symbols,
+#rrhh-step-files:checked ~ .rrhh-registration-tabs label[for="rrhh-step-files"] .material-symbols {
+    font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+}
+
+#rrhh-step-config:focus-visible ~ .rrhh-registration-tabs label[for="rrhh-step-config"],
+#rrhh-step-personal:focus-visible ~ .rrhh-registration-tabs label[for="rrhh-step-personal"],
+#rrhh-step-contract:focus-visible ~ .rrhh-registration-tabs label[for="rrhh-step-contract"],
+#rrhh-step-files:focus-visible ~ .rrhh-registration-tabs label[for="rrhh-step-files"] {
+    outline: 3px solid rgba(39, 99, 181, .28);
+    outline-offset: 2px;
+}
+
+@media (max-width: 600px) {
+    .rrhh-registration-tabs .view-tab {
+        min-width: 0;
+        flex: 1;
+        gap: 4px;
+        padding-inline: 5px;
+        font-size: 8px;
+        text-align: center;
+        white-space: normal;
+    }
+
+    .rrhh-registration-tabs .view-tab .material-symbols {
+        font-size: 15px;
+    }
+
+    .rrhh-tab-lock-label {
+        display: none;
+    }
+}
+
+.rrhh-operation-view {
+    display: none;
+}
+
+.rrhh-operation-view:target {
+    position: fixed;
+    z-index: 1000;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 18px;
+    background: rgba(15, 29, 42, .62);
+    backdrop-filter: blur(3px);
+}
+
+body:has(.rrhh-operation-view:target) {
+    overflow: hidden;
+}
+
+.rrhh-operation-shell {
+    display: flex;
+    width: min(1120px, 100%);
+    max-height: min(920px, 100%);
+    flex-direction: column;
+    overflow: auto;
+    border: 1px solid #e1e7ee;
+    border-radius: 16px;
+    background: #f7f9fc;
+    box-shadow: 0 24px 80px rgba(13, 30, 48, .3);
+}
+
+.rrhh-detail-shell {
+    width: min(1200px, 100%);
+}
+
+.rrhh-operation-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 22px 26px 18px;
+    background: #fff;
+}
+
+.rrhh-detail-identity,
+.rrhh-operation-title {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 13px;
+}
+
+.rrhh-detail-avatar {
+    display: grid;
+    width: 52px;
+    height: 52px;
+    flex: 0 0 52px;
+    place-items: center;
+    border: 1px solid #d5e7db;
+    border-radius: 50%;
+    background: #e8f3ec;
+    color: #26714c;
+    font-size: 27px;
+}
+
+.rrhh-detail-identity > div,
+.rrhh-operation-title > div {
+    min-width: 0;
+}
+
+.rrhh-detail-identity h1,
+.rrhh-operation-title h1 {
+    margin: 3px 0 0;
+    color: #24334a;
+    font-size: 20px;
+    font-weight: 750;
+}
+
+.rrhh-detail-identity p,
+.rrhh-operation-title p {
+    margin: 4px 0 0;
+    color: #718096;
+    font-size: 11px;
+}
+
+.rrhh-detail-identity > .rrhh-state-badge {
+    margin-left: 5px;
+}
+
+.rrhh-detail-header-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 7px;
+    margin-left: auto;
+}
+
+.rrhh-header-action {
+    display: inline-flex;
+    min-height: 34px;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 0 9px;
+    font-size: 9px;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.rrhh-header-action .material-symbols {
+    font-size: 15px;
+}
+
+.rrhh-more-actions {
+    position: relative;
+}
+
+.rrhh-more-actions summary {
+    display: inline-flex;
+    min-height: 34px;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 0 8px;
+    border: 1px solid #dfe5ec;
+    border-radius: 7px;
+    background: #fff;
+    color: #52627a;
+    cursor: pointer;
+    font-size: 9px;
+    font-weight: 700;
+    list-style: none;
+    white-space: nowrap;
+}
+
+.rrhh-more-actions summary::-webkit-details-marker {
+    display: none;
+}
+
+.rrhh-more-actions summary:hover,
+.rrhh-more-actions[open] summary {
+    border-color: #cbdced;
+    background: #f5f9ff;
+    color: #2763a2;
+}
+
+.rrhh-more-actions summary .material-symbols {
+    font-size: 17px;
+}
+
+.rrhh-more-actions > div {
+    position: absolute;
+    z-index: 5;
+    top: calc(100% + 5px);
+    right: 0;
+    display: grid;
+    min-width: 185px;
+    gap: 3px;
+    padding: 5px;
+    border: 1px solid #e0e6ed;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 10px 24px rgba(28, 48, 73, .14);
+}
+
+.rrhh-more-actions > div a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    border-radius: 5px;
+    color: #52627a;
+    font-size: 9px;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.rrhh-more-actions > div a:hover {
+    background: #f1f7ff;
+    color: #2763a2;
+}
+
+.rrhh-more-actions > div .material-symbols {
+    font-size: 16px;
+}
+
+.rrhh-operation-title .rrhh-registration-heading-icon {
+    flex: 0 0 48px;
+}
+
+.rrhh-operation-view .rrhh-prototype-notice {
+    margin-bottom: 14px;
+}
+
+.rrhh-detail-content {
+    min-width: 0;
+    padding: 0 26px 24px;
+}
+
+.rrhh-detail-radio {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+}
+
+.rrhh-detail-tabs {
+    margin: 0 0 0 !important;
+}
+
+.rrhh-detail-tabs .view-tab {
+    min-width: 150px !important;
+}
+
+#rrhh-detail-profile:checked ~ .rrhh-detail-tabs label[for="rrhh-detail-profile"],
+#rrhh-detail-contracts:checked ~ .rrhh-detail-tabs label[for="rrhh-detail-contracts"],
+#rrhh-detail-documents:checked ~ .rrhh-detail-tabs label[for="rrhh-detail-documents"],
+#rrhh-detail-assets:checked ~ .rrhh-detail-tabs label[for="rrhh-detail-assets"],
+#rrhh-detail-audit:checked ~ .rrhh-detail-tabs label[for="rrhh-detail-audit"] {
+    border-color: transparent;
+    border-bottom: 0;
+    background: #fff;
+    color: #1a7cd8;
+    box-shadow: none;
+    animation: permissionTabActivate .25s ease;
+}
+
+#rrhh-detail-profile:checked ~ .rrhh-detail-tabs label[for="rrhh-detail-profile"]::after,
+#rrhh-detail-contracts:checked ~ .rrhh-detail-tabs label[for="rrhh-detail-contracts"]::after,
+#rrhh-detail-documents:checked ~ .rrhh-detail-tabs label[for="rrhh-detail-documents"]::after,
+#rrhh-detail-assets:checked ~ .rrhh-detail-tabs label[for="rrhh-detail-assets"]::after,
+#rrhh-detail-audit:checked ~ .rrhh-detail-tabs label[for="rrhh-detail-audit"]::after {
+    transform: scaleX(1);
+}
+
+#rrhh-detail-profile:checked ~ .rrhh-detail-tabs label[for="rrhh-detail-profile"] .material-symbols,
+#rrhh-detail-contracts:checked ~ .rrhh-detail-tabs label[for="rrhh-detail-contracts"] .material-symbols,
+#rrhh-detail-documents:checked ~ .rrhh-detail-tabs label[for="rrhh-detail-documents"] .material-symbols,
+#rrhh-detail-assets:checked ~ .rrhh-detail-tabs label[for="rrhh-detail-assets"] .material-symbols,
+#rrhh-detail-audit:checked ~ .rrhh-detail-tabs label[for="rrhh-detail-audit"] .material-symbols {
+    font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+}
+
+#rrhh-detail-profile:focus-visible ~ .rrhh-detail-tabs label[for="rrhh-detail-profile"],
+#rrhh-detail-contracts:focus-visible ~ .rrhh-detail-tabs label[for="rrhh-detail-contracts"],
+#rrhh-detail-documents:focus-visible ~ .rrhh-detail-tabs label[for="rrhh-detail-documents"],
+#rrhh-detail-assets:focus-visible ~ .rrhh-detail-tabs label[for="rrhh-detail-assets"],
+#rrhh-detail-audit:focus-visible ~ .rrhh-detail-tabs label[for="rrhh-detail-audit"] {
+    outline: 3px solid rgba(39, 99, 181, .28);
+    outline-offset: 2px;
+}
+
+.rrhh-detail-panels {
+    min-height: 390px;
+    padding: 22px;
+    border: 1px solid #e2e8f0;
+    border-radius: 0 0 12px 12px;
+    background: #fff;
+}
+
+.rrhh-detail-panel {
+    display: none;
+    gap: 18px;
+}
+
+#rrhh-detail-profile:checked ~ .rrhh-detail-panels .rrhh-detail-profile,
+#rrhh-detail-contracts:checked ~ .rrhh-detail-panels .rrhh-detail-contracts,
+#rrhh-detail-documents:checked ~ .rrhh-detail-panels .rrhh-detail-documents,
+#rrhh-detail-assets:checked ~ .rrhh-detail-panels .rrhh-detail-assets,
+#rrhh-detail-audit:checked ~ .rrhh-detail-panels .rrhh-detail-audit {
+    display: grid;
+}
+
+.rrhh-audit-table td {
+    white-space: normal;
+}
+
+.rrhh-audit-table td:first-child {
+    min-width: 150px;
+    white-space: nowrap;
+}
+
+.rrhh-audit-detail {
+    min-width: 180px;
+}
+
+.rrhh-audit-empty {
+    margin: 0;
+    padding: 18px;
+    border: 1px dashed #dce3eb;
+    border-radius: 8px;
+    color: #64748b;
+    font-size: 11px;
+    text-align: center;
+}
+
+.rrhh-empty-directory {
+    padding: 28px !important;
+    color: #718087;
+    text-align: center;
+}
+
+.rrhh-detail-panel-heading,
+.rrhh-detail-heading-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.rrhh-detail-panel-heading h2 {
+    margin: 4px 0 0;
+    color: #25364d;
+    font-size: 17px;
+    font-weight: 750;
+}
+
+.rrhh-detail-panel-heading p {
+    margin: 5px 0 0;
+    color: #758297;
+    font-size: 10px;
+}
+
+.rrhh-detail-card-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.rrhh-detail-card {
+    min-width: 0;
+    padding: 16px;
+    border: 1px solid #e4e9ef;
+    border-radius: 10px;
+    background: #fff;
+}
+
+.rrhh-detail-card h3,
+.rrhh-history-heading h3 {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin: 0;
+    color: #2b3b51;
+    font-size: 12px;
+    font-weight: 750;
+}
+
+.rrhh-detail-card h3 .material-symbols {
+    color: #3974ac;
+    font-size: 17px;
+}
+
+.rrhh-detail-fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 15px 18px;
+    margin: 16px 0 0;
+}
+
+.rrhh-detail-fields > div {
+    min-width: 0;
+}
+
+.rrhh-detail-fields dt,
+.rrhh-contract-facts dt {
+    margin-bottom: 4px;
+    color: #7c899a;
+    font-size: 9px;
+}
+
+.rrhh-detail-fields dd,
+.rrhh-contract-facts dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+    color: #34445a;
+    font-size: 10px;
+    font-weight: 650;
+    line-height: 1.45;
+}
+
+.rrhh-detail-footnote {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    padding: 10px 12px;
+    border: 1px solid #e4eaf1;
+    border-radius: 8px;
+    background: #f8fafc;
+    color: #65748a;
+    font-size: 9px;
+    line-height: 1.5;
+}
+
+.rrhh-detail-footnote .material-symbols {
+    flex: 0 0 auto;
+    color: #6b7f96;
+    font-size: 16px;
+}
+
+.rrhh-operation-button {
+    display: inline-flex;
+    min-height: 38px;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    font-size: 10px;
+    text-decoration: none;
+}
+
+.rrhh-operation-button .material-symbols {
+    font-size: 17px;
+}
+
+.rrhh-current-contract {
+    padding: 17px;
+    border: 1px solid #dce8f8;
+    border-left: 3px solid #397cc1;
+    border-radius: 10px;
+    background: #f8fbff;
+}
+
+.rrhh-current-contract-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.rrhh-contract-label {
+    color: #647a95;
+    font-size: 9px;
+    font-weight: 750;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+
+.rrhh-current-contract h3 {
+    margin: 4px 0 0;
+    color: #293d57;
+    font-size: 15px;
+}
+
+.rrhh-contract-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 9px;
+    border: 1px solid #d2e8dd;
+    border-radius: 20px;
+    background: #f0f8f3;
+    color: #28714d;
+    font-size: 9px;
+    font-weight: 750;
+    white-space: nowrap;
+}
+
+.rrhh-contract-status > span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #329265;
+}
+
+.rrhh-contract-facts {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin: 17px 0;
+    padding: 0;
+}
+
+.rrhh-contract-reminder,
+.rrhh-asset-rule {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    padding: 10px 12px;
+    border: 1px solid #efe5c8;
+    border-radius: 8px;
+    background: #fffcf2;
+    color: #8e721f;
+}
+
+.rrhh-contract-reminder > .material-symbols,
+.rrhh-asset-rule > .material-symbols {
+    flex: 0 0 auto;
+    font-size: 17px;
+}
+
+.rrhh-contract-reminder > span:last-child,
+.rrhh-asset-rule > span:last-child {
+    display: grid;
+    gap: 3px;
+}
+
+.rrhh-contract-reminder strong,
+.rrhh-asset-rule strong {
+    font-size: 9px;
+}
+
+.rrhh-contract-reminder small,
+.rrhh-asset-rule small {
+    color: #826f3d;
+    font-size: 9px;
+    line-height: 1.45;
+}
+
+.rrhh-file-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: #2763a2;
+    font-size: 9px;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.rrhh-file-link:hover {
+    color: #174b81;
+    text-decoration: underline;
+}
+
+.rrhh-file-link .material-symbols {
+    font-size: 15px;
+}
+
+.rrhh-history-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 2px 0 -7px;
+}
+
+.rrhh-history-heading > span {
+    color: #8a96a5;
+    font-size: 8px;
+}
+
+.rrhh-history-list {
+    display: grid;
+    gap: 7px;
+}
+
+.rrhh-history-item {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid #e7ebf0;
+    border-radius: 8px;
+}
+
+.rrhh-history-icon {
+    color: #73859a;
+    font-size: 18px;
+}
+
+.rrhh-history-item > div {
+    display: grid;
+    min-width: 0;
+    flex: 1;
+    gap: 3px;
+}
+
+.rrhh-history-item strong {
+    color: #3a4b61;
+    font-size: 9px;
+}
+
+.rrhh-history-item small {
+    color: #7d8999;
+    font-size: 8px;
+}
+
+.rrhh-history-badge {
+    padding: 4px 7px;
+    border-radius: 15px;
+    background: #f0f8f3;
+    color: #28714d;
+    font-size: 8px;
+    font-weight: 700;
+}
+
+.rrhh-detail-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid #e3e8ee;
+    border-radius: 8px;
+}
+
+.rrhh-detail-table {
+    width: 100%;
+    min-width: 690px;
+    border-collapse: collapse;
+    background: #fff;
+}
+
+.rrhh-detail-table th {
+    padding: 10px 12px;
+    border-bottom: 1px solid #e3e8ee;
+    background: #f7f9fc;
+    color: #6a788b;
+    font-size: 8px;
+    font-weight: 750;
+    text-align: left;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.rrhh-detail-table td {
+    padding: 11px 12px;
+    border-bottom: 1px solid #edf0f3;
+    color: #526177;
+    font-size: 9px;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.rrhh-detail-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.rrhh-detail-table td > strong,
+.rrhh-detail-table td > small {
+    display: block;
+}
+
+.rrhh-detail-table td > strong {
+    color: #384960;
+    font-size: 9px;
+}
+
+.rrhh-detail-table td > small {
+    margin-top: 3px;
+    color: #8390a0;
+    font-size: 8px;
+}
+
+.rrhh-document-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 7px;
+    border: 1px solid #dce8df;
+    border-radius: 20px;
+    background: #f2f8f4;
+    color: #327353;
+    font-size: 8px;
+    font-weight: 700;
+}
+
+.rrhh-document-status.asignado {
+    border-color: #dce8f8;
+    background: #f1f7ff;
+    color: #315f96;
+}
+
+.rrhh-document-status.recibido {
+    border-color: #dce8df;
+    background: #f2f8f4;
+    color: #327353;
+}
+
+.rrhh-asset-rule {
+    border-color: #dce8f8;
+    background: #f5f9ff;
+    color: #2763a2;
+}
+
+.rrhh-asset-rule small {
+    color: #647a95;
+}
+
+.rrhh-row-action-link {
+    display: grid;
+    width: 29px;
+    height: 29px;
+    place-items: center;
+    border: 1px solid #e2e8ef;
+    border-radius: 7px;
+    color: #5e7188;
+    text-decoration: none;
+}
+
+.rrhh-row-action-link:hover {
+    border-color: #cbdced;
+    background: #f1f7ff;
+    color: #2763a2;
+}
+
+.rrhh-row-action-link .material-symbols {
+    font-size: 16px;
+}
+
+.rrhh-timeline {
+    display: grid;
+    gap: 0;
+    padding-left: 7px;
+}
+
+.rrhh-timeline article {
+    position: relative;
+    display: flex;
+    min-height: 43px;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.rrhh-timeline article:not(:last-child)::before {
+    position: absolute;
+    top: 10px;
+    bottom: -2px;
+    left: 3px;
+    width: 1px;
+    background: #dce3eb;
+    content: "";
+}
+
+.rrhh-timeline-dot {
+    z-index: 1;
+    width: 7px;
+    height: 7px;
+    flex: 0 0 7px;
+    margin-top: 3px;
+    border-radius: 50%;
+    background: #4a8f69;
+}
+
+.rrhh-timeline-dot.renovacion {
+    background: #4983bc;
+}
+
+.rrhh-timeline-dot.ingreso {
+    background: #9b8a52;
+}
+
+.rrhh-timeline article > div {
+    display: grid;
+    gap: 3px;
+}
+
+.rrhh-timeline strong {
+    color: #43536a;
+    font-size: 9px;
+}
+
+.rrhh-timeline small {
+    color: #8490a0;
+    font-size: 8px;
+}
+
+.rrhh-action-shell {
+    width: min(800px, 100%);
+}
+
+.rrhh-action-shell .rrhh-prototype-notice {
+    margin-top: 0;
+}
+
+.rrhh-action-form {
+    display: grid;
+    gap: 18px;
+    padding: 0 26px 24px;
+}
+
+.rrhh-action-context {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 13px;
+    border: 1px solid #e1e8ef;
+    border-radius: 9px;
+    background: #fff;
+}
+
+.rrhh-action-context > .material-symbols {
+    color: #3974ac;
+    font-size: 20px;
+}
+
+.rrhh-action-context > span:nth-child(2) {
+    display: grid;
+    flex: 1;
+    gap: 3px;
+}
+
+.rrhh-action-context small {
+    color: #7c899a;
+    font-size: 8px;
+}
+
+.rrhh-action-context strong {
+    color: #34445a;
+    font-size: 10px;
+}
+
+.rrhh-form-grid-two {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.rrhh-acta-upload {
+    display: grid;
+    grid-template-columns: 36px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px 12px;
+    padding: 13px;
+    border: 1px dashed #cbd7e3;
+    border-radius: 9px;
+    background: #fbfcfe;
+}
+
+.rrhh-acta-upload-icon {
+    display: grid;
+    width: 36px;
+    height: 36px;
+    place-items: center;
+    border-radius: 8px;
+    background: #fff0ef;
+    color: #be514a;
+    font-size: 20px;
+}
+
+.rrhh-acta-upload-copy {
+    display: grid;
+    gap: 4px;
+}
+
+.rrhh-acta-upload-copy strong {
+    color: #394a60;
+    font-size: 10px;
+}
+
+.rrhh-acta-upload-copy strong > span {
+    color: #c2413b;
+}
+
+.rrhh-acta-upload-copy small,
+.rrhh-file-picker-hint {
+    color: #7c899a;
+    font-size: 8px;
+    line-height: 1.45;
+}
+
+.rrhh-file-picker {
+    position: relative;
+    display: inline-flex;
+    min-height: 34px;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 0 10px;
+    border: 1px solid #d6e0ea;
+    border-radius: 7px;
+    background: #fff;
+    color: #315f96;
+    cursor: pointer;
+    font-size: 9px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.rrhh-file-picker:hover {
+    border-color: #afc5dd;
+    background: #f5f9ff;
+}
+
+.rrhh-file-picker .material-symbols {
+    font-size: 16px;
+}
+
+.rrhh-file-picker input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+}
+
+.rrhh-file-picker:focus-within {
+    outline: 3px solid rgba(39, 99, 181, .24);
+    outline-offset: 2px;
+}
+
+.rrhh-file-picker-hint {
+    grid-column: 2 / -1;
+    margin-top: -6px;
+}
+
+.rrhh-action-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 11px 13px;
+    border: 1px solid #efe5c8;
+    border-radius: 8px;
+    background: #fffcf2;
+    color: #806b35;
+}
+
+.rrhh-action-warning > .material-symbols {
+    flex: 0 0 auto;
+    font-size: 17px;
+}
+
+.rrhh-action-warning p {
+    margin: 0;
+    font-size: 9px;
+    line-height: 1.55;
+}
+
+.rrhh-action-footer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+    padding-top: 13px;
+    border-top: 1px solid #e7ebf0;
+}
+
+.rrhh-action-footer > a {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+}
+
+.rrhh-action-footer button,
+.rrhh-action-footer a {
+    min-height: 36px;
+    font-size: 9px;
+}
+
+.rrhh-action-footer .material-symbols {
+    margin-right: 5px;
+    font-size: 16px;
+    vertical-align: middle;
+}
+
+@media (max-width: 900px) {
+    .rrhh-operation-view:target {
+        padding: 10px;
+    }
+
+    .rrhh-operation-header {
+        padding: 18px 20px 15px;
+    }
+
+    .rrhh-detail-content {
+        padding: 0 20px 20px;
+    }
+
+    .rrhh-detail-panels {
+        padding: 16px;
+    }
+
+    .rrhh-action-form {
+        padding: 0 20px 20px;
+    }
+}
+
+@media (max-width: 600px) {
+    .rrhh-operation-view:target {
+        padding: 0;
+    }
+
+    .rrhh-operation-shell {
+        width: 100%;
+        height: 100%;
+        max-height: 100%;
+        border: 0;
+        border-radius: 0;
+    }
+
+    .rrhh-operation-header {
+        padding: 13px 14px;
+    }
+
+    .rrhh-detail-identity,
+    .rrhh-operation-title {
+        gap: 8px;
+    }
+
+    .rrhh-detail-header-actions {
+        order: 3;
+        width: 100%;
+        justify-content: flex-start;
+        margin: 0;
+    }
+
+    .rrhh-detail-header-actions .rrhh-header-action {
+        min-height: 31px;
+        padding-inline: 7px;
+        font-size: 8px;
+    }
+
+    .rrhh-more-actions summary {
+        min-height: 31px;
+        padding-inline: 7px;
+        font-size: 8px;
+    }
+
+    .rrhh-detail-shell > .rrhh-operation-header {
+        flex-wrap: wrap;
+    }
+
+    .rrhh-detail-avatar {
+        width: 38px;
+        height: 38px;
+        flex-basis: 38px;
+        font-size: 20px;
+    }
+
+    .rrhh-detail-identity h1,
+    .rrhh-operation-title h1 {
+        font-size: 15px;
+    }
+
+    .rrhh-detail-identity p,
+    .rrhh-operation-title p {
+        font-size: 9px;
+    }
+
+    .rrhh-detail-identity > .rrhh-state-badge {
+        display: none;
+    }
+
+    .rrhh-operation-title .rrhh-registration-heading-icon {
+        width: 36px;
+        height: 36px;
+        flex-basis: 36px;
+        font-size: 19px;
+    }
+
+    .rrhh-operation-view .rrhh-prototype-notice {
+        margin: 0 10px 10px;
+        padding: 8px 10px;
+        font-size: 8px;
+    }
+
+    .rrhh-detail-content {
+        padding: 0 10px 14px;
+    }
+
+    .rrhh-detail-tabs {
+        gap: 2px !important;
+        overflow-x: auto;
+    }
+
+    .rrhh-detail-tabs .view-tab {
+        min-width: 95px !important;
+        flex: 1 0 auto;
+        gap: 4px;
+        padding: 9px 6px 8px !important;
+        font-size: 8px !important;
+    }
+
+    .rrhh-detail-tabs .view-tab .material-symbols {
+        font-size: 15px !important;
+    }
+
+    .rrhh-detail-panels {
+        min-height: 0;
+        padding: 12px 10px;
+    }
+
+    .rrhh-detail-panel {
+        gap: 13px;
+    }
+
+    .rrhh-detail-card-grid,
+    .rrhh-detail-fields {
+        grid-template-columns: 1fr;
+    }
+
+    .rrhh-detail-card-grid {
+        gap: 9px;
+    }
+
+    .rrhh-detail-card {
+        padding: 12px;
+    }
+
+    .rrhh-detail-fields {
+        gap: 11px;
+    }
+
+    .rrhh-detail-panel-heading,
+    .rrhh-detail-heading-actions {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .rrhh-detail-panel-heading h2 {
+        font-size: 15px;
+    }
+
+    .rrhh-detail-panel-heading p {
+        line-height: 1.45;
+    }
+
+    .rrhh-operation-button {
+        min-height: 34px;
+    }
+
+    .rrhh-contract-facts {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .rrhh-history-item {
+        flex-wrap: wrap;
+    }
+
+    .rrhh-action-shell .rrhh-operation-header {
+        padding: 12px;
+    }
+
+    .rrhh-action-form {
+        gap: 13px;
+        padding: 0 12px 14px;
+    }
+
+    .rrhh-action-context {
+        flex-wrap: wrap;
+    }
+
+    .rrhh-action-context > .rrhh-contract-status {
+        margin-left: 30px;
+    }
+
+    .rrhh-form-grid-two,
+    .rrhh-form-grid-three {
+        grid-template-columns: 1fr;
+    }
+
+    .rrhh-acta-upload {
+        grid-template-columns: 32px minmax(0, 1fr);
+        gap: 8px;
+        padding: 10px;
+    }
+
+    .rrhh-acta-upload-icon {
+        width: 32px;
+        height: 32px;
+    }
+
+    .rrhh-file-picker {
+        grid-column: 1 / -1;
+        justify-self: start;
+    }
+
+    .rrhh-file-picker-hint {
+        grid-column: 1 / -1;
+        margin-top: 0;
+    }
+
+    .rrhh-action-footer {
+        justify-content: stretch;
+    }
+
+    .rrhh-action-footer > * {
+        flex: 1 1 auto;
+        justify-content: center;
+    }
+}
+
+.rrhh-card-demo-shell {
+    width: min(1120px, 100%);
+}
+
+.rrhh-card-demo-content {
+    min-width: 0;
+    padding: 0 24px 24px;
+}
+
+.rrhh-card-radio {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+}
+
+.rrhh-card-demo-layout {
+    display: grid;
+    grid-template-columns: minmax(230px, .75fr) minmax(0, 1.5fr);
+    gap: 20px;
+}
+
+.rrhh-card-demo-sidebar {
+    display: grid;
+    align-content: start;
+    gap: 12px;
+}
+
+.rrhh-card-selector-heading {
+    padding: 13px 14px 0;
+}
+
+.rrhh-card-selector-heading p {
+    margin: 5px 0 0;
+    color: #758297;
+    font-size: 9px;
+    line-height: 1.45;
+}
+
+.rrhh-card-selector {
+    display: grid;
+    gap: 5px;
+    padding: 6px;
+    border: 1px solid #e3e8ef;
+    border-radius: 10px;
+    background: #fff;
+}
+
+.rrhh-card-selector label {
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr) 16px;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    padding: 8px;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    color: #68778c;
+    cursor: pointer;
+    transition: background .15s ease, border-color .15s ease, color .15s ease;
+}
+
+.rrhh-card-selector label:hover {
+    border-color: #e0e8f1;
+    background: #f7faff;
+}
+
+.rrhh-card-selector label > span:nth-child(2) {
+    display: grid;
+    min-width: 0;
+    gap: 3px;
+}
+
+.rrhh-card-selector label strong {
+    overflow: hidden;
+    color: #37475c;
+    font-size: 9px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.rrhh-card-selector label small {
+    overflow: hidden;
+    color: #8490a0;
+    font-size: 8px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.rrhh-card-selector label > .material-symbols {
+    font-size: 16px;
+}
+
+.rrhh-card-selector-avatar {
+    display: grid;
+    width: 30px;
+    height: 30px;
+    place-items: center;
+    border-radius: 50%;
+    background: #edf2f7;
+    color: #64748b;
+    font-size: 8px;
+    font-weight: 750;
+}
+
+#rrhh-card-maria:checked ~ .rrhh-card-demo-layout .rrhh-card-selector label[for="rrhh-card-maria"],
+#rrhh-card-juan:checked ~ .rrhh-card-demo-layout .rrhh-card-selector label[for="rrhh-card-juan"],
+#rrhh-card-andres:checked ~ .rrhh-card-demo-layout .rrhh-card-selector label[for="rrhh-card-andres"],
+#rrhh-card-laura:checked ~ .rrhh-card-demo-layout .rrhh-card-selector label[for="rrhh-card-laura"],
+#rrhh-card-carlos:checked ~ .rrhh-card-demo-layout .rrhh-card-selector label[for="rrhh-card-carlos"] {
+    border-color: #cfe0f5;
+    background: #f1f7ff;
+    color: #2763a2;
+}
+
+#rrhh-card-maria:checked ~ .rrhh-card-demo-layout .rrhh-card-selector label[for="rrhh-card-maria"] strong,
+#rrhh-card-juan:checked ~ .rrhh-card-demo-layout .rrhh-card-selector label[for="rrhh-card-juan"] strong,
+#rrhh-card-andres:checked ~ .rrhh-card-demo-layout .rrhh-card-selector label[for="rrhh-card-andres"] strong,
+#rrhh-card-laura:checked ~ .rrhh-card-demo-layout .rrhh-card-selector label[for="rrhh-card-laura"] strong,
+#rrhh-card-carlos:checked ~ .rrhh-card-demo-layout .rrhh-card-selector label[for="rrhh-card-carlos"] strong {
+    color: #245c93;
+}
+
+#rrhh-card-maria:focus-visible ~ .rrhh-card-demo-layout .rrhh-card-selector label[for="rrhh-card-maria"],
+#rrhh-card-juan:focus-visible ~ .rrhh-card-demo-layout .rrhh-card-selector label[for="rrhh-card-juan"],
+#rrhh-card-andres:focus-visible ~ .rrhh-card-demo-layout .rrhh-card-selector label[for="rrhh-card-andres"],
+#rrhh-card-laura:focus-visible ~ .rrhh-card-demo-layout .rrhh-card-selector label[for="rrhh-card-laura"],
+#rrhh-card-carlos:focus-visible ~ .rrhh-card-demo-layout .rrhh-card-selector label[for="rrhh-card-carlos"] {
+    outline: 3px solid rgba(39, 99, 181, .28);
+    outline-offset: 2px;
+}
+
+.rrhh-card-privacy-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px;
+    border: 1px solid #dce8f8;
+    border-radius: 8px;
+    background: #f5f9ff;
+    color: #536782;
+}
+
+.rrhh-card-privacy-note .material-symbols {
+    flex: 0 0 auto;
+    color: #3974ac;
+    font-size: 16px;
+}
+
+.rrhh-card-privacy-note p {
+    margin: 1px 0 0;
+    font-size: 8px;
+    line-height: 1.5;
+}
+
+.rrhh-card-preview-area {
+    min-width: 0;
+    padding: 18px;
+    border: 1px solid #e1e7ee;
+    border-radius: 11px;
+    background-color: #f2f5f9;
+    background-image: radial-gradient(#dce3eb .8px, transparent .8px);
+    background-position: 0 0;
+    background-size: 16px 16px;
+}
+
+.rrhh-card-preview {
+    display: none;
+    grid-template-columns: minmax(240px, 1fr) minmax(175px, .7fr);
+    align-items: center;
+    gap: 17px;
+    min-height: 390px;
+}
+
+#rrhh-card-maria:checked ~ .rrhh-card-demo-layout .rrhh-card-preview-maria,
+#rrhh-card-juan:checked ~ .rrhh-card-demo-layout .rrhh-card-preview-juan,
+#rrhh-card-andres:checked ~ .rrhh-card-demo-layout .rrhh-card-preview-andres,
+#rrhh-card-laura:checked ~ .rrhh-card-demo-layout .rrhh-card-preview-laura,
+#rrhh-card-carlos:checked ~ .rrhh-card-demo-layout .rrhh-card-preview-carlos {
+    display: grid;
+}
+
+.rrhh-virtual-card {
+    display: flex;
+    width: 100%;
+    max-width: 350px;
+    min-height: 410px;
+    flex-direction: column;
+    align-items: center;
+    justify-self: center;
+    padding: 17px 19px 13px;
+    border: 1px solid #dfe5ec;
+    border-radius: 15px;
+    background: #fff;
+    box-shadow: 0 12px 28px rgba(37, 55, 78, .12);
+}
+
+.rrhh-virtual-card-brand {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 7px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #edf0f3;
+    color: #2763a2;
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: .06em;
+}
+
+.rrhh-virtual-card-brand > .material-symbols {
+    font-size: 18px;
+}
+
+.rrhh-virtual-card-brand small {
+    display: block;
+    margin-top: 2px;
+    color: #8995a5;
+    font-size: 6px;
+    font-weight: 700;
+    letter-spacing: .1em;
+}
+
+.rrhh-virtual-card-person {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    margin: 15px 0 10px;
+}
+
+.rrhh-virtual-photo {
+    position: relative;
+    display: grid;
+    width: 90px;
+    height: 90px;
+    place-items: center;
+    border: 2px solid #dbe3eb;
+    border-radius: 50%;
+    background: linear-gradient(145deg, #f3f6f9, #e8eef4);
+    color: #8492a2;
+}
+
+.rrhh-virtual-photo > .material-symbols {
+    font-size: 42px;
+}
+
+.rrhh-virtual-photo small {
+    position: absolute;
+    bottom: 12px;
+    padding: 2px 6px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, .9);
+    color: #65748a;
+    font-size: 6px;
+    font-weight: 800;
+    letter-spacing: .1em;
+}
+
+.rrhh-card-state {
+    position: absolute;
+    right: -53px;
+    bottom: 1px;
+    padding: 6px 9px;
+    border: 1px solid #cfe6d8;
+    border-radius: 6px;
+    background: #f1f8f3;
+    color: #27704d;
+    font-size: 8px;
+    font-weight: 750;
+    white-space: nowrap;
+}
+
+.rrhh-card-state.inicial {
+    border-color: #d7e5ef;
+    background: #f0f6fa;
+    color: #4d7792;
+}
+
+.rrhh-card-state.proceso {
+    border-color: #efe2c7;
+    background: #fffbf1;
+    color: #98722b;
+}
+
+.rrhh-card-state.retirado {
+    border-color: #e0e5e9;
+    background: #f2f4f6;
+    color: #68778c;
+}
+
+.rrhh-virtual-card-info {
+    display: grid;
+    width: 100%;
+    gap: 7px;
+    margin: 4px 0 10px;
+    text-align: center;
+}
+
+.rrhh-virtual-card-info > * {
+    display: block;
+    padding: 8px 10px;
+    border: 1px solid #e2e8ef;
+    border-radius: 6px;
+    background: #fff;
+    color: #52627a;
+    font-size: 9px;
+}
+
+.rrhh-virtual-card-info strong {
+    color: #2f4057;
+    font-size: 11px;
+    font-weight: 750;
+}
+
+.rrhh-virtual-card-documents {
+    display: grid;
+    width: 100%;
+    gap: 6px;
+    margin-top: auto;
+    padding: 10px;
+    border: 1px solid #e2e8ef;
+    border-radius: 8px;
+    background: #f9fafc;
+}
+
+.rrhh-virtual-card-documents > span {
+    color: #52627a;
+    font-size: 8px;
+    font-weight: 750;
+}
+
+.rrhh-virtual-card-documents > strong {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: #7a8798;
+    font-size: 7px;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.rrhh-virtual-card-documents > strong .material-symbols {
+    flex: 0 0 auto;
+    font-size: 14px;
+}
+
+.rrhh-virtual-card footer {
+    margin-top: 10px;
+    color: #9aa4b1;
+    font-size: 6px;
+    text-align: center;
+}
+
+.rrhh-card-qr-panel {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 17px 12px;
+    border: 1px solid #e1e7ee;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, .95);
+    text-align: center;
+}
+
+.rrhh-card-qr-panel > .material-symbols {
+    color: #3974ac;
+    font-size: 34px;
+}
+
+.rrhh-qr-label {
+    color: #53647b;
+    font-size: 9px;
+    font-weight: 750;
+}
+
+.rrhh-card-qr-panel img {
+    display: block;
+    width: min(100%, 150px);
+    height: auto;
+    padding: 5px;
+    border: 1px solid #e7ebf0;
+    border-radius: 5px;
+    background: #fff;
+    image-rendering: pixelated;
+}
+
+.rrhh-card-qr-panel > p {
+    max-width: 190px;
+    margin: 0;
+    color: #738196;
+    font-size: 8px;
+    line-height: 1.5;
+}
+
+.rrhh-qr-download {
+    display: inline-flex;
+    min-height: 31px;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 0 9px;
+    border: 1px solid #d6e0ea;
+    border-radius: 7px;
+    background: #fff;
+    color: #315f96;
+    font-size: 8px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.rrhh-qr-download:hover {
+    border-color: #afc5dd;
+    background: #f5f9ff;
+}
+
+.rrhh-qr-download .material-symbols {
+    font-size: 15px;
+}
+
+@media (max-width: 900px) {
+    .rrhh-card-demo-content {
+        padding: 0 18px 20px;
+    }
+
+    .rrhh-card-demo-layout {
+        grid-template-columns: minmax(190px, .8fr) minmax(0, 1.2fr);
+        gap: 12px;
+    }
+
+    .rrhh-card-preview-area {
+        padding: 12px;
+    }
+
+    .rrhh-card-preview {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .rrhh-card-qr-panel {
+        width: min(100%, 350px);
+        justify-self: center;
+    }
+}
+
+@media (max-width: 600px) {
+    .rrhh-card-demo-content {
+        padding: 0 10px 14px;
+    }
+
+    .rrhh-card-demo-layout {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .rrhh-card-selector-heading {
+        padding: 5px 2px 0;
+    }
+
+    .rrhh-card-selector {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 4px;
+        padding: 4px;
+    }
+
+    .rrhh-card-selector label {
+        grid-template-columns: 25px minmax(0, 1fr);
+        gap: 5px;
+        padding: 6px 4px;
+    }
+
+    .rrhh-card-selector label > .material-symbols {
+        display: none;
+    }
+
+    .rrhh-card-selector-avatar {
+        width: 24px;
+        height: 24px;
+        font-size: 7px;
+    }
+
+    .rrhh-card-selector label strong {
+        font-size: 7px;
+    }
+
+    .rrhh-card-selector label small {
+        font-size: 7px;
+    }
+
+    .rrhh-card-preview-area {
+        padding: 9px;
+    }
+
+    .rrhh-card-preview {
+        min-height: 0;
+        gap: 9px;
+    }
+
+    .rrhh-virtual-card {
+        max-width: 330px;
+        min-height: 385px;
+        padding: 14px;
+    }
+
+    .rrhh-card-privacy-note {
+        padding: 8px;
+    }
+}

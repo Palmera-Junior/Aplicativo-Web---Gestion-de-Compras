@@ -3,16 +3,783 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Principal RRHH | GestiÃ³n de Compras</title>
+    <title>Empleados | Gestión de Compras</title>
     <link rel="stylesheet" th:href="@{/css/compras.css}">
+    <link rel="stylesheet" th:href="@{/css/recursos-humanos.css}">
+    <link rel="stylesheet" th:href="@{/css/catalogos.css}">
     <link rel="stylesheet" th:href="@{/css/navigation.css}">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap">
 </head>
 <body>
     <header th:replace="~{fragments/encabezado :: administracion}"></header>
     <div th:replace="~{fragments/navegacion :: principal('rrhh-principal')}"></div>
-    <main class="dashboard-container">
-        <h1>VISTA PRINCIPAL</h1>
+    <main class="dashboard-container rrhh-container permission-management-page">
+        <div class="rrhh-header">
+            <div class="rrhh-heading">
+                <span class="material-symbols rrhh-heading-icon" aria-hidden="true">badge</span>
+                <div>
+                    <h1>Empleados</h1>
+                    <p class="rrhh-subtitle">Gestiona el registro, la contratación, la actividad y el retiro del personal.</p>
+                </div>
+            </div>
+            <a href="#registro-empleado" class="btn-primary rrhh-create-button" id="btn-nuevo-empleado">
+                <span class="material-symbols" aria-hidden="true">person_add</span>
+                Nuevo empleado
+            </a>
+        </div>
+
+        <section class="rrhh-summary" aria-labelledby="rrhh-summary-title">
+            <div class="rrhh-section-heading">
+                <div>
+                    <h2 id="rrhh-summary-title">Resumen de empleados</h2>
+                    <p>Distribución de empleados por estado.</p>
+                </div>
+                <div class="rrhh-total">
+                    <strong th:text="${totalEmpleados}">0</strong>
+                    <span>TOTAL</span>
+                </div>
+            </div>
+            <div class="rrhh-status-grid">
+                <article class="rrhh-status-card registro">
+                    <span class="rrhh-status-icon material-symbols" aria-hidden="true">edit_note</span>
+                    <div><strong th:text="${cantidadRegistroInicial}">0</strong><span>Registro inicial</span></div>
+                    <span class="rrhh-status-detail">Datos iniciales por completar</span>
+                </article>
+                <article class="rrhh-status-card contratacion">
+                    <span class="rrhh-status-icon material-symbols" aria-hidden="true">pending_actions</span>
+                    <div><strong th:text="${cantidadProcesoContratacion}">0</strong><span>Proceso de contratación</span></div>
+                    <span class="rrhh-status-detail">Proceso de incorporación en curso</span>
+                </article>
+                <article class="rrhh-status-card activo">
+                    <span class="rrhh-status-icon material-symbols" aria-hidden="true">how_to_reg</span>
+                    <div><strong th:text="${cantidadActivos}">0</strong><span>Activos</span></div>
+                    <span class="rrhh-status-detail">Vinculación vigente</span>
+                </article>
+                <article class="rrhh-status-card retirado">
+                    <span class="rrhh-status-icon material-symbols" aria-hidden="true">person_off</span>
+                    <div><strong th:text="${cantidadRetirados}">0</strong><span>Retirados</span></div>
+                    <span class="rrhh-status-detail">Vinculación finalizada</span>
+                </article>
+            </div>
+        </section>
+
+        <form class="rrhh-filters" method="get" action="/recursos-humanos/principal">
+            <div class="rrhh-filter-title">
+                <span class="material-symbols" aria-hidden="true">filter_alt</span>
+                <span>Filtros</span>
+            </div>
+            <label class="rrhh-search-field">
+                <span class="material-symbols" aria-hidden="true">search</span>
+                <input type="search" name="q" placeholder="Buscar por nombre, documento o cargo...">
+            </label>
+            <label class="sr-only" for="rrhh-filtro-estado">Estado</label>
+            <select class="input-control rrhh-filter-control" id="rrhh-filtro-estado" name="estado">
+                <option value="">Todos los estados</option>
+                <option value="REGISTRO_INICIAL">Registro inicial</option>
+                <option value="PROCESO_CONTRATACION">Proceso de contratación</option>
+                <option value="ACTIVO">Activos</option>
+                <option value="RETIRADO">Retirados</option>
+            </select>
+            <label class="sr-only" for="rrhh-filtro-area">Área</label>
+            <select class="input-control rrhh-filter-control" id="rrhh-filtro-area" name="area">
+                <option value="">Todas las áreas</option>
+                <option value="Administrativa">Administrativa</option>
+                <option value="Comercial">Comercial</option>
+                <option value="Operaciones">Operaciones</option>
+            </select>
+            <label class="sr-only" for="rrhh-filtro-sede">Sede</label>
+            <select class="input-control rrhh-filter-control rrhh-branch-filter" id="rrhh-filtro-sede" name="sede">
+                <option value="">Todas las sedes</option>
+                <option value="bogota">Bogotá</option>
+                <option value="medellin">Medellín</option>
+                <option value="cali">Cali</option>
+            </select>
+            <div class="rrhh-filter-actions">
+                <button class="btn-secondary rrhh-search-button" type="submit" title="Aplicar filtros" aria-label="Aplicar filtros">
+                    <span class="material-symbols" aria-hidden="true">search</span>
+                </button>
+                <a class="btn-secondary rrhh-clear-button" href="/recursos-humanos/principal" title="Limpiar filtros" aria-label="Limpiar filtros">
+                    <span class="material-symbols" aria-hidden="true">close</span>
+                </a>
+            </div>
+        </form>
+
+        <section class="rrhh-directory" id="directorio-empleados" aria-labelledby="rrhh-directory-title">
+            <div class="rrhh-directory-heading">
+                <div>
+                    <h2 id="rrhh-directory-title">Directorio de empleados</h2>
+                    <p>Los registros iniciales y en contratación se continúan desde <strong>Editar</strong>; los activos se consultan desde <strong>Ver</strong>.</p>
+                </div>
+                <span class="rrhh-results-count" th:text="|${#lists.size(empleados)} resultados|">42 resultados</span>
+            </div>
+            <div class="table-responsive rrhh-table-wrap">
+                <table class="data-table rrhh-table">
+                    <thead>
+                        <tr>
+                            <th>Empleado</th>
+                            <th>Documento</th>
+                            <th>Cargo / área</th>
+                            <th>Centro de costo</th>
+                            <th>Estado</th>
+                            <th class="rrhh-actions-heading">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="empleado : ${empleados}">
+                            <td>
+                                <div class="rrhh-employee-cell">
+                                    <span class="rrhh-avatar material-symbols" aria-hidden="true">person</span>
+                                    <span class="rrhh-employee-name"
+                                          th:text="${empleado.primerNombre + ' ' + (empleado.segundoNombre ?: '') + ' ' + empleado.primerApellido + ' ' + (empleado.segundoApellido ?: '')}">Nombre del empleado</span>
+                                </div>
+                            </td>
+                            <td class="rrhh-document" th:text="${empleado.numeroDocumento}">Documento</td>
+                            <td>
+                                <span class="rrhh-job-title"
+                                      th:text="${empleado.cargo != null ? empleado.cargo.nombre : 'Sin cargo'}">Cargo</span>
+                                <span class="rrhh-area"
+                                      th:text="${empleado.area != null ? empleado.area.nombre : 'Sin área'}">Área</span>
+                            </td>
+                            <td th:text="${empleado.centroCosto != null ? empleado.centroCosto.nombre : 'Sin centro de costo'}">Centro de costo</td>
+                            <td>
+                                <span class="rrhh-state-badge"
+                                      th:classappend="${'estado-' + #strings.toLowerCase(empleado.estado.name())}"
+                                      th:text="${empleado.estado.etiqueta}">Estado</span>
+                            </td>
+                            <td class="rrhh-row-actions">
+                                <a class="btn-icon" th:if="${empleado.estado.name() == 'REGISTRO_INICIAL' or empleado.estado.name() == 'PROCESO_CONTRATACION'}"
+                                   href="#registro-empleado" title="Editar registro" aria-label="Editar empleado">
+                                    <span class="material-symbols" aria-hidden="true">edit</span>
+                                </a>
+                                <a class="btn-icon"
+                                   th:if="${empleado.estado.name() == 'ACTIVO' or empleado.estado.name() == 'RETIRADO'}"
+                                   th:href="@{/recursos-humanos/principal(empleadoId=${empleado.idEmpleado})} + '#ficha-empleado'"
+                                   title="Ver ficha y auditoría" aria-label="Ver ficha y auditoría del empleado">
+                                    <span class="material-symbols" aria-hidden="true">visibility</span>
+                                </a>
+                                <a class="btn-icon" href="#tarjetas-empleados" title="Gestionar QR público" aria-label="Gestionar QR del empleado">
+                                    <span class="material-symbols" aria-hidden="true">qr_code_2</span>
+                                </a>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(empleados)}">
+                            <td colspan="6" class="rrhh-empty-directory">No hay empleados registrados.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
     </main>
+
+    <section class="rrhh-operation-view rrhh-employee-detail-view" id="ficha-empleado" aria-labelledby="rrhh-detail-title">
+        <div class="rrhh-operation-shell rrhh-detail-shell permission-management-page">
+            <header class="rrhh-operation-header">
+                <div class="rrhh-detail-identity">
+                    <span class="rrhh-detail-avatar material-symbols" aria-hidden="true">person</span>
+                    <div>
+                        <span class="rrhh-registration-eyebrow">Ficha del empleado / Vista de consulta</span>
+                        <h1 id="rrhh-detail-title"
+                            th:text="${empleadoSeleccionado != null ? empleadoSeleccionado.primerNombre + ' ' + (empleadoSeleccionado.segundoNombre ?: '') + ' ' + empleadoSeleccionado.primerApellido + ' ' + (empleadoSeleccionado.segundoApellido ?: '') : 'Ficha del empleado'}">Ficha del empleado</h1>
+                        <p th:if="${empleadoSeleccionado != null}"
+                           th:text="${'Documento ' + empleadoSeleccionado.numeroDocumento}">Documento</p>
+                    </div>
+                    <span class="rrhh-state-badge"
+                          th:if="${empleadoSeleccionado != null}"
+                          th:classappend="${'estado-' + #strings.toLowerCase(empleadoSeleccionado.estado.name())}"
+                          th:text="${empleadoSeleccionado.estado.etiqueta}">Estado</span>
+                </div>
+                <div class="rrhh-detail-header-actions">
+                    <a class="btn-secondary rrhh-header-action" href="#editar-datos-empleado"><span class="material-symbols" aria-hidden="true">edit</span>Editar datos</a>
+                    <label class="btn-secondary rrhh-header-action" for="rrhh-detail-contracts"><span class="material-symbols" aria-hidden="true">contract</span>Gestionar contrato</label>
+                    <details class="rrhh-more-actions">
+                        <summary><span class="material-symbols" aria-hidden="true">more_horiz</span>Más acciones</summary>
+                        <div>
+                            <a href="#asignar-herramienta"><span class="material-symbols" aria-hidden="true">inventory_2</span>Asignar herramienta</a>
+                            <a href="#renovar-contrato"><span class="material-symbols" aria-hidden="true">autorenew</span>Iniciar renovación</a>
+                        </div>
+                    </details>
+                </div>
+                <a class="rrhh-registration-close" href="#directorio-empleados" aria-label="Cerrar ficha" title="Cerrar">
+                    <span class="material-symbols" aria-hidden="true">close</span>
+                </a>
+            </header>
+
+            <div class="rrhh-prototype-notice" role="note">
+                <span class="material-symbols" aria-hidden="true">info</span>
+                <span>Auditoría muestra los cambios de estado registrados para el empleado seleccionado. Las demás pestañas aún contienen datos demostrativos.</span>
+            </div>
+
+            <div class="rrhh-detail-content">
+                <input class="rrhh-detail-radio" type="radio" name="pestana-ficha" id="rrhh-detail-profile" checked>
+                <input class="rrhh-detail-radio" type="radio" name="pestana-ficha" id="rrhh-detail-contracts">
+                <input class="rrhh-detail-radio" type="radio" name="pestana-ficha" id="rrhh-detail-documents">
+                <input class="rrhh-detail-radio" type="radio" name="pestana-ficha" id="rrhh-detail-assets">
+                <input class="rrhh-detail-radio" type="radio" name="pestana-ficha" id="rrhh-detail-audit">
+
+                <nav class="permission-tabs view-tabs rrhh-detail-tabs" aria-label="Secciones de la ficha del empleado">
+                    <label class="view-tab" for="rrhh-detail-profile"><span class="material-symbols" aria-hidden="true">badge</span>Perfil</label>
+                    <label class="view-tab" for="rrhh-detail-contracts"><span class="material-symbols" aria-hidden="true">contract</span>Contratos</label>
+                    <label class="view-tab" for="rrhh-detail-documents"><span class="material-symbols" aria-hidden="true">description</span>Documentos</label>
+                    <label class="view-tab" for="rrhh-detail-assets"><span class="material-symbols" aria-hidden="true">inventory_2</span>Asignaciones</label>
+                    <label class="view-tab" for="rrhh-detail-audit"><span class="material-symbols" aria-hidden="true">manage_search</span>Auditoría</label>
+                </nav>
+
+                <div class="rrhh-detail-panels">
+                    <section class="rrhh-detail-panel rrhh-detail-profile" aria-labelledby="rrhh-profile-heading">
+                        <div class="rrhh-detail-panel-heading">
+                            <div><span class="rrhh-step-kicker">Información del empleado</span><h2 id="rrhh-profile-heading">Perfil personal y laboral</h2><p>Datos registrados para consulta; las modificaciones se gestionan por un flujo autorizado.</p></div>
+                        </div>
+                        <div class="rrhh-detail-card-grid">
+                            <article class="rrhh-detail-card">
+                                <h3><span class="material-symbols" aria-hidden="true">person</span>Datos personales</h3>
+                                <dl class="rrhh-detail-fields">
+                                    <div><dt>Documento</dt><dd>Cédula de ciudadanía · 80.125.447</dd></div>
+                                    <div><dt>Fecha de nacimiento</dt><dd>18 de marzo de 1991</dd></div>
+                                    <div><dt>Celular</dt><dd>+57 310 555 0184</dd></div>
+                                    <div><dt>Correo</dt><dd>carlos.mendez@empresa.com</dd></div>
+                                    <div><dt>Dirección</dt><dd>Chapinero, Bogotá D. C.</dd></div>
+                                    <div><dt>Formación</dt><dd>Tecnólogo en mantenimiento industrial</dd></div>
+                                </dl>
+                            </article>
+                            <article class="rrhh-detail-card">
+                                <h3><span class="material-symbols" aria-hidden="true">work</span>Información laboral</h3>
+                                <dl class="rrhh-detail-fields">
+                                    <div><dt>Cargo</dt><dd>Técnico de servicio</dd></div>
+                                    <div><dt>Área</dt><dd>Operaciones</dd></div>
+                                    <div><dt>Sede</dt><dd>Bogotá</dd></div>
+                                    <div><dt>Centro de costo</dt><dd>Operaciones Bogotá</dd></div>
+                                    <div><dt>Fecha de ingreso</dt><dd>12 de julio de 2026</dd></div>
+                                    <div><dt>Estado</dt><dd><span class="rrhh-state-badge estado-activo">Activo</span></dd></div>
+                                </dl>
+                            </article>
+                        </div>
+                        <div class="rrhh-detail-footnote"><span class="material-symbols" aria-hidden="true">lock</span>La ficha es de consulta. Los cambios de datos personales requieren una acción de edición autorizada y deben quedar en el historial.</div>
+                    </section>
+
+                    <section class="rrhh-detail-panel rrhh-detail-contracts" aria-labelledby="rrhh-contracts-heading">
+                        <div class="rrhh-detail-panel-heading rrhh-detail-heading-actions">
+                            <div><span class="rrhh-step-kicker">Vinculación laboral</span><h2 id="rrhh-contracts-heading">Contratos</h2><p>Consulta el contrato vigente y las renovaciones anteriores del empleado.</p></div>
+                            <a class="btn-primary rrhh-operation-button" href="#renovar-contrato"><span class="material-symbols" aria-hidden="true">autorenew</span>Iniciar renovación</a>
+                        </div>
+                        <article class="rrhh-current-contract">
+                            <div class="rrhh-current-contract-heading">
+                                <div><span class="rrhh-contract-label">Contrato vigente</span><h3>Término fijo</h3></div>
+                                <span class="rrhh-contract-status"><span></span>Vigente</span>
+                            </div>
+                            <dl class="rrhh-contract-facts">
+                                <div><dt>Número</dt><dd>CT-2026-084</dd></div>
+                                <div><dt>Inicio</dt><dd>12 jul 2026</dd></div>
+                                <div><dt>Vencimiento</dt><dd>11 jul 2027</dd></div>
+                                <div><dt>Cargo</dt><dd>Técnico de servicio</dd></div>
+                            </dl>
+                            <div class="rrhh-contract-reminder"><span class="material-symbols" aria-hidden="true">notifications_active</span><span><strong>Seguimiento de vencimiento</strong><small>La decisión de renovación debe registrarse antes de la fecha de vencimiento.</small></span></div>
+                            <a class="rrhh-file-link" href="#rrhh-contracts-heading"><span class="material-symbols" aria-hidden="true">picture_as_pdf</span>Contrato firmado · PDF<span class="material-symbols" aria-hidden="true">open_in_new</span></a>
+                        </article>
+                        <div class="rrhh-history-heading"><h3>Historial de contratos</h3><span>Más reciente primero</span></div>
+                        <div class="rrhh-history-list">
+                            <article class="rrhh-history-item"><span class="rrhh-history-icon material-symbols" aria-hidden="true">history</span><div><strong>CT-2026-084 · Término fijo</strong><small>12 jul 2026 – 11 jul 2027 · Vigente</small></div><span class="rrhh-history-badge vigente">Vigente</span></article>
+                            <article class="rrhh-history-item"><span class="rrhh-history-icon material-symbols" aria-hidden="true">history</span><div><strong>CT-2025-041 · Término fijo</strong><small>12 jul 2025 – 11 jul 2026 · Vencido</small></div><a class="rrhh-file-link" href="#rrhh-contracts-heading"><span class="material-symbols" aria-hidden="true">picture_as_pdf</span>Ver contrato</a></article>
+                        </div>
+                        <div class="rrhh-detail-footnote"><span class="material-symbols" aria-hidden="true">link</span>Una renovación crea un nuevo contrato asociado a este mismo empleado; no duplica su ficha ni modifica el historial anterior.</div>
+                    </section>
+
+                    <section class="rrhh-detail-panel rrhh-detail-documents" aria-labelledby="rrhh-documents-heading">
+                        <div class="rrhh-detail-panel-heading rrhh-detail-heading-actions"><div><span class="rrhh-step-kicker">Expediente del empleado</span><h2 id="rrhh-documents-heading">Documentos</h2><p>Consulta el expediente y agrega certificados u otros documentos.</p></div><button class="btn-primary rrhh-operation-button" type="button"><span class="material-symbols" aria-hidden="true">upload_file</span>Agregar documento</button></div>
+                        <div class="rrhh-detail-table-wrap">
+                            <table class="rrhh-detail-table">
+                                <thead><tr><th>Documento</th><th>Categoría</th><th>Fecha</th><th>Estado</th><th>Archivo</th></tr></thead>
+                                <tbody>
+                                    <tr><td>Documento de identidad</td><td>Ingreso</td><td>10 jul 2026</td><td><span class="rrhh-document-status completo">Completo</span></td><td><a class="rrhh-file-link" href="#rrhh-documents-heading"><span class="material-symbols" aria-hidden="true">picture_as_pdf</span>Ver PDF</a></td></tr>
+                                    <tr><td>Hoja de vida</td><td>Ingreso</td><td>10 jul 2026</td><td><span class="rrhh-document-status completo">Completo</span></td><td><a class="rrhh-file-link" href="#rrhh-documents-heading"><span class="material-symbols" aria-hidden="true">picture_as_pdf</span>Ver PDF</a></td></tr>
+                                    <tr><td>Certificado de afiliación EPS</td><td>Afiliaciones</td><td>11 jul 2026</td><td><span class="rrhh-document-status completo">Completo</span></td><td><a class="rrhh-file-link" href="#rrhh-documents-heading"><span class="material-symbols" aria-hidden="true">picture_as_pdf</span>Ver PDF</a></td></tr>
+                                    <tr><td>Contrato de trabajo firmado</td><td>Contrato</td><td>12 jul 2026</td><td><span class="rrhh-document-status completo">Completo</span></td><td><a class="rrhh-file-link" href="#rrhh-documents-heading"><span class="material-symbols" aria-hidden="true">picture_as_pdf</span>Ver PDF</a></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="rrhh-detail-footnote"><span class="material-symbols" aria-hidden="true">verified_user</span>Los documentos del expediente son privados. Solo el certificado de ARL marcado para publicación se podrá consultar desde la tarjeta QR pública.</div>
+                    </section>
+
+                    <section class="rrhh-detail-panel rrhh-detail-assets" aria-labelledby="rrhh-assets-heading">
+                        <div class="rrhh-detail-panel-heading rrhh-detail-heading-actions">
+                            <div><span class="rrhh-step-kicker">Elementos a cargo</span><h2 id="rrhh-assets-heading">Asignaciones e historial</h2><p>Cada herramienta entregada conserva su propia acta y trazabilidad.</p></div>
+                            <a class="btn-primary rrhh-operation-button" href="#asignar-herramienta"><span class="material-symbols" aria-hidden="true">add_box</span>Asignar herramienta</a>
+                        </div>
+                        <div class="rrhh-asset-rule"><span class="material-symbols" aria-hidden="true">fact_check</span><span><strong>Una herramienta, un acta de entrega.</strong><small>La entrega no se marca como completa sin el acta PDF correspondiente a ese elemento.</small></span></div>
+                        <div class="rrhh-detail-table-wrap">
+                            <table class="rrhh-detail-table rrhh-assets-table">
+                                <thead><tr><th>Herramienta</th><th>Identificación</th><th>Fecha de entrega</th><th>Estado</th><th>Acta individual</th><th></th></tr></thead>
+                                <tbody>
+                                    <tr><td><strong>Computador portátil</strong><small>Lenovo ThinkPad E14</small></td><td>Activo TI-1042</td><td>12 jul 2026</td><td><span class="rrhh-document-status asignado">Asignado</span></td><td><a class="rrhh-file-link" href="#rrhh-assets-heading"><span class="material-symbols" aria-hidden="true">picture_as_pdf</span>Acta-1042.pdf</a></td><td><a class="rrhh-row-action-link" href="#asignar-herramienta" aria-label="Ver asignación del computador"><span class="material-symbols" aria-hidden="true">visibility</span></a></td></tr>
+                                    <tr><td><strong>Mouse inalámbrico</strong><small>Logitech M185</small></td><td>Activo TI-1098</td><td>12 jul 2026</td><td><span class="rrhh-document-status asignado">Asignado</span></td><td><a class="rrhh-file-link" href="#rrhh-assets-heading"><span class="material-symbols" aria-hidden="true">picture_as_pdf</span>Acta-1098.pdf</a></td><td><a class="rrhh-row-action-link" href="#asignar-herramienta" aria-label="Ver asignación del mouse"><span class="material-symbols" aria-hidden="true">visibility</span></a></td></tr>
+                                    <tr><td><strong>Base para laptop</strong><small>Ergonómica, ajustable</small></td><td>Activo TI-1120</td><td>18 oct 2026</td><td><span class="rrhh-document-status recibido">Recibido</span></td><td><a class="rrhh-file-link" href="#rrhh-assets-heading"><span class="material-symbols" aria-hidden="true">picture_as_pdf</span>Acta-1120.pdf</a></td><td><span class="rrhh-row-action-link" aria-label="Herramienta recibida"><span class="material-symbols" aria-hidden="true">task_alt</span></span></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="rrhh-history-heading"><h3>Actividad reciente</h3><span>Registro cronológico</span></div>
+                        <div class="rrhh-timeline">
+                            <article><span class="rrhh-timeline-dot entregado"></span><div><strong>Computador portátil y mouse asignados</strong><small>12 jul 2026 · Actas individuales registradas</small></div></article>
+                            <article><span class="rrhh-timeline-dot renovacion"></span><div><strong>Contrato CT-2026-084 formalizado</strong><small>12 jul 2026 · Renovación vinculada al historial del empleado</small></div></article>
+                            <article><span class="rrhh-timeline-dot ingreso"></span><div><strong>Empleado activado</strong><small>12 jul 2026 · Inicio de vinculación</small></div></article>
+                        </div>
+                    </section>
+
+                    <section class="rrhh-detail-panel rrhh-detail-audit" aria-labelledby="rrhh-audit-heading">
+                        <div class="rrhh-detail-panel-heading">
+                            <div>
+                                <span class="rrhh-step-kicker">Trazabilidad del empleado</span>
+                                <h2 id="rrhh-audit-heading">Auditoría de estados</h2>
+                                <p>Historial de transiciones de estado almacenadas en el sistema, de la más reciente a la más antigua.</p>
+                            </div>
+                        </div>
+                        <div class="rrhh-detail-table-wrap" th:if="${empleadoSeleccionado != null and !#lists.isEmpty(historialEstados)}">
+                            <table class="rrhh-detail-table rrhh-audit-table">
+                                <thead>
+                                    <tr><th>Fecha y hora</th><th>Estado anterior</th><th>Estado nuevo</th><th>Usuario</th><th>Detalle</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="cambio : ${historialEstados}">
+                                        <td><time th:datetime="${cambio.fechaCambio}" th:text="${cambio.fechaCambio}">Fecha</time></td>
+                                        <td th:text="${cambio.estadoAnterior != null ? cambio.estadoAnterior.etiqueta : 'Sin estado previo'}">Estado anterior</td>
+                                        <td th:text="${cambio.estadoNuevo.etiqueta}">Estado nuevo</td>
+                                        <td th:text="${cambio.usuario.nombreUsuario}">Usuario</td>
+                                        <td class="rrhh-audit-detail" th:text="${cambio.detalle ?: '—'}">Detalle</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <p class="rrhh-audit-empty" th:if="${empleadoSeleccionado == null}">Abre la ficha de un empleado desde el directorio para consultar su auditoría.</p>
+                        <p class="rrhh-audit-empty" th:if="${empleadoSeleccionado != null and #lists.isEmpty(historialEstados)}">Este empleado aún no tiene cambios de estado registrados.</p>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="rrhh-operation-view" id="tarjetas-empleados" aria-labelledby="rrhh-card-demo-title">
+        <div class="rrhh-operation-shell rrhh-card-demo-shell permission-management-page">
+            <header class="rrhh-operation-header">
+                <div class="rrhh-operation-title">
+                    <span class="rrhh-registration-heading-icon material-symbols" aria-hidden="true">contact_page</span>
+                    <div>
+                        <span class="rrhh-registration-eyebrow">Identificación digital / Prototipo</span>
+                        <h1 id="rrhh-card-demo-title">Tarjeta virtual del empleado</h1>
+                        <p>Una plantilla compartida con datos de ejemplo del directorio.</p>
+                    </div>
+                </div>
+                <a class="rrhh-registration-close" href="#directorio-empleados" aria-label="Cerrar tarjetas de prueba" title="Cerrar">
+                    <span class="material-symbols" aria-hidden="true">close</span>
+                </a>
+            </header>
+
+            <div class="rrhh-prototype-notice" role="note">
+                <span class="material-symbols" aria-hidden="true">info</span>
+                <span>Vista de diseño: la tarjeta será pública y mostrará únicamente los datos autorizados. El QR usará un token opaco; al renovarlo, el anterior quedará invalidado.</span>
+            </div>
+
+            <div class="rrhh-card-demo-content">
+                <input class="rrhh-card-radio" type="radio" name="empleado-tarjeta-demo" id="rrhh-card-maria">
+                <input class="rrhh-card-radio" type="radio" name="empleado-tarjeta-demo" id="rrhh-card-juan">
+                <input class="rrhh-card-radio" type="radio" name="empleado-tarjeta-demo" id="rrhh-card-andres" checked>
+                <input class="rrhh-card-radio" type="radio" name="empleado-tarjeta-demo" id="rrhh-card-laura">
+                <input class="rrhh-card-radio" type="radio" name="empleado-tarjeta-demo" id="rrhh-card-carlos">
+
+                <div class="rrhh-card-demo-layout">
+                    <aside class="rrhh-card-demo-sidebar">
+                        <div class="rrhh-card-selector-heading">
+                            <span class="rrhh-step-kicker">Empleados de prueba</span>
+                            <p>Selecciona un perfil para actualizar la vista previa.</p>
+                        </div>
+                        <nav class="rrhh-card-selector" aria-label="Seleccionar empleado de prueba">
+                            <label for="rrhh-card-maria"><span class="rrhh-card-selector-avatar">MR</span><span><strong>María Fernanda Rojas</strong><small>Registro inicial · Bogotá</small></span><span class="material-symbols" aria-hidden="true">chevron_right</span></label>
+                            <label for="rrhh-card-juan"><span class="rrhh-card-selector-avatar">JC</span><span><strong>Juan David Cárdenas</strong><small>Proceso de contratación · Medellín</small></span><span class="material-symbols" aria-hidden="true">chevron_right</span></label>
+                            <label for="rrhh-card-andres"><span class="rrhh-card-selector-avatar">AT</span><span><strong>Andrés Felipe Torres</strong><small>Activo · Cali</small></span><span class="material-symbols" aria-hidden="true">chevron_right</span></label>
+                            <label for="rrhh-card-laura"><span class="rrhh-card-selector-avatar">LR</span><span><strong>Laura Camila Restrepo</strong><small>Retirado · Medellín</small></span><span class="material-symbols" aria-hidden="true">chevron_right</span></label>
+                            <label for="rrhh-card-carlos"><span class="rrhh-card-selector-avatar">CM</span><span><strong>Carlos Eduardo Méndez</strong><small>Activo · Bogotá</small></span><span class="material-symbols" aria-hidden="true">chevron_right</span></label>
+                        </nav>
+                        <div class="rrhh-card-privacy-note"><span class="material-symbols" aria-hidden="true">shield_lock</span><p>La tarjeta pública muestra nombre, cargo, área, sede, estado y factor RH. Solo permite consultar el certificado ARL que RR. HH. marque expresamente como público.</p></div>
+                    </aside>
+
+                    <div class="rrhh-card-preview-area">
+                        <article class="rrhh-card-preview rrhh-card-preview-maria">
+                            <div class="rrhh-virtual-card">
+                                <div class="rrhh-virtual-card-brand"><span class="material-symbols" aria-hidden="true">verified_user</span><span>PALMERA JUNIOR <small>IDENTIFICACIÓN DIGITAL</small></span></div>
+                                <div class="rrhh-virtual-card-person"><span class="rrhh-virtual-photo"><span class="material-symbols" aria-hidden="true">person</span><small>FOTO</small></span><span class="rrhh-card-state inicial">Registro inicial</span></div>
+                                <div class="rrhh-virtual-card-info"><strong>María Fernanda Rojas</strong><span>Analista de compras</span><span>Área Administrativa</span><span>Sede Bogotá</span><span>Factor RH O+</span></div>
+                                <div class="rrhh-virtual-card-documents"><span>Documento público</span><strong>Solo certificado ARL marcado para publicación</strong><a class="rrhh-file-link" href="#tarjetas-empleados">Ver certificado ARL (si está publicado)</a></div>
+                                <footer>Tarjeta pública · Datos autorizados para consulta</footer>
+                            </div>
+                            <aside class="rrhh-card-qr-panel"><span class="material-symbols" aria-hidden="true">qr_code_2</span><span class="rrhh-qr-label">QR individual público</span><p>La URL contiene un token opaco, no datos personales. Renovar el QR invalida el enlace anterior.</p><button class="rrhh-qr-download" type="button"><span class="material-symbols" aria-hidden="true">autorenew</span>Generar / renovar QR</button></aside>
+                        </article>
+
+                        <article class="rrhh-card-preview rrhh-card-preview-juan">
+                            <div class="rrhh-virtual-card">
+                                <div class="rrhh-virtual-card-brand"><span class="material-symbols" aria-hidden="true">verified_user</span><span>PALMERA JUNIOR <small>IDENTIFICACIÓN DIGITAL</small></span></div>
+                                <div class="rrhh-virtual-card-person"><span class="rrhh-virtual-photo"><span class="material-symbols" aria-hidden="true">person</span><small>FOTO</small></span><span class="rrhh-card-state proceso">Proceso de contratación</span></div>
+                                <div class="rrhh-virtual-card-info"><strong>Juan David Cárdenas</strong><span>Coordinador de operaciones</span><span>Área Operaciones</span><span>Sede Medellín</span><span>Factor RH A+</span></div>
+                                <div class="rrhh-virtual-card-documents"><span>Documento público</span><strong>Solo certificado ARL marcado para publicación</strong><a class="rrhh-file-link" href="#tarjetas-empleados">Ver certificado ARL (si está publicado)</a></div>
+                                <footer>Tarjeta pública · Datos autorizados para consulta</footer>
+                            </div>
+                            <aside class="rrhh-card-qr-panel"><span class="material-symbols" aria-hidden="true">qr_code_2</span><span class="rrhh-qr-label">QR individual público</span><p>La URL contiene un token opaco, no datos personales. Renovar el QR invalida el enlace anterior.</p><button class="rrhh-qr-download" type="button"><span class="material-symbols" aria-hidden="true">autorenew</span>Generar / renovar QR</button></aside>
+                        </article>
+
+                        <article class="rrhh-card-preview rrhh-card-preview-andres">
+                            <div class="rrhh-virtual-card">
+                                <div class="rrhh-virtual-card-brand"><span class="material-symbols" aria-hidden="true">verified_user</span><span>PALMERA JUNIOR <small>IDENTIFICACIÓN DIGITAL</small></span></div>
+                                <div class="rrhh-virtual-card-person"><span class="rrhh-virtual-photo"><span class="material-symbols" aria-hidden="true">person</span><small>FOTO</small></span><span class="rrhh-card-state activo">Activo</span></div>
+                                <div class="rrhh-virtual-card-info"><strong>Andrés Felipe Torres</strong><span>Auxiliar de bodega</span><span>Área Operaciones</span><span>Sede Cali</span><span>Factor RH O+</span></div>
+                                <div class="rrhh-virtual-card-documents"><span>Documento público</span><strong>Solo certificado ARL marcado para publicación</strong><a class="rrhh-file-link" href="#tarjetas-empleados">Ver certificado ARL (si está publicado)</a></div>
+                                <footer>Tarjeta pública · Datos autorizados para consulta</footer>
+                            </div>
+                            <aside class="rrhh-card-qr-panel"><span class="material-symbols" aria-hidden="true">qr_code_2</span><span class="rrhh-qr-label">QR individual público</span><p>La URL contiene un token opaco, no datos personales. Renovar el QR invalida el enlace anterior.</p><button class="rrhh-qr-download" type="button"><span class="material-symbols" aria-hidden="true">autorenew</span>Generar / renovar QR</button></aside>
+                        </article>
+
+                        <article class="rrhh-card-preview rrhh-card-preview-laura">
+                            <div class="rrhh-virtual-card">
+                                <div class="rrhh-virtual-card-brand"><span class="material-symbols" aria-hidden="true">verified_user</span><span>PALMERA JUNIOR <small>IDENTIFICACIÓN DIGITAL</small></span></div>
+                                <div class="rrhh-virtual-card-person"><span class="rrhh-virtual-photo"><span class="material-symbols" aria-hidden="true">person</span><small>FOTO</small></span><span class="rrhh-card-state retirado">Retirado</span></div>
+                                <div class="rrhh-virtual-card-info"><strong>Laura Camila Restrepo</strong><span>Asesora comercial</span><span>Área Comercial</span><span>Sede Medellín</span><span>Factor RH B+</span></div>
+                                <div class="rrhh-virtual-card-documents"><span>Documento público</span><strong>Solo certificado ARL marcado para publicación</strong><a class="rrhh-file-link" href="#tarjetas-empleados">Ver certificado ARL (si está publicado)</a></div>
+                                <footer>Tarjeta pública · Datos autorizados para consulta</footer>
+                            </div>
+                            <aside class="rrhh-card-qr-panel"><span class="material-symbols" aria-hidden="true">qr_code_2</span><span class="rrhh-qr-label">QR individual público</span><p>La URL contiene un token opaco, no datos personales. Renovar el QR invalida el enlace anterior.</p><button class="rrhh-qr-download" type="button"><span class="material-symbols" aria-hidden="true">autorenew</span>Generar / renovar QR</button></aside>
+                        </article>
+
+                        <article class="rrhh-card-preview rrhh-card-preview-carlos">
+                            <div class="rrhh-virtual-card">
+                                <div class="rrhh-virtual-card-brand"><span class="material-symbols" aria-hidden="true">verified_user</span><span>PALMERA JUNIOR <small>IDENTIFICACIÓN DIGITAL</small></span></div>
+                                <div class="rrhh-virtual-card-person"><span class="rrhh-virtual-photo"><span class="material-symbols" aria-hidden="true">person</span><small>FOTO</small></span><span class="rrhh-card-state activo">Activo</span></div>
+                                <div class="rrhh-virtual-card-info"><strong>Carlos Eduardo Méndez</strong><span>Técnico de servicio</span><span>Área Operaciones</span><span>Sede Bogotá</span><span>Factor RH A+</span></div>
+                                <div class="rrhh-virtual-card-documents"><span>Documento público</span><strong>Solo certificado ARL marcado para publicación</strong><a class="rrhh-file-link" href="#tarjetas-empleados">Ver certificado ARL (si está publicado)</a></div>
+                                <footer>Tarjeta pública · Datos autorizados para consulta</footer>
+                            </div>
+                            <aside class="rrhh-card-qr-panel"><span class="material-symbols" aria-hidden="true">qr_code_2</span><span class="rrhh-qr-label">QR individual público</span><p>La URL contiene un token opaco, no datos personales. Renovar el QR invalida el enlace anterior.</p><button class="rrhh-qr-download" type="button"><span class="material-symbols" aria-hidden="true">autorenew</span>Generar / renovar QR</button></aside>
+                        </article>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="rrhh-operation-view" id="editar-datos-empleado" aria-labelledby="rrhh-edit-employee-title">
+        <div class="rrhh-operation-shell rrhh-action-shell">
+            <header class="rrhh-operation-header">
+                <div class="rrhh-operation-title"><span class="rrhh-registration-heading-icon material-symbols" aria-hidden="true">edit</span><div><span class="rrhh-registration-eyebrow">Carlos Eduardo Méndez · Empleado activo</span><h1 id="rrhh-edit-employee-title">Editar datos personales</h1><p>Los cambios relevantes deben quedar registrados en el historial.</p></div></div>
+                <a class="rrhh-registration-close" href="#ficha-empleado" aria-label="Cerrar edición" title="Cerrar"><span class="material-symbols" aria-hidden="true">close</span></a>
+            </header>
+            <div class="rrhh-prototype-notice" role="note"><span class="material-symbols" aria-hidden="true">info</span><span>Demostración visual. La edición y su auditoría requieren integración de backend.</span></div>
+            <form class="rrhh-action-form">
+                <div class="rrhh-action-context"><span class="material-symbols" aria-hidden="true">person</span><span><small>Empleado</small><strong>Carlos Eduardo Méndez · 80.125.447</strong></span><span class="rrhh-state-badge estado-activo">Activo</span></div>
+                <div class="rrhh-form-grid rrhh-form-grid-two">
+                    <div class="rrhh-form-field"><label for="editar-celular">Celular</label><input class="input-control" id="editar-celular" name="celular" type="tel" value="+57 310 555 0184"></div>
+                    <div class="rrhh-form-field"><label for="editar-correo">Correo electrónico</label><input class="input-control" id="editar-correo" name="correo" type="email" value="carlos.mendez@empresa.com"></div>
+                    <div class="rrhh-form-field"><label for="editar-direccion">Dirección</label><input class="input-control" id="editar-direccion" name="direccion" value="Chapinero, Bogotá D. C."></div>
+                    <div class="rrhh-form-field"><label for="editar-formacion">Formación</label><input class="input-control" id="editar-formacion" name="formacion" value="Tecnólogo en mantenimiento industrial"></div>
+                    <div class="rrhh-form-field rrhh-field-span-two"><label for="editar-motivo">Motivo del cambio</label><textarea class="input-control rrhh-textarea" id="editar-motivo" name="motivo" rows="3" placeholder="Indica por qué se actualiza la información"></textarea></div>
+                </div>
+                <div class="rrhh-action-warning"><span class="material-symbols" aria-hidden="true">history</span><p>La ficha conserva los datos anteriores en el historial de cambios, junto con el usuario y la fecha de modificación.</p></div>
+                <div class="rrhh-action-footer"><a class="btn-secondary" href="#ficha-empleado">Cancelar</a><button class="btn-primary" type="button"><span class="material-symbols" aria-hidden="true">save</span>Guardar cambios</button></div>
+            </form>
+        </div>
+    </section>
+
+    <section class="rrhh-operation-view" id="asignar-herramienta" aria-labelledby="rrhh-assign-title">
+        <div class="rrhh-operation-shell rrhh-action-shell">
+            <header class="rrhh-operation-header">
+                <div class="rrhh-operation-title"><span class="rrhh-registration-heading-icon material-symbols" aria-hidden="true">inventory_2</span><div><span class="rrhh-registration-eyebrow">Carlos Eduardo Méndez · Activo</span><h1 id="rrhh-assign-title">Asignar herramienta</h1><p>Registra la entrega y adjunta el acta individual.</p></div></div>
+                <a class="rrhh-registration-close" href="#ficha-empleado" aria-label="Cerrar asignación" title="Cerrar"><span class="material-symbols" aria-hidden="true">close</span></a>
+            </header>
+            <div class="rrhh-prototype-notice" role="note"><span class="material-symbols" aria-hidden="true">info</span><span>Demostración visual. Cada herramienta se registra con su acta individual; la devolución cambia su estado a Recibido.</span></div>
+            <form class="rrhh-action-form">
+                <div class="rrhh-action-context"><span class="material-symbols" aria-hidden="true">person</span><span><small>Empleado</small><strong>Carlos Eduardo Méndez · 80.125.447</strong></span><span class="rrhh-state-badge estado-activo">Activo</span></div>
+                <div class="rrhh-form-grid rrhh-form-grid-two">
+                    <div class="rrhh-form-field"><label for="herramienta-nueva">Herramienta <span>*</span></label><select class="input-control" id="herramienta-nueva" name="herramienta" required><option value="">Selecciona una herramienta</option><option selected>Base para laptop</option><option>Computador portátil</option><option>Mouse</option><option>Audífonos</option><option>Teléfono móvil</option><option>Otra herramienta</option></select></div>
+                    <div class="rrhh-form-field"><label for="herramienta-marca">Marca / referencia</label><input class="input-control" id="herramienta-marca" name="marcaReferencia" placeholder="Ej. Base ergonómica ajustable"></div>
+                    <div class="rrhh-form-field"><label for="herramienta-serial">Serial o código de inventario</label><input class="input-control" id="herramienta-serial" name="serial" placeholder="Se registra al momento de entrega"></div>
+                    <div class="rrhh-form-field"><label for="herramienta-fecha">Fecha de entrega <span>*</span></label><input class="input-control" id="herramienta-fecha" name="fechaEntrega" type="date" required></div>
+                    <div class="rrhh-form-field"><label for="herramienta-condicion">Condición de entrega <span>*</span></label><select class="input-control" id="herramienta-condicion" name="condicion" required><option value="">Selecciona</option><option>Nuevo</option><option>Buen estado</option><option>Reacondicionado</option></select></div>
+                    <div class="rrhh-form-field"><label for="herramienta-responsable">Responsable de entrega</label><input class="input-control" id="herramienta-responsable" name="responsable" placeholder="Nombre del responsable"></div>
+                </div>
+                <div class="rrhh-acta-upload">
+                    <span class="rrhh-acta-upload-icon material-symbols" aria-hidden="true">picture_as_pdf</span>
+                    <div class="rrhh-acta-upload-copy"><strong>Acta de entrega de esta herramienta <span>*</span></strong><small>Adjunta el PDF firmado correspondiente únicamente a la base para laptop.</small></div>
+                    <label class="rrhh-file-picker" for="acta-herramienta"><span class="material-symbols" aria-hidden="true">upload_file</span>Adjuntar acta<input id="acta-herramienta" type="file" name="actaEntrega" accept="application/pdf,.pdf" required></label>
+                    <span class="rrhh-file-picker-hint">PDF · Obligatorio para completar la entrega</span>
+                </div>
+                <div class="rrhh-action-warning"><span class="material-symbols" aria-hidden="true">rule</span><p>El acta individual es obligatoria para registrar la entrega.</p></div>
+                <div class="rrhh-action-footer"><a class="btn-secondary" href="#ficha-empleado">Cancelar</a><button class="btn-primary" type="button"><span class="material-symbols" aria-hidden="true">task_alt</span>Registrar entrega con acta</button></div>
+            </form>
+        </div>
+    </section>
+
+    <section class="rrhh-operation-view" id="renovar-contrato" aria-labelledby="rrhh-renew-title">
+        <div class="rrhh-operation-shell rrhh-action-shell">
+            <header class="rrhh-operation-header">
+                <div class="rrhh-operation-title"><span class="rrhh-registration-heading-icon material-symbols" aria-hidden="true">autorenew</span><div><span class="rrhh-registration-eyebrow">Carlos Eduardo Méndez · Empleado activo</span><h1 id="rrhh-renew-title">Iniciar renovación de contrato</h1><p>La renovación genera un nuevo contrato asociado a la misma ficha.</p></div></div>
+                <a class="rrhh-registration-close" href="#ficha-empleado" aria-label="Cerrar renovación" title="Cerrar"><span class="material-symbols" aria-hidden="true">close</span></a>
+            </header>
+            <div class="rrhh-prototype-notice" role="note"><span class="material-symbols" aria-hidden="true">info</span><span>Demostración visual. La renovación conserva el contrato anterior y calcula automáticamente el estado nuevo según sus fechas.</span></div>
+            <form class="rrhh-action-form">
+                <div class="rrhh-action-context"><span class="material-symbols" aria-hidden="true">description</span><span><small>Contrato actual</small><strong>CT-2026-084 · Término fijo · Vence 11 jul 2027</strong></span><span class="rrhh-contract-status"><span></span>Vigente</span></div>
+                <fieldset class="rrhh-form-section"><legend>Nuevas condiciones</legend>
+                    <div class="rrhh-form-grid rrhh-form-grid-three">
+                        <div class="rrhh-form-field"><label for="renovacion-tipo">Tipo de contrato <span>*</span></label><select class="input-control" id="renovacion-tipo" name="tipoContrato" required><option>Término fijo</option><option>Término indefinido</option><option>Obra o labor</option></select></div>
+                        <div class="rrhh-form-field"><label for="renovacion-inicio">Nueva fecha de inicio <span>*</span></label><input class="input-control" id="renovacion-inicio" name="fechaInicio" type="date" required></div>
+                        <div class="rrhh-form-field"><label for="renovacion-fin">Nueva fecha de vencimiento</label><input class="input-control" id="renovacion-fin" name="fechaFin" type="date"></div>
+                        <div class="rrhh-form-field"><label for="renovacion-cargo">Cargo</label><input class="input-control" id="renovacion-cargo" name="cargo" value="Técnico de servicio"></div>
+                        <div class="rrhh-form-field"><label for="renovacion-salario">Salario / remuneración <span>*</span></label><input class="input-control" id="renovacion-salario" name="remuneracion" type="number" min="0" placeholder="$ 0" required></div>
+                        <div class="rrhh-form-field"><label for="renovacion-motivo">Observaciones</label><input class="input-control" id="renovacion-motivo" name="observaciones" placeholder="Cambios o condiciones acordadas"></div>
+                    </div>
+                </fieldset>
+                <div class="rrhh-acta-upload">
+                    <span class="rrhh-acta-upload-icon material-symbols" aria-hidden="true">contract</span>
+                    <div class="rrhh-acta-upload-copy"><strong>Contrato renovado firmado</strong><small>Adjunta el documento para conservarlo en el historial del nuevo contrato.</small></div>
+                    <label class="rrhh-file-picker" for="contrato-renovado"><span class="material-symbols" aria-hidden="true">upload_file</span>Adjuntar PDF<input id="contrato-renovado" type="file" name="contratoFirmado" accept="application/pdf,.pdf"></label>
+                    <span class="rrhh-file-picker-hint">PDF · Asociado únicamente al nuevo contrato</span>
+                </div>
+                <div class="rrhh-action-warning"><span class="material-symbols" aria-hidden="true">event_repeat</span><p>El contrato nuevo queda <strong>Programado</strong> si inicia en el futuro, <strong>Vigente</strong> dentro de sus fechas o <strong>Vencido</strong> al superar la fecha final. La renovación no sobrescribe contratos ni documentos anteriores.</p></div>
+                <div class="rrhh-action-footer"><a class="btn-secondary" href="#ficha-empleado">Cancelar</a><button class="btn-primary" type="button"><span class="material-symbols" aria-hidden="true">save</span>Guardar renovación</button></div>
+            </form>
+        </div>
+    </section>
+
+    <section class="rrhh-registration-view" id="registro-empleado" aria-labelledby="rrhh-registration-title">
+        <div class="rrhh-registration-shell permission-management-page">
+            <header class="rrhh-registration-header">
+                <div class="rrhh-registration-heading">
+                    <span class="rrhh-registration-heading-icon material-symbols" aria-hidden="true">person_add</span>
+                    <div>
+                        <span class="rrhh-registration-eyebrow">Recursos humanos / Empleados</span>
+                        <h1 id="rrhh-registration-title">Registro de nuevo empleado</h1>
+                        <p>Completa datos personales, configuración y adjuntos para crear el empleado en Registro inicial.</p>
+                    </div>
+                </div>
+                <a class="rrhh-registration-close" href="#directorio-empleados" aria-label="Cerrar registro" title="Cerrar">
+                    <span class="material-symbols" aria-hidden="true">close</span>
+                </a>
+            </header>
+
+            <div class="rrhh-prototype-notice" role="note">
+                <span class="material-symbols" aria-hidden="true">info</span>
+                <span>Al guardar se crea el empleado en el directorio con estado Registro inicial y se notifica a los aprobadores de RR. HH.</span>
+            </div>
+
+            <div class="rrhh-registration-form" id="rrhh-registration-form">
+                <input class="rrhh-step-radio" type="radio" name="paso-registro" id="rrhh-step-config">
+                <input class="rrhh-step-radio" type="radio" name="paso-registro" id="rrhh-step-contract" disabled>
+                <input class="rrhh-step-radio" type="radio" name="paso-registro" id="rrhh-step-files">
+                <input class="rrhh-step-radio" type="radio" name="paso-registro" id="rrhh-step-personal" checked>
+
+                <nav class="permission-tabs view-tabs rrhh-registration-tabs" aria-label="Pasos del registro de empleado">
+                    <label class="view-tab" for="rrhh-step-personal"><span class="material-symbols" aria-hidden="true">badge</span>Datos personales</label>
+                    <label class="view-tab" for="rrhh-step-config"><span class="material-symbols" aria-hidden="true">tune</span>Configuración</label>
+                    <label class="view-tab rrhh-tab-locked" for="rrhh-step-contract" aria-disabled="true" title="Se habilita después de la aprobación de RR. HH."><span class="material-symbols" aria-hidden="true">lock</span>Contratación <span class="rrhh-tab-lock-label">Bloqueada</span></label>
+                    <label class="view-tab" for="rrhh-step-files"><span class="material-symbols" aria-hidden="true">description</span>Adjuntos</label>
+                </nav>
+
+                <div class="rrhh-registration-panels">
+                    <section class="rrhh-registration-step step-personal" aria-labelledby="rrhh-personal-heading">
+                        <div class="rrhh-step-heading"><div><span class="rrhh-step-kicker">Pestaña 1</span><h2 id="rrhh-personal-heading">Datos personales</h2><p>Información de identificación, ubicación, contacto y formación del empleado.</p></div></div>
+                        <fieldset class="rrhh-form-section"><legend>Identificación</legend>
+                            <div class="rrhh-form-grid rrhh-form-grid-three">
+                                <div class="rrhh-form-field"><label for="tipo-documento">Tipo de documento <span>*</span></label><select class="input-control" id="tipo-documento" name="tipoDocumento" required><option value="">Selecciona</option><option>Cédula de ciudadanía</option><option>Cédula de extranjería</option><option>Tarjeta de identidad</option><option>Registro civil</option><option>Pasaporte</option><option>Permiso por protección temporal</option></select></div>
+                                <div class="rrhh-form-field"><label for="numero-documento">Número de documento <span>*</span></label><input class="input-control" id="numero-documento" name="numeroDocumento" maxlength="30" required placeholder="Número sin separadores"></div>
+                                <div class="rrhh-form-field"><label for="fecha-expedicion">Fecha de expedición</label><input class="input-control" id="fecha-expedicion" name="fechaExpedicion" type="date"></div>
+                                <div class="rrhh-form-field"><label for="lugar-expedicion">Lugar de expedición</label><input class="input-control" id="lugar-expedicion" name="lugarExpedicion" maxlength="150" placeholder="Ciudad, departamento"></div>
+                            </div>
+                        </fieldset>
+                        <fieldset class="rrhh-form-section"><legend>Nombres y nacimiento</legend>
+                            <div class="rrhh-form-grid rrhh-form-grid-three">
+                                <div class="rrhh-form-field"><label for="primer-nombre">Primer nombre <span>*</span></label><input class="input-control" id="primer-nombre" name="primerNombre" maxlength="100" required></div>
+                                <div class="rrhh-form-field"><label for="segundo-nombre">Segundo nombre</label><input class="input-control" id="segundo-nombre" name="segundoNombre" maxlength="100"></div>
+                                <div class="rrhh-form-field"><label for="primer-apellido">Primer apellido <span>*</span></label><input class="input-control" id="primer-apellido" name="primerApellido" maxlength="100" required></div>
+                                <div class="rrhh-form-field"><label for="segundo-apellido">Segundo apellido</label><input class="input-control" id="segundo-apellido" name="segundoApellido" maxlength="100"></div>
+                                <div class="rrhh-form-field"><label for="fecha-nacimiento">Fecha de nacimiento</label><input class="input-control" id="fecha-nacimiento" name="fechaNacimiento" type="date"></div>
+                                <div class="rrhh-form-field"><label for="lugar-nacimiento">Lugar de nacimiento</label><input class="input-control" id="lugar-nacimiento" name="lugarNacimiento" maxlength="150"></div>
+                                <div class="rrhh-form-field"><label for="tipo-sangre">Grupo sanguíneo</label><select class="input-control" id="tipo-sangre" name="tipoSangre"><option value="">Selecciona</option><option>A</option><option>B</option><option>AB</option><option>O</option></select></div>
+                                <div class="rrhh-form-field"><label for="rh">Factor RH</label><select class="input-control" id="rh" name="rh"><option value="">Selecciona</option><option value="POSITIVO">Positivo (+)</option><option value="NEGATIVO">Negativo (-)</option></select></div>
+                            </div>
+                        </fieldset>
+                        <fieldset class="rrhh-form-section"><legend>Contacto y residencia</legend>
+                            <div class="rrhh-form-grid rrhh-form-grid-three">
+                                <div class="rrhh-form-field"><label for="celular">Celular</label><input class="input-control" id="celular" name="celular" type="tel" maxlength="30" placeholder="300 000 0000"></div>
+                                <div class="rrhh-form-field"><label for="correo">Correo electrónico</label><input class="input-control" id="correo" name="correoElectronico" type="email" maxlength="150" placeholder="nombre@correo.com"></div>
+                                <div class="rrhh-form-field"><label for="direccion">Dirección de residencia</label><input class="input-control" id="direccion" name="direccionResidencia" maxlength="255"></div>
+                                <div class="rrhh-form-field"><label for="barrio">Barrio</label><input class="input-control" id="barrio" name="barrio" maxlength="100"></div>
+                                <div class="rrhh-form-field"><label for="municipio">Municipio</label><input class="input-control" id="municipio" name="municipio" maxlength="100"></div>
+                                <div class="rrhh-form-field"><label for="departamento">Departamento</label><input class="input-control" id="departamento" name="departamento" maxlength="100"></div>
+                            </div>
+                        </fieldset>
+                        <fieldset class="rrhh-form-section"><legend>Educación y profesión</legend>
+                            <div class="rrhh-form-grid rrhh-form-grid-three">
+                                <div class="rrhh-form-field"><label for="nivel-educativo">Nivel educativo</label><select class="input-control" id="nivel-educativo" name="nivelEducativo"><option value="">Selecciona</option><option>Primaria</option><option>Bachillerato</option><option>Técnico</option><option>Tecnólogo</option><option>Universitario</option><option>Especialización</option><option>Maestría</option><option>Doctorado</option></select></div>
+                                <div class="rrhh-form-field rrhh-field-span-two"><label for="profesion">Profesión</label><input class="input-control" id="profesion" name="profesion" maxlength="150" placeholder="Título o profesión"></div>
+                            </div>
+                        </fieldset>
+                        <div class="rrhh-step-actions"><a class="btn-cancel" href="#directorio-empleados">Cancelar</a><label class="btn-primary rrhh-step-next" for="rrhh-step-config">Continuar a configuración <span class="material-symbols" aria-hidden="true">arrow_forward</span></label></div>
+                    </section>
+
+                    <section class="rrhh-registration-step step-config" aria-labelledby="rrhh-config-heading">
+                        <div class="rrhh-step-heading">
+                            <div><span class="rrhh-step-kicker">Pestaña 2</span><h2 id="rrhh-config-heading">Configuración del empleado</h2><p>Asigna su área, cargo y centro de costo; define los adjuntos requeridos para el registro inicial.</p></div>
+                        </div>
+                        <div class="rrhh-form-grid rrhh-form-grid-three">
+                            <div class="rrhh-form-field"><label for="nuevo-area">Área <span>*</span></label><select class="input-control" id="nuevo-area" name="area" required><option value="">Selecciona un área</option><option>Administrativa</option><option>Comercial</option><option>Operaciones</option><option>Recursos Humanos</option></select></div>
+                            <div class="rrhh-form-field"><label for="nuevo-cargo">Cargo <span>*</span></label><select class="input-control" id="nuevo-cargo" name="cargo" required><option value="">Selecciona un cargo</option><option>Analista de compras</option><option>Asesor comercial</option><option>Coordinador de operaciones</option><option>Técnico de servicio</option><option>Auxiliar de bodega</option></select></div>
+                            <div class="rrhh-form-field"><label for="nuevo-centro-costo">Centro de costo <span>*</span></label><select class="input-control" id="nuevo-centro-costo" name="centroCosto" required><option value="">Selecciona un centro</option><option>Administración Bogotá</option><option>Operaciones Medellín</option><option>Operaciones Cali</option></select></div>
+                            <div class="rrhh-form-field"><label for="nuevo-subcentro">Subcentro</label><input class="input-control" id="nuevo-subcentro" name="subcentro" maxlength="100" placeholder="Ej. Servicios técnicos"></div>
+                        </div>
+
+                        <fieldset class="rrhh-checklist-section">
+                            <legend><span class="material-symbols" aria-hidden="true">folder_open</span> Conceptos documentales obligatorios</legend>
+                            <p class="rrhh-checklist-description">Marca únicamente los documentos requeridos para el registro inicial. Los documentos de contratación se solicitarán después de la aprobación.</p>
+                            <div class="rrhh-concept-groups">
+                                <fieldset class="rrhh-checklist-group">
+                                    <legend>Documentos de ingreso</legend>
+                                    <div class="rrhh-checklist-grid">
+                                        <label class="rrhh-check-option"><input id="concepto-ficha" type="checkbox" name="conceptos" value="ficha" checked><span class="rrhh-checkmark"></span><span>Ficha de ingreso (F4-PRH01)</span></label>
+                                        <label class="rrhh-check-option"><input id="concepto-hoja-vida" type="checkbox" name="conceptos" value="hoja-vida" checked><span class="rrhh-checkmark"></span><span>Hoja de vida</span></label>
+                                        <label class="rrhh-check-option"><input id="concepto-cedula" type="checkbox" name="conceptos" value="cedula" checked><span class="rrhh-checkmark"></span><span>Documento de identidad</span></label>
+                                        <label class="rrhh-check-option"><input id="concepto-experiencia" type="checkbox" name="conceptos" value="experiencia"><span class="rrhh-checkmark"></span><span>Certificaciones laborales</span></label>
+                                        <label class="rrhh-check-option"><input id="concepto-estudios" type="checkbox" name="conceptos" value="estudios"><span class="rrhh-checkmark"></span><span>Certificados de estudio</span></label>
+                                        <label class="rrhh-check-option"><input id="concepto-tarjeta-profesional" type="checkbox" name="conceptos" value="tarjeta-profesional"><span class="rrhh-checkmark"></span><span>Tarjeta profesional</span></label>
+                                        <label class="rrhh-check-option"><input id="concepto-antecedentes" type="checkbox" name="conceptos" value="antecedentes"><span class="rrhh-checkmark"></span><span>Consulta de antecedentes</span></label>
+                                        <label class="rrhh-check-option"><input id="concepto-examen-ingreso" type="checkbox" name="conceptos" value="examen-ingreso"><span class="rrhh-checkmark"></span><span>Exámenes médicos de ingreso</span></label>
+                                        <label class="rrhh-check-option"><input id="concepto-certificado-bancario" type="checkbox" name="conceptos" value="certificado-bancario"><span class="rrhh-checkmark"></span><span>Certificado bancario de nómina</span></label>
+                                    </div>
+                                </fieldset>
+                                <fieldset class="rrhh-checklist-group">
+                                    <legend>Requisitos para vehículo o moto</legend>
+                                    <div class="rrhh-checklist-grid">
+                                        <label class="rrhh-check-option"><input id="concepto-licencia" type="checkbox" name="conceptos" value="licencia"><span class="rrhh-checkmark"></span><span>Licencia de conducción</span></label>
+                                        <label class="rrhh-check-option"><input id="concepto-soat" type="checkbox" name="conceptos" value="soat"><span class="rrhh-checkmark"></span><span>SOAT vigente</span></label>
+                                        <label class="rrhh-check-option"><input id="concepto-tecnomecanica" type="checkbox" name="conceptos" value="tecnomecanica"><span class="rrhh-checkmark"></span><span>Revisión técnico-mecánica</span></label>
+                                        <label class="rrhh-check-option"><input id="concepto-tarjeta-propiedad" type="checkbox" name="conceptos" value="tarjeta-propiedad"><span class="rrhh-checkmark"></span><span>Licencia de tránsito de la moto</span></label>
+                                        <label class="rrhh-check-option"><input id="concepto-simit" type="checkbox" name="conceptos" value="simit"><span class="rrhh-checkmark"></span><span>Consulta de multas SIMIT</span></label>
+                                        <label class="rrhh-check-option"><input id="concepto-declaracion-moto" type="checkbox" name="conceptos" value="declaracion-moto"><span class="rrhh-checkmark"></span><span>Declaración de propiedad de la moto</span></label>
+                                        <label class="rrhh-check-option"><input id="concepto-autorizacion-moto" type="checkbox" name="conceptos" value="autorizacion-moto"><span class="rrhh-checkmark"></span><span>Autorización de uso de moto</span></label>
+                                        <label class="rrhh-check-option"><input id="concepto-pruebas-conduccion" type="checkbox" name="conceptos" value="pruebas-conduccion"><span class="rrhh-checkmark"></span><span>Pruebas teóricas y prácticas</span></label>
+                                    </div>
+                                </fieldset>
+                                <fieldset class="rrhh-checklist-group">
+                                    <legend>Afiliaciones y formación</legend>
+                                    <div class="rrhh-checklist-grid">
+                                        <label class="rrhh-check-option"><input id="concepto-afiliacion-arl" type="checkbox" name="conceptos" value="afiliacion-arl"><span class="rrhh-checkmark"></span><span>Afiliación ARL</span></label>
+                                        <label class="rrhh-check-option"><input id="concepto-certificado-eps" type="checkbox" name="conceptos" value="certificado-eps"><span class="rrhh-checkmark"></span><span>Certificado EPS</span></label>
+                                        <label class="rrhh-check-option"><input id="concepto-afiliacion-eps" type="checkbox" name="conceptos" value="afiliacion-eps"><span class="rrhh-checkmark"></span><span>Afiliación EPS</span></label>
+                                        <label class="rrhh-check-option"><input id="concepto-certificado-pension" type="checkbox" name="conceptos" value="certificado-pension"><span class="rrhh-checkmark"></span><span>Certificado de pensión</span></label>
+                                        <label class="rrhh-check-option"><input id="concepto-afiliacion-pension" type="checkbox" name="conceptos" value="afiliacion-pension"><span class="rrhh-checkmark"></span><span>Afiliación a pensión</span></label>
+                                        <label class="rrhh-check-option"><input id="concepto-afiliacion-caja" type="checkbox" name="conceptos" value="afiliacion-caja"><span class="rrhh-checkmark"></span><span>Afiliación a caja de compensación</span></label>
+                                        <label class="rrhh-check-option"><input id="concepto-beneficiarios" type="checkbox" name="conceptos" value="beneficiarios"><span class="rrhh-checkmark"></span><span>Documentos de beneficiarios</span></label>
+                                        <label class="rrhh-check-option"><input id="concepto-contrato-firmado" type="checkbox" name="conceptos" value="contrato-firmado"><span class="rrhh-checkmark"></span><span>Contrato de trabajo firmado</span></label>
+                                        <label class="rrhh-check-option"><input id="concepto-induccion" type="checkbox" name="conceptos" value="induccion"><span class="rrhh-checkmark"></span><span>Registro de inducción</span></label>
+                                        <label class="rrhh-check-option"><input id="concepto-evaluacion-ingreso" type="checkbox" name="conceptos" value="evaluacion-ingreso"><span class="rrhh-checkmark"></span><span>Evaluación de personal nuevo</span></label>
+                                        <label class="rrhh-check-option"><input id="concepto-evaluacion-induccion" type="checkbox" name="conceptos" value="evaluacion-induccion"><span class="rrhh-checkmark"></span><span>Evaluación de la inducción</span></label>
+                                        <label class="rrhh-check-option"><input id="concepto-evaluacion-desempeno" type="checkbox" name="conceptos" value="evaluacion-desempeno"><span class="rrhh-checkmark"></span><span>Evaluación de desempeño</span></label>
+                                        <label class="rrhh-check-option"><input id="concepto-evaluacion-habilidades" type="checkbox" name="conceptos" value="evaluacion-habilidades"><span class="rrhh-checkmark"></span><span>Evaluación de habilidades</span></label>
+                                        <label class="rrhh-check-option"><input id="concepto-curso-alturas" type="checkbox" name="conceptos" value="curso-alturas"><span class="rrhh-checkmark"></span><span>Certificado de curso de alturas</span></label>
+                                    </div>
+                                </fieldset>
+                            </div>
+                        </fieldset>
+
+                        <fieldset class="rrhh-checklist-section">
+                            <legend><span class="material-symbols" aria-hidden="true">inventory_2</span> Herramientas previstas para el cargo</legend>
+                            <p class="rrhh-checklist-description">Esta selección es de referencia; las entregas se registran desde Asignaciones cuando el empleado esté activo.</p>
+                            <div class="rrhh-tools-grid">
+                                <label class="rrhh-tool-option"><input type="checkbox" name="herramientas" value="computador" checked><span class="material-symbols" aria-hidden="true">laptop_mac</span><span>Computador portátil</span></label>
+                                <label class="rrhh-tool-option"><input type="checkbox" name="herramientas" value="mouse" checked><span class="material-symbols" aria-hidden="true">mouse</span><span>Mouse</span></label>
+                                <label class="rrhh-tool-option"><input type="checkbox" name="herramientas" value="audifonos"><span class="material-symbols" aria-hidden="true">headphones</span><span>Audífonos</span></label>
+                                <label class="rrhh-tool-option"><input type="checkbox" name="herramientas" value="celular"><span class="material-symbols" aria-hidden="true">smartphone</span><span>Celular corporativo</span></label>
+                                <label class="rrhh-tool-option"><input type="checkbox" name="herramientas" value="moto"><span class="material-symbols" aria-hidden="true">two_wheeler</span><span>Motocicleta</span></label>
+                                <label class="rrhh-tool-option"><input type="checkbox" name="herramientas" value="casco"><span class="material-symbols" aria-hidden="true">engineering</span><span>Casco y protección</span></label>
+                                <label class="rrhh-tool-option"><input type="checkbox" name="herramientas" value="uniforme"><span class="material-symbols" aria-hidden="true">checkroom</span><span>Uniforme</span></label>
+                                <label class="rrhh-tool-option"><input type="checkbox" name="herramientas" value="kit-herramientas"><span class="material-symbols" aria-hidden="true">handyman</span><span>Kit de herramientas</span></label>
+                            </div>
+                            <div class="rrhh-form-field rrhh-extra-tool"><label for="otra-herramienta">Otra herramienta</label><input class="input-control" id="otra-herramienta" name="otraHerramienta" placeholder="Escribe el nombre de la herramienta"></div>
+                        </fieldset>
+                        <div class="rrhh-step-actions"><label class="btn-secondary rrhh-step-back" for="rrhh-step-personal"><span class="material-symbols" aria-hidden="true">arrow_back</span> Anterior</label><label class="btn-primary rrhh-step-next" for="rrhh-step-files">Continuar a adjuntos <span class="material-symbols" aria-hidden="true">arrow_forward</span></label></div>
+                    </section>
+
+                    <section class="rrhh-registration-step step-contract" aria-labelledby="rrhh-contract-heading">
+                        <div class="rrhh-step-heading"><div><span class="rrhh-step-kicker">Disponible después de aprobar</span><h2 id="rrhh-contract-heading">Datos de contratación</h2><p>Al aprobar el registro, se habilita esta pestaña. Los datos personales y de configuración quedan bloqueados.</p></div></div>
+                        <fieldset class="rrhh-form-section"><legend>Vigencia y modalidad</legend>
+                            <div class="rrhh-form-grid rrhh-form-grid-three">
+                                <div class="rrhh-form-field"><label for="tipo-contrato">Tipo de contrato</label><select class="input-control" id="tipo-contrato" name="tipoContrato"><option value="">Selecciona</option><option>Término indefinido</option><option>Término fijo</option><option>Obra o labor</option><option>Aprendizaje</option><option>Prestación de servicios</option></select></div>
+                                <div class="rrhh-form-field"><label for="tipo-pago">Tipo de pago</label><select class="input-control" id="tipo-pago" name="tipoPago"><option value="">Selecciona</option><option>Mensual</option><option>Quincenal</option><option>Semanal</option></select></div>
+                                <div class="rrhh-contract-state-note"><span class="material-symbols" aria-hidden="true">event_repeat</span><span>Estado calculado automáticamente a partir de las fechas: Programado, Vigente o Vencido. La terminación o anulación requiere una acción autorizada.</span></div>
+                                <div class="rrhh-form-field"><label for="fecha-ingreso">Fecha de ingreso <span>*</span></label><input class="input-control" id="fecha-ingreso" name="fechaIngreso" type="date" required></div>
+                                <div class="rrhh-form-field"><label for="fecha-fin">Fecha de finalización</label><input class="input-control" id="fecha-fin" name="fechaFin" type="date"></div>
+                                <div class="rrhh-form-field"><label for="salario">Salario básico <span>*</span></label><div class="rrhh-input-prefix"><span>$</span><input class="input-control" id="salario" name="salarioBasico" type="number" min="0" step="1000" required placeholder="0"></div></div>
+                            </div>
+                        </fieldset>
+                        <fieldset class="rrhh-form-section"><legend>Auxilios y bonificaciones</legend>
+                            <div class="rrhh-compensation-grid">
+                                <div class="rrhh-compensation-card"><label class="rrhh-inline-check"><input type="checkbox" name="auxilioTransporteAplica"><span>Aplica auxilio de transporte</span></label><div class="rrhh-form-field"><label for="auxilio-transporte">Valor mensual</label><div class="rrhh-input-prefix"><span>$</span><input class="input-control" id="auxilio-transporte" name="auxilioTransporteValor" type="number" min="0" step="1000" placeholder="0"></div></div></div>
+                                <div class="rrhh-compensation-card"><label class="rrhh-inline-check"><input type="checkbox" name="auxilioRodamientoAplica"><span>Aplica auxilio de rodamiento</span></label><div class="rrhh-form-field"><label for="auxilio-rodamiento">Valor mensual</label><div class="rrhh-input-prefix"><span>$</span><input class="input-control" id="auxilio-rodamiento" name="auxilioRodamientoValor" type="number" min="0" step="1000" placeholder="0"></div></div></div>
+                                <div class="rrhh-compensation-card"><label class="rrhh-inline-check"><input type="checkbox" name="bonificacionNoSalarialAplica"><span>Aplica bonificación no salarial</span></label><div class="rrhh-form-field"><label for="bonificacion">Valor mensual</label><div class="rrhh-input-prefix"><span>$</span><input class="input-control" id="bonificacion" name="bonificacionNoSalarialValor" type="number" min="0" step="1000" placeholder="0"></div></div></div>
+                            </div>
+                        </fieldset>
+                        <fieldset class="rrhh-form-section"><legend>Afiliaciones y seguridad social</legend>
+                            <div class="rrhh-form-grid rrhh-form-grid-three">
+                                <div class="rrhh-form-field"><label for="eps">EPS</label><select class="input-control" id="eps" name="eps"><option value="">Selecciona EPS</option><option>Sanitas</option><option>Sura</option><option>Compensar</option><option>Salud Total</option></select></div>
+                                <div class="rrhh-form-field"><label for="afp">Fondo de pensión (AFP)</label><select class="input-control" id="afp" name="afp"><option value="">Selecciona fondo</option><option>Colpensiones</option><option>Protección</option><option>Porvenir</option><option>Colfondos</option><option>Skandia</option></select></div>
+                                <div class="rrhh-form-field"><label for="arl">ARL</label><select class="input-control" id="arl" name="arl"><option value="">Selecciona ARL</option><option>Sura</option><option>Positiva</option><option>Colmena</option><option>Bolívar</option></select></div>
+                                <div class="rrhh-form-field"><label for="tarifa-arl">Tarifa ARL (%)</label><input class="input-control" id="tarifa-arl" name="tarifaArlPorcentaje" type="number" min="0" max="100" step="0.001" placeholder="0.000"></div>
+                                <div class="rrhh-form-field"><label for="caja-compensacion">Caja de compensación</label><select class="input-control" id="caja-compensacion" name="cajaCompensacion"><option value="">Selecciona caja</option><option>Compensar</option><option>Colsubsidio</option><option>Comfama</option><option>Comfenalco</option></select></div>
+                            </div>
+                        </fieldset>
+                        <fieldset class="rrhh-form-section"><legend>Pago y condiciones especiales</legend>
+                            <div class="rrhh-form-grid rrhh-form-grid-three">
+                                <div class="rrhh-form-field"><label for="entidad-bancaria">Entidad bancaria</label><select class="input-control" id="entidad-bancaria" name="entidadBancaria"><option value="">Selecciona banco</option><option>Bancolombia</option><option>Banco de Bogotá</option><option>Davivienda</option><option>BBVA</option><option>Nequi</option></select></div>
+                                <div class="rrhh-form-field rrhh-field-span-two"><label for="numero-cuenta">Número de cuenta bancaria</label><input class="input-control" id="numero-cuenta" name="numeroCuentaBancaria" maxlength="50"></div>
+                                <div class="rrhh-form-field rrhh-field-span-three"><label class="rrhh-inline-check"><input type="checkbox" name="condicionesEspecialesAplica"><span>Este contrato tiene condiciones especiales</span></label><label for="condiciones-especiales">Describe las condiciones</label><textarea class="input-control rrhh-textarea" id="condiciones-especiales" name="condicionesEspeciales" rows="3" placeholder="Especifica las condiciones acordadas"></textarea></div>
+                            </div>
+                        </fieldset>
+                        <div class="rrhh-step-actions"><label class="btn-secondary rrhh-step-back" for="rrhh-step-personal"><span class="material-symbols" aria-hidden="true">arrow_back</span> Anterior</label><label class="btn-primary rrhh-step-next" for="rrhh-step-files">Continuar a adjuntos <span class="material-symbols" aria-hidden="true">arrow_forward</span></label></div>
+                    </section>
+
+                    <section class="rrhh-registration-step step-files" aria-labelledby="rrhh-files-heading">
+                        <div class="rrhh-step-heading"><div><span class="rrhh-step-kicker">Pestaña 4</span><h2 id="rrhh-files-heading">Adjuntos del registro inicial</h2><p>Adjunta los documentos seleccionados como requeridos en Configuración. El resto de documentos se solicita durante contratación.</p></div><span class="rrhh-files-counter"><span class="material-symbols" aria-hidden="true">picture_as_pdf</span> PDF</span></div>
+                        <div class="rrhh-upload-summary"><span class="material-symbols" aria-hidden="true">fact_check</span><span>Al guardar, el empleado queda en Registro inicial. La aprobación no se habilita hasta completar los requisitos iniciales.</span></div>
+                        <div class="rrhh-upload-grid">
+                            <label class="rrhh-upload-item" data-concepto="ficha" for="archivo-ficha"><span class="rrhh-upload-icon material-symbols" aria-hidden="true">description</span><span class="rrhh-upload-copy"><strong>Ficha de ingreso (F4-PRH01)</strong><small>PDF · Obligatorio</small></span><input id="archivo-ficha" type="file" name="archivoFicha" accept="application/pdf"><span class="rrhh-upload-button">Adjuntar PDF</span></label>
+                            <label class="rrhh-upload-item" data-concepto="hoja-vida" for="archivo-hoja-vida"><span class="rrhh-upload-icon material-symbols" aria-hidden="true">article</span><span class="rrhh-upload-copy"><strong>Hoja de vida</strong><small>PDF · Obligatorio</small></span><input id="archivo-hoja-vida" type="file" name="archivoHojaVida" accept="application/pdf"><span class="rrhh-upload-button">Adjuntar PDF</span></label>
+                            <label class="rrhh-upload-item" data-concepto="cedula" for="archivo-cedula"><span class="rrhh-upload-icon material-symbols" aria-hidden="true">id_card</span><span class="rrhh-upload-copy"><strong>Documento de identidad</strong><small>PDF · Obligatorio</small></span><input id="archivo-cedula" type="file" name="archivoCedula" accept="application/pdf"><span class="rrhh-upload-button">Adjuntar PDF</span></label>
+                            <label class="rrhh-upload-item" data-concepto="experiencia" for="archivo-experiencia"><span class="rrhh-upload-icon material-symbols" aria-hidden="true">work_history</span><span class="rrhh-upload-copy"><strong>Certificaciones laborales</strong><small>PDF · Puedes adjuntar varios</small></span><input id="archivo-experiencia" type="file" name="archivoExperiencia" accept="application/pdf" multiple><span class="rrhh-upload-button">Adjuntar PDF</span></label>
+                            <label class="rrhh-upload-item" data-concepto="estudios" for="archivo-estudios"><span class="rrhh-upload-icon material-symbols" aria-hidden="true">school</span><span class="rrhh-upload-copy"><strong>Certificados de estudio</strong><small>PDF · Puedes adjuntar varios</small></span><input id="archivo-estudios" type="file" name="archivoEstudios" accept="application/pdf" multiple><span class="rrhh-upload-button">Adjuntar PDF</span></label>
+                            <label class="rrhh-upload-item" data-concepto="tarjeta-profesional" for="archivo-tarjeta-profesional"><span class="rrhh-upload-icon material-symbols" aria-hidden="true">workspace_premium</span><span class="rrhh-upload-copy"><strong>Tarjeta profesional</strong><small>PDF · Obligatorio</small></span><input id="archivo-tarjeta-profesional" type="file" name="archivoTarjetaProfesional" accept="application/pdf"><span class="rrhh-upload-button">Adjuntar PDF</span></label>
+                            <label class="rrhh-upload-item" data-concepto="antecedentes" for="archivo-antecedentes"><span class="rrhh-upload-icon material-symbols" aria-hidden="true">policy</span><span class="rrhh-upload-copy"><strong>Consulta de antecedentes</strong><small>PDF · Obligatorio</small></span><input id="archivo-antecedentes" type="file" name="archivoAntecedentes" accept="application/pdf"><span class="rrhh-upload-button">Adjuntar PDF</span></label>
+                            <label class="rrhh-upload-item" data-concepto="examen-ingreso" for="archivo-examen-ingreso"><span class="rrhh-upload-icon material-symbols" aria-hidden="true">medical_services</span><span class="rrhh-upload-copy"><strong>Exámenes médicos de ingreso</strong><small>PDF · Obligatorio</small></span><input id="archivo-examen-ingreso" type="file" name="archivoExamenIngreso" accept="application/pdf"><span class="rrhh-upload-button">Adjuntar PDF</span></label>
+                            <label class="rrhh-upload-item" data-concepto="certificado-bancario" for="archivo-certificado-bancario"><span class="rrhh-upload-icon material-symbols" aria-hidden="true">account_balance</span><span class="rrhh-upload-copy"><strong>Certificado bancario de nómina</strong><small>PDF · Obligatorio</small></span><input id="archivo-certificado-bancario" type="file" name="archivoCertificadoBancario" accept="application/pdf"><span class="rrhh-upload-button">Adjuntar PDF</span></label>
+                            <label class="rrhh-upload-item" data-concepto="licencia" for="archivo-licencia"><span class="rrhh-upload-icon material-symbols" aria-hidden="true">id_card</span><span class="rrhh-upload-copy"><strong>Licencia de conducción</strong><small>PDF · Obligatorio</small></span><input id="archivo-licencia" type="file" name="archivoLicencia" accept="application/pdf"><span class="rrhh-upload-button">Adjuntar PDF</span></label>
+                            <label class="rrhh-upload-item" data-concepto="soat" for="archivo-soat"><span class="rrhh-upload-icon material-symbols" aria-hidden="true">two_wheeler</span><span class="rrhh-upload-copy"><strong>SOAT vigente</strong><small>PDF · Obligatorio</small></span><input id="archivo-soat" type="file" name="archivoSoat" accept="application/pdf"><span class="rrhh-upload-button">Adjuntar PDF</span></label>
+                            <label class="rrhh-upload-item" data-concepto="tecnomecanica" for="archivo-tecnomecanica"><span class="rrhh-upload-icon material-symbols" aria-hidden="true">build</span><span class="rrhh-upload-copy"><strong>Revisión técnico-mecánica</strong><small>PDF · Obligatorio</small></span><input id="archivo-tecnomecanica" type="file" name="archivoTecnomecanica" accept="application/pdf"><span class="rrhh-upload-button">Adjuntar PDF</span></label>
+                            <label class="rrhh-upload-item" data-concepto="tarjeta-propiedad" for="archivo-tarjeta-propiedad"><span class="rrhh-upload-icon material-symbols" aria-hidden="true">description</span><span class="rrhh-upload-copy"><strong>Licencia de tránsito de la moto</strong><small>PDF · Obligatorio</small></span><input id="archivo-tarjeta-propiedad" type="file" name="archivoTarjetaPropiedad" accept="application/pdf"><span class="rrhh-upload-button">Adjuntar PDF</span></label>
+                            <label class="rrhh-upload-item" data-concepto="simit" for="archivo-simit"><span class="rrhh-upload-icon material-symbols" aria-hidden="true">fact_check</span><span class="rrhh-upload-copy"><strong>Consulta de multas SIMIT</strong><small>PDF · Obligatorio</small></span><input id="archivo-simit" type="file" name="archivoSimit" accept="application/pdf"><span class="rrhh-upload-button">Adjuntar PDF</span></label>
+                            <label class="rrhh-upload-item" data-concepto="declaracion-moto" for="archivo-declaracion-moto"><span class="rrhh-upload-icon material-symbols" aria-hidden="true">edit_document</span><span class="rrhh-upload-copy"><strong>Declaración de propiedad de la moto</strong><small>PDF · Obligatorio</small></span><input id="archivo-declaracion-moto" type="file" name="archivoDeclaracionMoto" accept="application/pdf"><span class="rrhh-upload-button">Adjuntar PDF</span></label>
+                            <label class="rrhh-upload-item" data-concepto="autorizacion-moto" for="archivo-autorizacion-moto"><span class="rrhh-upload-icon material-symbols" aria-hidden="true">approval</span><span class="rrhh-upload-copy"><strong>Autorización de uso de moto</strong><small>PDF · Obligatorio</small></span><input id="archivo-autorizacion-moto" type="file" name="archivoAutorizacionMoto" accept="application/pdf"><span class="rrhh-upload-button">Adjuntar PDF</span></label>
+                            <label class="rrhh-upload-item" data-concepto="pruebas-conduccion" for="archivo-pruebas-conduccion"><span class="rrhh-upload-icon material-symbols" aria-hidden="true">quiz</span><span class="rrhh-upload-copy"><strong>Pruebas teóricas y prácticas</strong><small>PDF · Obligatorio</small></span><input id="archivo-pruebas-conduccion" type="file" name="archivoPruebasConduccion" accept="application/pdf" multiple><span class="rrhh-upload-button">Adjuntar PDF</span></label>
+                            <label class="rrhh-upload-item" data-concepto="afiliacion-arl" for="archivo-afiliacion-arl"><span class="rrhh-upload-icon material-symbols" aria-hidden="true">health_and_safety</span><span class="rrhh-upload-copy"><strong>Afiliación ARL</strong><small>PDF · Obligatorio</small></span><input id="archivo-afiliacion-arl" type="file" name="archivoAfiliacionArl" accept="application/pdf"><span class="rrhh-upload-button">Adjuntar PDF</span></label>
+                            <label class="rrhh-upload-item" data-concepto="certificado-eps" for="archivo-certificado-eps"><span class="rrhh-upload-icon material-symbols" aria-hidden="true">health_and_safety</span><span class="rrhh-upload-copy"><strong>Certificado EPS</strong><small>PDF · Obligatorio</small></span><input id="archivo-certificado-eps" type="file" name="archivoCertificadoEps" accept="application/pdf"><span class="rrhh-upload-button">Adjuntar PDF</span></label>
+                            <label class="rrhh-upload-item" data-concepto="afiliacion-eps" for="archivo-afiliacion-eps"><span class="rrhh-upload-icon material-symbols" aria-hidden="true">medical_information</span><span class="rrhh-upload-copy"><strong>Afiliación EPS</strong><small>PDF · Obligatorio</small></span><input id="archivo-afiliacion-eps" type="file" name="archivoAfiliacionEps" accept="application/pdf"><span class="rrhh-upload-button">Adjuntar PDF</span></label>
+                            <label class="rrhh-upload-item" data-concepto="certificado-pension" for="archivo-certificado-pension"><span class="rrhh-upload-icon material-symbols" aria-hidden="true">savings</span><span class="rrhh-upload-copy"><strong>Certificado de pensión</strong><small>PDF · Obligatorio</small></span><input id="archivo-certificado-pension" type="file" name="archivoCertificadoPension" accept="application/pdf"><span class="rrhh-upload-button">Adjuntar PDF</span></label>
+                            <label class="rrhh-upload-item" data-concepto="afiliacion-pension" for="archivo-afiliacion-pension"><span class="rrhh-upload-icon material-symbols" aria-hidden="true">savings</span><span class="rrhh-upload-copy"><strong>Afiliación a pensión</strong><small>PDF · Obligatorio</small></span><input id="archivo-afiliacion-pension" type="file" name="archivoAfiliacionPension" accept="application/pdf"><span class="rrhh-upload-button">Adjuntar PDF</span></label>
+                            <label class="rrhh-upload-item" data-concepto="afiliacion-caja" for="archivo-afiliacion-caja"><span class="rrhh-upload-icon material-symbols" aria-hidden="true">family_restroom</span><span class="rrhh-upload-copy"><strong>Afiliación a caja de compensación</strong><small>PDF · Obligatorio</small></span><input id="archivo-afiliacion-caja" type="file" name="archivoAfiliacionCaja" accept="application/pdf"><span class="rrhh-upload-button">Adjuntar PDF</span></label>
+                            <label class="rrhh-upload-item" data-concepto="beneficiarios" for="archivo-beneficiarios"><span class="rrhh-upload-icon material-symbols" aria-hidden="true">family_restroom</span><span class="rrhh-upload-copy"><strong>Documentos de beneficiarios</strong><small>PDF · Puedes adjuntar varios</small></span><input id="archivo-beneficiarios" type="file" name="archivoBeneficiarios" accept="application/pdf" multiple><span class="rrhh-upload-button">Adjuntar PDF</span></label>
+                            <label class="rrhh-upload-item" data-concepto="contrato-firmado" for="archivo-contrato-firmado"><span class="rrhh-upload-icon material-symbols" aria-hidden="true">contract</span><span class="rrhh-upload-copy"><strong>Contrato de trabajo firmado</strong><small>PDF · Obligatorio</small></span><input id="archivo-contrato-firmado" type="file" name="archivoContratoFirmado" accept="application/pdf"><span class="rrhh-upload-button">Adjuntar PDF</span></label>
+                            <label class="rrhh-upload-item" data-concepto="induccion" for="archivo-induccion"><span class="rrhh-upload-icon material-symbols" aria-hidden="true">school</span><span class="rrhh-upload-copy"><strong>Registro de inducción</strong><small>PDF · Obligatorio</small></span><input id="archivo-induccion" type="file" name="archivoInduccion" accept="application/pdf"><span class="rrhh-upload-button">Adjuntar PDF</span></label>
+                            <label class="rrhh-upload-item" data-concepto="evaluacion-ingreso" for="archivo-evaluacion-ingreso"><span class="rrhh-upload-icon material-symbols" aria-hidden="true">fact_check</span><span class="rrhh-upload-copy"><strong>Evaluación de personal nuevo</strong><small>PDF · Obligatorio</small></span><input id="archivo-evaluacion-ingreso" type="file" name="archivoEvaluacionIngreso" accept="application/pdf" multiple><span class="rrhh-upload-button">Adjuntar PDF</span></label>
+                            <label class="rrhh-upload-item" data-concepto="evaluacion-induccion" for="archivo-evaluacion-induccion"><span class="rrhh-upload-icon material-symbols" aria-hidden="true">fact_check</span><span class="rrhh-upload-copy"><strong>Evaluación de la inducción</strong><small>PDF · Obligatorio</small></span><input id="archivo-evaluacion-induccion" type="file" name="archivoEvaluacionInduccion" accept="application/pdf"><span class="rrhh-upload-button">Adjuntar PDF</span></label>
+                            <label class="rrhh-upload-item" data-concepto="evaluacion-desempeno" for="archivo-evaluacion-desempeno"><span class="rrhh-upload-icon material-symbols" aria-hidden="true">fact_check</span><span class="rrhh-upload-copy"><strong>Evaluación de desempeño</strong><small>PDF · Obligatorio</small></span><input id="archivo-evaluacion-desempeno" type="file" name="archivoEvaluacionDesempeno" accept="application/pdf" multiple><span class="rrhh-upload-button">Adjuntar PDF</span></label>
+                            <label class="rrhh-upload-item" data-concepto="evaluacion-habilidades" for="archivo-evaluacion-habilidades"><span class="rrhh-upload-icon material-symbols" aria-hidden="true">fact_check</span><span class="rrhh-upload-copy"><strong>Evaluación de habilidades</strong><small>PDF · Obligatorio</small></span><input id="archivo-evaluacion-habilidades" type="file" name="archivoEvaluacionHabilidades" accept="application/pdf" multiple><span class="rrhh-upload-button">Adjuntar PDF</span></label>
+                            <label class="rrhh-upload-item" data-concepto="curso-alturas" for="archivo-curso-alturas"><span class="rrhh-upload-icon material-symbols" aria-hidden="true">height</span><span class="rrhh-upload-copy"><strong>Certificado de curso de alturas</strong><small>PDF · Obligatorio</small></span><input id="archivo-curso-alturas" type="file" name="archivoCursoAlturas" accept="application/pdf"><span class="rrhh-upload-button">Adjuntar PDF</span></label>
+                        </div>
+                        <div class="rrhh-step-actions"><label class="btn-secondary rrhh-step-back" for="rrhh-step-config"><span class="material-symbols" aria-hidden="true">arrow_back</span> Anterior</label><div class="rrhh-final-actions"><button class="btn-primary" type="button"><span class="material-symbols" aria-hidden="true">save</span> Guardar empleado</button></div></div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </section>
 </body>
 </html>

@@ -70,4 +70,7 @@ public class EmpleadoAdjunto {
 
     @Column(name = "es_vigente", nullable = false)
     private boolean vigente = true;
+
+    @Column(name = "publico_qr", nullable = false)
+    private boolean publicoQr;
 }

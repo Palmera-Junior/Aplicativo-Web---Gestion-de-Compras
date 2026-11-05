@@ -2,8 +2,11 @@ package com.palmera_junior.gestion_compras.rrhh.entity;
 
 import com.palmera_junior.gestion_compras.entity.Empleado;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -36,4 +39,8 @@ public class EmpleadoAdjuntoRequerido {
     @JoinColumn(name = "id_tipo_adjunto_empleado", nullable = false)
     @ToString.Exclude
     private TipoAdjuntoEmpleado tipoAdjunto;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "etapa_requerida", nullable = false, length = 30)
+    private EtapaAdjuntoEmpleado etapaRequerida = EtapaAdjuntoEmpleado.CONTRATACION;
 }
