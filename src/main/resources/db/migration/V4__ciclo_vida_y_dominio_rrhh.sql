@@ -257,25 +257,46 @@ CREATE TABLE rrhh.asignacion_herramienta (
     id_asignacion_herramienta BIGSERIAL PRIMARY KEY,
     id_herramienta INT NOT NULL,
     id_empleado INT NOT NULL,
-    estado VARCHAR(20) NOT NULL DEFAULT 'ASIGNADA',
-    acta_nombre VARCHAR(255) NOT NULL,
-    acta_mime VARCHAR(150) NOT NULL,
-    acta_tamano_bytes BIGINT NOT NULL,
-    acta_contenido BYTEA NOT NULL,
-    entregada_en TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    entregada_por INT NOT NULL,
+    estado VARCHAR(20) NOT NULL DEFAULT 'PENDIENTE',
+    acta_nombre VARCHAR(255),
+    acta_mime VARCHAR(150),
+    acta_tamano_bytes BIGINT,
+    acta_contenido BYTEA,
+    entregada_en TIMESTAMPTZ,
+    entregada_por INT,
     recibida_en TIMESTAMPTZ,
     recibida_por INT,
     CONSTRAINT chk_asignacion_herramienta_estado CHECK (
-        estado IN ('ASIGNADA', 'RECIBIDO')
+        estado IN ('PENDIENTE', 'ASIGNADA', 'RECIBIDO')
     ),
     CONSTRAINT chk_asignacion_herramienta_acta CHECK (
-        length(btrim(acta_nombre)) > 0 AND length(btrim(acta_mime)) > 0
-        AND acta_tamano_bytes > 0
-        AND octet_length(acta_contenido) = acta_tamano_bytes
+        (
+            estado = 'PENDIENTE'
+            AND acta_nombre IS NULL
+            AND acta_mime IS NULL
+            AND acta_tamano_bytes IS NULL
+            AND acta_contenido IS NULL
+            AND entregada_en IS NULL
+            AND entregada_por IS NULL
+        )
+        OR
+        (
+            estado IN ('ASIGNADA', 'RECIBIDO')
+            AND acta_nombre IS NOT NULL
+            AND length(btrim(acta_nombre)) > 0
+            AND acta_mime IS NOT NULL
+            AND length(btrim(acta_mime)) > 0
+            AND acta_tamano_bytes IS NOT NULL
+            AND acta_tamano_bytes > 0
+            AND acta_contenido IS NOT NULL
+            AND octet_length(acta_contenido) = acta_tamano_bytes
+            AND entregada_en IS NOT NULL
+            AND entregada_por IS NOT NULL
+        )
     ),
     CONSTRAINT chk_asignacion_herramienta_recepcion CHECK (
-        (estado = 'ASIGNADA' AND recibida_en IS NULL AND recibida_por IS NULL)
+        (estado IN ('PENDIENTE', 'ASIGNADA')
+            AND recibida_en IS NULL AND recibida_por IS NULL)
         OR (estado = 'RECIBIDO' AND recibida_en IS NOT NULL AND recibida_por IS NOT NULL)
     ),
     CONSTRAINT fk_asignacion_herramienta_herramienta FOREIGN KEY (id_herramienta)
@@ -291,6 +312,10 @@ CREATE TABLE rrhh.asignacion_herramienta (
 CREATE UNIQUE INDEX uq_asignacion_herramienta_activa
     ON rrhh.asignacion_herramienta (id_herramienta)
     WHERE estado = 'ASIGNADA';
+
+CREATE UNIQUE INDEX uq_asignacion_herramienta_pendiente_empleado
+    ON rrhh.asignacion_herramienta (id_empleado, id_herramienta)
+    WHERE estado = 'PENDIENTE';
 
 CREATE INDEX idx_asignacion_herramienta_empleado
     ON rrhh.asignacion_herramienta (id_empleado, entregada_en DESC);

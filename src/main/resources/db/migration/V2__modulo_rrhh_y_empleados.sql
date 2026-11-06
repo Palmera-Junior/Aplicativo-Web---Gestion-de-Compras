@@ -127,6 +127,9 @@ CREATE INDEX idx_empleado_cargo ON core.empleado (id_cargo);
 CREATE INDEX idx_empleado_area ON core.empleado (id_area);
 CREATE INDEX idx_empleado_centro_costo ON core.empleado (id_centro_costo);
 CREATE INDEX idx_empleado_nivel_educativo ON core.empleado (id_nivel_educativo);
+CREATE UNIQUE INDEX uq_empleado_correo_normalizado
+    ON core.empleado (lower(btrim(correo_electronico)))
+    WHERE correo_electronico IS NOT NULL AND btrim(correo_electronico) <> '';
 
 ALTER TABLE core.usuario
     ADD COLUMN id_empleado INT,
@@ -143,13 +146,13 @@ CREATE TABLE rrhh.contrato_empleado (
     numero_cuenta_bancaria VARCHAR(50),
     fecha_ingreso DATE NOT NULL,
     fecha_fin DATE,
-    salario_basico NUMERIC(14, 2) NOT NULL,
+    salario_basico NUMERIC(10, 2) NOT NULL,
     auxilio_transporte_aplica BOOLEAN NOT NULL DEFAULT FALSE,
-    auxilio_transporte_valor NUMERIC(14, 2),
+    auxilio_transporte_valor NUMERIC(10, 2),
     auxilio_rodamiento_aplica BOOLEAN NOT NULL DEFAULT FALSE,
-    auxilio_rodamiento_valor NUMERIC(14, 2),
+    auxilio_rodamiento_valor NUMERIC(10, 2),
     bonificacion_no_salarial_aplica BOOLEAN NOT NULL DEFAULT FALSE,
-    bonificacion_no_salarial_valor NUMERIC(14, 2),
+    bonificacion_no_salarial_valor NUMERIC(10, 2),
     condiciones_especiales_aplica BOOLEAN NOT NULL DEFAULT FALSE,
     condiciones_especiales TEXT,
     id_eps INT,
