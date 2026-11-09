@@ -69,25 +69,25 @@ public class ContratoEmpleado {
     @Column(name = "fecha_fin")
     private LocalDate fechaFin;
 
-    @Column(name = "salario_basico", nullable = false, precision = 14, scale = 2)
+    @Column(name = "salario_basico", nullable = false, precision = 10, scale = 2)
     private BigDecimal salarioBasico;
 
     @Column(name = "auxilio_transporte_aplica", nullable = false)
     private boolean auxilioTransporteAplica;
 
-    @Column(name = "auxilio_transporte_valor", precision = 14, scale = 2)
+    @Column(name = "auxilio_transporte_valor", precision = 10, scale = 2)
     private BigDecimal auxilioTransporteValor;
 
     @Column(name = "auxilio_rodamiento_aplica", nullable = false)
     private boolean auxilioRodamientoAplica;
 
-    @Column(name = "auxilio_rodamiento_valor", precision = 14, scale = 2)
+    @Column(name = "auxilio_rodamiento_valor", precision = 10, scale = 2)
     private BigDecimal auxilioRodamientoValor;
 
     @Column(name = "bonificacion_no_salarial_aplica", nullable = false)
     private boolean bonificacionNoSalarialAplica;
 
-    @Column(name = "bonificacion_no_salarial_valor", precision = 14, scale = 2)
+    @Column(name = "bonificacion_no_salarial_valor", precision = 10, scale = 2)
     private BigDecimal bonificacionNoSalarialValor;
 
     @Column(name = "condiciones_especiales_aplica", nullable = false)
@@ -111,7 +111,7 @@ public class ContratoEmpleado {
     @ToString.Exclude
     private Arl arl;
 
-    @Column(name = "tarifa_arl_porcentaje", precision = 6, scale = 3)
+    @Column(name = "tarifa_arl_porcentaje", precision = 10, scale = 2)
     private BigDecimal tarifaArlPorcentaje;
 
     @ManyToOne(fetch = FetchType.LAZY)

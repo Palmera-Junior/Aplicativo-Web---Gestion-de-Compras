@@ -836,12 +836,12 @@ body:has(.rrhh-registration-view:target) {
     background: #fff;
 }
 
-.rrhh-check-option input:checked + .rrhh-checkmark {
+.rrhh-check-option input:checked ~ .rrhh-checkmark {
     border-color: #2874c8;
     background: #2874c8;
 }
 
-.rrhh-check-option input:checked + .rrhh-checkmark::after {
+.rrhh-check-option input:checked ~ .rrhh-checkmark::after {
     width: 7px;
     height: 4px;
     border-bottom: 2px solid #fff;
@@ -929,12 +929,12 @@ body:has(.rrhh-registration-view:target) {
     transform: translateY(-50%);
 }
 
-.rrhh-inline-check input:checked + span::before {
+.rrhh-inline-check input:checked ~ span:first-of-type::before {
     border-color: #2874c8;
     background: #2874c8;
 }
 
-.rrhh-inline-check input:checked + span::after {
+.rrhh-inline-check input:checked ~ span:first-of-type::after {
     position: absolute;
     top: 50%;
     left: 4px;
@@ -2045,6 +2045,12 @@ body:has(.rrhh-operation-view:target) {
     color: #315f96;
 }
 
+.rrhh-document-status.pendiente {
+    border-color: #f1dfb8;
+    background: #fff9eb;
+    color: #936619;
+}
+
 .rrhh-document-status.recibido {
     border-color: #dce8df;
     background: #f2f8f4;
@@ -2275,6 +2281,20 @@ body:has(.rrhh-operation-view:target) {
 .rrhh-file-picker-hint {
     grid-column: 2 / -1;
     margin-top: -6px;
+}
+
+.rrhh-assignment-action {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 7px;
+}
+
+.rrhh-assignment-action .btn-primary,
+.rrhh-assignment-action .btn-secondary {
+    min-height: 32px;
+    padding: 0 10px;
+    font-size: 9px;
 }
 
 .rrhh-action-warning {

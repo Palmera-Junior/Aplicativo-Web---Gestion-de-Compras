@@ -3,18 +3,20 @@ package com.palmera_junior.gestion_compras.rrhh.service;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.palmera_junior.gestion_compras.entity.Empleado;
+import com.palmera_junior.gestion_compras.entity.Permiso;
 import com.palmera_junior.gestion_compras.entity.Usuario;
 import com.palmera_junior.gestion_compras.repository.CentroCostoRepository;
 import com.palmera_junior.gestion_compras.repository.EmpleadoRepository;
@@ -26,6 +28,7 @@ import com.palmera_junior.gestion_compras.rrhh.entity.ContratoEmpleado;
 import com.palmera_junior.gestion_compras.rrhh.entity.CatalogoRrhh;
 import com.palmera_junior.gestion_compras.rrhh.entity.TipoAdjuntoEmpleado;
 import com.palmera_junior.gestion_compras.rrhh.entity.EstadoEmpleado;
+import com.palmera_junior.gestion_compras.rrhh.entity.EstadoContratoEmpleado;
 import com.palmera_junior.gestion_compras.rrhh.repository.AfpRepository;
 import com.palmera_junior.gestion_compras.rrhh.repository.ArlRepository;
 import com.palmera_junior.gestion_compras.rrhh.repository.AreaRepository;
@@ -33,6 +36,7 @@ import com.palmera_junior.gestion_compras.rrhh.repository.CajaCompensacionReposi
 import com.palmera_junior.gestion_compras.rrhh.repository.CargoRepository;
 import com.palmera_junior.gestion_compras.rrhh.repository.EntidadBancariaRepository;
 import com.palmera_junior.gestion_compras.rrhh.repository.EpsRepository;
+import com.palmera_junior.gestion_compras.rrhh.repository.ContratoEmpleadoRepository;
 import com.palmera_junior.gestion_compras.rrhh.repository.EmpleadoAdjuntoRepository;
 import com.palmera_junior.gestion_compras.rrhh.repository.EmpleadoAdjuntoRequeridoRepository;
 import com.palmera_junior.gestion_compras.rrhh.repository.NivelEducativoRepository;
@@ -49,12 +53,15 @@ public class EmpleadoRegistroWorkflowService {
 
     private static final long MAX_TAMANO_ADJUNTO = 10L * 1024 * 1024;
     private static final long MAX_TAMANO_TOTAL_ADJUNTOS = 50L * 1024 * 1024;
+    private static final BigDecimal MAX_DECIMAL_10_2 = new BigDecimal("99999999.99");
     private static final Set<String> GRUPOS_INICIALES = Set.of("INGRESO", "VEHICULO");
     private static final Set<String> GRUPOS_CONTRATACION = Set.of("AFILIACIONES", "EVALUACIONES");
 
     private final IEmpleadoService empleadoService;
     private final IEmpleadoAdjuntoService adjuntoService;
+    private final AsignacionHerramientaService asignacionHerramientaService;
     private final EmpleadoRepository empleadoRepository;
+    private final ContratoEmpleadoRepository contratoRepository;
     private final EmpleadoAdjuntoRepository adjuntoRepository;
     private final EmpleadoAdjuntoRequeridoRepository requeridoRepository;
     private final TipoAdjuntoEmpleadoRepository tipoAdjuntoRepository;
@@ -90,14 +97,16 @@ public class EmpleadoRegistroWorkflowService {
                         "El registro cambió desde que lo abriste. Recarga la página antes de guardar.");
             }
             if (actual.getEstado() == EstadoEmpleado.PROCESO_CONTRATACION) {
-                return completarContratacion(form, archivos, actor, actual);
+                throw new IllegalStateException(
+                        "La contratación debe guardarse o completarse desde su acción específica");
             }
             if (actual.getEstado() != EstadoEmpleado.REGISTRO_INICIAL) {
                 throw new IllegalStateException(
-                        "Solo se puede editar un registro inicial o completar una contratación pendiente");
+                        "Solo se puede editar un empleado en Registro inicial");
             }
         }
         validarFormulario(form);
+        validarCorreoNoDuplicado(form.getCorreoElectronico(), form.getIdEmpleado());
         Empleado empleado = mapearEmpleado(form);
         if (!nuevo) {
             validarDocumentoNoDuplicado(empleado, form.getIdEmpleado());
@@ -107,6 +116,8 @@ public class EmpleadoRegistroWorkflowService {
             validarDocumentoNoDuplicado(empleado, null);
             empleado = empleadoService.crearRegistroInicial(empleado, actor);
         }
+        asignacionHerramientaService.sincronizarPendientes(
+                empleado, form.getHerramientasSolicitadasIds());
         guardarRequisitos(
                 empleado, form.getTiposAdjuntoRequeridos(), EtapaAdjuntoEmpleado.REGISTRO_INICIAL);
         guardarAdjuntos(
@@ -118,25 +129,64 @@ public class EmpleadoRegistroWorkflowService {
         return empleado;
     }
 
-    private Empleado completarContratacion(
+    @Transactional(readOnly = true)
+    public void cargarDatosContratacionPendiente(Integer idEmpleado, EmpleadoRegistroForm form) {
+        contratoRepository
+                .findFirstByEmpleado_IdEmpleadoAndEstadoOrderByIdContratoEmpleadoDesc(
+                        idEmpleado, EstadoContratoEmpleado.BORRADOR)
+                .ifPresent(contrato -> copiarContratoAlFormulario(contrato, form));
+    }
+
+    @Transactional
+    public Empleado guardarAvanceContratacion(
+            Integer idEmpleado,
             EmpleadoRegistroForm form,
             MultiValueMap<String, MultipartFile> archivos,
-            Usuario actor,
-            Empleado empleado) {
-        ContratoEmpleado contrato = mapearContrato(form);
+            Usuario actor) {
+        Empleado empleado = validarEmpleadoEnContratacion(idEmpleado, form, actor);
+        validarTamanoTotalAdjuntos(archivos);
+        ContratoEmpleado contrato = obtenerContratoBorrador(idEmpleado, form);
+        mapearContrato(form, contrato);
+        validarMinimosBorrador(contrato);
+        contrato.setEmpleado(empleado);
+        contrato.setEstado(EstadoContratoEmpleado.BORRADOR);
+        guardarRequisitos(
+                empleado, form.getTiposAdjuntoRequeridos(),
+                EtapaAdjuntoEmpleado.CONTRATACION);
+        guardarAdjuntos(
+                empleado, archivos, form.getTiposAdjuntoRequeridos(),
+                EtapaAdjuntoEmpleado.CONTRATACION);
+        contratoRepository.save(contrato);
+        return empleado;
+    }
+
+    @Transactional
+    public Empleado completarContratacion(
+            Integer idEmpleado,
+            EmpleadoRegistroForm form,
+            MultiValueMap<String, MultipartFile> archivos,
+            Usuario actor) {
+        Empleado empleado = validarEmpleadoEnContratacion(idEmpleado, form, actor);
+        validarTamanoTotalAdjuntos(archivos);
+        ContratoEmpleado contrato = obtenerContratoBorrador(idEmpleado, form);
+        mapearContrato(form, contrato);
+        contrato.setEmpleado(empleado);
         guardarRequisitos(
                 empleado, form.getTiposAdjuntoRequeridos(), EtapaAdjuntoEmpleado.CONTRATACION);
         guardarAdjuntos(
                 empleado, archivos, form.getTiposAdjuntoRequeridos(),
                 EtapaAdjuntoEmpleado.CONTRATACION);
-        return empleadoService.completarRegistro(empleado.getIdEmpleado(), contrato, actor);
+        Empleado completado =
+                empleadoService.completarRegistro(empleado.getIdEmpleado(), contrato, actor);
+        asociarAdjuntosAlContrato(empleado, contrato, form.getTiposAdjuntoRequeridos());
+        return completado;
     }
 
-    private ContratoEmpleado mapearContrato(EmpleadoRegistroForm form) {
-        ContratoEmpleado contrato = new ContratoEmpleado();
+    private ContratoEmpleado mapearContrato(
+            EmpleadoRegistroForm form, ContratoEmpleado contrato) {
         contrato.setFechaIngreso(form.getFechaIngreso());
         contrato.setFechaFin(form.getFechaFin());
-        contrato.setSalarioBasico(form.getSalarioBasico());
+        contrato.setSalarioBasico(validarDecimal10_2("salario básico", form.getSalarioBasico()));
         contrato.setTipoContrato(buscarCatalogoOpcional(
                 form.getTipoContratoId(), tipoContratoRepository, "tipo de contrato"));
         contrato.setTipoPago(buscarCatalogoOpcional(
@@ -149,7 +199,8 @@ public class EmpleadoRegistroWorkflowService {
         contrato.setArl(buscarCatalogoOpcional(form.getArlId(), arlRepository, "ARL"));
         contrato.setCajaCompensacion(buscarCatalogoOpcional(
                 form.getCajaCompensacionId(), cajaCompensacionRepository, "caja de compensación"));
-        contrato.setTarifaArlPorcentaje(form.getTarifaArlPorcentaje());
+        contrato.setTarifaArlPorcentaje(validarDecimal10_2(
+                "tarifa ARL", form.getTarifaArlPorcentaje()));
         contrato.setAuxilioTransporteAplica(form.isAuxilioTransporteAplica());
         contrato.setAuxilioTransporteValor(valorAplicable(
                 "auxilio de transporte", form.isAuxilioTransporteAplica(),
@@ -175,6 +226,125 @@ public class EmpleadoRegistroWorkflowService {
                     "Describe las condiciones especiales del contrato");
         }
         return contrato;
+    }
+
+    private Empleado validarEmpleadoEnContratacion(
+            Integer idEmpleado, EmpleadoRegistroForm form, Usuario actor) {
+        exigirPermiso(actor, "RRHH_GESTIONAR");
+        if (form == null || !Objects.equals(idEmpleado, form.getIdEmpleado())) {
+            throw new IllegalArgumentException(
+                    "Los datos de contratación no corresponden al empleado indicado");
+        }
+        Empleado empleado = empleadoRepository.findByIdForUpdate(idEmpleado)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "El empleado que intentas editar ya no existe"));
+        if (form.getVersion() == null || !form.getVersion().equals(empleado.getVersion())) {
+            throw new IllegalStateException(
+                    "El registro cambió desde que lo abriste. Recarga la página antes de guardar.");
+        }
+        if (empleado.getEstado() != EstadoEmpleado.PROCESO_CONTRATACION) {
+            throw new IllegalStateException(
+                    "Solo se puede guardar contratación mientras el empleado esté en Proceso de contratación");
+        }
+        return empleado;
+    }
+
+    private ContratoEmpleado obtenerContratoBorrador(
+            Integer idEmpleado, EmpleadoRegistroForm form) {
+        ContratoEmpleado borrador = contratoRepository
+                .findFirstByEmpleado_IdEmpleadoAndEstadoOrderByIdContratoEmpleadoDesc(
+                        idEmpleado, EstadoContratoEmpleado.BORRADOR)
+                .orElse(null);
+        if (borrador == null) {
+            if (form.getIdContratoEmpleado() != null || form.getVersionContrato() != null) {
+                throw new IllegalStateException(
+                        "El borrador contractual cambió. Recarga la página antes de continuar.");
+            }
+            return new ContratoEmpleado();
+        }
+        if (!Objects.equals(form.getIdContratoEmpleado(), borrador.getIdContratoEmpleado())
+                || form.getVersionContrato() == null
+                || !form.getVersionContrato().equals(borrador.getVersion())) {
+            throw new IllegalStateException(
+                    "El borrador contractual cambió. Recarga la página antes de continuar.");
+        }
+        return borrador;
+    }
+
+    private static void validarMinimosBorrador(ContratoEmpleado contrato) {
+        if (contrato.getFechaIngreso() == null) {
+            throw new IllegalArgumentException(
+                    "La fecha de ingreso es necesaria para guardar el avance contractual");
+        }
+        if (contrato.getSalarioBasico() == null || contrato.getSalarioBasico().signum() < 0) {
+            throw new IllegalArgumentException(
+                    "Ingresa un salario básico válido para guardar el avance contractual");
+        }
+        if (contrato.getFechaFin() != null
+                && contrato.getFechaFin().isBefore(contrato.getFechaIngreso())) {
+            throw new IllegalArgumentException(
+                    "La fecha de fin debe ser igual o posterior a la fecha de ingreso");
+        }
+    }
+
+    private void copiarContratoAlFormulario(
+            ContratoEmpleado contrato, EmpleadoRegistroForm form) {
+        form.setIdContratoEmpleado(contrato.getIdContratoEmpleado());
+        form.setVersionContrato(contrato.getVersion());
+        form.setTipoContratoId(contrato.getTipoContrato() == null
+                ? null : contrato.getTipoContrato().getId());
+        form.setTipoPagoId(contrato.getTipoPago() == null
+                ? null : contrato.getTipoPago().getId());
+        form.setEntidadBancariaId(contrato.getEntidadBancaria() == null
+                ? null : contrato.getEntidadBancaria().getId());
+        form.setNumeroCuentaBancaria(contrato.getNumeroCuentaBancaria());
+        form.setFechaIngreso(contrato.getFechaIngreso());
+        form.setFechaFin(contrato.getFechaFin());
+        form.setSalarioBasico(contrato.getSalarioBasico());
+        form.setAuxilioTransporteAplica(contrato.isAuxilioTransporteAplica());
+        form.setAuxilioTransporteValor(contrato.getAuxilioTransporteValor());
+        form.setAuxilioRodamientoAplica(contrato.isAuxilioRodamientoAplica());
+        form.setAuxilioRodamientoValor(contrato.getAuxilioRodamientoValor());
+        form.setBonificacionNoSalarialAplica(contrato.isBonificacionNoSalarialAplica());
+        form.setBonificacionNoSalarialValor(contrato.getBonificacionNoSalarialValor());
+        form.setEpsId(contrato.getEps() == null ? null : contrato.getEps().getId());
+        form.setAfpId(contrato.getAfp() == null ? null : contrato.getAfp().getId());
+        form.setArlId(contrato.getArl() == null ? null : contrato.getArl().getId());
+        form.setTarifaArlPorcentaje(contrato.getTarifaArlPorcentaje());
+        form.setCajaCompensacionId(contrato.getCajaCompensacion() == null
+                ? null : contrato.getCajaCompensacion().getId());
+        form.setCondicionesEspecialesAplica(contrato.isCondicionesEspecialesAplica());
+        form.setCondicionesEspeciales(contrato.getCondicionesEspeciales());
+    }
+
+    private void asociarAdjuntosAlContrato(
+            Empleado empleado, ContratoEmpleado contrato, List<Integer> tiposRequeridos) {
+        Set<Integer> idsTiposRequeridos = tiposRequeridos == null
+                ? Set.of() : new HashSet<>(tiposRequeridos);
+        List<EmpleadoAdjunto> adjuntos = adjuntoRepository
+                .findAllByEmpleado_IdEmpleadoOrderByFechaCargaDesc(empleado.getIdEmpleado());
+        List<EmpleadoAdjunto> adjuntosContratacion = adjuntos.stream()
+                .filter(EmpleadoAdjunto::isVigente)
+                .filter(adjunto -> idsTiposRequeridos.contains(
+                        adjunto.getTipoAdjunto().getIdTipoAdjuntoEmpleado()))
+                .filter(adjunto -> GRUPOS_CONTRATACION.contains(
+                        adjunto.getTipoAdjunto().getGrupo().name()))
+                .toList();
+        if (!adjuntosContratacion.isEmpty()) {
+            adjuntosContratacion.forEach(adjunto -> adjunto.setContrato(contrato));
+            adjuntoRepository.saveAll(adjuntosContratacion);
+        }
+    }
+
+    private static void exigirPermiso(Usuario actor, String permiso) {
+        Set<String> permisos = actor == null || actor.getPermisos() == null
+                ? Set.of()
+                : actor.getPermisos().stream()
+                        .map(Permiso::getCodigo)
+                        .collect(java.util.stream.Collectors.toSet());
+        if (!permisos.contains(permiso)) {
+            throw new SecurityException("No tiene permiso para esta operación");
+        }
     }
 
     private Empleado mapearEmpleado(EmpleadoRegistroForm form) {
@@ -285,7 +455,7 @@ public class EmpleadoRegistroWorkflowService {
                         .findAllByEmpleado_IdEmpleadoAndTipoAdjunto_IdTipoAdjuntoEmpleadoAndVigenteTrueOrderByFechaCargaDesc(
                                 empleado.getIdEmpleado(), idTipo);
                 anteriores.forEach(adjunto -> adjunto.setVigente(false));
-                adjuntoRepository.saveAll(anteriores);
+                adjuntoRepository.saveAllAndFlush(anteriores);
             }
             for (MultipartFile archivo : archivosTipo) {
                 guardarAdjunto(empleado, tipo, archivo);
@@ -364,6 +534,21 @@ public class EmpleadoRegistroWorkflowService {
         }
     }
 
+    private void validarCorreoNoDuplicado(String correo, Integer idActual) {
+        String normalizado = normalizar(correo);
+        if (normalizado == null) {
+            return;
+        }
+        boolean existe = idActual == null
+                ? empleadoRepository.existsByCorreoElectronicoNormalizado(normalizado)
+                : empleadoRepository.existsByCorreoElectronicoNormalizadoExcludingEmpleado(
+                        normalizado, idActual);
+        if (existe) {
+            throw new IllegalArgumentException(
+                    "Ya existe un empleado registrado con ese correo electrónico");
+        }
+    }
+
     private static Integer parsearIdTipo(String valor) {
         try {
             return Integer.valueOf(valor);
@@ -396,6 +581,18 @@ public class EmpleadoRegistroWorkflowService {
         if (valor == null || valor.signum() < 0) {
             throw new IllegalArgumentException(
                     "Ingresa un valor válido para " + concepto);
+        }
+        return validarDecimal10_2(concepto, valor);
+    }
+
+    private static BigDecimal validarDecimal10_2(String concepto, BigDecimal valor) {
+        if (valor == null) {
+            return null;
+        }
+        if (valor.abs().compareTo(MAX_DECIMAL_10_2) > 0
+                || valor.stripTrailingZeros().scale() > 2) {
+            throw new IllegalArgumentException(
+                    concepto + " debe tener máximo 8 enteros y 2 decimales");
         }
         return valor;
     }

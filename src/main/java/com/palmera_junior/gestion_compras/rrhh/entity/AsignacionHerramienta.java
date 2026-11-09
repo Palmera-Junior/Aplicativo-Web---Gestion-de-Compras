@@ -48,28 +48,28 @@ public class AsignacionHerramienta {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private EstadoAsignacionHerramienta estado = EstadoAsignacionHerramienta.ASIGNADA;
+    private EstadoAsignacionHerramienta estado = EstadoAsignacionHerramienta.PENDIENTE;
 
-    @Column(name = "acta_nombre", nullable = false, length = 255)
+    @Column(name = "acta_nombre", length = 255)
     private String actaNombre;
 
-    @Column(name = "acta_mime", nullable = false, length = 150)
+    @Column(name = "acta_mime", length = 150)
     private String actaMime;
 
-    @Column(name = "acta_tamano_bytes", nullable = false)
+    @Column(name = "acta_tamano_bytes")
     private Long actaTamanoBytes;
 
     @Basic(fetch = FetchType.LAZY)
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    @Column(name = "acta_contenido", nullable = false, columnDefinition = "BYTEA")
+    @Column(name = "acta_contenido", columnDefinition = "BYTEA")
     @ToString.Exclude
     private byte[] actaContenido;
 
-    @Column(name = "entregada_en", nullable = false)
+    @Column(name = "entregada_en")
     private OffsetDateTime entregadaEn;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "entregada_por", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "entregada_por")
     @ToString.Exclude
     private Usuario entregadaPor;
 

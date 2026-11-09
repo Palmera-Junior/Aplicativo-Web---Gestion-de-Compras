@@ -5,7 +5,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -17,6 +22,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.palmera_junior.gestion_compras.entity.Empleado;
@@ -33,6 +39,7 @@ import com.palmera_junior.gestion_compras.rrhh.entity.EmpleadoAdjuntoRequerido;
 import com.palmera_junior.gestion_compras.rrhh.entity.EmpleadoHistorialEstado;
 import com.palmera_junior.gestion_compras.rrhh.entity.EtapaAdjuntoEmpleado;
 import com.palmera_junior.gestion_compras.rrhh.entity.EstadoEmpleado;
+import com.palmera_junior.gestion_compras.rrhh.entity.AsignacionHerramienta;
 import com.palmera_junior.gestion_compras.rrhh.entity.GrupoAdjuntoEmpleado;
 import com.palmera_junior.gestion_compras.rrhh.entity.NivelEducativo;
 import com.palmera_junior.gestion_compras.rrhh.entity.TipoContrato;
@@ -40,6 +47,7 @@ import com.palmera_junior.gestion_compras.rrhh.entity.TipoAdjuntoEmpleado;
 import com.palmera_junior.gestion_compras.rrhh.entity.TipoPago;
 import com.palmera_junior.gestion_compras.rrhh.repository.AfpRepository;
 import com.palmera_junior.gestion_compras.rrhh.repository.ArlRepository;
+import com.palmera_junior.gestion_compras.rrhh.service.AsignacionHerramientaService;
 import com.palmera_junior.gestion_compras.rrhh.repository.AreaRepository;
 import com.palmera_junior.gestion_compras.rrhh.repository.CajaCompensacionRepository;
 import com.palmera_junior.gestion_compras.rrhh.repository.CargoRepository;
@@ -62,6 +70,7 @@ public class RecursosHumanosController {
     private final IEmpleadoService empleadoService;
     private final IEmpleadoAdjuntoService adjuntoService;
     private final EmpleadoRegistroWorkflowService registroWorkflow;
+    private final AsignacionHerramientaService asignacionHerramientaService;
     private final IUsuarioService usuarioService;
     private final AreaRepository areaRepository;
     private final CargoRepository cargoRepository;
@@ -79,6 +88,7 @@ public class RecursosHumanosController {
             IEmpleadoService empleadoService,
             IEmpleadoAdjuntoService adjuntoService,
             EmpleadoRegistroWorkflowService registroWorkflow,
+            AsignacionHerramientaService asignacionHerramientaService,
             IUsuarioService usuarioService,
             AreaRepository areaRepository,
             CargoRepository cargoRepository,
@@ -94,6 +104,7 @@ public class RecursosHumanosController {
         this.empleadoService = empleadoService;
         this.adjuntoService = adjuntoService;
         this.registroWorkflow = registroWorkflow;
+        this.asignacionHerramientaService = asignacionHerramientaService;
         this.usuarioService = usuarioService;
         this.areaRepository = areaRepository;
         this.cargoRepository = cargoRepository;
@@ -119,9 +130,14 @@ public class RecursosHumanosController {
             @RequestParam(required = false) Integer empleadoId,
             @RequestParam(required = false) Integer editarEmpleadoId,
             @RequestParam(required = false) String error,
+            @RequestParam(required = false, defaultValue = "false") boolean nuevoEmpleado,
             Authentication authentication,
             Model model) {
-        boolean formularioEnFlash = model.containsAttribute("registroEmpleado");
+        if (nuevoEmpleado) {
+            empleadoId = null;
+            editarEmpleadoId = null;
+        }
+        boolean formularioEnFlash = !nuevoEmpleado && model.containsAttribute("registroEmpleado");
         List<Empleado> empleados = empleadoService.listar();
         Usuario actor = usuarioService.obtenerUsuarioAutenticado(authentication);
         Set<String> permisos = actor.getPermisos().stream()
@@ -135,10 +151,14 @@ public class RecursosHumanosController {
                 && empleadoEnEdicion.getEstado() == EstadoEmpleado.PROCESO_CONTRATACION;
 
         model.addAttribute("empleados", empleados);
+        model.addAttribute("herramientasCatalogo",
+                asignacionHerramientaService.listarCatalogoActivo());
+        model.addAttribute("asignacionesHerramientas", List.of());
         model.addAttribute("puedeGestionar", permisos.contains("RRHH_GESTIONAR"));
         model.addAttribute("puedeEditarRegistro", permisos.contains("RRHH_REGISTRO_EDITAR"));
         model.addAttribute("puedeAprobar", permisos.contains("RRHH_APROBAR"));
         model.addAttribute("esEdicionContratacion", esEdicionContratacion);
+        model.addAttribute("esNuevoEmpleado", nuevoEmpleado && editarEmpleadoId == null);
         model.addAttribute("tiposDocumento",
                 com.palmera_junior.gestion_compras.entity.TipoDocumentoEmpleado.values());
         model.addAttribute("tiposSangre",
@@ -238,6 +258,9 @@ public class RecursosHumanosController {
                     adjuntoService.listarRequeridosPorEmpleado(editarEmpleadoId);
             if (!formularioEnFlash) {
                 EmpleadoRegistroForm form = formDesdeEmpleado(empleado);
+                if (esEdicionContratacion) {
+                    registroWorkflow.cargarDatosContratacionPendiente(editarEmpleadoId, form);
+                }
                 form.setTiposAdjuntoRequeridos(requisitos.stream()
                         .filter(requisito -> requisito.getEtapaRequerida()
                                 == (esEdicionContratacion
@@ -245,6 +268,11 @@ public class RecursosHumanosController {
                                         : EtapaAdjuntoEmpleado.REGISTRO_INICIAL))
                         .map(requisito -> requisito.getTipoAdjunto().getIdTipoAdjuntoEmpleado())
                         .collect(Collectors.toCollection(ArrayList::new)));
+                if (!esEdicionContratacion
+                        && empleado.getEstado() == EstadoEmpleado.REGISTRO_INICIAL) {
+                    form.setHerramientasSolicitadasIds(
+                            asignacionHerramientaService.listarIdsPendientes(editarEmpleadoId));
+                }
                 model.addAttribute("registroEmpleado", form);
             }
             List<EmpleadoAdjunto> adjuntos = adjuntoService.listarPorEmpleado(editarEmpleadoId);
@@ -256,6 +284,11 @@ public class RecursosHumanosController {
                     .map(String::valueOf)
                     .collect(Collectors.joining(",")));
         }
+        if (empleadoId != null) {
+            model.addAttribute(
+                    "asignacionesHerramientas",
+                    asignacionHerramientaService.listarPorEmpleado(empleadoId));
+        }
         EmpleadoRegistroForm registro = (EmpleadoRegistroForm) model.getAttribute("registroEmpleado");
         List<Integer> tiposSeleccionados = registro == null || registro.getTiposAdjuntoRequeridos() == null
                 ? List.of() : registro.getTiposAdjuntoRequeridos();
@@ -263,6 +296,10 @@ public class RecursosHumanosController {
         model.addAttribute("tiposAdjuntoSeleccionados", tiposAdjuntoIniciales.stream()
                 .filter(tipo -> tiposSeleccionados.contains(tipo.getIdTipoAdjuntoEmpleado()))
                 .toList());
+        model.addAttribute(
+                "herramientasSolicitadasSeleccionadas",
+                registro == null || registro.getHerramientasSolicitadasIds() == null
+                        ? List.of() : registro.getHerramientasSolicitadasIds());
         return "recursos-humanos-principal";
     }
 
@@ -291,6 +328,51 @@ public class RecursosHumanosController {
         }
     }
 
+    @PostMapping("/recursos-humanos/empleados/{id}/contratacion")
+    @PreAuthorize("hasAuthority('PERM_RRHH_GESTIONAR')")
+    public String guardarAvanceContratacion(
+            @PathVariable Integer id,
+            @ModelAttribute("registroEmpleado") EmpleadoRegistroForm form,
+            MultipartHttpServletRequest request,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes) {
+        try {
+            registroWorkflow.guardarAvanceContratacion(
+                    id, form, request.getMultiFileMap(),
+                    usuarioService.obtenerUsuarioAutenticado(authentication));
+            redirectAttributes.addFlashAttribute("mensajeExito",
+                    "Avance contractual guardado. El empleado continúa en Proceso de contratación.");
+        } catch (IllegalArgumentException | IllegalStateException ex) {
+            redirectAttributes.addFlashAttribute("mensajeError", ex.getMessage());
+            redirectAttributes.addFlashAttribute("registroEmpleado", form);
+        }
+        return "redirect:/recursos-humanos/principal?editarEmpleadoId=" + id
+                + "#registro-empleado";
+    }
+
+    @PostMapping("/recursos-humanos/empleados/{id}/completar")
+    @PreAuthorize("hasAuthority('PERM_RRHH_GESTIONAR')")
+    public String completarContratacion(
+            @PathVariable Integer id,
+            @ModelAttribute("registroEmpleado") EmpleadoRegistroForm form,
+            MultipartHttpServletRequest request,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes) {
+        try {
+            registroWorkflow.completarContratacion(
+                    id, form, request.getMultiFileMap(),
+                    usuarioService.obtenerUsuarioAutenticado(authentication));
+            redirectAttributes.addFlashAttribute("mensajeExito",
+                    "Empleado activado y primer contrato creado correctamente.");
+            return "redirect:/recursos-humanos/principal";
+        } catch (IllegalArgumentException | IllegalStateException ex) {
+            redirectAttributes.addFlashAttribute("mensajeError", ex.getMessage());
+            redirectAttributes.addFlashAttribute("registroEmpleado", form);
+            return "redirect:/recursos-humanos/principal?editarEmpleadoId=" + id
+                    + "#registro-empleado";
+        }
+    }
+
     @PostMapping("/recursos-humanos/empleados/{id}/aprobar")
     @PreAuthorize("hasAuthority('PERM_RRHH_APROBAR')")
     public String aprobarRegistroInicial(
@@ -306,6 +388,61 @@ public class RecursosHumanosController {
             redirectAttributes.addFlashAttribute("mensajeError", ex.getMessage());
         }
         return "redirect:/recursos-humanos/principal";
+    }
+
+    @PostMapping("/recursos-humanos/empleados/{id}/asignaciones/{idAsignacion}/entregar")
+    @PreAuthorize("hasAuthority('PERM_RRHH_GESTIONAR')")
+    public String entregarHerramienta(
+            @PathVariable Integer id,
+            @PathVariable Long idAsignacion,
+            @RequestParam("acta") MultipartFile acta,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes) {
+        try {
+            asignacionHerramientaService.asignar(
+                    id, idAsignacion, acta,
+                    usuarioService.obtenerUsuarioAutenticado(authentication));
+            redirectAttributes.addFlashAttribute(
+                    "mensajeExito", "Herramienta asignada y acta registrada correctamente.");
+        } catch (IllegalArgumentException | IllegalStateException ex) {
+            redirectAttributes.addFlashAttribute("mensajeError", ex.getMessage());
+        }
+        return "redirect:/recursos-humanos/principal?empleadoId=" + id + "#ficha-asignaciones";
+    }
+
+    @PostMapping("/recursos-humanos/empleados/{id}/asignaciones/{idAsignacion}/recibir")
+    @PreAuthorize("hasAuthority('PERM_RRHH_GESTIONAR')")
+    public String recibirHerramienta(
+            @PathVariable Integer id,
+            @PathVariable Long idAsignacion,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes) {
+        try {
+            asignacionHerramientaService.marcarRecibida(
+                    id, idAsignacion,
+                    usuarioService.obtenerUsuarioAutenticado(authentication));
+            redirectAttributes.addFlashAttribute(
+                    "mensajeExito", "La herramienta quedó marcada como recibida.");
+        } catch (IllegalArgumentException | IllegalStateException ex) {
+            redirectAttributes.addFlashAttribute("mensajeError", ex.getMessage());
+        }
+        return "redirect:/recursos-humanos/principal?empleadoId=" + id + "#ficha-asignaciones";
+    }
+
+    @GetMapping("/recursos-humanos/empleados/{id}/asignaciones/{idAsignacion}/acta")
+    @PreAuthorize("hasAnyAuthority('PERM_RRHH_VER', 'PERM_RRHH_GESTIONAR', 'PERM_RRHH_APROBAR', 'PERM_RRHH_REGISTRO_EDITAR')")
+    public ResponseEntity<ByteArrayResource> descargarActaHerramienta(
+            @PathVariable Integer id, @PathVariable Long idAsignacion) {
+        AsignacionHerramientaService.ActaHerramienta acta =
+                asignacionHerramientaService.obtenerActa(id, idAsignacion);
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        ContentDisposition.attachment()
+                                .filename(acta.nombre(), java.nio.charset.StandardCharsets.UTF_8)
+                                .build()
+                                .toString())
+                .body(new ByteArrayResource(acta.contenido()));
     }
 
     private EmpleadoRegistroForm formDesdeEmpleado(Empleado empleado) {

@@ -3,6 +3,8 @@ package com.palmera_junior.gestion_compras.config;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -17,14 +19,13 @@ import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.ModelAndView;
 
 /**
  * Manejador global de excepciones del aplicativo.
  * Intercepta excepciones de integridad de datos, validación y errores de servidor,
- * devolviendo respuestas JSON para peticiones AJAX o redirecciones con parámetros de error para vistas MVC.
+ * devolviendo respuestas JSON para peticiones AJAX o redirecciones seguras para vistas MVC.
  */
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -48,11 +49,56 @@ public class GlobalExceptionHandler {
     private String destinoError(HttpServletRequest request) {
         String uri = request.getRequestURI();
         String rutaPolizas = request.getContextPath() + "/polizas";
-        return uri != null && uri.startsWith(rutaPolizas) ? "/polizas" : "/admin";
+        String rutaRecursosHumanos = request.getContextPath() + "/recursos-humanos";
+        if (uri != null && uri.startsWith(rutaPolizas)) {
+            return "/polizas";
+        }
+        return uri != null && uri.startsWith(rutaRecursosHumanos)
+                ? "/recursos-humanos/principal" : "/admin";
     }
 
     private ModelAndView redirigirConError(HttpServletRequest request, String mensaje) {
+        String uri = request.getRequestURI();
+        String rutaEmpleado = request.getContextPath() + "/recursos-humanos/empleados/";
+        if (uri != null && uri.startsWith(rutaEmpleado)) {
+            Matcher matcher = Pattern.compile(
+                    "^" + Pattern.quote(rutaEmpleado) + "(\\d+)/(completar|contratacion)$")
+                    .matcher(uri);
+            if (matcher.matches()) {
+                return new ModelAndView("redirect:/recursos-humanos/principal?editarEmpleadoId="
+                        + matcher.group(1) + "&error=" + encode(mensaje) + "#registro-empleado");
+            }
+        }
         return new ModelAndView("redirect:" + destinoError(request) + "?error=" + encode(mensaje));
+    }
+
+    private String mensajeIntegridad(DataIntegrityViolationException ex) {
+        Throwable causa = ex.getMostSpecificCause();
+        String detalle = causa == null ? null : causa.getMessage();
+        if (detalle != null && detalle.contains("Solo se permite un adjunto vigente")) {
+            return "Ya existe un archivo vigente para uno de los conceptos seleccionados. "
+                    + "Reemplázalo desde el formulario y vuelve a intentar.";
+        }
+        if (detalle != null && (detalle.contains("duplicate key")
+                || detalle.contains("unique constraint") || detalle.contains("23505"))) {
+            return "Ya existe un registro con uno de los datos ingresados. "
+                    + "Verifica la información e inténtalo nuevamente.";
+        }
+        if (detalle != null && (detalle.contains("foreign key")
+                || detalle.contains("violates foreign key") || detalle.contains("23503"))) {
+            return "Uno de los datos seleccionados ya no está disponible. "
+                    + "Actualiza la página y vuelve a intentarlo.";
+        }
+        return "No fue posible guardar la información por una restricción de datos. "
+                + "Verifica los datos e inténtalo nuevamente.";
+    }
+
+    private Object respuestaError(
+            HttpServletRequest request, HttpStatus status, String message) {
+        if (isAjax(request)) {
+            return ResponseEntity.status(status).body(Map.of("error", message));
+        }
+        return redirigirConError(request, message);
     }
 
     /**
@@ -60,20 +106,13 @@ public class GlobalExceptionHandler {
      * Maneja violaciones de integridad referencial (llaves foráneas, registros duplicados).
      * 
      * A dónde apunta:
-     * - Retorna 409 Conflict JSON si es AJAX o redirige a /admin?error=...
+     * - Retorna un mensaje seguro en JSON para AJAX o redirige a la vista funcional.
      */
     @ExceptionHandler(DataIntegrityViolationException.class)
-    @ResponseBody
     public Object handleDataIntegrityViolation(DataIntegrityViolationException ex, HttpServletRequest request) {
-        String message = "Operación no permitida: el registro tiene referencias en otras entidades.";
-        if (ex.getMostSpecificCause() != null) {
-            String causeMsg = ex.getMostSpecificCause().getMessage();
-            if (causeMsg != null && causeMsg.length() < 200) {
-                message = message + " Detalle: " + causeMsg;
-            }
-        }
+        String message = mensajeIntegridad(ex);
         log.warn("Violación de integridad de datos en {}", request.getRequestURI(), ex);
-        return errorResponse(request, HttpStatus.CONFLICT, message);
+        return respuestaError(request, HttpStatus.CONFLICT, message);
     }
 
     /**
@@ -81,14 +120,13 @@ public class GlobalExceptionHandler {
      * Maneja errores generales de acceso a base de datos Spring Data JPA.
      * 
      * A dónde apunta:
-     * - Retorna 500 Internal Server Error JSON o redirige a /admin?error=...
+     * - Retorna un mensaje seguro en JSON para AJAX o redirige a la vista funcional.
      */
     @ExceptionHandler(DataAccessException.class)
-    @ResponseBody
     public Object handleDataAccess(DataAccessException ex, HttpServletRequest request) {
-        String message = "Error de acceso a datos.";
+        String message = "No fue posible guardar la información en este momento. Inténtalo nuevamente.";
         log.error("Error de acceso a datos en {}", request.getRequestURI(), ex);
-        return errorResponse(request, HttpStatus.INTERNAL_SERVER_ERROR, message);
+        return respuestaError(request, HttpStatus.INTERNAL_SERVER_ERROR, message);
     }
 
     /**
@@ -99,56 +137,35 @@ public class GlobalExceptionHandler {
      * - Retorna 400 Bad Request JSON o redirige con mensaje de error.
      */
     @ExceptionHandler(IllegalArgumentException.class)
-    @ResponseBody
     public Object handleIllegalArgument(IllegalArgumentException ex, HttpServletRequest request) {
         String message = ex.getMessage() == null ? "Argumentos inválidos." : ex.getMessage();
-        if (isAjax(request)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", message));
-        } else {
-            return redirigirConError(request, message);
-        }
+        return respuestaError(request, HttpStatus.BAD_REQUEST, message);
     }
 
     @ExceptionHandler(IllegalStateException.class)
-    @ResponseBody
     public Object handleIllegalState(IllegalStateException ex, HttpServletRequest request) {
         String message = ex.getMessage() == null ? "No fue posible completar la operación." : ex.getMessage();
-        if (isAjax(request)) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", message));
-        }
-        return redirigirConError(request, message);
+        return respuestaError(request, HttpStatus.CONFLICT, message);
     }
 
     @ExceptionHandler(SecurityException.class)
-    @ResponseBody
     public Object handleSecurity(SecurityException ex, HttpServletRequest request) {
         String message = ex.getMessage() == null ? "No tiene permisos para realizar esta operación." : ex.getMessage();
-        if (isAjax(request)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", message));
-        }
-        return redirigirConError(request, message);
+        return respuestaError(request, HttpStatus.FORBIDDEN, message);
     }
 
     @ExceptionHandler(BindException.class)
-    @ResponseBody
     public Object handleBindException(BindException ex, HttpServletRequest request) {
         String message = ex.getFieldError() == null
                 ? "No fue posible procesar los datos enviados."
                 : "El campo " + ex.getFieldError().getField() + " no tiene un valor válido.";
-        if (isAjax(request)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", message));
-        }
-        return redirigirConError(request, message);
+        return respuestaError(request, HttpStatus.BAD_REQUEST, message);
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
-    @ResponseBody
     public Object handleMaxUploadSize(MaxUploadSizeExceededException ex, HttpServletRequest request) {
-        String message = "El archivo adjunto supera el tamaño máximo permitido de 10 MB.";
-        if (isAjax(request)) {
-            return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(Map.of("error", message));
-        }
-        return redirigirConError(request, message);
+        String message = "La carga supera el límite permitido. Cada PDF puede pesar hasta 10 MB y el total de archivos adjuntos no puede superar 50 MB.";
+        return respuestaError(request, HttpStatus.PAYLOAD_TOO_LARGE, message);
     }
 
     /**
@@ -159,14 +176,9 @@ public class GlobalExceptionHandler {
      * - Retorna 400 Bad Request JSON o redirige con mensaje de error.
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    @ResponseBody
     public Object handleValidation(MethodArgumentNotValidException ex, HttpServletRequest request) {
         String message = "Error de validación de datos.";
-        if (isAjax(request)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", message));
-        } else {
-            return redirigirConError(request, message);
-        }
+        return respuestaError(request, HttpStatus.BAD_REQUEST, message);
     }
 
     /**
@@ -174,22 +186,12 @@ public class GlobalExceptionHandler {
      * Capturador genérico para cualquier excepción no controlada en el sistema.
      * 
      * A dónde apunta:
-     * - Retorna 500 Internal Server Error JSON o redirección a /admin.
+     * - Retorna JSON para AJAX o redirige a la vista funcional sin mostrar detalles internos.
      */
     @ExceptionHandler(Exception.class)
-    @ResponseBody
     public Object handleAll(Exception ex, HttpServletRequest request) {
         String message = "Ocurrió un error interno. Por favor contacte al administrador.";
         log.error("Error no controlado en {}", request.getRequestURI(), ex);
-        return errorResponse(request, HttpStatus.INTERNAL_SERVER_ERROR, message);
-    }
-
-    private ResponseEntity<?> errorResponse(HttpServletRequest request, HttpStatus status, String message) {
-        if (isAjax(request)) {
-            return ResponseEntity.status(status).body(Map.of("error", message));
-        }
-        return ResponseEntity.status(status)
-                .contentType(MediaType.TEXT_PLAIN)
-                .body(message);
+        return respuestaError(request, HttpStatus.INTERNAL_SERVER_ERROR, message);
     }
 }

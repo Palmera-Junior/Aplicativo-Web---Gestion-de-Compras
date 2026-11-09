@@ -15,5 +15,8 @@ public interface ContratoEmpleadoRepository extends JpaRepository<ContratoEmplea
     Optional<ContratoEmpleado> findByEmpleado_IdEmpleadoAndEstado(
             Integer idEmpleado, EstadoContratoEmpleado estado);
 
+    Optional<ContratoEmpleado> findFirstByEmpleado_IdEmpleadoAndEstadoOrderByIdContratoEmpleadoDesc(
+            Integer idEmpleado, EstadoContratoEmpleado estado);
+
     List<ContratoEmpleado> findAllByEstadoIn(List<EstadoContratoEmpleado> estados);
 }
