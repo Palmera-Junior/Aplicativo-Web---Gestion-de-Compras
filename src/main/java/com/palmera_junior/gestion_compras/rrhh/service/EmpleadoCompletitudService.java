@@ -63,8 +63,8 @@ public class EmpleadoCompletitudService {
         }
         if (contrato.getFechaFin() != null
                 && contrato.getFechaIngreso() != null
-                && contrato.getFechaFin().isBefore(contrato.getFechaIngreso())) {
-            faltantes.add("La fecha de fin debe ser igual o posterior a la fecha de ingreso");
+                && !contrato.getFechaFin().isAfter(contrato.getFechaIngreso())) {
+            faltantes.add("La fecha de finalización debe ser posterior a la fecha de ingreso");
         }
         if (contrato.getTipoContrato() == null) {
             faltantes.add("Tipo de contrato");

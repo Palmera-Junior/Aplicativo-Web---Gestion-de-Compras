@@ -2,6 +2,10 @@ package com.palmera_junior.gestion_compras.rrhh.service;
 
 import java.util.List;
 import java.util.Optional;
+import java.time.LocalDate;
+import java.math.BigDecimal;
+
+import org.springframework.web.multipart.MultipartFile;
 
 import com.palmera_junior.gestion_compras.rrhh.entity.ContratoEmpleado;
 import com.palmera_junior.gestion_compras.entity.Usuario;
@@ -19,4 +23,8 @@ public interface IContratoEmpleadoService {
     ContratoEmpleado terminar(Integer idContratoEmpleado, Usuario actor, String motivo);
 
     ContratoEmpleado anular(Integer idContratoEmpleado, Usuario actor, String motivo);
+
+    ContratoEmpleado renovar(Integer idContratoEmpleado, LocalDate inicio, LocalDate fin,
+            BigDecimal salario, Integer idTipoContrato, Integer idCargo, Integer idArea,
+            MultipartFile contratoFirmado, Usuario actor);
 }

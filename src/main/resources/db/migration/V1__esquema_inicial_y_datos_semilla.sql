@@ -75,6 +75,19 @@ CREATE TABLE IF NOT EXISTS core.usuario (
         REFERENCES core.sede (id_sede)
 );
 
+ALTER TABLE core.usuario
+    ADD COLUMN IF NOT EXISTS cedula VARCHAR(20),
+    ADD COLUMN IF NOT EXISTS nombre VARCHAR(100),
+    ADD COLUMN IF NOT EXISTS apellido VARCHAR(100),
+    ADD COLUMN IF NOT EXISTS email VARCHAR(100),
+    ADD COLUMN IF NOT EXISTS proveedor VARCHAR(100),
+    ADD COLUMN IF NOT EXISTS proveedor_id VARCHAR(100),
+    ADD COLUMN IF NOT EXISTS cargo VARCHAR(100),
+    ADD COLUMN IF NOT EXISTS nombre_usuario VARCHAR(50),
+    ADD COLUMN IF NOT EXISTS contraseña VARCHAR(255),
+    ADD COLUMN IF NOT EXISTS id_rol INT,
+    ADD COLUMN IF NOT EXISTS id_sede INT;
+
 CREATE TABLE IF NOT EXISTS core.password_reset_token (
     id_password_reset_token BIGSERIAL PRIMARY KEY,
     id_usuario INT NOT NULL,

@@ -70,6 +70,7 @@ public class EmpleadoRegistroWorkflowService {
     private final CentroCostoRepository centroCostoRepository;
     private final NivelEducativoRepository nivelEducativoRepository;
     private final CorreoEmpleadoOutboxService correoOutboxService;
+    private final EmpleadoFotoService empleadoFotoService;
     private final TipoContratoRepository tipoContratoRepository;
     private final TipoPagoRepository tipoPagoRepository;
     private final EntidadBancariaRepository entidadBancariaRepository;
@@ -116,6 +117,7 @@ public class EmpleadoRegistroWorkflowService {
             validarDocumentoNoDuplicado(empleado, null);
             empleado = empleadoService.crearRegistroInicial(empleado, actor);
         }
+        empleadoFotoService.guardar(empleado, form.getFoto());
         asignacionHerramientaService.sincronizarPendientes(
                 empleado, form.getHerramientasSolicitadasIds());
         guardarRequisitos(
@@ -147,6 +149,8 @@ public class EmpleadoRegistroWorkflowService {
         validarTamanoTotalAdjuntos(archivos);
         ContratoEmpleado contrato = obtenerContratoBorrador(idEmpleado, form);
         mapearContrato(form, contrato);
+        contrato.setCargo(empleado.getCargo());
+        contrato.setArea(empleado.getArea());
         validarMinimosBorrador(contrato);
         contrato.setEmpleado(empleado);
         contrato.setEstado(EstadoContratoEmpleado.BORRADOR);
@@ -170,6 +174,8 @@ public class EmpleadoRegistroWorkflowService {
         validarTamanoTotalAdjuntos(archivos);
         ContratoEmpleado contrato = obtenerContratoBorrador(idEmpleado, form);
         mapearContrato(form, contrato);
+        contrato.setCargo(empleado.getCargo());
+        contrato.setArea(empleado.getArea());
         contrato.setEmpleado(empleado);
         guardarRequisitos(
                 empleado, form.getTiposAdjuntoRequeridos(), EtapaAdjuntoEmpleado.CONTRATACION);
@@ -184,6 +190,17 @@ public class EmpleadoRegistroWorkflowService {
 
     private ContratoEmpleado mapearContrato(
             EmpleadoRegistroForm form, ContratoEmpleado contrato) {
+        ValidacionDatosEmpleado.validarFechaIngresoNoPasada(form.getFechaIngreso());
+        ValidacionDatosEmpleado.validarSoloDigitos(
+                form.getNumeroCuentaBancaria(), "El número de cuenta bancaria");
+        ValidacionDatosEmpleado.validarNoNegativo("salario básico", form.getSalarioBasico());
+        ValidacionDatosEmpleado.validarNoNegativo("tarifa ARL", form.getTarifaArlPorcentaje());
+        ValidacionDatosEmpleado.validarNoNegativo(
+                "auxilio de transporte", form.getAuxilioTransporteValor());
+        ValidacionDatosEmpleado.validarNoNegativo(
+                "auxilio de rodamiento", form.getAuxilioRodamientoValor());
+        ValidacionDatosEmpleado.validarNoNegativo(
+                "bonificación no salarial", form.getBonificacionNoSalarialValor());
         contrato.setFechaIngreso(form.getFechaIngreso());
         contrato.setFechaFin(form.getFechaFin());
         contrato.setSalarioBasico(validarDecimal10_2("salario básico", form.getSalarioBasico()));
@@ -280,11 +297,8 @@ public class EmpleadoRegistroWorkflowService {
             throw new IllegalArgumentException(
                     "Ingresa un salario básico válido para guardar el avance contractual");
         }
-        if (contrato.getFechaFin() != null
-                && contrato.getFechaFin().isBefore(contrato.getFechaIngreso())) {
-            throw new IllegalArgumentException(
-                    "La fecha de fin debe ser igual o posterior a la fecha de ingreso");
-        }
+        ValidacionDatosEmpleado.validarFechaFinPosterior(
+                contrato.getFechaIngreso(), contrato.getFechaFin());
     }
 
     private void copiarContratoAlFormulario(
@@ -524,6 +538,12 @@ public class EmpleadoRegistroWorkflowService {
             throw new IllegalArgumentException(
                     "Completa tipo y número de documento, nombres, apellidos, área, cargo y centro de costo");
         }
+        ValidacionDatosEmpleado.validarSoloDigitos(
+                form.getNumeroDocumento(), "El número de documento");
+        ValidacionDatosEmpleado.validarSoloDigitos(form.getCelular(), "El celular");
+        ValidacionDatosEmpleado.validarCorreo(form.getCorreoElectronico());
+        ValidacionDatosEmpleado.validarFechasIdentificacion(
+                form.getFechaExpedicion(), form.getFechaNacimiento());
     }
 
     private void validarDocumentoNoDuplicado(Empleado empleado, Integer idActual) {

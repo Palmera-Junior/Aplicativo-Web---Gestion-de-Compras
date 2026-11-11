@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.palmera_junior.gestion_compras.entity.Rh;
 import com.palmera_junior.gestion_compras.entity.TipoDocumentoEmpleado;
@@ -46,6 +47,7 @@ public class EmpleadoRegistroForm {
     private Integer cargoId;
     private Integer centroCostoId;
     private String subcentro;
+    private MultipartFile foto;
     private List<Integer> herramientasSolicitadasIds = new ArrayList<>();
     private List<Integer> tiposAdjuntoRequeridos = new ArrayList<>();
 

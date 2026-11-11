@@ -6,6 +6,7 @@ import java.time.ZoneOffset;
 import com.palmera_junior.gestion_compras.entity.Empleado;
 import com.palmera_junior.gestion_compras.entity.Usuario;
 
+import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -56,6 +57,11 @@ public class EmpleadoQrToken {
     @Column(nullable = false)
     private boolean activo = true;
 
+    @Basic(fetch = FetchType.LAZY)
+    @Column(name = "imagen_qr", columnDefinition = "BYTEA")
+    @ToString.Exclude
+    private byte[] imagenQr;
+
     @PrePersist
     void inicializarFechaEmision() {
         if (emitidoEn == null) {
@@ -69,5 +75,6 @@ public class EmpleadoQrToken {
         }
         invalidadoEn = OffsetDateTime.now(ZoneOffset.UTC);
         activo = false;
+        imagenQr = null;
     }
 }

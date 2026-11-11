@@ -113,6 +113,7 @@ public class SecurityConfig {
                                 "/login/oauth2/**",
                                 "/error"
                         ).permitAll()
+                        .requestMatchers("/recursos-humanos/tarjeta/**").permitAll()
 
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                         .requestMatchers("/actuator/**").denyAll()
@@ -152,6 +153,8 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(org.springframework.security.web.csrf.CookieCsrfTokenRepository.withHttpOnlyFalse())
                 )
+                .headers(headers -> headers
+                        .frameOptions(frameOptions -> frameOptions.sameOrigin()))
                 .formLogin(form -> form
                         .loginPage("/login")
                         .successHandler(successHandler())

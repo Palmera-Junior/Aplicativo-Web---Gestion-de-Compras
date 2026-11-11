@@ -38,7 +38,7 @@ WHERE usuario.id_empleado IS NULL
   AND empleado.numero_documento = usuario.cedula;
 
 ALTER TABLE core.usuario
-    DROP COLUMN cedula,
-    DROP COLUMN nombre,
-    DROP COLUMN apellido,
-    DROP COLUMN cargo;
+    DROP COLUMN IF EXISTS cedula,
+    DROP COLUMN IF EXISTS nombre,
+    DROP COLUMN IF EXISTS apellido,
+    DROP COLUMN IF EXISTS cargo;

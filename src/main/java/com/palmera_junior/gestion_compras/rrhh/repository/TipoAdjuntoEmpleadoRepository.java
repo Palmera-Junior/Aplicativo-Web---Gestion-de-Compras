@@ -1,6 +1,7 @@
 package com.palmera_junior.gestion_compras.rrhh.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -12,4 +13,6 @@ public interface TipoAdjuntoEmpleadoRepository extends JpaRepository<TipoAdjunto
     List<TipoAdjuntoEmpleado> findAllByActivoTrueOrderByOrdenAsc();
 
     List<TipoAdjuntoEmpleado> findAllByGrupoAndActivoTrueOrderByOrdenAsc(GrupoAdjuntoEmpleado grupo);
+
+    Optional<TipoAdjuntoEmpleado> findByCodigoAndActivoTrue(String codigo);
 }

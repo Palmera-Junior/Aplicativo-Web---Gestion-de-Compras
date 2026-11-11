@@ -5,6 +5,8 @@ import java.time.LocalDate;
 
 import com.palmera_junior.gestion_compras.entity.Empleado;
 import com.palmera_junior.gestion_compras.entity.Usuario;
+import com.palmera_junior.gestion_compras.rrhh.entity.Area;
+import com.palmera_junior.gestion_compras.rrhh.entity.Cargo;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -49,6 +51,16 @@ public class ContratoEmpleado {
     @JoinColumn(name = "id_tipo_contrato")
     @ToString.Exclude
     private TipoContrato tipoContrato;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_cargo")
+    @ToString.Exclude
+    private Cargo cargo;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_area")
+    @ToString.Exclude
+    private Area area;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_tipo_pago")

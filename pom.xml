@@ -134,6 +134,18 @@
     		<version>1.3.37</version>
 		</dependency>
 
+		<!-- Generación de códigos QR opacos para las tarjetas públicas de empleados. -->
+		<dependency>
+			<groupId>com.google.zxing</groupId>
+			<artifactId>core</artifactId>
+			<version>3.5.3</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.zxing</groupId>
+			<artifactId>javase</artifactId>
+			<version>3.5.3</version>
+		</dependency>
+
 		<!-- Spring Cache: soporte para almacenar temporalmente datos en cache. -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

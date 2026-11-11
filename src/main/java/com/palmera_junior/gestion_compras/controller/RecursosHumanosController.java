@@ -6,6 +6,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -23,7 +24,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.multipart.MultipartFile;
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.EncodeHintType;
+import com.google.zxing.WriterException;
+import com.google.zxing.client.j2se.MatrixToImageWriter;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.QRCodeWriter;
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import com.palmera_junior.gestion_compras.entity.Empleado;
 import com.palmera_junior.gestion_compras.entity.Usuario;
@@ -35,11 +45,11 @@ import com.palmera_junior.gestion_compras.rrhh.entity.Cargo;
 import com.palmera_junior.gestion_compras.rrhh.entity.EntidadBancaria;
 import com.palmera_junior.gestion_compras.rrhh.entity.Eps;
 import com.palmera_junior.gestion_compras.rrhh.entity.EmpleadoAdjunto;
+import com.palmera_junior.gestion_compras.rrhh.entity.ContratoEmpleado;
 import com.palmera_junior.gestion_compras.rrhh.entity.EmpleadoAdjuntoRequerido;
 import com.palmera_junior.gestion_compras.rrhh.entity.EmpleadoHistorialEstado;
 import com.palmera_junior.gestion_compras.rrhh.entity.EtapaAdjuntoEmpleado;
 import com.palmera_junior.gestion_compras.rrhh.entity.EstadoEmpleado;
-import com.palmera_junior.gestion_compras.rrhh.entity.AsignacionHerramienta;
 import com.palmera_junior.gestion_compras.rrhh.entity.GrupoAdjuntoEmpleado;
 import com.palmera_junior.gestion_compras.rrhh.entity.NivelEducativo;
 import com.palmera_junior.gestion_compras.rrhh.entity.TipoContrato;
@@ -59,6 +69,10 @@ import com.palmera_junior.gestion_compras.rrhh.repository.TipoPagoRepository;
 import com.palmera_junior.gestion_compras.rrhh.service.EmpleadoRegistroWorkflowService;
 import com.palmera_junior.gestion_compras.rrhh.service.IEmpleadoAdjuntoService;
 import com.palmera_junior.gestion_compras.rrhh.service.IEmpleadoService;
+import com.palmera_junior.gestion_compras.rrhh.service.IContratoEmpleadoService;
+import com.palmera_junior.gestion_compras.rrhh.service.EmpleadoQrService;
+import com.palmera_junior.gestion_compras.rrhh.service.EmpleadoPerfilService;
+import com.palmera_junior.gestion_compras.rrhh.web.EmpleadoPerfilForm;
 import com.palmera_junior.gestion_compras.rrhh.web.EmpleadoRegistroForm;
 import com.palmera_junior.gestion_compras.repository.CentroCostoRepository;
 import com.palmera_junior.gestion_compras.service.usuario.IUsuarioService;
@@ -68,6 +82,9 @@ import com.palmera_junior.gestion_compras.service.usuario.IUsuarioService;
 public class RecursosHumanosController {
 
     private final IEmpleadoService empleadoService;
+    private final IContratoEmpleadoService contratoEmpleadoService;
+    private final EmpleadoQrService empleadoQrService;
+    private final EmpleadoPerfilService empleadoPerfilService;
     private final IEmpleadoAdjuntoService adjuntoService;
     private final EmpleadoRegistroWorkflowService registroWorkflow;
     private final AsignacionHerramientaService asignacionHerramientaService;
@@ -84,6 +101,49 @@ public class RecursosHumanosController {
     private final ArlRepository arlRepository;
     private final CajaCompensacionRepository cajaCompensacionRepository;
 
+    @Autowired
+    public RecursosHumanosController(
+            IEmpleadoService empleadoService,
+            IContratoEmpleadoService contratoEmpleadoService,
+            EmpleadoQrService empleadoQrService,
+            EmpleadoPerfilService empleadoPerfilService,
+            IEmpleadoAdjuntoService adjuntoService,
+            EmpleadoRegistroWorkflowService registroWorkflow,
+            AsignacionHerramientaService asignacionHerramientaService,
+            IUsuarioService usuarioService,
+            AreaRepository areaRepository,
+            CargoRepository cargoRepository,
+            CentroCostoRepository centroCostoRepository,
+            NivelEducativoRepository nivelEducativoRepository,
+            TipoContratoRepository tipoContratoRepository,
+            TipoPagoRepository tipoPagoRepository,
+            EntidadBancariaRepository entidadBancariaRepository,
+            EpsRepository epsRepository,
+            AfpRepository afpRepository,
+            ArlRepository arlRepository,
+            CajaCompensacionRepository cajaCompensacionRepository) {
+        this.empleadoService = empleadoService;
+        this.contratoEmpleadoService = contratoEmpleadoService;
+        this.empleadoQrService = empleadoQrService;
+        this.empleadoPerfilService = empleadoPerfilService;
+        this.adjuntoService = adjuntoService;
+        this.registroWorkflow = registroWorkflow;
+        this.asignacionHerramientaService = asignacionHerramientaService;
+        this.usuarioService = usuarioService;
+        this.areaRepository = areaRepository;
+        this.cargoRepository = cargoRepository;
+        this.centroCostoRepository = centroCostoRepository;
+        this.nivelEducativoRepository = nivelEducativoRepository;
+        this.tipoContratoRepository = tipoContratoRepository;
+        this.tipoPagoRepository = tipoPagoRepository;
+        this.entidadBancariaRepository = entidadBancariaRepository;
+        this.epsRepository = epsRepository;
+        this.afpRepository = afpRepository;
+        this.arlRepository = arlRepository;
+        this.cajaCompensacionRepository = cajaCompensacionRepository;
+    }
+
+    /** Constructor compatible con pruebas y extensiones que usan el contrato previo. */
     public RecursosHumanosController(
             IEmpleadoService empleadoService,
             IEmpleadoAdjuntoService adjuntoService,
@@ -101,22 +161,11 @@ public class RecursosHumanosController {
             AfpRepository afpRepository,
             ArlRepository arlRepository,
             CajaCompensacionRepository cajaCompensacionRepository) {
-        this.empleadoService = empleadoService;
-        this.adjuntoService = adjuntoService;
-        this.registroWorkflow = registroWorkflow;
-        this.asignacionHerramientaService = asignacionHerramientaService;
-        this.usuarioService = usuarioService;
-        this.areaRepository = areaRepository;
-        this.cargoRepository = cargoRepository;
-        this.centroCostoRepository = centroCostoRepository;
-        this.nivelEducativoRepository = nivelEducativoRepository;
-        this.tipoContratoRepository = tipoContratoRepository;
-        this.tipoPagoRepository = tipoPagoRepository;
-        this.entidadBancariaRepository = entidadBancariaRepository;
-        this.epsRepository = epsRepository;
-        this.afpRepository = afpRepository;
-        this.arlRepository = arlRepository;
-        this.cajaCompensacionRepository = cajaCompensacionRepository;
+        this(empleadoService, null, null, null, adjuntoService, registroWorkflow, asignacionHerramientaService,
+                usuarioService, areaRepository, cargoRepository, centroCostoRepository,
+                nivelEducativoRepository, tipoContratoRepository, tipoPagoRepository,
+                entidadBancariaRepository, epsRepository, afpRepository, arlRepository,
+                cajaCompensacionRepository);
     }
 
     @GetMapping("/recursos-humanos/dashboard")
@@ -155,8 +204,13 @@ public class RecursosHumanosController {
                 asignacionHerramientaService.listarCatalogoActivo());
         model.addAttribute("asignacionesHerramientas", List.of());
         model.addAttribute("puedeGestionar", permisos.contains("RRHH_GESTIONAR"));
+        model.addAttribute("puedeGestionarAsignaciones",
+                permisos.contains("RRHH_ASIGNACIONES_GESTIONAR"));
         model.addAttribute("puedeEditarRegistro", permisos.contains("RRHH_REGISTRO_EDITAR"));
         model.addAttribute("puedeAprobar", permisos.contains("RRHH_APROBAR"));
+        model.addAttribute("puedeAnularContrato", permisos.contains("RRHH_CONTRATO_ANULAR"));
+        model.addAttribute("puedeGestionarQr", permisos.contains("RRHH_QR_GESTIONAR"));
+        model.addAttribute("puedeEditarPerfil", permisos.contains("RRHH_PERFIL_EDITAR"));
         model.addAttribute("esEdicionContratacion", esEdicionContratacion);
         model.addAttribute("esNuevoEmpleado", nuevoEmpleado && editarEmpleadoId == null);
         model.addAttribute("tiposDocumento",
@@ -174,6 +228,8 @@ public class RecursosHumanosController {
         model.addAttribute("tiposContrato", esEdicionContratacion
                 ? tipoContratoRepository.findAll().stream().filter(TipoContrato::isActivo).toList()
                 : List.of());
+        model.addAttribute("tiposContratoRenovacion", tipoContratoRepository.findAll().stream()
+                .filter(TipoContrato::isActivo).toList());
         model.addAttribute("tiposPago", esEdicionContratacion
                 ? tipoPagoRepository.findAll().stream().filter(TipoPago::isActivo).toList()
                 : List.of());
@@ -222,6 +278,19 @@ public class RecursosHumanosController {
         model.addAttribute("cantidadActivos", contarPorEstado(empleados, EstadoEmpleado.ACTIVO));
         model.addAttribute("cantidadRetirados", contarPorEstado(empleados, EstadoEmpleado.RETIRADO));
         model.addAttribute("empleadoSeleccionado", null);
+        model.addAttribute("perfilForm", new EmpleadoPerfilForm());
+        model.addAttribute("nombreFotoEmpleado", null);
+        model.addAttribute("contratosEmpleado", List.of());
+        model.addAttribute("contratoVigente", null);
+        model.addAttribute("adjuntosFicha", List.of());
+        model.addAttribute("tiposDocumentoExpediente", adjuntoService.listarTiposActivos().stream()
+                .filter(tipo -> !"3.8".equals(tipo.getCodigo())).toList());
+        model.addAttribute("contratosDocumento", List.of());
+        model.addAttribute("documentosContrato", java.util.Map.of());
+        model.addAttribute("qrActivo", false);
+        model.addAttribute("qrImagenDisponible", false);
+        model.addAttribute("empleadoTieneFoto", false);
+        model.addAttribute("nombreArlPublico", null);
         model.addAttribute("historialEstados", List.of());
         model.addAttribute("empleadoEditar", null);
         model.addAttribute("adjuntosEmpleado", List.of());
@@ -231,13 +300,46 @@ public class RecursosHumanosController {
         }
 
         if (empleadoId != null) {
+            if (contratoEmpleadoService != null) {
+                contratoEmpleadoService.sincronizarEstados();
+            }
             Empleado empleado = empleadoService.buscarPorId(empleadoId)
                     .orElseThrow(() -> new ResponseStatusException(
                             HttpStatus.NOT_FOUND, "No existe el empleado solicitado"));
             List<EmpleadoHistorialEstado> historial =
                     empleadoService.listarHistorialEstado(empleadoId);
             model.addAttribute("empleadoSeleccionado", empleado);
+            model.addAttribute("perfilForm", formDesdePerfil(empleado));
+            if (empleadoPerfilService != null) {
+                model.addAttribute("nombreFotoEmpleado",
+                        empleadoPerfilService.obtenerNombreFoto(empleadoId).orElse(null));
+            }
             model.addAttribute("historialEstados", historial);
+            List<ContratoEmpleado> contratos = contratoEmpleadoService == null
+                    ? List.of() : contratoEmpleadoService.listarPorEmpleado(empleadoId);
+            java.util.Map<Integer, Long> documentosContrato = new java.util.HashMap<>();
+            for (ContratoEmpleado contrato : contratos) {
+                adjuntoService.buscarContratoFirmado(empleadoId, contrato.getIdContratoEmpleado())
+                        .ifPresent(adjunto -> documentosContrato.put(
+                                contrato.getIdContratoEmpleado(), adjunto.getIdEmpleadoAdjunto()));
+            }
+            model.addAttribute("contratosEmpleado", contratos);
+            model.addAttribute("contratoVigente", contratos.stream()
+                    .filter(contrato -> contrato.getEstado().name().equals("VIGENTE"))
+                    .findFirst().orElse(null));
+            model.addAttribute("adjuntosFicha", adjuntoService.listarPorEmpleado(empleadoId));
+            model.addAttribute("contratosDocumento", contratos);
+            model.addAttribute("documentosContrato", documentosContrato);
+            boolean qrActivo = empleadoQrService != null
+                    && empleadoQrService.tieneQrActivo(empleadoId);
+            model.addAttribute("qrActivo", qrActivo);
+            model.addAttribute("qrImagenDisponible", qrActivo
+                    && empleadoQrService.tieneImagenQrActivo(empleadoId));
+            if (empleadoQrService != null && permisos.contains("RRHH_QR_GESTIONAR")) {
+                model.addAttribute("empleadoTieneFoto", empleadoQrService.tieneFoto(empleadoId));
+                model.addAttribute("nombreArlPublico",
+                        empleadoQrService.nombreArlPublico(empleadoId));
+            }
         }
 
         if (editarEmpleadoId != null) {
@@ -391,7 +493,7 @@ public class RecursosHumanosController {
     }
 
     @PostMapping("/recursos-humanos/empleados/{id}/asignaciones/{idAsignacion}/entregar")
-    @PreAuthorize("hasAuthority('PERM_RRHH_GESTIONAR')")
+    @PreAuthorize("hasAuthority('PERM_RRHH_ASIGNACIONES_GESTIONAR')")
     public String entregarHerramienta(
             @PathVariable Integer id,
             @PathVariable Long idAsignacion,
@@ -407,11 +509,12 @@ public class RecursosHumanosController {
         } catch (IllegalArgumentException | IllegalStateException ex) {
             redirectAttributes.addFlashAttribute("mensajeError", ex.getMessage());
         }
-        return "redirect:/recursos-humanos/principal?empleadoId=" + id + "#ficha-asignaciones";
+        return "redirect:/recursos-humanos/principal?empleadoId=" + id
+                + "&pestana=asignaciones#ficha-empleado";
     }
 
     @PostMapping("/recursos-humanos/empleados/{id}/asignaciones/{idAsignacion}/recibir")
-    @PreAuthorize("hasAuthority('PERM_RRHH_GESTIONAR')")
+    @PreAuthorize("hasAuthority('PERM_RRHH_ASIGNACIONES_GESTIONAR')")
     public String recibirHerramienta(
             @PathVariable Integer id,
             @PathVariable Long idAsignacion,
@@ -426,12 +529,405 @@ public class RecursosHumanosController {
         } catch (IllegalArgumentException | IllegalStateException ex) {
             redirectAttributes.addFlashAttribute("mensajeError", ex.getMessage());
         }
-        return "redirect:/recursos-humanos/principal?empleadoId=" + id + "#ficha-asignaciones";
+        return "redirect:/recursos-humanos/principal?empleadoId=" + id
+                + "&pestana=asignaciones#ficha-empleado";
+    }
+
+    @PostMapping("/recursos-humanos/empleados/{id}/contratos/{idContrato}/terminar")
+    @PreAuthorize("hasAuthority('PERM_RRHH_CONTRATO_TERMINAR')")
+    public String terminarContrato(
+            @PathVariable Integer id,
+            @PathVariable Integer idContrato,
+            @RequestParam String motivo,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes) {
+        try {
+            ContratoEmpleado contrato = contratoEmpleadoService.buscarPorId(idContrato)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+            if (contrato.getEmpleado().getIdEmpleado().intValue() != id) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+            }
+            contratoEmpleadoService.terminar(idContrato,
+                    usuarioService.obtenerUsuarioAutenticado(authentication), motivo);
+            redirectAttributes.addFlashAttribute("mensajeExito", "Contrato terminado correctamente.");
+        } catch (IllegalArgumentException | IllegalStateException | SecurityException ex) {
+            redirectAttributes.addFlashAttribute("mensajeError", ex.getMessage());
+        }
+        return "redirect:/recursos-humanos/principal?empleadoId=" + id + "#ficha-empleado";
+    }
+
+    @PostMapping("/recursos-humanos/empleados/{id}/contratos/{idContrato}/anular")
+    @PreAuthorize("hasAuthority('PERM_RRHH_CONTRATO_ANULAR')")
+    public String anularContrato(
+            @PathVariable Integer id,
+            @PathVariable Integer idContrato,
+            @RequestParam String motivo,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes) {
+        try {
+            ContratoEmpleado contrato = contratoEmpleadoService.buscarPorId(idContrato)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+            if (!contrato.getEmpleado().getIdEmpleado().equals(id)) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+            }
+            contratoEmpleadoService.anular(idContrato,
+                    usuarioService.obtenerUsuarioAutenticado(authentication), motivo);
+            redirectAttributes.addFlashAttribute("mensajeExito", "Contrato anulado correctamente.");
+        } catch (IllegalArgumentException | IllegalStateException | SecurityException ex) {
+            redirectAttributes.addFlashAttribute("mensajeError", ex.getMessage());
+        }
+        return "redirect:/recursos-humanos/principal?empleadoId=" + id + "#ficha-empleado";
+    }
+
+    @PostMapping("/recursos-humanos/empleados/{id}/contratos/{idContrato}/renovar")
+    @PreAuthorize("hasAuthority('PERM_RRHH_GESTIONAR')")
+    public String renovarContrato(
+            @PathVariable Integer id,
+            @PathVariable Integer idContrato,
+            @RequestParam java.time.LocalDate fechaInicio,
+            @RequestParam(required = false) java.time.LocalDate fechaFin,
+            @RequestParam java.math.BigDecimal salario,
+            @RequestParam Integer idTipoContrato,
+            @RequestParam Integer idCargo,
+            @RequestParam Integer idArea,
+            @RequestParam MultipartFile contratoFirmado,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes) {
+        try {
+            ContratoEmpleado contrato = contratoEmpleadoService.buscarPorId(idContrato)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+            if (!contrato.getEmpleado().getIdEmpleado().equals(id)) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+            }
+            contratoEmpleadoService.renovar(idContrato, fechaInicio, fechaFin, salario,
+                    idTipoContrato, idCargo, idArea, contratoFirmado,
+                    usuarioService.obtenerUsuarioAutenticado(authentication));
+            redirectAttributes.addFlashAttribute("mensajeExito", "Contrato renovado; se conservó el historial anterior.");
+        } catch (IllegalArgumentException | IllegalStateException | SecurityException ex) {
+            redirectAttributes.addFlashAttribute("mensajeError", ex.getMessage());
+        }
+        return "redirect:/recursos-humanos/principal?empleadoId=" + id + "#rrhh-detail-contracts";
+    }
+
+    @PostMapping("/recursos-humanos/empleados/{id}/documentos")
+    @PreAuthorize("hasAuthority('PERM_RRHH_GESTIONAR')")
+    public String agregarDocumento(
+            @PathVariable Integer id,
+            @RequestParam Integer idTipoAdjunto,
+            @RequestParam(required = false) Integer idContrato,
+            @RequestParam MultipartFile archivo,
+            RedirectAttributes redirectAttributes) {
+        try {
+            adjuntoService.agregarDocumento(id, idTipoAdjunto, idContrato, archivo);
+            redirectAttributes.addFlashAttribute("mensajeExito", "Documento agregado al expediente.");
+        } catch (IllegalArgumentException | IllegalStateException ex) {
+            redirectAttributes.addFlashAttribute("mensajeError", ex.getMessage());
+        }
+        return "redirect:/recursos-humanos/principal?empleadoId=" + id + "&pestana=documentos#ficha-empleado";
+    }
+
+    @PostMapping("/recursos-humanos/empleados/{id}/documentos/{idAdjunto}/reemplazar")
+    @PreAuthorize("hasAnyAuthority('PERM_RRHH_GESTIONAR', 'PERM_RRHH_REGISTRO_EDITAR')")
+    public String reemplazarDocumentoInicial(
+            @PathVariable Integer id,
+            @PathVariable Long idAdjunto,
+            @RequestParam MultipartFile archivo,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes) {
+        try {
+            validarPermisoGestionDocumentosIniciales(id, authentication);
+            adjuntoService.reemplazarDocumentoInicial(id, idAdjunto, archivo);
+            redirectAttributes.addFlashAttribute("mensajeExito", "Documento reemplazado correctamente.");
+        } catch (IllegalArgumentException | IllegalStateException ex) {
+            redirectAttributes.addFlashAttribute("mensajeError", ex.getMessage());
+        }
+        return "redirect:/recursos-humanos/principal?empleadoId=" + id
+                + "&pestana=documentos#ficha-empleado";
+    }
+
+    @PostMapping("/recursos-humanos/empleados/{id}/documentos/{idAdjunto}/retirar")
+    @PreAuthorize("hasAnyAuthority('PERM_RRHH_GESTIONAR', 'PERM_RRHH_REGISTRO_EDITAR')")
+    public String retirarDocumentoInicial(
+            @PathVariable Integer id,
+            @PathVariable Long idAdjunto,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes) {
+        try {
+            validarPermisoGestionDocumentosIniciales(id, authentication);
+            adjuntoService.retirarDocumentoInicial(id, idAdjunto);
+            redirectAttributes.addFlashAttribute("mensajeExito", "Documento retirado del expediente.");
+        } catch (IllegalArgumentException | IllegalStateException ex) {
+            redirectAttributes.addFlashAttribute("mensajeError", ex.getMessage());
+        }
+        return "redirect:/recursos-humanos/principal?empleadoId=" + id
+                + "&pestana=documentos#ficha-empleado";
+    }
+
+    private void validarPermisoGestionDocumentosIniciales(Integer idEmpleado, Authentication authentication) {
+        Empleado empleado = empleadoService.buscarPorId(idEmpleado)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        boolean puedeGestionar = usuarioService.obtenerUsuarioAutenticado(authentication)
+                .getPermisos().stream()
+                .anyMatch(permiso -> "RRHH_GESTIONAR".equals(permiso.getCodigo()));
+        if (empleado.getEstado() != EstadoEmpleado.REGISTRO_INICIAL && !puedeGestionar) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
+    }
+
+    @GetMapping("/recursos-humanos/empleados/{id}/contratos/{idContrato}/documento")
+    @PreAuthorize("hasAnyAuthority('PERM_RRHH_VER', 'PERM_RRHH_GESTIONAR', 'PERM_RRHH_APROBAR', 'PERM_RRHH_REGISTRO_EDITAR')")
+    public ResponseEntity<ByteArrayResource> verContratoFirmado(
+            @PathVariable Integer id, @PathVariable Integer idContrato) {
+        return respuestaContratoFirmado(id, idContrato, false);
+    }
+
+    @GetMapping("/recursos-humanos/empleados/{id}/contratos/{idContrato}/documento/descargar")
+    @PreAuthorize("hasAnyAuthority('PERM_RRHH_VER', 'PERM_RRHH_GESTIONAR', 'PERM_RRHH_APROBAR', 'PERM_RRHH_REGISTRO_EDITAR')")
+    public ResponseEntity<ByteArrayResource> descargarContratoFirmado(
+            @PathVariable Integer id, @PathVariable Integer idContrato) {
+        return respuestaContratoFirmado(id, idContrato, true);
+    }
+
+    private ResponseEntity<ByteArrayResource> respuestaContratoFirmado(
+            Integer idEmpleado, Integer idContrato, boolean descargar) {
+        IEmpleadoAdjuntoService.DocumentoContratoFirmado adjunto =
+                adjuntoService.obtenerDocumentoContratoFirmado(idEmpleado, idContrato)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        ContentDisposition disposicion = (descargar
+                ? ContentDisposition.attachment()
+                : ContentDisposition.inline())
+                .filename(adjunto.nombreOriginal(), java.nio.charset.StandardCharsets.UTF_8)
+                .build();
+        ResponseEntity.BodyBuilder respuesta = ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, disposicion.toString())
+                .header(HttpHeaders.CACHE_CONTROL, "private, no-store")
+                .header("X-Content-Type-Options", "nosniff");
+        return respuesta.body(new ByteArrayResource(adjunto.contenido()));
+    }
+
+    @PostMapping("/recursos-humanos/empleados/{id}/qr")
+    @PreAuthorize("hasAuthority('PERM_RRHH_QR_GESTIONAR')")
+    public String renovarQr(@PathVariable Integer id, Authentication authentication,
+            HttpServletRequest request, RedirectAttributes redirectAttributes) {
+        try {
+            String urlBase = request.getScheme() + "://" + request.getServerName()
+                    + (request.getServerPort() == 80 || request.getServerPort() == 443
+                            ? "" : ":" + request.getServerPort())
+                    + request.getContextPath() + "/recursos-humanos/tarjeta/";
+            boolean yaTeniaQr = empleadoQrService.tieneQrActivo(id);
+            empleadoQrService.renovar(id,
+                    usuarioService.obtenerUsuarioAutenticado(authentication), urlBase);
+            redirectAttributes.addFlashAttribute("mensajeExito", yaTeniaQr
+                    ? "QR renovado. El anterior quedó completamente invalidado."
+                    : "QR generado correctamente.");
+        } catch (IllegalArgumentException | IllegalStateException ex) {
+            redirectAttributes.addFlashAttribute("mensajeError", ex.getMessage());
+        }
+        return "redirect:/recursos-humanos/principal?empleadoId=" + id + "#modal-qr";
+    }
+
+    @GetMapping("/recursos-humanos/empleados/{id}/qr/imagen")
+    @PreAuthorize("hasAuthority('PERM_RRHH_QR_GESTIONAR')")
+    public ResponseEntity<ByteArrayResource> imagenQrEmpleado(
+            @PathVariable Integer id, @RequestParam(defaultValue = "false") boolean descargar,
+            Authentication authentication) {
+        byte[] imagen;
+        try {
+            imagen = empleadoQrService.obtenerImagenQrActivo(
+                    id, usuarioService.obtenerUsuarioAutenticado(authentication));
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, ex.getMessage());
+        }
+        ContentDisposition disposicion = (descargar
+                ? ContentDisposition.attachment()
+                : ContentDisposition.inline())
+                .filename("tarjeta-empleado-" + id + ".png",
+                        java.nio.charset.StandardCharsets.UTF_8)
+                .build();
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_PNG)
+                .header(HttpHeaders.CONTENT_DISPOSITION, disposicion.toString())
+                .header(HttpHeaders.CACHE_CONTROL, "private, no-store")
+                .header("X-Content-Type-Options", "nosniff")
+                .body(new ByteArrayResource(imagen));
+    }
+
+    @GetMapping("/recursos-humanos/empleados/{id}/qr/foto")
+    @PreAuthorize("hasAuthority('PERM_RRHH_QR_GESTIONAR')")
+    public ResponseEntity<ByteArrayResource> fotoEmpleadoQr(
+            @PathVariable Integer id, Authentication authentication) {
+        try {
+            EmpleadoQrService.ArchivoPublico foto = empleadoQrService.fotoEmpleado(
+                    id, usuarioService.obtenerUsuarioAutenticado(authentication));
+            return respuestaPublica(MediaType.parseMediaType(foto.mime()), foto.contenido());
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, ex.getMessage());
+        }
+    }
+
+    @PostMapping("/recursos-humanos/empleados/{id}/qr/revocar")
+    @PreAuthorize("hasAuthority('PERM_RRHH_QR_GESTIONAR')")
+    public String revocarQr(@PathVariable Integer id, Authentication authentication,
+            RedirectAttributes redirectAttributes) {
+        try {
+            empleadoQrService.revocar(id, usuarioService.obtenerUsuarioAutenticado(authentication));
+            redirectAttributes.addFlashAttribute("mensajeExito", "QR revocado correctamente.");
+        } catch (IllegalArgumentException | IllegalStateException ex) {
+            redirectAttributes.addFlashAttribute("mensajeError", ex.getMessage());
+        }
+        return "redirect:/recursos-humanos/principal?empleadoId=" + id + "#modal-qr";
+    }
+
+    @PostMapping("/recursos-humanos/empleados/{id}/perfil")
+    @PreAuthorize("hasAuthority('PERM_RRHH_PERFIL_EDITAR')")
+    public String actualizarPerfil(@PathVariable Integer id,
+            @ModelAttribute("perfilForm") EmpleadoPerfilForm form,
+            Authentication authentication, RedirectAttributes redirectAttributes) {
+        try {
+            empleadoPerfilService.actualizar(id, form,
+                    usuarioService.obtenerUsuarioAutenticado(authentication));
+            redirectAttributes.addFlashAttribute("mensajeExito", "Perfil actualizado y cambios auditados.");
+        } catch (IllegalArgumentException | IllegalStateException | SecurityException ex) {
+            redirectAttributes.addFlashAttribute("mensajeError", ex.getMessage());
+        }
+        return "redirect:/recursos-humanos/principal?empleadoId=" + id + "#ficha-empleado";
+    }
+
+    @GetMapping("/recursos-humanos/tarjeta/{token}")
+    public String tarjetaPublica(@PathVariable String token, Model model,
+            HttpServletResponse response) {
+        try {
+            model.addAttribute("tarjeta", empleadoQrService.consultar(token));
+            response.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
+            response.setHeader(HttpHeaders.CACHE_CONTROL, "no-store, no-cache, must-revalidate");
+            return "tarjeta-empleado-publica";
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @GetMapping("/recursos-humanos/tarjeta/{token}/qr.png")
+    public ResponseEntity<ByteArrayResource> qrPublico(@PathVariable String token,
+            HttpServletRequest request) {
+        try {
+            empleadoQrService.consultar(token);
+            String url = request.getScheme() + "://" + request.getServerName()
+                    + (request.getServerPort() == 80 || request.getServerPort() == 443
+                            ? "" : ":" + request.getServerPort())
+                    + request.getContextPath() + "/recursos-humanos/tarjeta/" + token;
+            var hints = new java.util.HashMap<EncodeHintType, Object>();
+            hints.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.M);
+            hints.put(EncodeHintType.MARGIN, 2);
+            BitMatrix matrix = new QRCodeWriter().encode(url, BarcodeFormat.QR_CODE, 320, 320, hints);
+            java.io.ByteArrayOutputStream output = new java.io.ByteArrayOutputStream();
+            MatrixToImageWriter.writeToStream(matrix, "PNG", output);
+            return respuestaPublica(MediaType.IMAGE_PNG, output.toByteArray());
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        } catch (WriterException | java.io.IOException ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "No fue posible generar el código QR");
+        }
+    }
+
+    @GetMapping("/recursos-humanos/tarjeta/{token}/foto")
+    public ResponseEntity<ByteArrayResource> fotoPublica(@PathVariable String token) {
+        try {
+            EmpleadoQrService.ArchivoPublico foto = empleadoQrService.foto(token);
+            MediaType tipo = MediaType.parseMediaType(foto.mime());
+            if (!Set.of("image/jpeg", "image/png", "image/webp").contains(tipo.toString())) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+            }
+            return respuestaPublica(tipo, foto.contenido());
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @GetMapping("/recursos-humanos/tarjeta/{token}/arl")
+    public ResponseEntity<ByteArrayResource> arlPublica(@PathVariable String token) {
+        try {
+            EmpleadoQrService.ArchivoPublico arl = empleadoQrService.certificadoArl(token);
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .header(HttpHeaders.CONTENT_DISPOSITION,
+                            ContentDisposition.inline()
+                                    .filename(arl.nombre(), java.nio.charset.StandardCharsets.UTF_8)
+                                    .build().toString())
+                    .header("X-Robots-Tag", "noindex, nofollow, noarchive")
+                    .header(HttpHeaders.CACHE_CONTROL, "no-store, no-cache, must-revalidate")
+                    .header("X-Content-Type-Options", "nosniff")
+                    .body(new ByteArrayResource(arl.contenido()));
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    private static ResponseEntity<ByteArrayResource> respuestaPublica(MediaType mediaType, byte[] bytes) {
+        return ResponseEntity.ok().contentType(mediaType)
+                .header("X-Robots-Tag", "noindex, nofollow, noarchive")
+                .header(HttpHeaders.CACHE_CONTROL, "no-store, no-cache, must-revalidate")
+                .body(new ByteArrayResource(bytes));
+    }
+
+    @GetMapping({
+            "/recursos-humanos/empleados/{id}/documentos/{idAdjunto}",
+            "/recursos-humanos/empleados/{id}/documentos/{idAdjunto}/descargar"
+    })
+    @PreAuthorize("hasAnyAuthority('PERM_RRHH_VER', 'PERM_RRHH_GESTIONAR', 'PERM_RRHH_APROBAR', 'PERM_RRHH_REGISTRO_EDITAR')")
+    public ResponseEntity<ByteArrayResource> descargarAdjunto(
+            @PathVariable Integer id, @PathVariable Long idAdjunto) {
+        EmpleadoAdjunto adjunto = adjuntoService.buscarAdjunto(id, idAdjunto);
+        MediaType mediaType = MediaType.APPLICATION_OCTET_STREAM;
+        try {
+            mediaType = MediaType.parseMediaType(adjunto.getTipoMime());
+        } catch (IllegalArgumentException ignored) {
+            // Se sirve como binario si el MIME guardado no es válido.
+        }
+        return ResponseEntity.ok().contentType(mediaType)
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        ContentDisposition.attachment()
+                                .filename(adjunto.getNombreOriginal(), java.nio.charset.StandardCharsets.UTF_8)
+                                .build().toString())
+                .body(new ByteArrayResource(adjunto.getContenido()));
+    }
+
+    @GetMapping("/recursos-humanos/empleados/{id}/documentos/{idAdjunto}/ver")
+    @PreAuthorize("hasAnyAuthority('PERM_RRHH_VER', 'PERM_RRHH_GESTIONAR', 'PERM_RRHH_APROBAR', 'PERM_RRHH_REGISTRO_EDITAR')")
+    public ResponseEntity<ByteArrayResource> verAdjunto(
+            @PathVariable Integer id, @PathVariable Long idAdjunto) {
+        EmpleadoAdjunto adjunto = adjuntoService.buscarAdjunto(id, idAdjunto);
+        return respuestaPdfInline(adjunto.getNombreOriginal(), adjunto.getContenido());
+    }
+
+    @PostMapping("/recursos-humanos/empleados/{id}/documentos/{idAdjunto}/publicar-qr")
+    @PreAuthorize("hasAuthority('PERM_RRHH_QR_GESTIONAR')")
+    public String publicarAdjuntoQr(@PathVariable Integer id, @PathVariable Long idAdjunto,
+            @RequestParam boolean publicar, RedirectAttributes redirectAttributes) {
+        try {
+            adjuntoService.actualizarPublicacionQr(id, idAdjunto, publicar);
+            redirectAttributes.addFlashAttribute("mensajeExito", publicar
+                    ? "Certificado ARL publicado para la tarjeta QR."
+                    : "Certificado ARL retirado de la tarjeta QR.");
+        } catch (IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("mensajeError", ex.getMessage());
+        }
+        return "redirect:/recursos-humanos/principal?empleadoId=" + id + "&pestana=documentos#ficha-empleado";
     }
 
     @GetMapping("/recursos-humanos/empleados/{id}/asignaciones/{idAsignacion}/acta")
     @PreAuthorize("hasAnyAuthority('PERM_RRHH_VER', 'PERM_RRHH_GESTIONAR', 'PERM_RRHH_APROBAR', 'PERM_RRHH_REGISTRO_EDITAR')")
-    public ResponseEntity<ByteArrayResource> descargarActaHerramienta(
+    public ResponseEntity<ByteArrayResource> verActaHerramienta(
+            @PathVariable Integer id, @PathVariable Long idAsignacion) {
+        AsignacionHerramientaService.ActaHerramienta acta =
+                asignacionHerramientaService.obtenerActa(id, idAsignacion);
+        return respuestaPdfInline(acta.nombre(), acta.contenido());
+    }
+
+    @GetMapping("/recursos-humanos/empleados/{id}/asignaciones/{idAsignacion}/acta/descargar")
+    @PreAuthorize("hasAnyAuthority('PERM_RRHH_VER', 'PERM_RRHH_GESTIONAR', 'PERM_RRHH_APROBAR', 'PERM_RRHH_REGISTRO_EDITAR')")
+    public ResponseEntity<ByteArrayResource> descargarActaHerramientaArchivo(
             @PathVariable Integer id, @PathVariable Long idAsignacion) {
         AsignacionHerramientaService.ActaHerramienta acta =
                 asignacionHerramientaService.obtenerActa(id, idAsignacion);
@@ -443,6 +939,18 @@ public class RecursosHumanosController {
                                 .build()
                                 .toString())
                 .body(new ByteArrayResource(acta.contenido()));
+    }
+
+    private static ResponseEntity<ByteArrayResource> respuestaPdfInline(String nombre, byte[] contenido) {
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        ContentDisposition.inline()
+                                .filename(nombre, java.nio.charset.StandardCharsets.UTF_8)
+                                .build().toString())
+                .header(HttpHeaders.CACHE_CONTROL, "private, no-store")
+                .header("X-Content-Type-Options", "nosniff")
+                .body(new ByteArrayResource(contenido));
     }
 
     private EmpleadoRegistroForm formDesdeEmpleado(Empleado empleado) {
@@ -475,6 +983,32 @@ public class RecursosHumanosController {
         form.setCentroCostoId(empleado.getCentroCosto() == null
                 ? null : empleado.getCentroCosto().getIdCentroCosto());
         form.setSubcentro(empleado.getSubcentro());
+        return form;
+    }
+
+    private EmpleadoPerfilForm formDesdePerfil(Empleado empleado) {
+        EmpleadoPerfilForm form = new EmpleadoPerfilForm();
+        form.setTipoDocumento(empleado.getTipoDocumento());
+        form.setNumeroDocumento(empleado.getNumeroDocumento());
+        form.setFechaExpedicion(empleado.getFechaExpedicion());
+        form.setLugarExpedicion(empleado.getLugarExpedicion());
+        form.setPrimerNombre(empleado.getPrimerNombre());
+        form.setSegundoNombre(empleado.getSegundoNombre());
+        form.setPrimerApellido(empleado.getPrimerApellido());
+        form.setSegundoApellido(empleado.getSegundoApellido());
+        form.setFechaNacimiento(empleado.getFechaNacimiento());
+        form.setLugarNacimiento(empleado.getLugarNacimiento());
+        form.setTipoSangre(empleado.getTipoSangre());
+        form.setRh(empleado.getRh());
+        form.setCelular(empleado.getCelular());
+        form.setCorreoElectronico(empleado.getCorreoElectronico());
+        form.setDireccionResidencia(empleado.getDireccionResidencia());
+        form.setBarrio(empleado.getBarrio());
+        form.setMunicipio(empleado.getMunicipio());
+        form.setDepartamento(empleado.getDepartamento());
+        form.setProfesion(empleado.getProfesion());
+        form.setNivelEducativoId(empleado.getNivelEducativo() == null
+                ? null : empleado.getNivelEducativo().getId());
         return form;
     }
 

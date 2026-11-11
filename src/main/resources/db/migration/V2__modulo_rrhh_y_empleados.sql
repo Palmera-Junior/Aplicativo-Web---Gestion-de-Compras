@@ -1,76 +1,76 @@
 CREATE SCHEMA IF NOT EXISTS rrhh;
 
-CREATE TABLE rrhh.area (
+CREATE TABLE IF NOT EXISTS rrhh.area (
     id_area SERIAL PRIMARY KEY,
     codigo VARCHAR(30) NOT NULL UNIQUE,
     nombre VARCHAR(100) NOT NULL UNIQUE,
     activo BOOLEAN NOT NULL DEFAULT TRUE
 );
 
-CREATE TABLE rrhh.cargo (
+CREATE TABLE IF NOT EXISTS rrhh.cargo (
     id_cargo SERIAL PRIMARY KEY,
     codigo VARCHAR(30) NOT NULL UNIQUE,
     nombre VARCHAR(100) NOT NULL UNIQUE,
     activo BOOLEAN NOT NULL DEFAULT TRUE
 );
 
-CREATE TABLE rrhh.nivel_educativo (
+CREATE TABLE IF NOT EXISTS rrhh.nivel_educativo (
     id_nivel_educativo SERIAL PRIMARY KEY,
     codigo VARCHAR(30) NOT NULL UNIQUE,
     nombre VARCHAR(100) NOT NULL UNIQUE,
     activo BOOLEAN NOT NULL DEFAULT TRUE
 );
 
-CREATE TABLE rrhh.tipo_contrato (
+CREATE TABLE IF NOT EXISTS rrhh.tipo_contrato (
     id_tipo_contrato SERIAL PRIMARY KEY,
     codigo VARCHAR(30) NOT NULL UNIQUE,
     nombre VARCHAR(100) NOT NULL UNIQUE,
     activo BOOLEAN NOT NULL DEFAULT TRUE
 );
 
-CREATE TABLE rrhh.tipo_pago (
+CREATE TABLE IF NOT EXISTS rrhh.tipo_pago (
     id_tipo_pago SERIAL PRIMARY KEY,
     codigo VARCHAR(30) NOT NULL UNIQUE,
     nombre VARCHAR(100) NOT NULL UNIQUE,
     activo BOOLEAN NOT NULL DEFAULT TRUE
 );
 
-CREATE TABLE rrhh.entidad_bancaria (
+CREATE TABLE IF NOT EXISTS rrhh.entidad_bancaria (
     id_entidad_bancaria SERIAL PRIMARY KEY,
     codigo VARCHAR(30) NOT NULL UNIQUE,
     nombre VARCHAR(100) NOT NULL UNIQUE,
     activo BOOLEAN NOT NULL DEFAULT TRUE
 );
 
-CREATE TABLE rrhh.eps (
+CREATE TABLE IF NOT EXISTS rrhh.eps (
     id_eps SERIAL PRIMARY KEY,
     codigo VARCHAR(30) NOT NULL UNIQUE,
     nombre VARCHAR(100) NOT NULL UNIQUE,
     activo BOOLEAN NOT NULL DEFAULT TRUE
 );
 
-CREATE TABLE rrhh.afp (
+CREATE TABLE IF NOT EXISTS rrhh.afp (
     id_afp SERIAL PRIMARY KEY,
     codigo VARCHAR(30) NOT NULL UNIQUE,
     nombre VARCHAR(100) NOT NULL UNIQUE,
     activo BOOLEAN NOT NULL DEFAULT TRUE
 );
 
-CREATE TABLE rrhh.arl (
+CREATE TABLE IF NOT EXISTS rrhh.arl (
     id_arl SERIAL PRIMARY KEY,
     codigo VARCHAR(30) NOT NULL UNIQUE,
     nombre VARCHAR(100) NOT NULL UNIQUE,
     activo BOOLEAN NOT NULL DEFAULT TRUE
 );
 
-CREATE TABLE rrhh.caja_compensacion (
+CREATE TABLE IF NOT EXISTS rrhh.caja_compensacion (
     id_caja_compensacion SERIAL PRIMARY KEY,
     codigo VARCHAR(30) NOT NULL UNIQUE,
     nombre VARCHAR(100) NOT NULL UNIQUE,
     activo BOOLEAN NOT NULL DEFAULT TRUE
 );
 
-CREATE TABLE core.empleado (
+CREATE TABLE IF NOT EXISTS core.empleado (
     id_empleado SERIAL PRIMARY KEY,
     tipo_documento VARCHAR(30) NOT NULL,
     numero_documento VARCHAR(30) NOT NULL,
@@ -123,21 +123,45 @@ CREATE TABLE core.empleado (
         REFERENCES rrhh.nivel_educativo (id_nivel_educativo) ON DELETE RESTRICT
 );
 
-CREATE INDEX idx_empleado_cargo ON core.empleado (id_cargo);
-CREATE INDEX idx_empleado_area ON core.empleado (id_area);
-CREATE INDEX idx_empleado_centro_costo ON core.empleado (id_centro_costo);
-CREATE INDEX idx_empleado_nivel_educativo ON core.empleado (id_nivel_educativo);
-CREATE UNIQUE INDEX uq_empleado_correo_normalizado
+CREATE INDEX IF NOT EXISTS idx_empleado_cargo ON core.empleado (id_cargo);
+CREATE INDEX IF NOT EXISTS idx_empleado_area ON core.empleado (id_area);
+CREATE INDEX IF NOT EXISTS idx_empleado_centro_costo ON core.empleado (id_centro_costo);
+CREATE INDEX IF NOT EXISTS idx_empleado_nivel_educativo ON core.empleado (id_nivel_educativo);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_empleado_correo_normalizado
     ON core.empleado (lower(btrim(correo_electronico)))
     WHERE correo_electronico IS NOT NULL AND btrim(correo_electronico) <> '';
 
 ALTER TABLE core.usuario
-    ADD COLUMN id_empleado INT,
-    ADD CONSTRAINT uq_usuario_empleado UNIQUE (id_empleado),
-    ADD CONSTRAINT fk_usuario_empleado FOREIGN KEY (id_empleado)
-        REFERENCES core.empleado (id_empleado) ON DELETE RESTRICT;
+    ADD COLUMN IF NOT EXISTS id_empleado INT;
 
-CREATE TABLE rrhh.contrato_empleado (
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conrelid = 'core.usuario'::regclass
+          AND conname = 'uq_usuario_empleado'
+    ) THEN
+        ALTER TABLE core.usuario
+            ADD CONSTRAINT uq_usuario_empleado UNIQUE (id_empleado);
+    END IF;
+END $$;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conrelid = 'core.usuario'::regclass
+          AND conname = 'fk_usuario_empleado'
+    ) THEN
+        ALTER TABLE core.usuario
+            ADD CONSTRAINT fk_usuario_empleado FOREIGN KEY (id_empleado)
+                REFERENCES core.empleado (id_empleado) ON DELETE RESTRICT;
+    END IF;
+END $$;
+
+CREATE TABLE IF NOT EXISTS rrhh.contrato_empleado (
     id_contrato_empleado SERIAL PRIMARY KEY,
     id_empleado INT NOT NULL,
     id_tipo_contrato INT,
@@ -219,18 +243,18 @@ CREATE TABLE rrhh.contrato_empleado (
         REFERENCES rrhh.caja_compensacion (id_caja_compensacion) ON DELETE RESTRICT
 );
 
-CREATE UNIQUE INDEX uq_contrato_empleado_vigente
+CREATE UNIQUE INDEX IF NOT EXISTS uq_contrato_empleado_vigente
     ON rrhh.contrato_empleado (id_empleado)
     WHERE estado = 'VIGENTE';
 
-CREATE INDEX idx_contrato_empleado_historial
+CREATE INDEX IF NOT EXISTS idx_contrato_empleado_historial
     ON rrhh.contrato_empleado (id_empleado, fecha_ingreso DESC);
 
 ALTER TABLE rrhh.contrato_empleado
     ADD CONSTRAINT uq_contrato_empleado_id_empleado
         UNIQUE (id_contrato_empleado, id_empleado);
 
-CREATE TABLE rrhh.tipo_adjunto_empleado (
+CREATE TABLE IF NOT EXISTS rrhh.tipo_adjunto_empleado (
     id_tipo_adjunto_empleado SERIAL PRIMARY KEY,
     codigo VARCHAR(30) NOT NULL UNIQUE,
     descripcion VARCHAR(255) NOT NULL,
@@ -281,7 +305,7 @@ VALUES
     ('5.3', 'RH-F-14 Orden examen de egreso', 'RETIRO', 33, FALSE),
     ('5.4', 'RH-F-04 Paz y salvo', 'RETIRO', 34, FALSE);
 
-CREATE TABLE rrhh.empleado_adjunto_requerido (
+CREATE TABLE IF NOT EXISTS rrhh.empleado_adjunto_requerido (
     id_empleado INT NOT NULL,
     id_tipo_adjunto_empleado INT NOT NULL,
     PRIMARY KEY (id_empleado, id_tipo_adjunto_empleado),
@@ -291,10 +315,10 @@ CREATE TABLE rrhh.empleado_adjunto_requerido (
         REFERENCES rrhh.tipo_adjunto_empleado (id_tipo_adjunto_empleado) ON DELETE RESTRICT
 );
 
-CREATE INDEX idx_empleado_adjunto_requerido_tipo
+CREATE INDEX IF NOT EXISTS idx_empleado_adjunto_requerido_tipo
     ON rrhh.empleado_adjunto_requerido (id_tipo_adjunto_empleado);
 
-CREATE TABLE rrhh.empleado_adjunto (
+CREATE TABLE IF NOT EXISTS rrhh.empleado_adjunto (
     id_empleado_adjunto BIGSERIAL PRIMARY KEY,
     id_empleado INT NOT NULL,
     id_tipo_adjunto_empleado INT NOT NULL,
@@ -323,14 +347,14 @@ CREATE TABLE rrhh.empleado_adjunto (
     ) ON DELETE RESTRICT
 );
 
-CREATE INDEX idx_empleado_adjunto_tipo_vigente
+CREATE INDEX IF NOT EXISTS idx_empleado_adjunto_tipo_vigente
     ON rrhh.empleado_adjunto (id_empleado, id_tipo_adjunto_empleado, es_vigente);
 
-CREATE INDEX idx_empleado_adjunto_contrato
+CREATE INDEX IF NOT EXISTS idx_empleado_adjunto_contrato
     ON rrhh.empleado_adjunto (id_contrato_empleado)
     WHERE id_contrato_empleado IS NOT NULL;
 
-CREATE FUNCTION rrhh.validar_multiplicidad_adjunto_empleado()
+CREATE OR REPLACE FUNCTION rrhh.validar_multiplicidad_adjunto_empleado()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 AS $$
@@ -365,6 +389,8 @@ BEGIN
     RETURN NEW;
 END;
 $$;
+
+DROP TRIGGER IF EXISTS trg_validar_multiplicidad_adjunto_empleado ON rrhh.empleado_adjunto;
 
 CREATE TRIGGER trg_validar_multiplicidad_adjunto_empleado
     BEFORE INSERT OR UPDATE OF id_empleado, id_tipo_adjunto_empleado, es_vigente

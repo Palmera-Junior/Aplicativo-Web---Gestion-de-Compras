@@ -144,7 +144,9 @@ public class AsignacionHerramientaService {
             throw new IllegalArgumentException("Adjunta el acta firmada para registrar la entrega");
         }
         byte[] contenido = archivoStorage.almacenar(acta);
-        if (contenido == null) {
+        if (contenido == null || contenido.length < 5
+                || contenido[0] != '%' || contenido[1] != 'P' || contenido[2] != 'D'
+                || contenido[3] != 'F' || contenido[4] != '-') {
             throw new IllegalArgumentException("Adjunta el acta firmada para registrar la entrega");
         }
         String nombre = nombreSeguro(acta.getOriginalFilename());

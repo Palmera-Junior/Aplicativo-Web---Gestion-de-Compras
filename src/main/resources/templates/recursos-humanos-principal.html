@@ -6,7 +6,7 @@
     <title>Empleados | Gestión de Compras</title>
     <link rel="icon" type="image/png" th:href="@{/imgs/logo1.png}">
     <link rel="stylesheet" th:href="@{/css/compras.css}">
-    <link rel="stylesheet" th:href="@{/css/recursos-humanos.css(v=4)}">
+    <link rel="stylesheet" th:href="@{/css/recursos-humanos.css(v=5)}">
     <link rel="stylesheet" th:href="@{/css/catalogos.css}">
     <link rel="stylesheet" th:href="@{/css/navigation.css}">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap">
@@ -165,12 +165,15 @@
                                     </button>
                                 </form>
                                 <a class="btn-icon"
-                                   th:if="${empleado.estado.name() == 'ACTIVO' or empleado.estado.name() == 'RETIRADO'}"
+                                   th:if="${empleado.estado.name() == 'ACTIVO' or empleado.estado.name() == 'RETIRADO' or empleado.estado.name() == 'PROCESO_CONTRATACION'}"
                                    th:href="@{/recursos-humanos/principal(empleadoId=${empleado.idEmpleado})} + '#ficha-empleado'"
                                    title="Ver ficha y auditoría" aria-label="Ver ficha y auditoría del empleado">
                                     <span class="material-symbols" aria-hidden="true">visibility</span>
                                 </a>
-                                <a class="btn-icon" href="#tarjetas-empleados" title="Gestionar QR público" aria-label="Gestionar QR del empleado">
+                                <a class="btn-icon"
+                                   th:if="${empleado.estado.name() == 'ACTIVO' and puedeGestionarQr}"
+                                   th:href="@{/recursos-humanos/principal(empleadoId=${empleado.idEmpleado})} + '#modal-qr'"
+                                   title="Gestionar tarjeta QR" aria-label="Gestionar tarjeta QR del empleado">
                                     <span class="material-symbols" aria-hidden="true">qr_code_2</span>
                                 </a>
                             </td>
@@ -184,6 +187,108 @@
         </section>
 
     </main>
+
+    <dialog class="rrhh-qr-dialog" id="rrhh-qr-dialog"
+            th:if="${empleadoSeleccionado != null and empleadoSeleccionado.estado.name() == 'ACTIVO' and puedeGestionarQr}"
+            aria-labelledby="rrhh-qr-dialog-title">
+        <header class="rrhh-qr-dialog-header">
+            <div>
+                <span class="rrhh-step-kicker">Identificación digital</span>
+                <h2 id="rrhh-qr-dialog-title">Gestionar tarjeta QR</h2>
+                <p th:text="${empleadoSeleccionado.primerNombre + ' ' + empleadoSeleccionado.primerApellido}">Empleado</p>
+            </div>
+            <form method="dialog" class="rrhh-qr-dialog-close">
+                <button type="submit" aria-label="Cerrar">×</button>
+            </form>
+        </header>
+        <div class="rrhh-qr-manager-layout">
+            <section class="rrhh-qr-card-section" aria-label="Vista previa de la tarjeta">
+                <span class="rrhh-step-kicker">Vista de la tarjeta virtual</span>
+                <article class="rrhh-virtual-card rrhh-qr-virtual-card">
+                    <div class="rrhh-virtual-card-brand">
+                        <span class="material-symbols" aria-hidden="true">verified_user</span>
+                        <span>PALMERA JUNIOR <small>IDENTIFICACIÓN DIGITAL</small></span>
+                    </div>
+                    <div class="rrhh-virtual-card-person">
+                        <span class="rrhh-virtual-photo">
+                            <img th:if="${empleadoTieneFoto}"
+                                 th:src="@{/recursos-humanos/empleados/{id}/qr/foto(id=${empleadoSeleccionado.idEmpleado})}"
+                                 alt="Fotografía del empleado">
+                            <span th:unless="${empleadoTieneFoto}" class="material-symbols" aria-hidden="true">person</span>
+                            <small th:unless="${empleadoTieneFoto}">FOTO</small>
+                        </span>
+                        <span class="rrhh-card-state"
+                              th:text="${empleadoSeleccionado.estado.etiqueta}">Activo</span>
+                    </div>
+                    <div class="rrhh-virtual-card-info">
+                        <strong th:text="${empleadoSeleccionado.primerNombre + ' ' + (empleadoSeleccionado.segundoNombre != null ? empleadoSeleccionado.segundoNombre + ' ' : '') + empleadoSeleccionado.primerApellido + (empleadoSeleccionado.segundoApellido != null ? ' ' + empleadoSeleccionado.segundoApellido : '')}">Nombre del empleado</strong>
+                        <span th:text="${empleadoSeleccionado.cargo != null ? empleadoSeleccionado.cargo.nombre : 'Sin cargo'}">Cargo</span>
+                        <span th:text="${empleadoSeleccionado.area != null ? 'Área ' + empleadoSeleccionado.area.nombre : 'Sin área'}">Área</span>
+                        <span th:text="${empleadoSeleccionado.centroCosto != null and empleadoSeleccionado.centroCosto.sede != null ? 'Sede ' + empleadoSeleccionado.centroCosto.sede.nombre : 'Sede no especificada'}">Sede</span>
+                        <span th:text="${empleadoSeleccionado.tipoSangre != null and empleadoSeleccionado.rh != null ? 'Factor RH ' + empleadoSeleccionado.tipoSangre.name() + (empleadoSeleccionado.rh.name() == 'POSITIVO' ? '+' : '-') : 'Factor RH no especificado'}">Factor RH</span>
+                    </div>
+                    <div class="rrhh-virtual-card-documents">
+                        <span>Documento público</span>
+                        <strong th:text="${nombreArlPublico != null ? nombreArlPublico : 'No hay certificado ARL publicado'}">Documento ARL</strong>
+                    </div>
+                    <footer>Tarjeta pública · Datos autorizados para consulta</footer>
+                </article>
+            </section>
+            <section class="rrhh-card-qr-panel rrhh-qr-management-panel" aria-label="Gestión del código QR">
+                <span class="rrhh-step-kicker">QR individual público</span>
+                <div class="rrhh-qr-image-frame" th:if="${qrActivo and qrImagenDisponible}">
+                    <img th:src="@{/recursos-humanos/empleados/{id}/qr/imagen(id=${empleadoSeleccionado.idEmpleado})}"
+                         alt="Código QR activo de la tarjeta del empleado">
+                </div>
+                <div class="rrhh-qr-empty" th:unless="${qrActivo and qrImagenDisponible}">
+                    <span class="material-symbols" aria-hidden="true"
+                          th:text="${qrActivo ? 'warning' : 'qr_code_2'}">qr_code_2</span>
+                    <strong th:text="${qrActivo ? 'QR anterior a esta mejora' : 'Aún no hay un QR activo'}">Aún no hay un QR activo</strong>
+                </div>
+                <p th:if="${qrActivo and qrImagenDisponible}">El código está activo y lleva a la tarjeta pública del empleado.</p>
+                <p th:if="${qrActivo and !qrImagenDisponible}">Por seguridad, no se puede recuperar el código emitido anteriormente. Renuévalo para generar un QR que quede disponible aquí.</p>
+                <p th:unless="${qrActivo}">Genera un código QR para compartir la tarjeta pública del empleado.</p>
+                <div class="rrhh-qr-management-actions">
+                    <a class="rrhh-qr-download" th:if="${qrActivo and qrImagenDisponible}"
+                       th:href="@{/recursos-humanos/empleados/{id}/qr/imagen(id=${empleadoSeleccionado.idEmpleado},descargar=true)}"
+                       download th:attr="aria-label=${'Descargar QR de ' + empleadoSeleccionado.primerNombre}"
+                       title="Descargar código QR">
+                        <span class="material-symbols" aria-hidden="true">download</span>
+                    </a>
+                    <form th:unless="${qrActivo}"
+                          th:action="@{/recursos-humanos/empleados/{id}/qr(id=${empleadoSeleccionado.idEmpleado})}"
+                          method="post">
+                        <button class="btn-primary" type="submit">
+                            <span class="material-symbols" aria-hidden="true">qr_code_2</span>Generar QR
+                        </button>
+                    </form>
+                    <button class="btn-primary" type="button" data-open-qr-confirm
+                            th:if="${qrActivo}">
+                        <span class="material-symbols" aria-hidden="true">autorenew</span>Renovar QR
+                    </button>
+                </div>
+            </section>
+        </div>
+    </dialog>
+
+    <dialog class="rrhh-qr-confirm-dialog" id="rrhh-qr-confirm-dialog"
+            th:if="${empleadoSeleccionado != null and empleadoSeleccionado.estado.name() == 'ACTIVO' and puedeGestionarQr}"
+            aria-labelledby="rrhh-qr-confirm-title">
+        <button class="rrhh-qr-confirm-close" type="button" data-close-qr-confirm
+                aria-label="Cerrar confirmación">×</button>
+        <span class="material-symbols rrhh-qr-confirm-icon" aria-hidden="true">warning</span>
+        <h2 id="rrhh-qr-confirm-title">¿Renovar el código QR?</h2>
+        <p>Al confirmar, el QR actual quedará <strong>completamente inservible</strong>. Cualquier copia o impresión anterior dejará de abrir la tarjeta y no se podrá recuperar.</p>
+        <div class="rrhh-qr-confirm-actions">
+            <button class="btn-secondary" type="button" data-close-qr-confirm>Cancelar</button>
+            <form th:action="@{/recursos-humanos/empleados/{id}/qr(id=${empleadoSeleccionado.idEmpleado})}"
+                  method="post">
+                <button class="btn-primary" type="submit">
+                    <span class="material-symbols" aria-hidden="true">autorenew</span>Invalidar y renovar
+                </button>
+            </form>
+        </div>
+    </dialog>
 
     <section class="rrhh-operation-view rrhh-employee-detail-view" id="ficha-empleado" aria-labelledby="rrhh-detail-title">
         <div class="rrhh-operation-shell rrhh-detail-shell permission-management-page">
@@ -203,7 +308,7 @@
                           th:text="${empleadoSeleccionado.estado.etiqueta}">Estado</span>
                 </div>
                 <div class="rrhh-detail-header-actions">
-                    <a class="btn-secondary rrhh-header-action" href="#editar-datos-empleado"><span class="material-symbols" aria-hidden="true">edit</span>Editar datos</a>
+                    <a class="btn-secondary rrhh-header-action" th:if="${empleadoSeleccionado != null and puedeEditarPerfil and empleadoSeleccionado.estado.name() == 'ACTIVO'}" th:href="@{/recursos-humanos/principal(empleadoId=${empleadoSeleccionado.idEmpleado})} + '#editar-datos-empleado'"><span class="material-symbols" aria-hidden="true">edit</span>Editar datos</a>
                     <label class="btn-secondary rrhh-header-action" for="rrhh-detail-contracts"><span class="material-symbols" aria-hidden="true">contract</span>Gestionar contrato</label>
                     <details class="rrhh-more-actions">
                         <summary><span class="material-symbols" aria-hidden="true">more_horiz</span>Más acciones</summary>
@@ -219,7 +324,7 @@
 
             <div class="rrhh-prototype-notice" role="note">
                 <span class="material-symbols" aria-hidden="true">info</span>
-                <span>Auditoría muestra los cambios de estado registrados y Asignaciones conecta con las solicitudes, actas y devoluciones reales. Perfil, contratos y documentos aún contienen elementos demostrativos.</span>
+                <span>Consulta los datos actuales del empleado, su historial contractual y los documentos privados de su expediente.</span>
             </div>
 
             <div class="rrhh-detail-content">
@@ -246,23 +351,23 @@
                             <article class="rrhh-detail-card">
                                 <h3><span class="material-symbols" aria-hidden="true">person</span>Datos personales</h3>
                                 <dl class="rrhh-detail-fields">
-                                    <div><dt>Documento</dt><dd>Cédula de ciudadanía · 80.125.447</dd></div>
-                                    <div><dt>Fecha de nacimiento</dt><dd>18 de marzo de 1991</dd></div>
-                                    <div><dt>Celular</dt><dd>+57 310 555 0184</dd></div>
-                                    <div><dt>Correo</dt><dd>carlos.mendez@empresa.com</dd></div>
-                                    <div><dt>Dirección</dt><dd>Chapinero, Bogotá D. C.</dd></div>
-                                    <div><dt>Formación</dt><dd>Tecnólogo en mantenimiento industrial</dd></div>
+                                    <div><dt>Documento</dt><dd th:text="${empleadoSeleccionado != null ? empleadoSeleccionado.tipoDocumento + ' · ' + empleadoSeleccionado.numeroDocumento : '—'}">Documento</dd></div>
+                                    <div><dt>Fecha de nacimiento</dt><dd th:text="${empleadoSeleccionado != null ? empleadoSeleccionado.fechaNacimiento : '—'}">Fecha</dd></div>
+                                    <div><dt>Celular</dt><dd th:text="${empleadoSeleccionado != null ? empleadoSeleccionado.celular : '—'}">Celular</dd></div>
+                                    <div><dt>Correo</dt><dd th:text="${empleadoSeleccionado != null ? empleadoSeleccionado.correoElectronico : '—'}">Correo</dd></div>
+                                    <div><dt>Dirección</dt><dd th:text="${empleadoSeleccionado != null ? empleadoSeleccionado.direccionResidencia : '—'}">Dirección</dd></div>
+                                    <div><dt>Formación</dt><dd th:text="${empleadoSeleccionado != null and empleadoSeleccionado.nivelEducativo != null ? empleadoSeleccionado.nivelEducativo.nombre : '—'}">Formación</dd></div>
                                 </dl>
                             </article>
                             <article class="rrhh-detail-card">
                                 <h3><span class="material-symbols" aria-hidden="true">work</span>Información laboral</h3>
                                 <dl class="rrhh-detail-fields">
-                                    <div><dt>Cargo</dt><dd>Técnico de servicio</dd></div>
-                                    <div><dt>Área</dt><dd>Operaciones</dd></div>
-                                    <div><dt>Sede</dt><dd>Bogotá</dd></div>
-                                    <div><dt>Centro de costo</dt><dd>Operaciones Bogotá</dd></div>
-                                    <div><dt>Fecha de ingreso</dt><dd>12 de julio de 2026</dd></div>
-                                    <div><dt>Estado</dt><dd><span class="rrhh-state-badge estado-activo">Activo</span></dd></div>
+                                    <div><dt>Cargo</dt><dd th:text="${empleadoSeleccionado != null and empleadoSeleccionado.cargo != null ? empleadoSeleccionado.cargo.nombre : '—'}">Cargo</dd></div>
+                                    <div><dt>Área</dt><dd th:text="${empleadoSeleccionado != null and empleadoSeleccionado.area != null ? empleadoSeleccionado.area.nombre : '—'}">Área</dd></div>
+                                    <div><dt>RH</dt><dd th:text="${empleadoSeleccionado != null ? empleadoSeleccionado.rh : '—'}">RH</dd></div>
+                                    <div><dt>Centro de costo</dt><dd th:text="${empleadoSeleccionado != null and empleadoSeleccionado.centroCosto != null ? empleadoSeleccionado.centroCosto.nombre : '—'}">Centro de costo</dd></div>
+                                    <div><dt>Fecha de ingreso</dt><dd th:text="${contratoVigente != null ? contratoVigente.fechaIngreso : '—'}">Fecha de ingreso</dd></div>
+                                    <div><dt>Estado</dt><dd th:text="${empleadoSeleccionado != null ? empleadoSeleccionado.estado.etiqueta : '—'}">Estado</dd></div>
                                 </dl>
                             </article>
                         </div>
@@ -274,42 +379,172 @@
                             <div><span class="rrhh-step-kicker">Vinculación laboral</span><h2 id="rrhh-contracts-heading">Contratos</h2><p>Consulta el contrato vigente y las renovaciones anteriores del empleado.</p></div>
                             <a class="btn-primary rrhh-operation-button" href="#renovar-contrato"><span class="material-symbols" aria-hidden="true">autorenew</span>Iniciar renovación</a>
                         </div>
-                        <article class="rrhh-current-contract">
+                        <article class="rrhh-current-contract" th:if="${contratoVigente != null}">
                             <div class="rrhh-current-contract-heading">
-                                <div><span class="rrhh-contract-label">Contrato vigente</span><h3>Término fijo</h3></div>
-                                <span class="rrhh-contract-status"><span></span>Vigente</span>
+                                <div><span class="rrhh-contract-label">Contrato vigente</span><h3 th:text="${contratoVigente.tipoContrato != null ? contratoVigente.tipoContrato.nombre : 'Contrato'}">Contrato</h3></div>
+                                <span class="rrhh-contract-status"><span aria-hidden="true"></span><span th:text="${contratoVigente.estado}">Vigente</span></span>
                             </div>
                             <dl class="rrhh-contract-facts">
-                                <div><dt>Número</dt><dd>CT-2026-084</dd></div>
-                                <div><dt>Inicio</dt><dd>12 jul 2026</dd></div>
-                                <div><dt>Vencimiento</dt><dd>11 jul 2027</dd></div>
-                                <div><dt>Cargo</dt><dd>Técnico de servicio</dd></div>
+                                <div><dt>Número</dt><dd th:text="${contratoVigente.idContratoEmpleado}">—</dd></div>
+                                <div><dt>Inicio</dt><dd th:text="${contratoVigente.fechaIngreso}">—</dd></div>
+                                <div><dt>Vencimiento</dt><dd th:text="${contratoVigente.fechaFin != null ? contratoVigente.fechaFin : 'Sin fecha de fin'}">—</dd></div>
+                                <div><dt>Salario básico</dt><dd th:text="${'$ ' + #numbers.formatDecimal(contratoVigente.salarioBasico, 1, 'COMMA', 2, 'POINT')}">$ 0.00</dd></div>
+                                <div><dt>Cargo</dt><dd th:text="${contratoVigente.cargo != null ? contratoVigente.cargo.nombre : '—'}">—</dd></div>
+                                <div><dt>Área</dt><dd th:text="${contratoVigente.area != null ? contratoVigente.area.nombre : '—'}">—</dd></div>
                             </dl>
                             <div class="rrhh-contract-reminder"><span class="material-symbols" aria-hidden="true">notifications_active</span><span><strong>Seguimiento de vencimiento</strong><small>La decisión de renovación debe registrarse antes de la fecha de vencimiento.</small></span></div>
-                            <a class="rrhh-file-link" href="#rrhh-contracts-heading"><span class="material-symbols" aria-hidden="true">picture_as_pdf</span>Contrato firmado · PDF<span class="material-symbols" aria-hidden="true">open_in_new</span></a>
                         </article>
                         <div class="rrhh-history-heading"><h3>Historial de contratos</h3><span>Más reciente primero</span></div>
-                        <div class="rrhh-history-list">
-                            <article class="rrhh-history-item"><span class="rrhh-history-icon material-symbols" aria-hidden="true">history</span><div><strong>CT-2026-084 · Término fijo</strong><small>12 jul 2026 – 11 jul 2027 · Vigente</small></div><span class="rrhh-history-badge vigente">Vigente</span></article>
-                            <article class="rrhh-history-item"><span class="rrhh-history-icon material-symbols" aria-hidden="true">history</span><div><strong>CT-2025-041 · Término fijo</strong><small>12 jul 2025 – 11 jul 2026 · Vencido</small></div><a class="rrhh-file-link" href="#rrhh-contracts-heading"><span class="material-symbols" aria-hidden="true">picture_as_pdf</span>Ver contrato</a></article>
+                        <div class="rrhh-detail-table-wrap rrhh-contract-history-table-wrap">
+                            <table class="rrhh-detail-table">
+                                <thead>
+                                    <tr><th>Contrato</th><th>Vigencia</th><th>Cargo</th><th>Área</th><th>Salario básico</th><th>Estado</th><th>Acciones</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="contrato : ${contratosEmpleado}">
+                                        <td>
+                                            <strong th:text="${'#' + contrato.idContratoEmpleado}">Contrato</strong>
+                                            <small th:text="${contrato.tipoContrato != null ? contrato.tipoContrato.nombre : 'Contrato'}">Tipo</small>
+                                        </td>
+                                        <td th:text="${contrato.fechaIngreso + ' – ' + (contrato.fechaFin != null ? contrato.fechaFin : 'Sin fecha de fin')}">Fechas</td>
+                                        <td th:text="${contrato.cargo != null ? contrato.cargo.nombre : '—'}">Cargo</td>
+                                        <td th:text="${contrato.area != null ? contrato.area.nombre : '—'}">Área</td>
+                                        <td th:text="${'$ ' + #numbers.formatDecimal(contrato.salarioBasico, 1, 'COMMA', 2, 'POINT')}">$ 0.00</td>
+                                        <td><span class="rrhh-history-badge" th:text="${contrato.estado}">Estado</span></td>
+                                        <td>
+                                            <div class="rrhh-contract-actions">
+                                                <a class="btn-icon" th:if="${documentosContrato[contrato.idContratoEmpleado] != null}"
+                                                   th:href="@{/recursos-humanos/empleados/{id}/contratos/{idContrato}/documento(id=${empleadoSeleccionado.idEmpleado},idContrato=${contrato.idContratoEmpleado})}"
+                                                   th:attr="data-pdf-preview-url=@{/recursos-humanos/empleados/{id}/contratos/{idContrato}/documento(id=${empleadoSeleccionado.idEmpleado},idContrato=${contrato.idContratoEmpleado})},data-pdf-preview-title=${'Contrato firmado · #' + contrato.idContratoEmpleado}"
+                                                   title="Ver contrato firmado" aria-label="Ver contrato firmado">
+                                                    <span class="material-symbols" aria-hidden="true">visibility</span>
+                                                </a>
+                                                <a class="btn-icon" th:if="${documentosContrato[contrato.idContratoEmpleado] != null}"
+                                                   th:href="@{/recursos-humanos/empleados/{id}/contratos/{idContrato}/documento/descargar(id=${empleadoSeleccionado.idEmpleado},idContrato=${contrato.idContratoEmpleado})}"
+                                                   title="Descargar contrato firmado" aria-label="Descargar contrato firmado">
+                                                    <span class="material-symbols" aria-hidden="true">download</span>
+                                                </a>
+                                                <button class="btn-icon rrhh-contract-action-button" type="button"
+                                                        th:if="${contrato.estado.name() == 'VIGENTE' and puedeGestionar}"
+                                                        th:attr="data-action-url=@{/recursos-humanos/empleados/{id}/contratos/{idContrato}/terminar(id=${empleadoSeleccionado.idEmpleado},idContrato=${contrato.idContratoEmpleado})},data-action-title='Terminar contrato',data-reason-label='Motivo de terminación',data-submit-label='Terminar contrato'"
+                                                        title="Terminar contrato" aria-label="Terminar contrato">
+                                                    <span class="material-symbols" aria-hidden="true">event_busy</span>
+                                                </button>
+                                                <button class="btn-icon rrhh-contract-action-button" type="button"
+                                                        th:if="${(contrato.estado.name() == 'VIGENTE' or contrato.estado.name() == 'PROGRAMADO' or contrato.estado.name() == 'VENCIDO') and puedeAnularContrato}"
+                                                        th:attr="data-action-url=@{/recursos-humanos/empleados/{id}/contratos/{idContrato}/anular(id=${empleadoSeleccionado.idEmpleado},idContrato=${contrato.idContratoEmpleado})},data-action-title='Anular contrato',data-reason-label='Motivo de anulación',data-submit-label='Anular contrato'"
+                                                        title="Anular contrato" aria-label="Anular contrato">
+                                                    <span class="material-symbols" aria-hidden="true">cancel</span>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${#lists.isEmpty(contratosEmpleado)}"><td colspan="7">No hay contratos registrados.</td></tr>
+                                </tbody>
+                            </table>
                         </div>
                         <div class="rrhh-detail-footnote"><span class="material-symbols" aria-hidden="true">link</span>Una renovación crea un nuevo contrato asociado a este mismo empleado; no duplica su ficha ni modifica el historial anterior.</div>
                     </section>
 
                     <section class="rrhh-detail-panel rrhh-detail-documents" aria-labelledby="rrhh-documents-heading">
-                        <div class="rrhh-detail-panel-heading rrhh-detail-heading-actions"><div><span class="rrhh-step-kicker">Expediente del empleado</span><h2 id="rrhh-documents-heading">Documentos</h2><p>Consulta el expediente y agrega certificados u otros documentos.</p></div><button class="btn-primary rrhh-operation-button" type="button"><span class="material-symbols" aria-hidden="true">upload_file</span>Agregar documento</button></div>
+                        <div class="rrhh-detail-panel-heading rrhh-detail-heading-actions"><div><span class="rrhh-step-kicker">Expediente del empleado</span><h2 id="rrhh-documents-heading">Documentos</h2><p>Consulta el expediente y agrega certificados u otros documentos.</p></div><a class="btn-primary rrhh-operation-button" th:if="${puedeGestionar and empleadoSeleccionado != null and empleadoSeleccionado.estado.name() == 'ACTIVO'}" href="#agregar-documento-form"><span class="material-symbols" aria-hidden="true">upload_file</span>Agregar documento</a></div>
                         <div class="rrhh-detail-table-wrap">
-                            <table class="rrhh-detail-table">
-                                <thead><tr><th>Documento</th><th>Categoría</th><th>Fecha</th><th>Estado</th><th>Archivo</th></tr></thead>
+                            <table class="rrhh-detail-table rrhh-documents-table">
+                                <thead><tr><th>Documento</th><th>Categoría</th><th>Fecha</th><th>Estado</th><th>Archivo</th><th>Acciones</th></tr></thead>
                                 <tbody>
-                                    <tr><td>Documento de identidad</td><td>Ingreso</td><td>10 jul 2026</td><td><span class="rrhh-document-status completo">Completo</span></td><td><a class="rrhh-file-link" href="#rrhh-documents-heading"><span class="material-symbols" aria-hidden="true">picture_as_pdf</span>Ver PDF</a></td></tr>
-                                    <tr><td>Hoja de vida</td><td>Ingreso</td><td>10 jul 2026</td><td><span class="rrhh-document-status completo">Completo</span></td><td><a class="rrhh-file-link" href="#rrhh-documents-heading"><span class="material-symbols" aria-hidden="true">picture_as_pdf</span>Ver PDF</a></td></tr>
-                                    <tr><td>Certificado de afiliación EPS</td><td>Afiliaciones</td><td>11 jul 2026</td><td><span class="rrhh-document-status completo">Completo</span></td><td><a class="rrhh-file-link" href="#rrhh-documents-heading"><span class="material-symbols" aria-hidden="true">picture_as_pdf</span>Ver PDF</a></td></tr>
-                                    <tr><td>Contrato de trabajo firmado</td><td>Contrato</td><td>12 jul 2026</td><td><span class="rrhh-document-status completo">Completo</span></td><td><a class="rrhh-file-link" href="#rrhh-documents-heading"><span class="material-symbols" aria-hidden="true">picture_as_pdf</span>Ver PDF</a></td></tr>
+                                    <tr th:each="adjunto : ${adjuntosFicha}">
+                                        <td th:text="${adjunto.tipoAdjunto.descripcion}">Documento</td>
+                                        <td th:text="${adjunto.tipoAdjunto.grupo}">Categoría</td>
+                                        <td th:text="${adjunto.fechaCarga}">Fecha</td>
+                                        <td><span class="rrhh-document-status" th:classappend="${adjunto.vigente ? ' completo' : ''}" th:text="${adjunto.vigente ? 'Vigente' : 'Reemplazado'}">Estado</span></td>
+                                        <td>
+                                            <span th:text="${adjunto.nombreOriginal}">Documento PDF</span>
+                                        </td>
+                                        <td class="rrhh-document-actions">
+                                            <div class="rrhh-document-file-actions">
+                                                <a class="btn-icon"
+                                                   th:href="@{/recursos-humanos/empleados/{id}/documentos/{idAdjunto}/ver(id=${empleadoSeleccionado.idEmpleado},idAdjunto=${adjunto.idEmpleadoAdjunto})}"
+                                                   th:attr="data-pdf-preview-url=@{/recursos-humanos/empleados/{id}/documentos/{idAdjunto}/ver(id=${empleadoSeleccionado.idEmpleado},idAdjunto=${adjunto.idEmpleadoAdjunto})},data-pdf-preview-title=${adjunto.tipoAdjunto.descripcion}"
+                                                   title="Ver documento" aria-label="Ver documento">
+                                                    <span class="material-symbols" aria-hidden="true">visibility</span>
+                                                </a>
+                                                <a class="btn-icon"
+                                                   th:href="@{/recursos-humanos/empleados/{id}/documentos/{idAdjunto}/descargar(id=${empleadoSeleccionado.idEmpleado},idAdjunto=${adjunto.idEmpleadoAdjunto})}"
+                                                   title="Descargar documento" aria-label="Descargar documento">
+                                                    <span class="material-symbols" aria-hidden="true">download</span>
+                                                </a>
+                                                <form th:if="${puedeGestionarQr and adjunto.tipoAdjunto.codigo == '3.1'}" th:action="@{/recursos-humanos/empleados/{id}/documentos/{idAdjunto}/publicar-qr(id=${empleadoSeleccionado.idEmpleado},idAdjunto=${adjunto.idEmpleadoAdjunto})}" method="post" class="rrhh-inline-action">
+                                                    <input type="hidden" name="publicar" th:value="${!adjunto.publicoQr}">
+                                                    <button class="btn-icon" type="submit"
+                                                            th:attr="title=${adjunto.publicoQr ? 'Retirar de QR' : 'Publicar en QR'},aria-label=${adjunto.publicoQr ? 'Retirar de QR' : 'Publicar en QR'}">
+                                                        <span class="material-symbols" aria-hidden="true" th:text="${adjunto.publicoQr ? 'cloud_off' : 'cloud_upload'}">cloud_upload</span>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                            <div th:if="${adjunto.vigente and (adjunto.tipoAdjunto.grupo.name() == 'INGRESO' or adjunto.tipoAdjunto.grupo.name() == 'VEHICULO') and (puedeGestionar or (puedeEditarRegistro and empleadoSeleccionado.estado.name() == 'REGISTRO_INICIAL'))}">
+                                                <form class="rrhh-document-replace-form"
+                                                      th:action="@{/recursos-humanos/empleados/{id}/documentos/{idAdjunto}/reemplazar(id=${empleadoSeleccionado.idEmpleado},idAdjunto=${adjunto.idEmpleadoAdjunto})}"
+                                                      method="post" enctype="multipart/form-data">
+                                                    <label class="btn-icon rrhh-document-replace-picker" title="Reemplazar documento">
+                                                        <span class="material-symbols" aria-hidden="true">upload_file</span>
+                                                        <span class="sr-only">Reemplazar documento</span>
+                                                        <input class="rrhh-document-replace-input" type="file" name="archivo"
+                                                               accept="application/pdf,.pdf" required>
+                                                    </label>
+                                                </form>
+                                                <form th:action="@{/recursos-humanos/empleados/{id}/documentos/{idAdjunto}/retirar(id=${empleadoSeleccionado.idEmpleado},idAdjunto=${adjunto.idEmpleadoAdjunto})}"
+                                                      method="post" data-confirm-message="¿Retirar este documento vigente? Se conservará en el historial.">
+                                                    <button class="btn-icon" type="submit" title="Retirar documento" aria-label="Retirar documento">
+                                                        <span class="material-symbols" aria-hidden="true">delete</span>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                            <span th:unless="${adjunto.vigente and (adjunto.tipoAdjunto.grupo.name() == 'INGRESO' or adjunto.tipoAdjunto.grupo.name() == 'VEHICULO') and (puedeGestionar or (puedeEditarRegistro and empleadoSeleccionado.estado.name() == 'REGISTRO_INICIAL'))}">—</span>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${#lists.isEmpty(adjuntosFicha)}"><td colspan="6">No hay documentos cargados para este empleado.</td></tr>
                                 </tbody>
                             </table>
                         </div>
                         <div class="rrhh-detail-footnote"><span class="material-symbols" aria-hidden="true">verified_user</span>Los documentos del expediente son privados. Solo el certificado de ARL marcado para publicación se podrá consultar desde la tarjeta QR pública.</div>
+                        <form class="rrhh-action-form" id="agregar-documento-form"
+                              th:if="${puedeGestionar and empleadoSeleccionado != null and empleadoSeleccionado.estado.name() == 'ACTIVO'}"
+                              th:action="@{/recursos-humanos/empleados/{id}/documentos(id=${empleadoSeleccionado.idEmpleado})}"
+                              method="post" enctype="multipart/form-data">
+                            <fieldset class="rrhh-form-section">
+                                <legend>Agregar documento al expediente</legend>
+                                <div class="rrhh-form-grid rrhh-form-grid-three">
+                                    <div class="rrhh-form-field">
+                                        <label for="documento-tipo">Tipo de documento <span>*</span></label>
+                                        <select class="input-control" id="documento-tipo" name="idTipoAdjunto" required>
+                                            <option value="">Selecciona</option>
+                                            <option th:each="tipo : ${tiposDocumentoExpediente}"
+                                                    th:value="${tipo.idTipoAdjuntoEmpleado}"
+                                                    th:text="${tipo.descripcion}">Tipo</option>
+                                        </select>
+                                    </div>
+                                    <div class="rrhh-form-field">
+                                        <label for="documento-contrato">Asociar a contrato</label>
+                                        <select class="input-control" id="documento-contrato" name="idContrato">
+                                            <option value="">Sin contrato asociado</option>
+                                            <option th:each="contrato : ${contratosDocumento}"
+                                                    th:value="${contrato.idContratoEmpleado}"
+                                                    th:text="${'#' + contrato.idContratoEmpleado + ' · ' + contrato.estado}">Contrato</option>
+                                        </select>
+                                    </div>
+                                    <div class="rrhh-form-field">
+                                        <label for="documento-archivo">Archivo PDF <span>*</span></label>
+                                        <input class="input-control" id="documento-archivo" name="archivo"
+                                               type="file" accept="application/pdf,.pdf" required>
+                                    </div>
+                                </div>
+                            </fieldset>
+                            <div class="rrhh-action-footer">
+                                <button class="btn-primary" type="submit">
+                                    <span class="material-symbols" aria-hidden="true">upload_file</span>Guardar documento
+                                </button>
+                            </div>
+                        </form>
                     </section>
 
                     <section class="rrhh-detail-panel rrhh-detail-assets" aria-labelledby="rrhh-assets-heading">
@@ -335,16 +570,25 @@
                                                   th:text="${asignacion.estado.name() == 'PENDIENTE' ? 'Pendiente' : (asignacion.estado.name() == 'ASIGNADA' ? 'Asignada' : 'Recibida')}">Estado</span>
                                         </td>
                                         <td>
-                                            <a class="rrhh-file-link"
-                                               th:if="${asignacion.actaNombre != null}"
-                                               th:href="@{/recursos-humanos/empleados/{id}/asignaciones/{idAsignacion}/acta(id=${empleadoSeleccionado.idEmpleado},idAsignacion=${asignacion.idAsignacionHerramienta})}">
-                                                <span class="material-symbols" aria-hidden="true">picture_as_pdf</span>
-                                                <span th:text="${asignacion.actaNombre}">Acta</span>
-                                            </a>
+                                            <span th:if="${asignacion.actaNombre != null}" th:text="${asignacion.actaNombre}">Acta PDF</span>
                                             <span th:if="${asignacion.actaNombre == null}">Pendiente de entrega</span>
                                         </td>
                                         <td>
-                                            <form th:if="${asignacion.estado.name() == 'PENDIENTE' and puedeGestionar and empleadoSeleccionado.estado.name() == 'ACTIVO'}"
+                                            <div class="rrhh-assignment-actions">
+                                                <a class="btn-icon"
+                                                   th:if="${asignacion.actaNombre != null}"
+                                                   th:href="@{/recursos-humanos/empleados/{id}/asignaciones/{idAsignacion}/acta(id=${empleadoSeleccionado.idEmpleado},idAsignacion=${asignacion.idAsignacionHerramienta})}"
+                                                   th:attr="data-pdf-preview-url=@{/recursos-humanos/empleados/{id}/asignaciones/{idAsignacion}/acta(id=${empleadoSeleccionado.idEmpleado},idAsignacion=${asignacion.idAsignacionHerramienta})},data-pdf-preview-title=${'Acta · ' + asignacion.herramienta.nombre}"
+                                                   title="Ver acta" aria-label="Ver acta">
+                                                    <span class="material-symbols" aria-hidden="true">visibility</span>
+                                                </a>
+                                                <a class="btn-icon"
+                                                   th:if="${asignacion.actaNombre != null}"
+                                                   th:href="@{/recursos-humanos/empleados/{id}/asignaciones/{idAsignacion}/acta/descargar(id=${empleadoSeleccionado.idEmpleado},idAsignacion=${asignacion.idAsignacionHerramienta})}"
+                                                   title="Descargar acta" aria-label="Descargar acta">
+                                                    <span class="material-symbols" aria-hidden="true">download</span>
+                                                </a>
+                                            <form th:if="${asignacion.estado.name() == 'PENDIENTE' and puedeGestionarAsignaciones and empleadoSeleccionado.estado.name() == 'ACTIVO'}"
                                                   th:action="@{/recursos-humanos/empleados/{id}/asignaciones/{idAsignacion}/entregar(id=${empleadoSeleccionado.idEmpleado},idAsignacion=${asignacion.idAsignacionHerramienta})}"
                                                   method="post" enctype="multipart/form-data" class="rrhh-assignment-action">
                                                 <label class="rrhh-file-picker">
@@ -355,11 +599,12 @@
                                                 <small data-acta-name>Sin archivo seleccionado</small>
                                                 <button class="btn-primary" type="submit">Asignar</button>
                                             </form>
-                                            <form th:if="${asignacion.estado.name() == 'ASIGNADA' and puedeGestionar}"
+                                            <form th:if="${asignacion.estado.name() == 'ASIGNADA' and puedeGestionarAsignaciones}"
                                                   th:action="@{/recursos-humanos/empleados/{id}/asignaciones/{idAsignacion}/recibir(id=${empleadoSeleccionado.idEmpleado},idAsignacion=${asignacion.idAsignacionHerramienta})}"
                                                   method="post" class="rrhh-assignment-action">
                                                 <button class="btn-secondary" type="submit">Marcar recibida</button>
                                             </form>
+                                            </div>
                                         </td>
                                     </tr>
                                     <tr th:if="${#lists.isEmpty(asignacionesHerramientas)}">
@@ -388,7 +633,7 @@
                                         <td><time th:datetime="${cambio.fechaCambio}" th:text="${cambio.fechaCambio}">Fecha</time></td>
                                         <td th:text="${cambio.estadoAnterior != null ? cambio.estadoAnterior.etiqueta : 'Sin estado previo'}">Estado anterior</td>
                                         <td th:text="${cambio.estadoNuevo.etiqueta}">Estado nuevo</td>
-                                        <td th:text="${cambio.usuario.nombreUsuario}">Usuario</td>
+                                        <td th:text="${cambio.usuario != null ? cambio.usuario.nombreUsuario : 'Sistema'}">Usuario</td>
                                         <td class="rrhh-audit-detail" th:text="${cambio.detalle ?: '—'}">Detalle</td>
                                     </tr>
                                 </tbody>
@@ -402,7 +647,40 @@
         </div>
     </section>
 
-    <section class="rrhh-operation-view" id="tarjetas-empleados" aria-labelledby="rrhh-card-demo-title">
+    <dialog class="rrhh-contract-reason-dialog" id="rrhh-contract-reason-dialog"
+            aria-labelledby="rrhh-contract-reason-title">
+        <form class="rrhh-contract-reason-form" id="rrhh-contract-reason-form" method="post" action="#">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <div class="rrhh-contract-reason-heading">
+                <h2 id="rrhh-contract-reason-title">Acción sobre contrato</h2>
+                <button class="btn-icon" type="button" data-cerrar-motivo aria-label="Cerrar modal">
+                    <span class="material-symbols" aria-hidden="true">close</span>
+                </button>
+            </div>
+            <label for="rrhh-contract-reason" id="rrhh-contract-reason-label">Motivo</label>
+            <textarea class="input-control" id="rrhh-contract-reason" name="motivo"
+                      rows="4" maxlength="500" required></textarea>
+            <div class="rrhh-contract-reason-actions">
+                <button class="btn-secondary" type="button" data-cerrar-motivo>Cancelar</button>
+                <button class="btn-primary" type="submit" id="rrhh-contract-reason-submit">Confirmar</button>
+            </div>
+        </form>
+    </dialog>
+
+    <dialog class="rrhh-pdf-preview-dialog" id="rrhh-pdf-preview-dialog"
+            aria-labelledby="rrhh-pdf-preview-title">
+        <header class="rrhh-pdf-preview-heading">
+            <h2 id="rrhh-pdf-preview-title">Vista previa PDF</h2>
+            <form method="dialog">
+                <button class="btn-icon" type="submit" aria-label="Cerrar vista previa">
+                    <span class="material-symbols" aria-hidden="true">close</span>
+                </button>
+            </form>
+        </header>
+        <iframe id="rrhh-pdf-preview-frame" title="Vista previa del contrato firmado"></iframe>
+    </dialog>
+
+    <section class="rrhh-operation-view" id="tarjetas-empleados" aria-labelledby="rrhh-card-demo-title" th:remove="all">
         <div class="rrhh-operation-shell rrhh-card-demo-shell permission-management-page">
             <header class="rrhh-operation-header">
                 <div class="rrhh-operation-title">
@@ -513,18 +791,49 @@
                 <div class="rrhh-operation-title"><span class="rrhh-registration-heading-icon material-symbols" aria-hidden="true">edit</span><div><span class="rrhh-registration-eyebrow">Carlos Eduardo Méndez · Empleado activo</span><h1 id="rrhh-edit-employee-title">Editar datos personales</h1><p>Los cambios relevantes deben quedar registrados en el historial.</p></div></div>
                 <a class="rrhh-registration-close" href="#ficha-empleado" aria-label="Cerrar edición" title="Cerrar"><span class="material-symbols" aria-hidden="true">close</span></a>
             </header>
-            <div class="rrhh-prototype-notice" role="note"><span class="material-symbols" aria-hidden="true">info</span><span>Demostración visual. La edición y su auditoría requieren integración de backend.</span></div>
-            <form class="rrhh-action-form">
-                <div class="rrhh-action-context"><span class="material-symbols" aria-hidden="true">person</span><span><small>Empleado</small><strong>Carlos Eduardo Méndez · 80.125.447</strong></span><span class="rrhh-state-badge estado-activo">Activo</span></div>
-                <div class="rrhh-form-grid rrhh-form-grid-two">
-                    <div class="rrhh-form-field"><label for="editar-celular">Celular</label><input class="input-control" id="editar-celular" name="celular" type="tel" value="+57 310 555 0184"></div>
-                    <div class="rrhh-form-field"><label for="editar-correo">Correo electrónico</label><input class="input-control" id="editar-correo" name="correo" type="email" value="carlos.mendez@empresa.com"></div>
-                    <div class="rrhh-form-field"><label for="editar-direccion">Dirección</label><input class="input-control" id="editar-direccion" name="direccion" value="Chapinero, Bogotá D. C."></div>
-                    <div class="rrhh-form-field"><label for="editar-formacion">Formación</label><input class="input-control" id="editar-formacion" name="formacion" value="Tecnólogo en mantenimiento industrial"></div>
-                    <div class="rrhh-form-field rrhh-field-span-two"><label for="editar-motivo">Motivo del cambio</label><textarea class="input-control rrhh-textarea" id="editar-motivo" name="motivo" rows="3" placeholder="Indica por qué se actualiza la información"></textarea></div>
+            <div class="rrhh-prototype-notice" role="note"><span class="material-symbols" aria-hidden="true">history</span><span>Los cambios personales quedan auditados con usuario, fecha y motivo. Las condiciones contractuales no se modifican desde este formulario.</span></div>
+            <form class="rrhh-action-form" method="post" enctype="multipart/form-data" th:if="${empleadoSeleccionado != null and puedeEditarPerfil and empleadoSeleccionado.estado.name() == 'ACTIVO'}" th:action="@{/recursos-humanos/empleados/{id}/perfil(id=${empleadoSeleccionado.idEmpleado})}" th:object="${perfilForm}">
+                <div class="rrhh-action-context"><span class="material-symbols" aria-hidden="true">person</span><span><small>Empleado</small><strong th:text="${empleadoSeleccionado.primerNombre + ' ' + empleadoSeleccionado.primerApellido + ' · ' + empleadoSeleccionado.numeroDocumento}">Empleado</strong></span><span class="rrhh-state-badge estado-activo">Activo</span></div>
+                <div class="rrhh-form-grid rrhh-form-grid-three">
+                    <div class="rrhh-form-field"><label for="editar-tipo-documento">Tipo de documento <span>*</span></label><select class="input-control" id="editar-tipo-documento" th:field="*{tipoDocumento}" required><option th:each="tipo : ${tiposDocumento}" th:value="${tipo}" th:text="${#strings.replace(tipo.name(), '_', ' ')}"></option></select></div>
+                    <div class="rrhh-form-field"><label for="editar-numero-documento">Número de documento <span>*</span></label><input class="input-control" id="editar-numero-documento" th:field="*{numeroDocumento}" maxlength="30" inputmode="numeric" data-solo-digitos required></div>
+                    <div class="rrhh-form-field"><label for="editar-fecha-expedicion">Fecha de expedición</label><input class="input-control" id="editar-fecha-expedicion" th:field="*{fechaExpedicion}" type="date" data-fecha-expedicion></div>
+                    <div class="rrhh-form-field"><label for="editar-lugar-expedicion">Lugar de expedición</label><input class="input-control" id="editar-lugar-expedicion" th:field="*{lugarExpedicion}" maxlength="150"></div>
+                    <div class="rrhh-form-field"><label for="editar-primer-nombre">Primer nombre <span>*</span></label><input class="input-control" id="editar-primer-nombre" th:field="*{primerNombre}" maxlength="100" required></div>
+                    <div class="rrhh-form-field"><label for="editar-segundo-nombre">Segundo nombre</label><input class="input-control" id="editar-segundo-nombre" th:field="*{segundoNombre}" maxlength="100"></div>
+                    <div class="rrhh-form-field"><label for="editar-primer-apellido">Primer apellido <span>*</span></label><input class="input-control" id="editar-primer-apellido" th:field="*{primerApellido}" maxlength="100" required></div>
+                    <div class="rrhh-form-field"><label for="editar-segundo-apellido">Segundo apellido</label><input class="input-control" id="editar-segundo-apellido" th:field="*{segundoApellido}" maxlength="100"></div>
+                    <div class="rrhh-form-field"><label for="editar-fecha-nacimiento">Fecha de nacimiento</label><input class="input-control" id="editar-fecha-nacimiento" th:field="*{fechaNacimiento}" type="date" data-fecha-nacimiento></div>
+                    <div class="rrhh-form-field"><label for="editar-lugar-nacimiento">Lugar de nacimiento</label><input class="input-control" id="editar-lugar-nacimiento" th:field="*{lugarNacimiento}" maxlength="150"></div>
+                    <div class="rrhh-form-field"><label for="editar-tipo-sangre">Grupo sanguíneo</label><select class="input-control" id="editar-tipo-sangre" th:field="*{tipoSangre}"><option value="">Sin especificar</option><option th:each="tipo : ${tiposSangre}" th:value="${tipo}" th:text="${tipo}"></option></select></div>
+                    <div class="rrhh-form-field"><label for="editar-rh">Factor RH</label><select class="input-control" id="editar-rh" th:field="*{rh}"><option value="">Sin especificar</option><option th:each="factor : ${factoresRh}" th:value="${factor}" th:text="${factor}"></option></select></div>
+                    <div class="rrhh-form-field"><label for="editar-celular">Celular</label><input class="input-control" id="editar-celular" th:field="*{celular}" type="text" inputmode="numeric" maxlength="30" data-solo-digitos></div>
+                    <div class="rrhh-form-field"><label for="editar-correo">Correo electrónico</label><input class="input-control" id="editar-correo" th:field="*{correoElectronico}" type="email" maxlength="150" data-correo-valido></div>
+                    <div class="rrhh-form-field"><label for="editar-direccion">Dirección</label><input class="input-control" id="editar-direccion" th:field="*{direccionResidencia}" maxlength="255"></div>
+                    <div class="rrhh-form-field"><label for="editar-barrio">Barrio</label><input class="input-control" id="editar-barrio" th:field="*{barrio}" maxlength="100"></div>
+                    <div class="rrhh-form-field"><label for="editar-municipio">Municipio</label><input class="input-control" id="editar-municipio" th:field="*{municipio}" maxlength="100"></div>
+                    <div class="rrhh-form-field"><label for="editar-departamento">Departamento</label><input class="input-control" id="editar-departamento" th:field="*{departamento}" maxlength="100"></div>
+                    <div class="rrhh-form-field"><label for="editar-formacion">Profesión</label><input class="input-control" id="editar-formacion" th:field="*{profesion}" maxlength="150"></div>
+                    <div class="rrhh-form-field"><label for="editar-nivel-educativo">Nivel educativo</label><select class="input-control" id="editar-nivel-educativo" th:field="*{nivelEducativoId}"><option value="">Sin especificar</option><option th:each="nivel : ${nivelesEducativos}" th:value="${nivel.id}" th:text="${nivel.nombre}"></option></select></div>
+                    <div class="rrhh-form-field rrhh-photo-field">
+                        <label for="editar-foto">Fotografía para tarjeta QR</label>
+                        <div class="rrhh-photo-upload">
+                            <input class="rrhh-photo-input" id="editar-foto" th:field="*{foto}"
+                                   type="file" accept="image/png,image/jpeg" data-photo-input
+                                   th:attr="data-existing-name=${nombreFotoEmpleado}">
+                            <label class="rrhh-photo-picker" for="editar-foto">
+                                <span class="material-symbols" aria-hidden="true">upload</span>
+                                Examinar
+                            </label>
+                            <span class="rrhh-photo-name" data-photo-name aria-live="polite"
+                                  th:text="${nombreFotoEmpleado != null ? nombreFotoEmpleado : 'Sin fotografía cargada'}">Sin fotografía cargada</span>
+                        </div>
+                        <small class="rrhh-photo-help">PNG o JPEG, máximo 5 MB. Al seleccionar otra foto, reemplazará la actual.</small>
+                    </div>
+                    <div class="rrhh-form-field rrhh-field-span-two"><label for="editar-motivo">Motivo del cambio <span>*</span></label><textarea class="input-control rrhh-textarea" id="editar-motivo" th:field="*{motivo}" rows="3" required maxlength="1000"></textarea></div>
                 </div>
                 <div class="rrhh-action-warning"><span class="material-symbols" aria-hidden="true">history</span><p>La ficha conserva los datos anteriores en el historial de cambios, junto con el usuario y la fecha de modificación.</p></div>
-                <div class="rrhh-action-footer"><a class="btn-secondary" href="#ficha-empleado">Cancelar</a><button class="btn-primary" type="button"><span class="material-symbols" aria-hidden="true">save</span>Guardar cambios</button></div>
+                <div class="rrhh-action-footer"><a class="btn-secondary" th:href="@{/recursos-humanos/principal(empleadoId=${empleadoSeleccionado.idEmpleado})} + '#ficha-empleado'">Cancelar</a><button class="btn-primary" type="submit"><span class="material-symbols" aria-hidden="true">save</span>Guardar cambios</button></div>
             </form>
         </div>
     </section>
@@ -535,27 +844,37 @@
                 <div class="rrhh-operation-title"><span class="rrhh-registration-heading-icon material-symbols" aria-hidden="true">autorenew</span><div><span class="rrhh-registration-eyebrow">Carlos Eduardo Méndez · Empleado activo</span><h1 id="rrhh-renew-title">Iniciar renovación de contrato</h1><p>La renovación genera un nuevo contrato asociado a la misma ficha.</p></div></div>
                 <a class="rrhh-registration-close" href="#ficha-empleado" aria-label="Cerrar renovación" title="Cerrar"><span class="material-symbols" aria-hidden="true">close</span></a>
             </header>
-            <div class="rrhh-prototype-notice" role="note"><span class="material-symbols" aria-hidden="true">info</span><span>Demostración visual. La renovación conserva el contrato anterior y calcula automáticamente el estado nuevo según sus fechas.</span></div>
-            <form class="rrhh-action-form">
-                <div class="rrhh-action-context"><span class="material-symbols" aria-hidden="true">description</span><span><small>Contrato actual</small><strong>CT-2026-084 · Término fijo · Vence 11 jul 2027</strong></span><span class="rrhh-contract-status"><span></span>Vigente</span></div>
+            <div class="rrhh-prototype-notice" role="note" th:if="${empleadoSeleccionado == null or contratoVigente == null}"><span class="material-symbols" aria-hidden="true">info</span><span>Abre la ficha de un empleado con contrato vigente para iniciar una renovación.</span></div>
+            <form class="rrhh-action-form" id="rrhh-renew-contract-form" method="post" enctype="multipart/form-data" th:if="${empleadoSeleccionado != null and contratoVigente != null and puedeGestionar}" th:attr="data-cubierto-hasta=${contratoVigente.fechaFin}" th:action="@{/recursos-humanos/empleados/{id}/contratos/{idContrato}/renovar(id=${empleadoSeleccionado.idEmpleado},idContrato=${contratoVigente.idContratoEmpleado})}">
+                <div class="rrhh-action-context"><span class="material-symbols" aria-hidden="true">description</span><span><small>Contrato actual</small><strong th:text="${'#' + contratoVigente.idContratoEmpleado + ' · ' + (contratoVigente.tipoContrato != null ? contratoVigente.tipoContrato.nombre : 'Contrato') + ' · ' + contratoVigente.estado}">Contrato</strong></span><span class="rrhh-contract-status"><span></span><span th:text="${contratoVigente.estado}">Vigente</span></span></div>
                 <fieldset class="rrhh-form-section"><legend>Nuevas condiciones</legend>
                     <div class="rrhh-form-grid rrhh-form-grid-three">
-                        <div class="rrhh-form-field"><label for="renovacion-tipo">Tipo de contrato <span>*</span></label><select class="input-control" id="renovacion-tipo" name="tipoContrato" required><option>Término fijo</option><option>Término indefinido</option><option>Obra o labor</option></select></div>
-                        <div class="rrhh-form-field"><label for="renovacion-inicio">Nueva fecha de inicio <span>*</span></label><input class="input-control" id="renovacion-inicio" name="fechaInicio" type="date" required></div>
+                        <div class="rrhh-form-field"><label for="renovacion-tipo">Tipo de contrato <span>*</span></label><select class="input-control" id="renovacion-tipo" name="idTipoContrato" required><option value="">Selecciona</option><option th:each="tipo : ${tiposContratoRenovacion}" th:value="${tipo.id}" th:text="${tipo.nombre}" th:selected="${contratoVigente.tipoContrato != null and contratoVigente.tipoContrato.id == tipo.id}"></option></select></div>
+                        <div class="rrhh-form-field"><label for="renovacion-inicio">Nueva fecha de inicio <span>*</span></label><input class="input-control" id="renovacion-inicio" name="fechaInicio" type="date" required th:attr="data-cubierto-hasta=${contratoVigente.fechaFin}"></div>
                         <div class="rrhh-form-field"><label for="renovacion-fin">Nueva fecha de vencimiento</label><input class="input-control" id="renovacion-fin" name="fechaFin" type="date"></div>
-                        <div class="rrhh-form-field"><label for="renovacion-cargo">Cargo</label><input class="input-control" id="renovacion-cargo" name="cargo" value="Técnico de servicio"></div>
-                        <div class="rrhh-form-field"><label for="renovacion-salario">Salario / remuneración <span>*</span></label><input class="input-control" id="renovacion-salario" name="remuneracion" type="number" min="0" step="0.01" placeholder="$ 0.00" required></div>
-                        <div class="rrhh-form-field"><label for="renovacion-motivo">Observaciones</label><input class="input-control" id="renovacion-motivo" name="observaciones" placeholder="Cambios o condiciones acordadas"></div>
+                        <div class="rrhh-form-field"><label for="renovacion-cargo">Cargo <span>*</span></label><select class="input-control" id="renovacion-cargo" name="idCargo" required><option value="">Selecciona</option><option th:each="cargo : ${cargos}" th:value="${cargo.id}" th:text="${cargo.nombre}" th:selected="${contratoVigente.cargo != null ? contratoVigente.cargo.id == cargo.id : (empleadoSeleccionado.cargo != null and empleadoSeleccionado.cargo.id == cargo.id)}"></option></select></div>
+                        <div class="rrhh-form-field"><label for="renovacion-area">Área <span>*</span></label><select class="input-control" id="renovacion-area" name="idArea" required><option value="">Selecciona</option><option th:each="area : ${areas}" th:value="${area.id}" th:text="${area.nombre}" th:selected="${contratoVigente.area != null ? contratoVigente.area.id == area.id : (empleadoSeleccionado.area != null and empleadoSeleccionado.area.id == area.id)}"></option></select></div>
+                        <div class="rrhh-form-field"><label for="renovacion-salario">Salario básico (COP) <span>*</span></label><div class="rrhh-input-prefix"><span>$</span><input class="input-control" id="renovacion-salario" name="salario" type="number" min="0" step="0.01" data-no-negativo data-numerico-decimal th:value="${contratoVigente.salarioBasico}" required></div></div>
                     </div>
                 </fieldset>
                 <div class="rrhh-acta-upload">
                     <span class="rrhh-acta-upload-icon material-symbols" aria-hidden="true">contract</span>
-                    <div class="rrhh-acta-upload-copy"><strong>Contrato renovado firmado</strong><small>Adjunta el documento para conservarlo en el historial del nuevo contrato.</small></div>
-                    <label class="rrhh-file-picker" for="contrato-renovado"><span class="material-symbols" aria-hidden="true">upload_file</span>Adjuntar PDF<input id="contrato-renovado" type="file" name="contratoFirmado" accept="application/pdf,.pdf"></label>
-                    <span class="rrhh-file-picker-hint">PDF · Asociado únicamente al nuevo contrato</span>
+                    <div class="rrhh-acta-upload-copy"><strong>Contrato renovado firmado</strong><small>PDF requerido; se guardará asociado al nuevo contrato.</small></div>
+                    <div class="rrhh-contract-file-control">
+                        <label class="rrhh-file-picker" for="renovacion-contrato-firmado">
+                            <span class="material-symbols" aria-hidden="true">upload_file</span>Seleccionar PDF
+                            <input class="rrhh-contract-file-input" id="renovacion-contrato-firmado" name="contratoFirmado"
+                                   type="file" accept="application/pdf,.pdf" required>
+                        </label>
+                        <span class="rrhh-contract-file-name" id="renovacion-contrato-firmado-nombre">Ningún archivo seleccionado</span>
+                    </div>
                 </div>
+                <p class="rrhh-date-coverage-note" id="rrhh-renew-date-note" aria-live="polite"></p>
+                <p class="rrhh-date-coverage-note rrhh-date-coverage-error" th:if="${contratoVigente.fechaFin == null}">
+                    Este contrato no tiene fecha de vencimiento; primero debe terminarse antes de iniciar una renovación.
+                </p>
                 <div class="rrhh-action-warning"><span class="material-symbols" aria-hidden="true">event_repeat</span><p>El contrato nuevo queda <strong>Programado</strong> si inicia en el futuro, <strong>Vigente</strong> dentro de sus fechas o <strong>Vencido</strong> al superar la fecha final. La renovación no sobrescribe contratos ni documentos anteriores.</p></div>
-                <div class="rrhh-action-footer"><a class="btn-secondary" href="#ficha-empleado">Cancelar</a><button class="btn-primary" type="button"><span class="material-symbols" aria-hidden="true">save</span>Guardar renovación</button></div>
+                <div class="rrhh-action-footer"><a class="btn-secondary" href="#ficha-empleado">Cancelar</a><button class="btn-primary" type="submit" th:disabled="${contratoVigente.fechaFin == null}"><span class="material-symbols" aria-hidden="true">save</span>Guardar renovación</button></div>
             </form>
         </div>
     </section>
@@ -617,8 +936,8 @@
                         <fieldset class="rrhh-form-section"><legend>Identificación</legend>
                             <div class="rrhh-form-grid rrhh-form-grid-three">
                                 <div class="rrhh-form-field"><label for="tipo-documento">Tipo de documento <span>*</span></label><select class="input-control" id="tipo-documento" th:field="*{tipoDocumento}" required><option value="">Selecciona</option><option th:each="tipo : ${tiposDocumento}" th:value="${tipo}" th:text="${#strings.replace(tipo.name(), '_', ' ')}"></option></select></div>
-                                <div class="rrhh-form-field"><label for="numero-documento">Número de documento <span>*</span></label><input class="input-control" id="numero-documento" th:field="*{numeroDocumento}" maxlength="30" required placeholder="Número sin separadores"></div>
-                                <div class="rrhh-form-field"><label for="fecha-expedicion">Fecha de expedición</label><input class="input-control" id="fecha-expedicion" th:field="*{fechaExpedicion}" type="date"></div>
+                                <div class="rrhh-form-field"><label for="numero-documento">Número de documento <span>*</span></label><input class="input-control" id="numero-documento" th:field="*{numeroDocumento}" maxlength="30" inputmode="numeric" data-solo-digitos required placeholder="Solo números"></div>
+                                <div class="rrhh-form-field"><label for="fecha-expedicion">Fecha de expedición</label><input class="input-control" id="fecha-expedicion" th:field="*{fechaExpedicion}" type="date" data-fecha-expedicion></div>
                                 <div class="rrhh-form-field"><label for="lugar-expedicion">Lugar de expedición</label><input class="input-control" id="lugar-expedicion" th:field="*{lugarExpedicion}" maxlength="150" placeholder="Ciudad, departamento"></div>
                             </div>
                         </fieldset>
@@ -628,7 +947,7 @@
                                 <div class="rrhh-form-field"><label for="segundo-nombre">Segundo nombre</label><input class="input-control" id="segundo-nombre" th:field="*{segundoNombre}" maxlength="100"></div>
                                 <div class="rrhh-form-field"><label for="primer-apellido">Primer apellido <span>*</span></label><input class="input-control" id="primer-apellido" th:field="*{primerApellido}" maxlength="100" required></div>
                                 <div class="rrhh-form-field"><label for="segundo-apellido">Segundo apellido</label><input class="input-control" id="segundo-apellido" th:field="*{segundoApellido}" maxlength="100"></div>
-                                <div class="rrhh-form-field"><label for="fecha-nacimiento">Fecha de nacimiento</label><input class="input-control" id="fecha-nacimiento" th:field="*{fechaNacimiento}" type="date"></div>
+                                <div class="rrhh-form-field"><label for="fecha-nacimiento">Fecha de nacimiento</label><input class="input-control" id="fecha-nacimiento" th:field="*{fechaNacimiento}" type="date" data-fecha-nacimiento></div>
                                 <div class="rrhh-form-field"><label for="lugar-nacimiento">Lugar de nacimiento</label><input class="input-control" id="lugar-nacimiento" th:field="*{lugarNacimiento}" maxlength="150"></div>
                                 <div class="rrhh-form-field"><label for="tipo-sangre">Grupo sanguíneo</label><select class="input-control" id="tipo-sangre" th:field="*{tipoSangre}"><option value="">Selecciona</option><option th:each="tipo : ${tiposSangre}" th:value="${tipo}" th:text="${tipo}"></option></select></div>
                                 <div class="rrhh-form-field"><label for="rh">Factor RH</label><select class="input-control" id="rh" th:field="*{rh}"><option value="">Selecciona</option><option th:each="factor : ${factoresRh}" th:value="${factor}" th:text="${factor == T(com.palmera_junior.gestion_compras.entity.Rh).POSITIVO ? 'Positivo (+)' : 'Negativo (-)'}"></option></select></div>
@@ -636,8 +955,8 @@
                         </fieldset>
                         <fieldset class="rrhh-form-section"><legend>Contacto y residencia</legend>
                             <div class="rrhh-form-grid rrhh-form-grid-three">
-                                <div class="rrhh-form-field"><label for="celular">Celular</label><input class="input-control" id="celular" th:field="*{celular}" type="tel" maxlength="30" placeholder="300 000 0000"></div>
-                                <div class="rrhh-form-field"><label for="correo">Correo electrónico</label><input class="input-control" id="correo" th:field="*{correoElectronico}" type="email" maxlength="150" placeholder="nombre@correo.com"></div>
+                                <div class="rrhh-form-field"><label for="celular">Celular</label><input class="input-control" id="celular" th:field="*{celular}" type="text" inputmode="numeric" maxlength="30" data-solo-digitos placeholder="Solo números"></div>
+                                <div class="rrhh-form-field"><label for="correo">Correo electrónico</label><input class="input-control" id="correo" th:field="*{correoElectronico}" type="email" maxlength="150" data-correo-valido placeholder="nombre@correo.com"></div>
                                 <div class="rrhh-form-field"><label for="direccion">Dirección de residencia</label><input class="input-control" id="direccion" th:field="*{direccionResidencia}" maxlength="255"></div>
                                 <div class="rrhh-form-field"><label for="barrio">Barrio</label><input class="input-control" id="barrio" th:field="*{barrio}" maxlength="100"></div>
                                 <div class="rrhh-form-field"><label for="municipio">Municipio</label><input class="input-control" id="municipio" th:field="*{municipio}" maxlength="100"></div>
@@ -648,6 +967,19 @@
                             <div class="rrhh-form-grid rrhh-form-grid-three">
                                 <div class="rrhh-form-field"><label for="nivel-educativo">Nivel educativo</label><select class="input-control" id="nivel-educativo" th:field="*{nivelEducativoId}"><option value="">Selecciona</option><option th:each="nivel : ${nivelesEducativos}" th:value="${nivel.id}" th:text="${nivel.nombre}"></option></select></div>
                                 <div class="rrhh-form-field rrhh-field-span-two"><label for="profesion">Profesión</label><input class="input-control" id="profesion" th:field="*{profesion}" maxlength="150" placeholder="Título o profesión"></div>
+                                <div class="rrhh-form-field rrhh-photo-field" th:unless="${esEdicionContratacion}">
+                                    <label for="registro-foto">Fotografía del empleado</label>
+                                    <div class="rrhh-photo-upload">
+                                        <input class="rrhh-photo-input" id="registro-foto" th:field="*{foto}"
+                                               type="file" accept="image/png,image/jpeg" data-photo-input>
+                                        <label class="rrhh-photo-picker" for="registro-foto">
+                                            <span class="material-symbols" aria-hidden="true">upload</span>
+                                            Adjuntar foto
+                                        </label>
+                                        <span class="rrhh-photo-name" data-photo-name aria-live="polite">Ninguna foto seleccionada</span>
+                                    </div>
+                                    <small class="rrhh-photo-help">Opcional · PNG o JPEG, máximo 5 MB.</small>
+                                </div>
                             </div>
                         </fieldset>
                         <div class="rrhh-step-actions"><a class="btn-cancel" href="#directorio-empleados">Cancelar</a><label class="btn-primary rrhh-step-next" for="rrhh-step-config">Continuar a configuración <span class="material-symbols" aria-hidden="true">arrow_forward</span></label></div>
@@ -740,16 +1072,16 @@
                                 <div class="rrhh-form-field"><label for="tipo-contrato">Tipo de contrato <span>*</span></label><select class="input-control" id="tipo-contrato" th:field="*{tipoContratoId}" required><option value="">Selecciona</option><option th:each="tipo : ${tiposContrato}" th:value="${tipo.id}" th:text="${tipo.nombre}"></option></select></div>
                                 <div class="rrhh-form-field"><label for="tipo-pago">Tipo de pago <span>*</span></label><select class="input-control" id="tipo-pago" th:field="*{tipoPagoId}" required><option value="">Selecciona</option><option th:each="tipo : ${tiposPago}" th:value="${tipo.id}" th:text="${tipo.nombre}"></option></select></div>
                                 <div class="rrhh-contract-state-note"><span class="material-symbols" aria-hidden="true">event_repeat</span><span>Estado calculado automáticamente a partir de las fechas: Programado, Vigente o Vencido.</span></div>
-                                <div class="rrhh-form-field"><label for="fecha-ingreso">Fecha de ingreso <span>*</span></label><input class="input-control" id="fecha-ingreso" th:field="*{fechaIngreso}" type="date" required></div>
+                                <div class="rrhh-form-field"><label for="fecha-ingreso">Fecha de ingreso <span>*</span></label><input class="input-control" id="fecha-ingreso" th:field="*{fechaIngreso}" type="date" data-fecha-ingreso required></div>
                                 <div class="rrhh-form-field"><label for="fecha-fin">Fecha de finalización</label><input class="input-control" id="fecha-fin" th:field="*{fechaFin}" type="date"></div>
-                                <div class="rrhh-form-field"><label for="salario">Salario básico <span>*</span></label><div class="rrhh-input-prefix"><span>$</span><input class="input-control" id="salario" th:field="*{salarioBasico}" type="number" min="0" step="0.01" required placeholder="0.00"></div></div>
+                                <div class="rrhh-form-field"><label for="salario">Salario básico (COP) <span>*</span></label><div class="rrhh-input-prefix"><span>$</span><input class="input-control" id="salario" th:field="*{salarioBasico}" type="number" min="0" step="0.01" data-no-negativo data-numerico-decimal required placeholder="0.00"></div></div>
                             </div>
                         </fieldset>
                         <fieldset class="rrhh-form-section"><legend>Auxilios y bonificaciones</legend>
                             <div class="rrhh-compensation-grid">
-                                <div class="rrhh-compensation-card"><label class="rrhh-inline-check"><input type="checkbox" th:field="*{auxilioTransporteAplica}" data-requiere-valor="auxilio-transporte"><span>Aplica auxilio de transporte</span></label><div class="rrhh-form-field"><label for="auxilio-transporte">Valor mensual</label><div class="rrhh-input-prefix"><span>$</span><input class="input-control" id="auxilio-transporte" th:field="*{auxilioTransporteValor}" data-valor-para="auxilio-transporte" type="number" min="0" step="0.01" placeholder="0.00" disabled></div></div></div>
-                                <div class="rrhh-compensation-card"><label class="rrhh-inline-check"><input type="checkbox" th:field="*{auxilioRodamientoAplica}" data-requiere-valor="auxilio-rodamiento"><span>Aplica auxilio de rodamiento</span></label><div class="rrhh-form-field"><label for="auxilio-rodamiento">Valor mensual</label><div class="rrhh-input-prefix"><span>$</span><input class="input-control" id="auxilio-rodamiento" th:field="*{auxilioRodamientoValor}" data-valor-para="auxilio-rodamiento" type="number" min="0" step="0.01" placeholder="0.00" disabled></div></div></div>
-                                <div class="rrhh-compensation-card"><label class="rrhh-inline-check"><input type="checkbox" th:field="*{bonificacionNoSalarialAplica}" data-requiere-valor="bonificacion"><span>Aplica bonificación no salarial</span></label><div class="rrhh-form-field"><label for="bonificacion">Valor mensual</label><div class="rrhh-input-prefix"><span>$</span><input class="input-control" id="bonificacion" th:field="*{bonificacionNoSalarialValor}" data-valor-para="bonificacion" type="number" min="0" step="0.01" placeholder="0.00" disabled></div></div></div>
+                                <div class="rrhh-compensation-card"><label class="rrhh-inline-check"><input type="checkbox" th:field="*{auxilioTransporteAplica}" data-requiere-valor="auxilio-transporte"><span>Aplica auxilio de transporte</span></label><div class="rrhh-form-field"><label for="auxilio-transporte">Valor mensual (COP)</label><div class="rrhh-input-prefix"><span>$</span><input class="input-control" id="auxilio-transporte" th:field="*{auxilioTransporteValor}" data-valor-para="auxilio-transporte" data-no-negativo data-numerico-decimal type="number" min="0" step="0.01" placeholder="0.00" disabled></div></div></div>
+                                <div class="rrhh-compensation-card"><label class="rrhh-inline-check"><input type="checkbox" th:field="*{auxilioRodamientoAplica}" data-requiere-valor="auxilio-rodamiento"><span>Aplica auxilio de rodamiento</span></label><div class="rrhh-form-field"><label for="auxilio-rodamiento">Valor mensual (COP)</label><div class="rrhh-input-prefix"><span>$</span><input class="input-control" id="auxilio-rodamiento" th:field="*{auxilioRodamientoValor}" data-valor-para="auxilio-rodamiento" data-no-negativo data-numerico-decimal type="number" min="0" step="0.01" placeholder="0.00" disabled></div></div></div>
+                                <div class="rrhh-compensation-card"><label class="rrhh-inline-check"><input type="checkbox" th:field="*{bonificacionNoSalarialAplica}" data-requiere-valor="bonificacion"><span>Aplica bonificación no salarial</span></label><div class="rrhh-form-field"><label for="bonificacion">Valor mensual (COP)</label><div class="rrhh-input-prefix"><span>$</span><input class="input-control" id="bonificacion" th:field="*{bonificacionNoSalarialValor}" data-valor-para="bonificacion" data-no-negativo data-numerico-decimal type="number" min="0" step="0.01" placeholder="0.00" disabled></div></div></div>
                             </div>
                         </fieldset>
                         <fieldset class="rrhh-form-section"><legend>Afiliaciones y seguridad social</legend>
@@ -757,14 +1089,14 @@
                                 <div class="rrhh-form-field"><label for="eps">EPS <span>*</span></label><select class="input-control" id="eps" th:field="*{epsId}" required><option value="">Selecciona EPS</option><option th:each="entidad : ${epsCatalogo}" th:value="${entidad.id}" th:text="${entidad.nombre}"></option></select></div>
                                 <div class="rrhh-form-field"><label for="afp">Fondo de pensión (AFP) <span>*</span></label><select class="input-control" id="afp" th:field="*{afpId}" required><option value="">Selecciona fondo</option><option th:each="entidad : ${afpCatalogo}" th:value="${entidad.id}" th:text="${entidad.nombre}"></option></select></div>
                                 <div class="rrhh-form-field"><label for="arl">ARL <span>*</span></label><select class="input-control" id="arl" th:field="*{arlId}" required><option value="">Selecciona ARL</option><option th:each="entidad : ${arlCatalogo}" th:value="${entidad.id}" th:text="${entidad.nombre}"></option></select></div>
-                                <div class="rrhh-form-field"><label for="tarifa-arl">Tarifa ARL (%)</label><input class="input-control" id="tarifa-arl" th:field="*{tarifaArlPorcentaje}" type="number" min="0" max="100" step="0.01" placeholder="0.00"></div>
+                                <div class="rrhh-form-field"><label for="tarifa-arl">Tarifa ARL (%)</label><input class="input-control" id="tarifa-arl" th:field="*{tarifaArlPorcentaje}" type="number" min="0" max="100" step="0.01" data-no-negativo data-numerico-decimal data-maximo="100" placeholder="0.00"></div>
                                 <div class="rrhh-form-field"><label for="caja-compensacion">Caja de compensación <span>*</span></label><select class="input-control" id="caja-compensacion" th:field="*{cajaCompensacionId}" required><option value="">Selecciona caja</option><option th:each="entidad : ${cajasCompensacion}" th:value="${entidad.id}" th:text="${entidad.nombre}"></option></select></div>
                             </div>
                         </fieldset>
                         <fieldset class="rrhh-form-section"><legend>Pago y condiciones especiales</legend>
                             <div class="rrhh-form-grid rrhh-form-grid-three">
                                 <div class="rrhh-form-field"><label for="entidad-bancaria">Entidad bancaria</label><select class="input-control" id="entidad-bancaria" th:field="*{entidadBancariaId}"><option value="">Selecciona banco</option><option th:each="entidad : ${entidadesBancarias}" th:value="${entidad.id}" th:text="${entidad.nombre}"></option></select></div>
-                                <div class="rrhh-form-field rrhh-field-span-two"><label for="numero-cuenta">Número de cuenta bancaria</label><input class="input-control" id="numero-cuenta" th:field="*{numeroCuentaBancaria}" maxlength="50"></div>
+                                <div class="rrhh-form-field rrhh-field-span-two"><label for="numero-cuenta">Número de cuenta bancaria</label><input class="input-control" id="numero-cuenta" th:field="*{numeroCuentaBancaria}" maxlength="50" inputmode="numeric" data-solo-digitos placeholder="Solo números"></div>
                                 <div class="rrhh-form-field rrhh-field-span-three"><label class="rrhh-inline-check"><input type="checkbox" th:field="*{condicionesEspecialesAplica}" data-requiere-valor="condiciones"><span>Este contrato tiene condiciones especiales</span></label><label for="condiciones-especiales">Describe las condiciones</label><textarea class="input-control rrhh-textarea" id="condiciones-especiales" th:field="*{condicionesEspeciales}" data-valor-para="condiciones" rows="3" placeholder="Especifica las condiciones acordadas" disabled></textarea></div>
                             </div>
                         </fieldset>
@@ -804,8 +1136,9 @@
                                 <span class="rrhh-upload-button">Adjuntar PDF</span>
                                 <span class="rrhh-upload-selection" aria-live="polite">Ningún archivo seleccionado</span>
                             </label>
-                            <p id="rrhh-no-adjuntos">
-                                No hay conceptos seleccionados. Selecciónalos en la pestaña Configuración.
+                            <p id="rrhh-no-adjuntos" role="status">
+                                <span class="material-symbols" aria-hidden="true">folder_off</span>
+                                <span><strong>No hay conceptos seleccionados.</strong> Selecciónalos en la pestaña Configuración para cargar los documentos requeridos.</span>
                             </p>
                         </div>
                         <div th:remove="all">
@@ -873,9 +1206,236 @@
     <script th:src="@{/js/toast.js(v=1)}"></script>
     <script>
         (() => {
-            if (window.location.hash === "#ficha-asignaciones") {
+            const hoyLocal = () => {
+                const ahora = new Date();
+                return `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, "0")}-${String(ahora.getDate()).padStart(2, "0")}`;
+            };
+            const mostrarErrorCampo = (campo, mensaje) => {
+                const contenedor = campo.closest(".rrhh-form-field") || campo.parentElement;
+                let ayuda = contenedor.querySelector(`[data-validacion-para="${campo.id}"]`);
+                if (!ayuda) {
+                    ayuda = document.createElement("small");
+                    ayuda.className = "rrhh-field-feedback";
+                    ayuda.dataset.validacionPara = campo.id;
+                    ayuda.setAttribute("aria-live", "polite");
+                    contenedor.append(ayuda);
+                }
+                ayuda.textContent = mensaje;
+                ayuda.hidden = !mensaje;
+                campo.setCustomValidity(mensaje);
+                campo.setAttribute("aria-invalid", mensaje ? "true" : "false");
+            };
+            document.querySelectorAll("[data-solo-digitos]").forEach((campo) => {
+                const validar = () => {
+                    const invalido = campo.value !== "" && !/^[0-9]+$/.test(campo.value);
+                    mostrarErrorCampo(campo, invalido ? "Este campo solo puede contener números." : "");
+                };
+                campo.addEventListener("beforeinput", (evento) => {
+                    if (evento.data && !/^[0-9]+$/.test(evento.data)) {
+                        evento.preventDefault();
+                        mostrarErrorCampo(campo, "Este campo solo puede contener números.");
+                        campo.reportValidity();
+                    }
+                });
+                campo.addEventListener("paste", (evento) => {
+                    const texto = evento.clipboardData?.getData("text") || "";
+                    if (!/^[0-9]+$/.test(texto)) {
+                        evento.preventDefault();
+                        mostrarErrorCampo(campo, "Este campo solo puede contener números.");
+                        campo.reportValidity();
+                    }
+                });
+                campo.addEventListener("input", validar);
+                campo.addEventListener("blur", () => {
+                    validar();
+                    if (campo.validationMessage) campo.reportValidity();
+                });
+                validar();
+            });
+            document.querySelectorAll("[data-correo-valido]").forEach((campo) => {
+                const validar = () => {
+                    const correo = campo.value.trim();
+                    const valido = !correo || /^[^\s@]+@[^\s@]+\.[A-Za-z]{2,}$/.test(correo);
+                    mostrarErrorCampo(campo, valido ? "" : "Correo no válido. Usa el formato ejemplo@ejemplo.com.");
+                };
+                campo.addEventListener("input", validar);
+                campo.addEventListener("blur", validar);
+                validar();
+            });
+            document.querySelectorAll("[data-no-negativo]").forEach((campo) => {
+                const mostrarAyuda = (mensaje) => {
+                    let ayuda = campo.closest(".rrhh-form-field")
+                        ?.querySelector(`[data-validacion-para="${campo.id}"]`);
+                    if (!ayuda) {
+                        ayuda = document.createElement("small");
+                        ayuda.className = "rrhh-field-feedback";
+                        ayuda.dataset.validacionPara = campo.id;
+                        ayuda.setAttribute("aria-live", "polite");
+                        (campo.closest(".rrhh-form-field") || campo.parentElement).append(ayuda);
+                    }
+                    ayuda.textContent = mensaje;
+                    ayuda.hidden = !mensaje;
+                    campo.setAttribute("aria-invalid", mensaje ? "true" : "false");
+                };
+                const validar = () => {
+                    const valor = campo.valueAsNumber;
+                    const maximo = Number(campo.dataset.maximo);
+                    const negativo = campo.value !== "" && Number.isFinite(valor) && valor < 0;
+                    const superaMaximo = campo.value !== "" && Number.isFinite(maximo)
+                        && Number.isFinite(valor) && valor > maximo;
+                    const formatoInvalido = campo.dataset.numericoDecimal !== undefined
+                        && (campo.validity.badInput || campo.validity.stepMismatch);
+                    const mensaje = negativo
+                        ? "El valor no puede ser negativo."
+                        : (superaMaximo ? `El valor máximo permitido es ${maximo}.`
+                            : (formatoInvalido
+                                ? "Ingresa solo números y hasta dos decimales."
+                                : ""));
+                    campo.setCustomValidity(mensaje);
+                    mostrarAyuda(mensaje);
+                };
+                if (campo.dataset.numericoDecimal !== undefined) {
+                    campo.addEventListener("beforeinput", (evento) => {
+                        if (evento.data && !/^[0-9.]$/.test(evento.data)) {
+                            evento.preventDefault();
+                            campo.setCustomValidity("Ingresa solo números y hasta dos decimales.");
+                            mostrarAyuda(campo.validationMessage);
+                            campo.reportValidity();
+                        } else if (evento.data === "." && campo.value.includes(".")) {
+                            evento.preventDefault();
+                            campo.setCustomValidity("Ingresa solo números y hasta dos decimales.");
+                            mostrarAyuda(campo.validationMessage);
+                            campo.reportValidity();
+                        }
+                    });
+                    campo.addEventListener("paste", (evento) => {
+                        const texto = evento.clipboardData?.getData("text") || "";
+                        if (!/^[0-9]+(?:\.[0-9]{0,2})?$/.test(texto)) {
+                            evento.preventDefault();
+                            campo.setCustomValidity("Ingresa solo números y hasta dos decimales.");
+                            mostrarAyuda(campo.validationMessage);
+                            campo.reportValidity();
+                        }
+                    });
+                }
+                campo.addEventListener("input", validar);
+                campo.addEventListener("change", validar);
+                campo.addEventListener("blur", () => {
+                    validar();
+                    if (campo.validationMessage) campo.reportValidity();
+                });
+                validar();
+            });
+            const fechaSiguiente = (fecha) => {
+                if (!fecha) return "";
+                const valor = new Date(`${fecha}T00:00:00Z`);
+                valor.setUTCDate(valor.getUTCDate() + 1);
+                return valor.toISOString().slice(0, 10);
+            };
+            const agregarValidacionFechas = (inicio, fin) => {
+                if (!inicio || !fin) return;
+                const validar = () => {
+                    fin.min = fechaSiguiente(inicio.value);
+                    const invalida = Boolean(inicio.value && fin.value && fin.value <= inicio.value);
+                    mostrarErrorCampo(fin, invalida
+                        ? "La fecha de finalización debe ser posterior a la fecha de inicio."
+                        : "");
+                };
+                [inicio, fin].forEach((campo) => {
+                    campo.addEventListener("input", validar);
+                    campo.addEventListener("change", validar);
+                });
+                validar();
+            };
+            agregarValidacionFechas(
+                document.getElementById("fecha-ingreso"),
+                document.getElementById("fecha-fin"));
+            document.querySelectorAll("[data-fecha-expedicion]").forEach((fechaExpedicion) => {
+                const formulario = fechaExpedicion.closest("form");
+                const fechaNacimiento = formulario?.querySelector("[data-fecha-nacimiento]");
+                const actualizarFechasPersonales = () => {
+                    const hoy = hoyLocal();
+                    fechaExpedicion.max = hoy;
+                    const referencia = fechaExpedicion.value || hoy;
+                    if (fechaNacimiento) {
+                        const [anio, mes, dia] = referencia.split("-").map(Number);
+                        const anioLimite = anio - 18;
+                        const diaLimite = Math.min(dia, new Date(anioLimite, mes, 0).getDate());
+                        const limiteEdad = `${anioLimite}-${String(mes).padStart(2, "0")}-${String(diaLimite).padStart(2, "0")}`;
+                        fechaNacimiento.max = limiteEdad;
+                    }
+                    mostrarErrorCampo(fechaExpedicion, fechaExpedicion.value > hoy
+                        ? "La fecha de expedición no puede ser futura." : "");
+                    if (fechaNacimiento) {
+                        const fechaLimite = fechaNacimiento.max;
+                        mostrarErrorCampo(fechaNacimiento, fechaNacimiento.value > hoy
+                            ? "La fecha de nacimiento no puede ser futura."
+                            : (fechaNacimiento.value && fechaNacimiento.value > fechaLimite
+                                ? "La persona debe tener al menos 18 años en la fecha de expedición."
+                                : ""));
+                    }
+                };
+                [fechaExpedicion, fechaNacimiento].filter(Boolean).forEach((campo) => {
+                    campo.addEventListener("input", actualizarFechasPersonales);
+                    campo.addEventListener("change", actualizarFechasPersonales);
+                });
+                actualizarFechasPersonales();
+            });
+            document.querySelectorAll("[data-fecha-ingreso]").forEach((campo) => {
+                const validar = () => {
+                    const hoy = hoyLocal();
+                    campo.min = hoy;
+                    mostrarErrorCampo(campo, campo.value && campo.value < hoy
+                        ? "La fecha de ingreso no puede ser anterior a hoy." : "");
+                };
+                campo.addEventListener("input", validar);
+                campo.addEventListener("change", validar);
+                validar();
+            });
+            const dialogoQr = document.getElementById("rrhh-qr-dialog");
+            const abrirQrSolicitado = () => {
+                if (window.location.hash === "#modal-qr" && dialogoQr && !dialogoQr.open) {
+                    dialogoQr.showModal();
+                }
+            };
+            window.addEventListener("hashchange", abrirQrSolicitado);
+            dialogoQr?.addEventListener("close", () => {
+                if (window.location.hash === "#modal-qr") {
+                    window.history.replaceState(null, "", window.location.pathname + window.location.search);
+                }
+            });
+            abrirQrSolicitado();
+            const confirmacionQr = document.getElementById("rrhh-qr-confirm-dialog");
+            document.querySelectorAll("[data-open-qr-confirm]").forEach((boton) => {
+                boton.addEventListener("click", () => confirmacionQr?.showModal());
+            });
+            document.querySelectorAll("[data-close-qr-confirm]").forEach((boton) => {
+                boton.addEventListener("click", () => confirmacionQr?.close());
+            });
+            confirmacionQr?.addEventListener("click", (evento) => {
+                if (evento.target === confirmacionQr) confirmacionQr.close();
+            });
+            if (window.location.hash === "#ficha-asignaciones"
+                    || new URLSearchParams(window.location.search).get("pestana") === "asignaciones") {
                 const panel = document.getElementById("rrhh-detail-assets");
-                panel.checked = true;
+                if (panel) panel.checked = true;
+                if (window.location.hash === "#ficha-asignaciones") {
+                    window.history.replaceState(null, "", window.location.pathname
+                        + window.location.search + "#ficha-empleado");
+                }
+                document.getElementById("ficha-empleado").scrollIntoView();
+            } else if (window.location.hash === "#ficha-auditoria"
+                    || new URLSearchParams(window.location.search).get("pestana") === "auditoria") {
+                const panel = document.getElementById("rrhh-detail-audit");
+                if (panel) panel.checked = true;
+                if (window.location.hash === "#ficha-auditoria") {
+                    window.history.replaceState(null, "", window.location.pathname
+                        + window.location.search + "#ficha-empleado");
+                }
+                document.getElementById("ficha-empleado").scrollIntoView();
+            } else if (new URLSearchParams(window.location.search).get("pestana") === "documentos") {
+                const panel = document.getElementById("rrhh-detail-documents");
+                if (panel) panel.checked = true;
                 document.getElementById("ficha-empleado").scrollIntoView();
             }
             document.querySelectorAll('input[type="file"][name="acta"]').forEach((input) => {
@@ -883,6 +1443,159 @@
                     const nombre = input.closest("form")?.querySelector("[data-acta-name]");
                     if (nombre) nombre.textContent = input.files?.[0]?.name || "Sin archivo seleccionado";
                 });
+            });
+            document.querySelectorAll("[data-photo-input]").forEach((input) => {
+                input.addEventListener("change", () => {
+                    const nombre = input.parentElement.querySelector("[data-photo-name]");
+                    if (nombre) {
+                        nombre.textContent = input.files?.[0]?.name
+                            || input.dataset.existingName
+                            || "Sin fotografía cargada";
+                    }
+                });
+            });
+
+            const dialogoMotivo = document.getElementById("rrhh-contract-reason-dialog");
+            const formularioMotivo = document.getElementById("rrhh-contract-reason-form");
+            const campoMotivo = document.getElementById("rrhh-contract-reason");
+            const etiquetaMotivo = document.getElementById("rrhh-contract-reason-label");
+            const tituloMotivo = document.getElementById("rrhh-contract-reason-title");
+            const botonConfirmarMotivo = document.getElementById("rrhh-contract-reason-submit");
+            document.querySelectorAll(".rrhh-contract-action-button").forEach((boton) => {
+                boton.addEventListener("click", () => {
+                    if (!dialogoMotivo || !formularioMotivo || !campoMotivo) return;
+                    formularioMotivo.action = boton.dataset.actionUrl;
+                    tituloMotivo.textContent = boton.dataset.actionTitle;
+                    etiquetaMotivo.textContent = boton.dataset.reasonLabel;
+                    botonConfirmarMotivo.textContent = boton.dataset.submitLabel;
+                    formularioMotivo.reset();
+                    campoMotivo.setCustomValidity("");
+                    dialogoMotivo.showModal();
+                    campoMotivo.focus();
+                });
+            });
+            document.querySelectorAll("[data-cerrar-motivo]").forEach((boton) => {
+                boton.addEventListener("click", () => dialogoMotivo?.close());
+            });
+            campoMotivo?.addEventListener("input", () => {
+                campoMotivo.setCustomValidity(campoMotivo.value.trim() ? "" : "El motivo es obligatorio.");
+            });
+            formularioMotivo?.addEventListener("submit", (evento) => {
+                if (!campoMotivo.value.trim()) {
+                    campoMotivo.setCustomValidity("El motivo es obligatorio.");
+                    campoMotivo.reportValidity();
+                    evento.preventDefault();
+                } else {
+                    campoMotivo.value = campoMotivo.value.trim();
+                }
+            });
+
+            const dialogoVistaPdf = document.getElementById("rrhh-pdf-preview-dialog");
+            const marcoVistaPdf = document.getElementById("rrhh-pdf-preview-frame");
+            const tituloVistaPdf = document.getElementById("rrhh-pdf-preview-title");
+            document.querySelectorAll("[data-pdf-preview-url]").forEach((enlace) => {
+                enlace.addEventListener("click", (evento) => {
+                    if (!dialogoVistaPdf || !marcoVistaPdf) return;
+                    evento.preventDefault();
+                    marcoVistaPdf.src = enlace.dataset.pdfPreviewUrl;
+                    tituloVistaPdf.textContent = enlace.dataset.pdfPreviewTitle || "Vista previa PDF";
+                    dialogoVistaPdf.showModal();
+                });
+            });
+            dialogoVistaPdf?.addEventListener("close", () => {
+                if (marcoVistaPdf) marcoVistaPdf.src = "about:blank";
+            });
+
+            document.querySelectorAll(".rrhh-document-replace-input").forEach((input) => {
+                input.addEventListener("change", () => {
+                    if (input.files?.length) input.form?.requestSubmit();
+                });
+            });
+            document.querySelectorAll("form[data-confirm-message]").forEach((formulario) => {
+                formulario.addEventListener("submit", (evento) => {
+                    if (!window.confirm(formulario.dataset.confirmMessage)) evento.preventDefault();
+                });
+            });
+
+            const formularioRenovacion = document.getElementById("rrhh-renew-contract-form");
+            if (formularioRenovacion) {
+                const inicio = document.getElementById("renovacion-inicio");
+                const fin = document.getElementById("renovacion-fin");
+                const avisoFechas = document.getElementById("rrhh-renew-date-note");
+                const fechaCubiertaHasta = formularioRenovacion.dataset.cubiertoHasta;
+                let inicioMinimo = "";
+                if (fechaCubiertaHasta) {
+                    const diaSiguiente = new Date(`${fechaCubiertaHasta}T00:00:00Z`);
+                    diaSiguiente.setUTCDate(diaSiguiente.getUTCDate() + 1);
+                    inicioMinimo = diaSiguiente.toISOString().slice(0, 10);
+                    inicio.min = inicioMinimo;
+                }
+                const validarFechas = () => {
+                    inicio.setCustomValidity("");
+                    fin.setCustomValidity("");
+                    if (inicioMinimo && inicio.value && inicio.value < inicioMinimo) {
+                        inicio.setCustomValidity(`La renovación debe iniciar desde ${inicioMinimo}.`);
+                    }
+                    const fechaMinimaFin = inicio.value || inicioMinimo;
+                    if (fechaMinimaFin) {
+                        const diaPosterior = new Date(`${fechaMinimaFin}T00:00:00Z`);
+                        diaPosterior.setUTCDate(diaPosterior.getUTCDate() + 1);
+                        fin.min = diaPosterior.toISOString().slice(0, 10);
+                    } else {
+                        fin.removeAttribute("min");
+                    }
+                    const fechaFinInvalida = fin.value && inicio.value && fin.value <= inicio.value;
+                    if (fechaFinInvalida) {
+                        fin.setCustomValidity("La fecha de vencimiento debe ser posterior al inicio.");
+                    }
+                    let ayudaFin = fin.closest(".rrhh-form-field")
+                        ?.querySelector(`[data-validacion-para="${fin.id}"]`);
+                    if (!ayudaFin) {
+                        ayudaFin = document.createElement("small");
+                        ayudaFin.className = "rrhh-field-feedback";
+                        ayudaFin.dataset.validacionPara = fin.id;
+                        ayudaFin.setAttribute("aria-live", "polite");
+                        fin.closest(".rrhh-form-field")?.append(ayudaFin);
+                    }
+                    ayudaFin.textContent = fechaFinInvalida ? fin.validationMessage : "";
+                    ayudaFin.hidden = !fechaFinInvalida;
+                    fin.setAttribute("aria-invalid", fechaFinInvalida ? "true" : "false");
+                    const ayudaInicio = inicio.closest(".rrhh-form-field")
+                        ?.querySelector(`[data-validacion-para="${inicio.id}"]`);
+                    if (ayudaInicio) {
+                        ayudaInicio.textContent = inicio.validationMessage;
+                        ayudaInicio.hidden = !inicio.validationMessage;
+                    } else if (inicio.validationMessage) {
+                        const nuevaAyuda = document.createElement("small");
+                        nuevaAyuda.className = "rrhh-field-feedback";
+                        nuevaAyuda.dataset.validacionPara = inicio.id;
+                        nuevaAyuda.setAttribute("aria-live", "polite");
+                        nuevaAyuda.textContent = inicio.validationMessage;
+                        inicio.closest(".rrhh-form-field")?.append(nuevaAyuda);
+                    }
+                    inicio.setAttribute("aria-invalid", inicio.validationMessage ? "true" : "false");
+                    if (avisoFechas) {
+                        avisoFechas.textContent = inicioMinimo
+                            ? `El nuevo contrato podrá iniciar desde ${inicioMinimo}; el periodo actual está cubierto hasta ${fechaCubiertaHasta}.`
+                            : "";
+                    }
+                };
+                inicio.addEventListener("input", validarFechas);
+                inicio.addEventListener("change", validarFechas);
+                fin.addEventListener("input", validarFechas);
+                fin.addEventListener("change", validarFechas);
+                formularioRenovacion.addEventListener("submit", (evento) => {
+                    validarFechas();
+                    if (!formularioRenovacion.reportValidity()) evento.preventDefault();
+                });
+                validarFechas();
+            }
+
+            const inputContratoFirmado = document.getElementById("renovacion-contrato-firmado");
+            inputContratoFirmado?.addEventListener("change", () => {
+                const nombre = document.getElementById("renovacion-contrato-firmado-nombre");
+                if (nombre) nombre.textContent = inputContratoFirmado.files?.[0]?.name
+                    || "Ningún archivo seleccionado";
             });
         })();
     </script>
@@ -931,7 +1644,16 @@
                     const habilitado = checkbox?.checked === true;
                     campo.disabled = !habilitado;
                     campo.required = habilitado;
-                    if (!habilitado) campo.value = "";
+                    if (!habilitado) {
+                        campo.value = "";
+                        campo.setCustomValidity("");
+                        const ayuda = campo.closest(".rrhh-form-field")
+                            ?.querySelector(`[data-validacion-para="${campo.id}"]`);
+                        if (ayuda) ayuda.hidden = true;
+                        campo.setAttribute("aria-invalid", "false");
+                    } else {
+                        campo.dispatchEvent(new Event("input", { bubbles: true }));
+                    }
                 });
             };
 
@@ -955,9 +1677,9 @@
                 const fechaIngreso = form.querySelector("#fecha-ingreso");
                 const fechaFin = form.querySelector("#fecha-fin");
                 const fechaFinInvalida = fechaIngreso.value && fechaFin.value
-                    && fechaFin.value < fechaIngreso.value;
+                    && fechaFin.value <= fechaIngreso.value;
                 fechaFin.setCustomValidity(fechaFinInvalida
-                    ? "La fecha de finalización debe ser igual o posterior a la fecha de ingreso."
+                    ? "La fecha de finalización debe ser posterior a la fecha de ingreso."
                     : "");
 
                 camposContratacion.forEach((campo) => {
@@ -970,7 +1692,7 @@
                 });
 
                 if (fechaFinInvalida) {
-                    faltantes.push("La fecha de finalización debe ser igual o posterior a la fecha de ingreso");
+                    faltantes.push("La fecha de finalización debe ser posterior a la fecha de ingreso");
                 }
 
                 form.querySelectorAll(".step-contract [data-adjunto-requerido]:checked")

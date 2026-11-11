@@ -721,6 +721,75 @@ body:has(.rrhh-registration-view:target) {
     font-size: 11px;
 }
 
+.rrhh-photo-field {
+    align-items: flex-start;
+}
+
+.rrhh-photo-upload {
+    display: grid;
+    width: 100%;
+    min-width: 0;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 8px 10px;
+}
+
+.rrhh-photo-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    clip-path: inset(50%);
+}
+
+.rrhh-photo-picker {
+    display: inline-flex;
+    min-height: 36px;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 0 13px;
+    border: 1px solid #b9d8c8;
+    border-radius: 8px;
+    background: #edf7f1;
+    color: #176b48;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 700;
+    transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+.rrhh-photo-picker:hover {
+    border-color: #176b48;
+    background: #e1f1e8;
+}
+
+.rrhh-photo-picker:active {
+    transform: translateY(1px);
+}
+
+.rrhh-photo-input:focus-visible + .rrhh-photo-picker {
+    outline: 3px solid rgb(23 107 72 / 28%);
+    outline-offset: 2px;
+}
+
+.rrhh-photo-name {
+    min-width: 0;
+    overflow: hidden;
+    color: #64736c;
+    font-size: 11px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.rrhh-photo-help {
+    color: #77847e;
+    font-size: 10px;
+    line-height: 1.4;
+}
+
 .rrhh-field-span-two {
     grid-column: span 2;
 }
@@ -763,6 +832,47 @@ body:has(.rrhh-registration-view:target) {
     color: #7a8799;
     font-size: 10px;
     line-height: 1.5;
+}
+
+#rrhh-no-adjuntos {
+    display: flex;
+    grid-column: 1 / -1;
+    align-items: center;
+    gap: 12px;
+    margin: 0;
+    padding: 14px 16px;
+    border: 1px dashed #b9c9dc;
+    border-radius: 10px;
+    background: linear-gradient(110deg, #f5f8fc, #fff);
+    color: #5e7087;
+    font-size: 11px;
+    line-height: 1.55;
+}
+
+#rrhh-no-adjuntos[hidden] {
+    display: none;
+}
+
+#rrhh-no-adjuntos > .material-symbols {
+    flex: 0 0 auto;
+    color: #6182a8;
+    font-size: 22px;
+}
+
+#rrhh-no-adjuntos strong {
+    color: #334c68;
+}
+
+.rrhh-field-feedback {
+    display: block;
+    margin-top: 5px;
+    color: #b33e3e;
+    font-size: 10px;
+    line-height: 1.4;
+}
+
+.rrhh-field-feedback[hidden] {
+    display: none;
 }
 
 .rrhh-concept-groups {
@@ -1809,8 +1919,10 @@ body:has(.rrhh-operation-view:target) {
 
 .rrhh-current-contract-heading {
     display: flex;
+    min-width: 0;
     align-items: flex-start;
     justify-content: space-between;
+    flex-wrap: wrap;
     gap: 12px;
 }
 
@@ -1830,6 +1942,8 @@ body:has(.rrhh-operation-view:target) {
 
 .rrhh-contract-status {
     display: inline-flex;
+    max-width: 100%;
+    min-width: 0;
     align-items: center;
     gap: 6px;
     padding: 5px 9px;
@@ -1839,14 +1953,20 @@ body:has(.rrhh-operation-view:target) {
     color: #28714d;
     font-size: 9px;
     font-weight: 750;
-    white-space: nowrap;
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
 
-.rrhh-contract-status > span {
+.rrhh-contract-status > span:first-child {
+    flex: 0 0 6px;
     width: 6px;
     height: 6px;
     border-radius: 50%;
     background: #329265;
+}
+
+.rrhh-contract-status > span:last-child {
+    min-width: 0;
 }
 
 .rrhh-contract-facts {
@@ -2278,9 +2398,224 @@ body:has(.rrhh-operation-view:target) {
     outline-offset: 2px;
 }
 
+.rrhh-contract-current-heading {
+    display: flex;
+    min-width: 0;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+}
+
+.rrhh-contract-current-heading .rrhh-contract-status {
+    max-width: 100%;
+    flex: 0 1 auto;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.rrhh-contract-history-table-wrap table {
+    min-width: 1050px;
+}
+
+.rrhh-documents-table {
+    min-width: 850px;
+}
+
+.rrhh-document-actions > div,
+.rrhh-document-replace-form,
+.rrhh-document-file-actions,
+.rrhh-assignment-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.rrhh-document-actions .btn-icon {
+    flex: 0 0 auto;
+}
+
+.rrhh-document-replace-picker {
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.rrhh-document-replace-picker input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+}
+
+.rrhh-document-replace-picker:focus-within {
+    outline: 3px solid rgba(39, 99, 181, .24);
+    outline-offset: 2px;
+}
+
+.rrhh-contract-actions {
+    display: flex;
+    min-width: 170px;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.rrhh-contract-actions .btn-icon {
+    flex: 0 0 auto;
+}
+
+.rrhh-contract-file-control {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.rrhh-file-picker {
+    overflow: hidden;
+}
+
+.rrhh-file-picker input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+}
+
+.rrhh-file-picker:focus-within {
+    outline: 3px solid rgba(39, 99, 181, .24);
+    outline-offset: 2px;
+}
+
+.rrhh-contract-file-name {
+    max-width: min(100%, 360px);
+    overflow: hidden;
+    color: #64748b;
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.rrhh-contract-reason-dialog {
+    position: fixed;
+    inset: 0;
+    width: min(480px, calc(100vw - 32px));
+    max-width: none;
+    margin: auto;
+    padding: 0;
+    border: 0;
+    border-radius: 14px;
+    box-shadow: 0 24px 70px rgba(15, 23, 42, .3);
+}
+
+.rrhh-contract-reason-dialog::backdrop {
+    background: rgba(15, 23, 42, .58);
+}
+
+.rrhh-pdf-preview-dialog {
+    position: fixed;
+    inset: 0;
+    display: none;
+    width: min(1100px, calc(100vw - 32px));
+    height: min(900px, calc(100dvh - 32px));
+    max-width: none;
+    max-height: calc(100dvh - 32px);
+    margin: auto;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    border-radius: 14px;
+    box-shadow: 0 24px 70px rgba(15, 23, 42, .3);
+}
+
+.rrhh-pdf-preview-dialog[open] {
+    display: flex;
+    flex-direction: column;
+}
+
+.rrhh-pdf-preview-dialog::backdrop {
+    background: rgba(15, 23, 42, .68);
+}
+
+.rrhh-pdf-preview-heading {
+    display: flex;
+    min-height: 58px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 18px;
+    border-bottom: 1px solid #e3e8ee;
+}
+
+.rrhh-pdf-preview-heading h2 {
+    margin: 0;
+    color: #384960;
+    font-size: 15px;
+}
+
+.rrhh-pdf-preview-dialog iframe {
+    width: 100%;
+    min-height: 0;
+    flex: 1;
+    border: 0;
+    background: #e8edf2;
+}
+
+.rrhh-contract-reason-form {
+    display: grid;
+    gap: 14px;
+    padding: 22px;
+}
+
+.rrhh-contract-reason-heading,
+.rrhh-contract-reason-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.rrhh-contract-reason-heading h2 {
+    margin: 0;
+}
+
+.rrhh-contract-reason-form > label {
+    font-weight: 700;
+}
+
+.rrhh-contract-reason-form textarea {
+    width: 100%;
+    resize: vertical;
+}
+
+.rrhh-contract-reason-actions {
+    justify-content: flex-end;
+}
+
 .rrhh-file-picker-hint {
     grid-column: 2 / -1;
     margin-top: -6px;
+}
+
+@media (max-width: 640px) {
+    .rrhh-contract-reason-form {
+        padding: 18px;
+    }
+
+    .rrhh-contract-reason-actions {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+
+    .rrhh-contract-reason-actions button {
+        width: 100%;
+    }
 }
 
 .rrhh-assignment-action {
@@ -2808,8 +3143,16 @@ body:has(.rrhh-operation-view:target) {
 .rrhh-virtual-photo {
     position: relative;
     display: grid;
-    width: 90px;
-    height: 90px;
+    box-sizing: border-box;
+    width: 120px;
+    min-width: 120px;
+    max-width: 120px;
+    height: 120px;
+    min-height: 120px;
+    max-height: 120px;
+    flex: 0 0 120px;
+    aspect-ratio: 1;
+    overflow: hidden;
     place-items: center;
     border: 2px solid #dbe3eb;
     border-radius: 50%;
@@ -2819,6 +3162,16 @@ body:has(.rrhh-operation-view:target) {
 
 .rrhh-virtual-photo > .material-symbols {
     font-size: 42px;
+}
+
+.rrhh-virtual-photo img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    border-radius: 50%;
+    object-fit: cover;
 }
 
 .rrhh-virtual-photo small {
@@ -2835,8 +3188,10 @@ body:has(.rrhh-operation-view:target) {
 
 .rrhh-card-state {
     position: absolute;
-    right: -53px;
-    bottom: 1px;
+    z-index: 1;
+    top: 74%;
+    left: 78%;
+    transform: translateY(35%);
     padding: 6px 9px;
     border: 1px solid #cfe6d8;
     border-radius: 6px;
@@ -2994,6 +3349,289 @@ body:has(.rrhh-operation-view:target) {
 
 .rrhh-qr-download .material-symbols {
     font-size: 15px;
+}
+
+.rrhh-qr-dialog {
+    position: fixed;
+    inset: 0;
+    width: min(94vw, 1000px);
+    max-height: min(92dvh, 840px);
+    margin: auto;
+    overflow: auto;
+    padding: 26px;
+    border: 1px solid #dfe7ef;
+    border-radius: 18px;
+    color: #23364d;
+    background: #f5f8fc;
+    box-shadow: 0 24px 70px #10243a40;
+}
+
+.rrhh-qr-dialog::backdrop {
+    background: rgb(16 36 58 / 58%);
+    backdrop-filter: blur(3px);
+}
+
+.rrhh-qr-dialog-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 20px;
+}
+
+.rrhh-qr-dialog-header h2 {
+    margin: 3px 0 2px;
+    color: #1d344e;
+    font-size: 21px;
+}
+
+.rrhh-qr-dialog-header p {
+    margin: 0;
+    color: #718096;
+    font-size: 12px;
+}
+
+.rrhh-qr-dialog-close {
+    flex: 0 0 auto;
+}
+
+.rrhh-qr-dialog-close button {
+    display: grid;
+    width: 36px;
+    height: 36px;
+    place-items: center;
+    border: 1px solid #dbe3ec;
+    border-radius: 9px;
+    background: #fff;
+    color: #52657b;
+    font-size: 23px;
+    cursor: pointer;
+}
+
+.rrhh-qr-manager-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(280px, .82fr);
+    align-items: center;
+    gap: 22px;
+    min-height: 440px;
+    padding: 18px;
+    border: 1px solid #e0e7f0;
+    border-radius: 14px;
+    background-color: #f1f5fa;
+    background-image: radial-gradient(#cbd7e5 0.8px, transparent 0.8px);
+    background-size: 16px 16px;
+}
+
+.rrhh-qr-card-section {
+    display: grid;
+    justify-items: center;
+    gap: 12px;
+}
+
+.rrhh-qr-virtual-card {
+    min-height: 420px;
+}
+
+.rrhh-qr-virtual-card .rrhh-virtual-card-person {
+    margin-top: 16px;
+}
+
+.rrhh-qr-virtual-card .rrhh-virtual-card-info {
+    gap: 6px;
+}
+
+.rrhh-qr-virtual-card .rrhh-virtual-card-info > * {
+    padding: 8px 10px;
+    font-size: 10px;
+}
+
+.rrhh-qr-virtual-card .rrhh-virtual-card-info strong {
+    font-size: 12px;
+}
+
+.rrhh-qr-virtual-card .rrhh-virtual-card-documents {
+    margin-top: auto;
+}
+
+.rrhh-qr-management-panel {
+    width: 100%;
+    min-height: 260px;
+    justify-content: center;
+    padding: 24px 20px;
+    box-shadow: 0 8px 20px rgb(34 55 78 / 6%);
+}
+
+.rrhh-qr-management-panel > .rrhh-step-kicker {
+    color: #53647b;
+}
+
+.rrhh-qr-image-frame,
+.rrhh-qr-empty {
+    display: grid;
+    width: 220px;
+    height: 220px;
+    max-width: 100%;
+    place-items: center;
+    border: 1px solid #e3eaf2;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.rrhh-qr-image-frame img {
+    width: 100%;
+    height: 100%;
+    padding: 12px;
+    object-fit: contain;
+    image-rendering: pixelated;
+}
+
+.rrhh-qr-empty {
+    align-content: center;
+    gap: 10px;
+    padding: 20px;
+    color: #8492a2;
+    text-align: center;
+}
+
+.rrhh-qr-empty .material-symbols {
+    font-size: 42px;
+}
+
+.rrhh-qr-empty strong {
+    color: #52647a;
+    font-size: 12px;
+}
+
+.rrhh-qr-management-panel > p {
+    max-width: 300px;
+    font-size: 10px;
+}
+
+.rrhh-qr-management-actions {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 4px;
+}
+
+.rrhh-qr-management-actions form {
+    margin: 0;
+}
+
+.rrhh-qr-management-actions .btn-primary {
+    min-height: 40px;
+    gap: 7px;
+    padding: 0 15px;
+    font-size: 11px;
+}
+
+.rrhh-qr-management-actions .rrhh-qr-download {
+    width: 40px;
+    height: 40px;
+    border-color: #b9d8c8;
+    border-radius: 9px;
+    color: #176b48;
+}
+
+.rrhh-qr-management-actions .rrhh-qr-download .material-symbols {
+    font-size: 20px;
+}
+
+.rrhh-qr-confirm-dialog {
+    position: fixed;
+    inset: 0;
+    width: min(92vw, 440px);
+    margin: auto;
+    padding: 30px;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    color: #293d54;
+    text-align: center;
+    box-shadow: 0 24px 70px #10243a55;
+}
+
+.rrhh-qr-confirm-dialog::backdrop {
+    background: rgb(16 36 58 / 68%);
+}
+
+.rrhh-qr-confirm-close {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    border: 0;
+    background: transparent;
+    color: #718096;
+    font-size: 25px;
+    cursor: pointer;
+}
+
+.rrhh-qr-confirm-icon {
+    color: #b7791f;
+    font-size: 38px;
+}
+
+.rrhh-qr-confirm-dialog h2 {
+    margin: 10px 0;
+    font-size: 19px;
+}
+
+.rrhh-qr-confirm-dialog p {
+    margin: 0;
+    color: #66768a;
+    font-size: 12px;
+    line-height: 1.65;
+}
+
+.rrhh-qr-confirm-dialog p strong {
+    color: #9c3d35;
+}
+
+.rrhh-qr-confirm-actions {
+    display: flex;
+    justify-content: center;
+    gap: 9px;
+    margin-top: 22px;
+}
+
+.rrhh-qr-confirm-actions form {
+    margin: 0;
+}
+
+.rrhh-qr-confirm-actions button {
+    min-height: 38px;
+    font-size: 10px;
+}
+
+@media (max-width: 720px) {
+    .rrhh-qr-dialog {
+        padding: 18px;
+    }
+
+    .rrhh-qr-manager-layout {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 16px;
+        padding: 12px;
+    }
+
+    .rrhh-qr-virtual-card {
+        min-height: 0;
+    }
+
+    .rrhh-qr-management-panel {
+        min-height: 0;
+    }
+}
+
+@media (max-width: 420px) {
+    .rrhh-qr-confirm-dialog {
+        padding: 26px 18px 20px;
+    }
+
+    .rrhh-qr-confirm-actions {
+        flex-direction: column-reverse;
+    }
 }
 
 @media (max-width: 900px) {
