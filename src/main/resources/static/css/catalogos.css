@@ -602,6 +602,39 @@ body.catalog-drawer-open {
     content: ' *';
 }
 
+.usuario-empleado-search {
+    width: 100%;
+}
+
+.usuario-empleado-option {
+    display: block;
+    width: 100%;
+    border: 0;
+    background: #fff;
+    text-align: left;
+}
+
+.usuario-empleado-sin-resultados {
+    cursor: default;
+}
+
+.usuario-empleado-seleccionado {
+    display: flex;
+    min-height: 42px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: #f8fafc;
+    color: #334155;
+}
+
+.usuario-empleado-seleccionado[hidden] {
+    display: none !important;
+}
+
 .catalog-drawer #presentacionesTable {
     width: 100%;
     min-width: 0;

@@ -86,20 +86,6 @@ document.addEventListener("DOMContentLoaded", () => {
         btnCancelar.addEventListener('click', cerrarModal);
     }
 
-    // Cerrar al hacer click sobre el fondo oscuro
-    modal.addEventListener("click", (e) => {
-        if (e.target === modal) {
-            cerrarModal();
-        }
-    });
-
-    // Cerrar con ESC
-    document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") {
-            cerrarModal();
-        }
-    });
-
     // cerrarModal()
     // - Qué hace: Cierra el modal de creación/edición de ordenes, restaura el overflow del body
     //   y resetea el identificador `ordenIdActual`.
@@ -149,6 +135,7 @@ function resetFormularioOrden() {
         if (campo) {
             campo.value = '';
             campo.disabled = false;
+            actualizarValidacionCampoProveedor(campo, "");
         }
     });
 
@@ -313,6 +300,61 @@ const campos = [
     email
 ];
 
+function actualizarValidacionCampoProveedor(campo, mensaje) {
+    const contenedor = campo.closest(".form-group") || campo.parentElement;
+    let ayuda = contenedor.querySelector(`[data-validacion-para="${campo.id}"]`);
+    if (!ayuda) {
+        ayuda = document.createElement("small");
+        ayuda.className = "proveedor-field-feedback";
+        ayuda.dataset.validacionPara = campo.id;
+        ayuda.setAttribute("aria-live", "polite");
+        contenedor.append(ayuda);
+    }
+    ayuda.textContent = mensaje;
+    ayuda.hidden = !mensaje;
+    campo.setCustomValidity(mensaje);
+    campo.setAttribute("aria-invalid", mensaje ? "true" : "false");
+}
+
+function validarCampoProveedor(campo) {
+    let mensaje = "";
+    if (campo.hasAttribute("data-solo-digitos") && campo.value !== "" && !/^[0-9]+$/.test(campo.value)) {
+        mensaje = "Este campo solo puede contener números.";
+    } else if (campo.hasAttribute("data-correo-valido")) {
+        const correo = campo.value.trim();
+        if (correo && !/^[^\s@]+@[^\s@]+\.[A-Za-z]{2,}$/.test(correo)) {
+            mensaje = "Correo no válido. Usa el formato ejemplo@ejemplo.com.";
+        }
+    }
+    actualizarValidacionCampoProveedor(campo, mensaje);
+}
+
+campos.forEach(campo => {
+    campo.addEventListener("beforeinput", evento => {
+        if (campo.hasAttribute("data-solo-digitos") && evento.data && !/^[0-9]+$/.test(evento.data)) {
+            evento.preventDefault();
+            actualizarValidacionCampoProveedor(campo, "Este campo solo puede contener números.");
+            campo.reportValidity();
+        }
+    });
+    campo.addEventListener("paste", evento => {
+        const texto = evento.clipboardData?.getData("text") || "";
+        if (campo.hasAttribute("data-solo-digitos") && !/^[0-9]+$/.test(texto)) {
+            evento.preventDefault();
+            actualizarValidacionCampoProveedor(campo, "Este campo solo puede contener números.");
+            campo.reportValidity();
+        }
+    });
+    campo.addEventListener("input", () => {
+        if (!proveedorNewPanel.hidden) validarCampoProveedor(campo);
+    });
+    campo.addEventListener("blur", () => {
+        if (proveedorNewPanel.hidden) return;
+        validarCampoProveedor(campo);
+        if (campo.validationMessage) campo.reportValidity();
+    });
+});
+
 function aplicarProveedor(proveedor) {
     delete nit.dataset.nitToastShown;
     idProveedorSeleccionado.value = proveedor.idProv || "";
@@ -324,6 +366,7 @@ function aplicarProveedor(proveedor) {
     email.value = proveedor.correo || "";
     campos.forEach(campo => {
         campo.disabled = false;
+        actualizarValidacionCampoProveedor(campo, "");
     });
     cerrarDropdownProveedor(true);
     mostrarTarjetaProveedor(false);
@@ -364,6 +407,7 @@ function mostrarFormularioProveedorNuevo(termino = buscarProveedor.value.trim())
     campos.forEach(campo => {
         campo.value = "";
         campo.disabled = false;
+        actualizarValidacionCampoProveedor(campo, "");
     });
     if (/^\d+$/.test(termino)) {
         nit.value = termino;
@@ -373,6 +417,7 @@ function mostrarFormularioProveedorNuevo(termino = buscarProveedor.value.trim())
     proveedorSearchSection.hidden = true;
     proveedorSelectedCard.hidden = true;
     proveedorNewPanel.hidden = false;
+    campos.forEach(validarCampoProveedor);
     nit.focus();
     nit.setSelectionRange(nit.value.length, nit.value.length);
 }
@@ -384,6 +429,7 @@ function volverABuscarProveedor() {
     campos.forEach(campo => {
         campo.value = "";
         campo.disabled = false;
+        actualizarValidacionCampoProveedor(campo, "");
     });
     proveedorNewPanel.hidden = true;
     proveedorSelectedCard.hidden = true;
@@ -403,6 +449,13 @@ function seleccionarProveedorNuevo() {
         nit.focus();
         return;
     }
+    validarCampoProveedor(telefono);
+    if (!telefono.checkValidity()) {
+        telefono.reportValidity();
+        telefono.focus();
+        return;
+    }
+    validarCampoProveedor(email);
     if (!email.checkValidity()) {
         mostrarToast("Ingrese un email válido para el proveedor.", "error");
         email.focus();
@@ -455,6 +508,7 @@ buscarProveedor.addEventListener("input", function () {
     campos.forEach(campo => {
         campo.disabled = false;
         campo.value = "";
+        actualizarValidacionCampoProveedor(campo, "");
     });
     if (/^\d+$/.test(termino)) {
         nit.value = termino;
@@ -2154,6 +2208,12 @@ async function abrirModalCambios(ordenId, numeroOrden = '', proveedor = '') {
 document.getElementById('btn-cerrar-cambios')?.addEventListener('click', () => {
     const modal = document.getElementById('modal-cambios-recepcion');
     if (modal) modal.style.display = 'none';
+});
+
+document.querySelectorAll('[data-modal-close-trigger]').forEach((button) => {
+    button.addEventListener('click', () => {
+        document.getElementById(button.dataset.modalCloseTrigger)?.click();
+    });
 });
 
 // applyFiltroModificadas()

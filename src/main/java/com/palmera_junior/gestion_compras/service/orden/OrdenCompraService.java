@@ -94,7 +94,10 @@ public class OrdenCompraService implements IOrdenCompraService {
      */
     @Override
     public Page<OrdenCompra> ordenesDeCompraPaginadas(Pageable pageable, String search, String fechaDesde,
-            String fechaHasta, Integer idSede, boolean esNacional, String estado, boolean soloModificadas) {
+            String fechaHasta, List<Integer> idsSedes, boolean esNacional, String estado, boolean soloModificadas) {
+        if (!esNacional && (idsSedes == null || idsSedes.isEmpty())) {
+            return Page.empty(pageable);
+        }
         Specification<OrdenCompra> spec = Specification.where((root, query, cb) -> cb.conjunction());
 
         if (search != null && !search.isBlank()) {
@@ -132,13 +135,14 @@ public class OrdenCompraService implements IOrdenCompraService {
             }
         }
 
-        if (!esNacional && idSede != null) {
+        if (!esNacional) {
             spec = spec.and((root, query, cb) -> {
+                query.distinct(true);
                 jakarta.persistence.criteria.Join<Object, Object> centroCostoJoin = root.join("centroCosto",
                         jakarta.persistence.criteria.JoinType.LEFT);
                 return cb.or(
-                        cb.equal(root.get("sede").get("idSede"), idSede),
-                        cb.equal(centroCostoJoin.get("sede").get("idSede"), idSede));
+                        root.get("sede").get("idSede").in(idsSedes),
+                        centroCostoJoin.get("sede").get("idSede").in(idsSedes));
             });
         }
 
@@ -492,16 +496,15 @@ public class OrdenCompraService implements IOrdenCompraService {
 
         Usuario usuarioAprobador = usuarioService.obtenerUsuarioAutenticado();
 
-        boolean esSuperAdministrador = usuarioAprobador.getPermisos().stream()
+        boolean esSuperAdministrador = usuarioAprobador.esSuperAdministrador() || usuarioAprobador.getPermisos().stream()
                 .anyMatch(permiso -> "PANEL_ADMINISTRACION".equals(permiso.getCodigo()));
 
-        boolean mismaSede = orden.getSede().getIdSede()
-                .equals(usuarioAprobador.getSede().getIdSede());
+        Integer idSedeOrden = orden.getSede() == null ? null : orden.getSede().getIdSede();
+        boolean mismaSede = usuarioAprobador.tieneSedeAsignada(idSedeOrden);
 
         boolean centroCostoPerteneceSede = orden.getCentroCosto() != null
                 && orden.getCentroCosto().getSede() != null
-                && orden.getCentroCosto().getSede().getIdSede()
-                        .equals(usuarioAprobador.getSede().getIdSede());
+                && usuarioAprobador.tieneSedeAsignada(orden.getCentroCosto().getSede().getIdSede());
 
         if (!esSuperAdministrador && !mismaSede && !centroCostoPerteneceSede) {
             throw new RuntimeException(

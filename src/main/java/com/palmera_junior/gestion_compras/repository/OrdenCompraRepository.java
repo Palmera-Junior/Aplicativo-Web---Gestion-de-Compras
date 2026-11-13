@@ -42,6 +42,12 @@ public interface OrdenCompraRepository extends JpaRepository<OrdenCompra, Intege
 
     long countByEstadoAndSedeIdSede(EstadoOrdenCompra estado, Integer idSede);
 
+    @Query("select count(distinct o) from OrdenCompra o left join o.centroCosto centroCosto "
+            + "where o.estado = :estado and (centroCosto.sede.idSede in :idsSedes "
+            + "or o.sede.idSede in :idsSedes)")
+    long countPendientesAprobacionPorSedes(@Param("estado") EstadoOrdenCompra estado,
+            @Param("idsSedes") List<Integer> idsSedes);
+
     /**
      * Qué hace: Cuenta las órdenes de compra en estado de borrador pendientes de aprobación
      * para una sede determinada, tomando en cuenta tanto las que pertenecen directamente a la sede
@@ -59,4 +65,3 @@ public interface OrdenCompraRepository extends JpaRepository<OrdenCompra, Intege
     @Query("select o from OrdenCompra o")
     List<OrdenCompra> findAllParaResumenAdministrativo();
 }
-

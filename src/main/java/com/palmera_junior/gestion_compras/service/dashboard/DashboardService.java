@@ -68,6 +68,7 @@ public class DashboardService implements IDashboardService {
         Usuario usuario = usuarioService.obtenerUsuarioAutenticado(authentication);
 
         Integer idSede = usuario.getSede() != null ? usuario.getSede().getIdSede() : null;
+        List<Integer> idsSedes = usuario.getIdsSedesAsignadas().stream().toList();
 
         boolean esNacional = usuario.getSede() != null
                 && "Sede Nacional".equalsIgnoreCase(usuario.getSede().getNombre());
@@ -83,11 +84,11 @@ public class DashboardService implements IDashboardService {
         }
 
         Page<OrdenCompra> ordenesCompra = ordenCompraService.ordenesDeCompraPaginadas(
-                PageRequest.of(page, size), q, fechaDesdeAplicada, fechaHastaAplicada, idSede, esNacional, estado,
+                PageRequest.of(page, size), q, fechaDesdeAplicada, fechaHastaAplicada, idsSedes, esNacional, estado,
                 soloModificadas);
 
         Page<OrdenCompra> ordenesCompraResumenPage = ordenCompraService.ordenesDeCompraPaginadas(
-                PageRequest.of(0, Integer.MAX_VALUE), q, fechaDesdeAplicada, fechaHastaAplicada, idSede, esNacional,
+                PageRequest.of(0, Integer.MAX_VALUE), q, fechaDesdeAplicada, fechaHastaAplicada, idsSedes, esNacional,
                 estado, soloModificadas);
 
         List<OrdenCompra> ordenesCompraResumen = ordenesCompraResumenPage.getContent();
@@ -140,4 +141,3 @@ public class DashboardService implements IDashboardService {
                 return orden != null && orden.getEstado() != EstadoOrdenCompra.ANULADA;
         }
 }
-

@@ -1202,10 +1202,12 @@ body {
     width: 32px;
     height: 32px;
     border: none;
+    border-bottom: 0;
     background: transparent;
     border-radius: 6px;
     cursor: pointer;
     margin: 0;
+    text-decoration: none;
 
 }
 
@@ -1673,10 +1675,30 @@ body {
 }
 
 .confirmacion-header h2 {
+    flex: 1;
     margin: 0;
     color: var(--brand-blue);
     font-size: 20px;
     font-weight: 700;
+}
+
+.confirmacion-cerrar {
+    display: grid;
+    width: 34px;
+    height: 34px;
+    flex: 0 0 auto;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--brand-blue);
+    font: inherit;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.confirmacion-cerrar:hover {
+    background: #f1f4fa;
 }
 
 .confirmacion-body {
@@ -1976,6 +1998,18 @@ body {
     font-weight: 600;
     margin-bottom: 5px;
     color: var(--text-muted);
+}
+
+.proveedor-field-feedback {
+    display: block;
+    margin-top: 5px;
+    color: #b33e3e;
+    font-size: 0.78rem;
+    line-height: 1.4;
+}
+
+.proveedor-field-feedback[hidden] {
+    display: none;
 }
 
 /* Tabla interna de Productos del Modal:
@@ -2312,6 +2346,28 @@ body {
     font-weight: 700;
     color: var(--brand-blue);
     line-height: 1.3;
+}
+
+.modal-recibir-oc-close {
+    display: inline-flex;
+    width: 34px;
+    height: 34px;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--brand-blue);
+    cursor: pointer;
+}
+
+.modal-recibir-oc-close:hover {
+    background: #f1f4fa;
+}
+
+.modal-recibir-oc-close .material-symbols {
+    font-size: 20px;
 }
 
 .modal-recibir-oc-body {

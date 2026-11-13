@@ -50,6 +50,61 @@ const formatearPesos = (valor) => {
 
 const valorNumerico = (valor) => valor.replace(/[^0-9]/g, '');
 
+function actualizarValidacionCampoProveedor(campo, mensaje) {
+    const contenedor = campo.closest('.form-grid-3 label') || campo.parentElement;
+    let ayuda = contenedor.querySelector(`[data-validacion-para="${campo.id}"]`);
+    if (!ayuda) {
+        ayuda = document.createElement('small');
+        ayuda.className = 'proveedor-field-feedback';
+        ayuda.dataset.validacionPara = campo.id;
+        ayuda.setAttribute('aria-live', 'polite');
+        contenedor.append(ayuda);
+    }
+    ayuda.textContent = mensaje;
+    ayuda.hidden = !mensaje;
+    campo.setCustomValidity(mensaje);
+    campo.setAttribute('aria-invalid', mensaje ? 'true' : 'false');
+}
+
+function validarCampoProveedor(campo) {
+    let mensaje = '';
+    if (campo.hasAttribute('data-solo-digitos') && campo.value !== '' && !/^[0-9]+$/.test(campo.value)) {
+        mensaje = 'Este campo solo puede contener números.';
+    } else if (campo.hasAttribute('data-correo-valido')) {
+        const correo = campo.value.trim();
+        if (correo && !/^[^\s@]+@[^\s@]+\.[A-Za-z]{2,}$/.test(correo)) {
+            mensaje = 'Correo no válido. Usa el formato ejemplo@ejemplo.com.';
+        }
+    }
+    actualizarValidacionCampoProveedor(campo, mensaje);
+}
+
+function configurarValidacionCampoProveedor(campo, panel) {
+    campo.addEventListener('beforeinput', (evento) => {
+        if (campo.hasAttribute('data-solo-digitos') && evento.data && !/^[0-9]+$/.test(evento.data)) {
+            evento.preventDefault();
+            actualizarValidacionCampoProveedor(campo, 'Este campo solo puede contener números.');
+            campo.reportValidity();
+        }
+    });
+    campo.addEventListener('paste', (evento) => {
+        const texto = evento.clipboardData?.getData('text') || '';
+        if (campo.hasAttribute('data-solo-digitos') && !/^[0-9]+$/.test(texto)) {
+            evento.preventDefault();
+            actualizarValidacionCampoProveedor(campo, 'Este campo solo puede contener números.');
+            campo.reportValidity();
+        }
+    });
+    campo.addEventListener('input', () => {
+        if (!panel.hidden) validarCampoProveedor(campo);
+    });
+    campo.addEventListener('blur', () => {
+        if (panel.hidden) return;
+        validarCampoProveedor(campo);
+        if (campo.validationMessage) campo.reportValidity();
+    });
+}
+
 function configurarCampoMoneda(campoVisible) {
     const nombre = campoVisible.dataset.moneyField;
     const campoOculto = campoVisible.form?.elements[nombre];
@@ -194,6 +249,10 @@ function configurarEdicionDetallesPrima(editable) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('dialog').forEach((modal) => {
+        modal.addEventListener('cancel', (event) => event.preventDefault());
+    });
+
     const dialog = document.getElementById('poliza-modal');
     const detailDialog = document.getElementById('poliza-detalle-modal');
     const activarDialog = document.getElementById('poliza-activar-modal');
@@ -203,6 +262,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const terminarDialog = document.getElementById('poliza-terminar-modal');
     const terminarForm = document.getElementById('poliza-terminar-form');
     const terminarMotivo = terminarForm?.elements.motivoTerminacion;
+    const dialogoVistaPdf = document.getElementById('poliza-pdf-preview-dialog');
+    const marcoVistaPdf = document.getElementById('poliza-pdf-preview-frame');
+    const tituloVistaPdf = document.getElementById('poliza-pdf-preview-title');
     const renovarDialog = document.getElementById('poliza-renovar-modal');
     const renovarForm = document.getElementById('poliza-renovar-form');
     const renovarInicio = document.getElementById('poliza-renovacion-inicio');
@@ -223,7 +285,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const archivoInput = form?.elements.contratoAdjunto;
     const archivoActual = document.getElementById('poliza-archivo-actual');
     const nombreArchivoActual = document.getElementById('poliza-archivo-nombre');
-    const enlaceArchivoActual = document.getElementById('poliza-archivo-enlace');
+    const verArchivoActual = document.getElementById('poliza-archivo-ver');
+    const descargarArchivoActual = document.getElementById('poliza-archivo-descargar');
     const eliminarArchivoButton = document.getElementById('btn-eliminar-archivo-poliza');
     const eliminarArchivoInput = form?.elements.eliminarContratoAdjunto;
     const agregarDetalleButton = document.getElementById('btn-agregar-detalle-prima');
@@ -249,6 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('poliza-prov-telefono'),
         document.getElementById('poliza-prov-correo')
     ];
+    camposProveedorNuevo.forEach((campo) => configurarValidacionCampoProveedor(campo, proveedorNuevoPanel));
     const createAction = form?.getAttribute('action');
     const fechaDesde = document.getElementById('poliza-fecha-desde');
     const fechaHasta = document.getElementById('poliza-fecha-hasta');
@@ -315,6 +379,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const nombreProveedor = document.getElementById('poliza-prov-nombre');
         if (/^\d+$/.test(termino)) nitProveedor.value = termino;
         else nombreProveedor.value = termino;
+        camposProveedorNuevo.forEach(validarCampoProveedor);
         proveedorSearchContainer.hidden = true;
         crearProveedorButton.hidden = true;
         proveedorCard.hidden = true;
@@ -334,6 +399,7 @@ document.addEventListener('DOMContentLoaded', () => {
         proveedorNuevoPanel.hidden = true;
         proveedorPolizaField?.classList.remove('proveedor-nuevo-abierto');
         limpiarProveedorNuevo();
+        camposProveedorNuevo.forEach((campo) => actualizarValidacionCampoProveedor(campo, ''));
         proveedorCard.hidden = true;
         cambiarProveedorButton.disabled = false;
     };
@@ -378,7 +444,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         detalleProveedor.textContent = `NIT: ${proveedor.nit || ''}${proveedor.ciudad ? ` · ${proveedor.ciudad}` : ''}`;
                         opcion.append(nombreProveedor, detalleProveedor);
                         opcion.addEventListener('mousedown', (event) => event.preventDefault());
-                        opcion.addEventListener('click', () => mostrarTarjetaProveedor(proveedor));
+                        opcion.addEventListener('click', () => {
+                            camposProveedorNuevo.forEach((campo) => actualizarValidacionCampoProveedor(campo, ''));
+                            mostrarTarjetaProveedor(proveedor);
+                        });
                         proveedorDropdown.appendChild(opcion);
                     });
                 }
@@ -439,11 +508,18 @@ document.addEventListener('DOMContentLoaded', () => {
             campoIncompleto.focus();
             return;
         }
+        camposProveedorNuevo.forEach(validarCampoProveedor);
         const nitProveedor = document.getElementById('poliza-prov-nit');
         const correoProveedor = document.getElementById('poliza-prov-correo');
         if (!/^\d+$/.test(nitProveedor.value.trim())) {
             mostrarToast('El NIT del proveedor solo debe contener números.', 'error');
             nitProveedor.focus();
+            return;
+        }
+        const telefonoProveedor = document.getElementById('poliza-prov-telefono');
+        if (!telefonoProveedor.checkValidity()) {
+            telefonoProveedor.reportValidity();
+            telefonoProveedor.focus();
             return;
         }
         if (!correoProveedor.checkValidity()) {
@@ -523,13 +599,41 @@ document.addEventListener('DOMContentLoaded', () => {
                     fila.appendChild(celda);
                 });
                 const documentos = document.createElement('td');
-                (renovacion.archivos || []).forEach((archivo, indice) => {
-                    if (indice > 0) documentos.appendChild(document.createTextNode(', '));
-                    const enlace = document.createElement('a');
-                    enlace.href = archivo.url;
-                    enlace.textContent = archivo.nombre;
-                    enlace.setAttribute('download', '');
-                    documentos.appendChild(enlace);
+                documentos.classList.add('poliza-documentos-cell');
+                (renovacion.archivos || []).forEach((archivo) => {
+                    const documento = document.createElement('div');
+                    documento.className = 'poliza-documento';
+                    const nombre = document.createElement('span');
+                    nombre.className = 'poliza-documento-nombre';
+                    nombre.textContent = archivo.nombre;
+                    const acciones = document.createElement('div');
+                    acciones.className = 'poliza-documento-acciones';
+                    const ver = document.createElement('button');
+                    ver.className = 'btn-icon';
+                    ver.type = 'button';
+                    ver.dataset.polizaPdfPreviewUrl = crearUrlVistaPrevia(archivo.url);
+                    ver.dataset.polizaPdfPreviewTitle = archivo.nombre;
+                    ver.title = `Ver ${archivo.nombre}`;
+                    ver.setAttribute('aria-label', `Ver ${archivo.nombre}`);
+                    const iconoVer = document.createElement('span');
+                    iconoVer.className = 'material-symbols';
+                    iconoVer.setAttribute('aria-hidden', 'true');
+                    iconoVer.textContent = 'visibility';
+                    ver.appendChild(iconoVer);
+                    const descargar = document.createElement('a');
+                    descargar.className = 'btn-icon';
+                    descargar.href = archivo.url;
+                    descargar.download = '';
+                    descargar.title = `Descargar ${archivo.nombre}`;
+                    descargar.setAttribute('aria-label', `Descargar ${archivo.nombre}`);
+                    const iconoDescargar = document.createElement('span');
+                    iconoDescargar.className = 'material-symbols';
+                    iconoDescargar.setAttribute('aria-hidden', 'true');
+                    iconoDescargar.textContent = 'download';
+                    descargar.appendChild(iconoDescargar);
+                    acciones.append(ver, descargar);
+                    documento.append(nombre, acciones);
+                    documentos.appendChild(documento);
                 });
                 fila.appendChild(documentos);
                 renovacionesBody.appendChild(fila);
@@ -538,6 +642,12 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             mostrarToast(error.message || 'No fue posible consultar las renovaciones.', 'error');
         }
+    };
+
+    const crearUrlVistaPrevia = (url) => {
+        const urlVistaPrevia = new URL(url, window.location.origin);
+        urlVistaPrevia.searchParams.set('inline', 'true');
+        return urlVistaPrevia.toString();
     };
 
     document.querySelectorAll('.poliza-money').forEach((celda) => {
@@ -774,10 +884,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         if (eliminarArchivoInput) eliminarArchivoInput.value = 'false';
         if (archivoActual) archivoActual.style.display = 'none';
-        if (enlaceArchivoActual) {
-            enlaceArchivoActual.hidden = true;
-            enlaceArchivoActual.href = '#';
-        }
+        if (verArchivoActual) verArchivoActual.hidden = true;
+        if (descargarArchivoActual) descargarArchivoActual.hidden = true;
         if (archivoInput) {
             archivoInput.disabled = false;
             archivoInput.required = true;
@@ -809,9 +917,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const esBorrador = button.dataset.estado === 'BORRADOR';
         const esSuperAdministrador = rolUsuarioActual === 'SUPERADMINISTRADOR';
         const esCreador = button.dataset.creadorId === usuarioActualId;
-        const sedePolizaId = button.dataset.sedeId || button.closest('tr[data-poliza-id]')?.dataset.sedeId || '';
-        const esSedePrincipal = sedePolizaId === sedeActualId;
-        const puedeEditar = esBorrador && (esSuperAdministrador || esCreador || esSedePrincipal);
+        const puedeEditar = esBorrador && (esSuperAdministrador || esCreador);
         const campos = form?.elements;
         if (!form || !campos) return;
 
@@ -866,9 +972,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (archivoActual) archivoActual.style.display = nombreArchivo ? '' : 'none';
         if (archivoInput) archivoInput.style.display = nombreArchivo ? 'none' : '';
         if (nombreArchivoActual) nombreArchivoActual.textContent = nombreArchivo || 'Sin archivo adjunto';
-        if (enlaceArchivoActual) {
-            enlaceArchivoActual.href = button.dataset.urlContrato || '#';
-            enlaceArchivoActual.hidden = !nombreArchivo;
+        const urlContrato = button.dataset.urlContrato || '#';
+        if (verArchivoActual) {
+            verArchivoActual.hidden = !nombreArchivo;
+        }
+        if (descargarArchivoActual) {
+            descargarArchivoActual.href = nombreArchivo ? urlContrato : '#';
+            descargarArchivoActual.hidden = !nombreArchivo;
+        }
+        if (verArchivoActual) {
+            verArchivoActual.dataset.polizaPdfPreviewUrl = nombreArchivo ? crearUrlVistaPrevia(urlContrato) : '';
+            verArchivoActual.dataset.polizaPdfPreviewTitle = nombreArchivo;
         }
 
         form.querySelectorAll('input, select, textarea').forEach((control) => {
@@ -934,11 +1048,25 @@ document.addEventListener('DOMContentLoaded', () => {
         abrir(dialog);
         if (esBorrador && !puedeEditar) {
             mostrarToast(
-                'Esta póliza no es suya. Por tanto, no puede editarla.',
+                'Solo el creador o un superadministrador puede editar esta póliza.',
                 'info'
             );
         }
     };
+
+    document.addEventListener('click', (event) => {
+        const botonVistaPrevia = event.target.closest('[data-poliza-pdf-preview-url]');
+        if (!botonVistaPrevia || !dialogoVistaPdf || !marcoVistaPdf) return;
+        marcoVistaPdf.src = botonVistaPrevia.dataset.polizaPdfPreviewUrl;
+        if (tituloVistaPdf) {
+            tituloVistaPdf.textContent = botonVistaPrevia.dataset.polizaPdfPreviewTitle || 'Vista previa PDF';
+        }
+        dialogoVistaPdf.showModal();
+    });
+
+    dialogoVistaPdf?.addEventListener('close', () => {
+        if (marcoVistaPdf) marcoVistaPdf.src = 'about:blank';
+    });
 
     openButton?.addEventListener('click', () => {
         prepararNueva();
@@ -954,7 +1082,8 @@ document.addEventListener('DOMContentLoaded', () => {
     eliminarArchivoButton?.addEventListener('click', () => {
         if (eliminarArchivoInput) eliminarArchivoInput.value = 'true';
         if (archivoActual) archivoActual.style.display = 'none';
-        if (enlaceArchivoActual) enlaceArchivoActual.hidden = true;
+        if (verArchivoActual) verArchivoActual.hidden = true;
+        if (descargarArchivoActual) descargarArchivoActual.hidden = true;
         if (archivoInput) {
             archivoInput.disabled = false;
             archivoInput.required = true;
@@ -967,6 +1096,9 @@ document.addEventListener('DOMContentLoaded', () => {
         event.preventDefault();
         if (!saveButton) return;
         const proveedorNuevoCompleto = camposProveedorNuevo.every((campo) => campo?.value.trim());
+        if (!proveedorId.value && proveedorNuevoCompleto) {
+            camposProveedorNuevo.forEach(validarCampoProveedor);
+        }
         if (!proveedorId.value && !proveedorNuevoCompleto) {
             mostrarToast('Seleccione un proveedor existente o complete los seis datos para crear uno nuevo.', 'error');
             if (proveedorNuevoPanel.hidden) {
@@ -1047,7 +1179,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.js-confirm-action').forEach((actionForm) => {
         actionForm.addEventListener('submit', async (event) => {
             event.preventDefault();
-            const esAprobacion = actionForm.action.endsWith('/aprobar');
+            const esAprobacion = new URL(actionForm.action, window.location.href).pathname.endsWith('/aprobar');
             const confirmar = await mostrarConfirmacion(
                 actionForm.dataset.confirm || '¿Confirmar esta acción?',
                 esAprobacion ? '¿Aprobar póliza?' : '¿Anular póliza?',
@@ -1058,7 +1190,4 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    [dialog, detailDialog, activarDialog, terminarDialog, renovarDialog].forEach((modal) => modal?.addEventListener('click', (event) => {
-        if (event.target === modal) cerrar(modal);
-    }));
 });

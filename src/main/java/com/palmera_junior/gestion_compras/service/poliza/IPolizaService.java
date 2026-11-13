@@ -17,7 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 public interface IPolizaService {
 
     Page<Poliza> polizasPaginadas(Pageable pageable, String search, String fechaDesde,
-            String fechaHasta, Integer idSede, boolean esNacional, String estado);
+            String fechaHasta, List<Integer> idsSedes, boolean consultarTodasLasSedes, String estado);
 
     List<Poliza> listarPolizas();
 

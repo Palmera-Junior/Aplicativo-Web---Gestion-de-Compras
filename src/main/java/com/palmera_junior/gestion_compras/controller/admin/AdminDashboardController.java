@@ -33,7 +33,6 @@ import com.palmera_junior.gestion_compras.entity.Sede;
 import com.palmera_junior.gestion_compras.entity.Usuario;
 import com.palmera_junior.gestion_compras.entity.Permiso;
 import com.palmera_junior.gestion_compras.repository.CategoriaRepository;
-import com.palmera_junior.gestion_compras.repository.EmpleadoRepository;
 import com.palmera_junior.gestion_compras.repository.RolRepository;
 import com.palmera_junior.gestion_compras.repository.PermisoRepository;
 import com.palmera_junior.gestion_compras.service.catalogo.IProductoService;
@@ -67,7 +66,6 @@ public class AdminDashboardController {
     private final CategoriaRepository categoriaRepository;
     private final RolRepository rolRepository;
     private final PermisoRepository permisoRepository;
-    private final EmpleadoRepository empleadoRepository;
 
     /**
      * Constructor para inyección de dependencias de todos los servicios de administración.
@@ -76,7 +74,7 @@ public class AdminDashboardController {
             IProductoService productoService, ISedeService sedeService, ICentroCostoService centroCostoService,
             IOrdenCompraService ordenCompraService, IPolizaService polizaService,
             CategoriaRepository categoriaRepository, RolRepository rolRepository,
-            PermisoRepository permisoRepository, EmpleadoRepository empleadoRepository) {
+            PermisoRepository permisoRepository) {
         this.proveedorService = proveedorService;
         this.usuarioService = usuarioService;
         this.productoService = productoService;
@@ -87,7 +85,6 @@ public class AdminDashboardController {
         this.categoriaRepository = categoriaRepository;
         this.rolRepository = rolRepository;
         this.permisoRepository = permisoRepository;
-        this.empleadoRepository = empleadoRepository;
     }
 
     /**
@@ -258,7 +255,7 @@ public class AdminDashboardController {
                 ok = u.getRol() != null && u.getRol().getCodigo().equalsIgnoreCase(rolUsuario);
             }
             if (ok && sedeIdUsuario != null) {
-                ok = u.getSede() != null && u.getSede().getIdSede().equals(sedeIdUsuario);
+                ok = u.tieneSedeAsignada(sedeIdUsuario);
             }
             return ok;
         }).collect(Collectors.toList());
@@ -318,7 +315,6 @@ public class AdminDashboardController {
 
         model.addAttribute("proveedores", proveedores);
         model.addAttribute("usuarios", usuarios);
-        model.addAttribute("empleados", empleadoRepository.findAllByOrderByPrimerApellidoAscPrimerNombreAsc());
         model.addAttribute("ordenesCompra", ordenesCompra);
         model.addAttribute("ordenesCompraTarjeta", ordenesCompraTarjeta);
         model.addAttribute("sedeOrdenesSeleccionada", sedeOrdenes);

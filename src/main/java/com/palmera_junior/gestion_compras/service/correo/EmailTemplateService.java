@@ -31,6 +31,17 @@ public class EmailTemplateService {
 
     /** Renderiza el aviso HTML de una póliza en borrador para un aprobador específico. */
     public String generarCorreoNuevaPolizaPendiente(Poliza poliza, String nombreAprobador, String sedeAprobador) {
+        return generarCorreoPolizaPendiente(poliza, nombreAprobador, sedeAprobador, false);
+    }
+
+    /** Renderiza el aviso de que una póliza modificada requiere una nueva aprobación. */
+    public String generarCorreoPolizaModificadaPendiente(
+            Poliza poliza, String nombreAprobador, String sedeAprobador) {
+        return generarCorreoPolizaPendiente(poliza, nombreAprobador, sedeAprobador, true);
+    }
+
+    private String generarCorreoPolizaPendiente(
+            Poliza poliza, String nombreAprobador, String sedeAprobador, boolean modificada) {
         Context context = new Context(new Locale("es", "CO"));
         String numeroPoliza = poliza.getNumeroPoliza();
         if (numeroPoliza == null || numeroPoliza.isBlank()) {
@@ -43,7 +54,7 @@ public class EmailTemplateService {
         context.setVariable("nombreAprobador", nombreAprobador);
         context.setVariable("numeroPoliza", numeroPoliza);
         context.setVariable("numeroContrato", poliza.getNumeroContrato());
-        context.setVariable("tituloResumen", "Nueva Póliza");
+        context.setVariable("tituloResumen", modificada ? "Póliza modificada" : "Nueva Póliza");
         context.setVariable("cliente", poliza.getCliente());
         context.setVariable("proveedor", poliza.getProveedor() == null ? "N/A" : poliza.getProveedor().getNombre());
         context.setVariable("sede", sedeAprobador);
@@ -53,10 +64,18 @@ public class EmailTemplateService {
         context.setVariable("fechaCreacion", poliza.getFechaCreacion());
         context.setVariable("urlRevision", plataformaUrl.replaceAll("/$", "") + "/polizas");
         context.setVariable("encabezado", "SISTEMA DE GESTIÓN · PÓLIZAS");
-        context.setVariable("etiqueta", "◷  PENDIENTE DE TU APROBACIÓN");
-        context.setVariable("mensaje", "Se ha creado una nueva póliza que requiere tu revisión y aprobación antes de continuar el proceso. A continuación encontrarás el resumen:");
-        context.setVariable("textoBoton", "Revisar y aprobar póliza");
-        context.setVariable("advertencia", "Esta póliza permanecerá en estado Borrador hasta que sea aprobada. Si no se gestiona a tiempo, puede afectar el inicio de la vigencia del contrato.");
+        context.setVariable("etiqueta", modificada
+                ? "◷  REQUIERE UNA NUEVA APROBACIÓN"
+                : "◷  PENDIENTE DE TU APROBACIÓN");
+        context.setVariable("mensaje", modificada
+                ? "La póliza fue modificada y las aprobaciones anteriores se reiniciaron. Ingresa nuevamente al sistema para revisar los cambios y aprobarla."
+                : "Se ha creado una nueva póliza que requiere tu revisión y aprobación antes de continuar el proceso. A continuación encontrarás el resumen:");
+        context.setVariable("textoBoton", modificada
+                ? "Revisar y aprobar nuevamente"
+                : "Revisar y aprobar póliza");
+        context.setVariable("advertencia", modificada
+                ? "Debes ingresar nuevamente al sistema para revisar los cambios y registrar otra vez la aprobación de esta póliza."
+                : "Esta póliza permanecerá en estado Borrador hasta que sea aprobada. Si no se gestiona a tiempo, puede afectar el inicio de la vigencia del contrato.");
         return templateEngine.process("poliza-pendiente-aprobacion", context);
     }
 

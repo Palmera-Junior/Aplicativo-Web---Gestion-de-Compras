@@ -43,7 +43,7 @@ public class CorreoPolizaTerminadaService {
             Set<String> correos = ConcurrentHashMap.newKeySet();
             notificarUsuario(poliza.getUsuario(), poliza, correos);
             if (idsSedes != null && !idsSedes.isEmpty()) {
-                usuarioRepository.findByRolCodigoAndSedeIdSedeIn("APROBADOR", idsSedes)
+                usuarioRepository.findDistinctByRolCodigoAndSedesIdSedeIn("APROBADOR", idsSedes)
                         .forEach(aprobador -> notificarUsuario(aprobador, poliza, correos));
             }
         } catch (Exception exception) {

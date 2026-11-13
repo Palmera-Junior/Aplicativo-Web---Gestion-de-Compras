@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Locale;
+import java.util.Objects;
 import jakarta.mail.internet.AddressException;
 import jakarta.mail.internet.InternetAddress;
 
@@ -119,8 +120,8 @@ public class UsuarioService implements IUsuarioService {
    }
 
    /**
-    * Qué hace: Resuelve la entidad {@link Usuario} subyacente según el tipo de principal de seguridad.
-    * A dónde apunta: Instancia de {@link UsuarioPrincipal} o {@link CustomOAuth2User}.
+    * Qué hace: Usa el principal para identificar al usuario y lo vuelve a cargar desde la base de datos.
+    * A dónde apunta: {@link UsuarioPrincipal}, {@link CustomOAuth2User} y {@link UsuarioRepository}.
     */
    @Override
    public Usuario obtenerUsuarioAutenticado(Authentication authentication) {
@@ -129,14 +130,22 @@ public class UsuarioService implements IUsuarioService {
        }
 
        Object principal = authentication.getPrincipal();
+       String nombreUsuario;
        if (principal instanceof UsuarioPrincipal usuarioPrincipal) {
-           return usuarioPrincipal.getUsuario();
-       }
-       if (principal instanceof CustomOAuth2User oauthUser) {
-           return oauthUser.getUsuario();
+           nombreUsuario = usuarioPrincipal.getUsername();
+       } else if (principal instanceof CustomOAuth2User oauthUser) {
+           nombreUsuario = oauthUser.getUsuario().getNombreUsuario();
+       } else {
+           throw new IllegalStateException("Tipo de autenticación no soportado.");
        }
 
-       throw new IllegalStateException("Tipo de autenticación no soportado.");
+       Usuario usuario = usuarioRepository.findByNombreUsuario(nombreUsuario)
+               .orElseThrow(() -> new IllegalStateException(
+                       "El usuario autenticado ya no existe en el sistema."));
+       if (usuario.esSuperAdministrador()) {
+           usuario.setPermisosSuperAdministrador(new java.util.LinkedHashSet<>(permisoRepository.findAll()));
+       }
+       return usuario;
    }
 
    /**
@@ -193,7 +202,7 @@ public class UsuarioService implements IUsuarioService {
    @Override
    @Transactional
    public Usuario guardarUsuario(Integer idUsuario, Integer empleadoId, String nombreUsuario,
-           String contrasena, String email, Integer rolId, Integer sedeId) {
+           String contrasena, String email, Integer rolId, Integer sedeId, List<Integer> sedeIds) {
        final String nombreUsuarioTrim = normalizar(nombreUsuario);
        final String emailOriginal = normalizar(email);
        final String emailTrim = emailOriginal == null ? null : emailOriginal.toLowerCase(Locale.ROOT);
@@ -225,7 +234,7 @@ public class UsuarioService implements IUsuarioService {
                throw new IllegalArgumentException("El correo electrónico ya está en uso.");
            }
            Sede sede = sedeRepository.findById(sedeId)
-                   .orElseThrow(() -> new IllegalArgumentException("La sede seleccionada no es válida."));
+                   .orElseThrow(() -> new IllegalArgumentException("La sede principal seleccionada no es válida."));
            Usuario usuario = new Usuario();
            usuario.setEmpleado(empleado);
            usuario.setNombreUsuario(nombreUsuarioTrim);
@@ -233,11 +242,19 @@ public class UsuarioService implements IUsuarioService {
            usuario.setContraseña(passwordEncoder.encode(contrasenaTrim));
            usuario.setRol(rol);
            usuario.setSede(sede);
+           usuario.setSedes(resolverSedesAsignadas(sedeId, sedeIds));
            return usuarioRepository.save(usuario);
        }
 
        Usuario usuario = usuarioRepository.findById(idUsuario)
                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado para actualizar."));
+       Integer empleadoActualId = usuario.getEmpleado() == null
+               ? null
+               : usuario.getEmpleado().getIdEmpleado();
+       if (!Objects.equals(empleadoActualId, empleadoId)) {
+           throw new IllegalArgumentException(
+                   "No se puede cambiar el empleado asociado a un usuario existente.");
+       }
        if (usuarioRepository.existsByEmpleado_IdEmpleadoAndIdUsuarioNot(empleadoId, idUsuario)) {
            throw new IllegalArgumentException("El empleado seleccionado ya tiene otra cuenta de usuario.");
        }
@@ -249,7 +266,7 @@ public class UsuarioService implements IUsuarioService {
        }
 
        Sede sede = sedeRepository.findById(sedeId)
-               .orElseThrow(() -> new IllegalArgumentException("La sede seleccionada no es válida."));
+               .orElseThrow(() -> new IllegalArgumentException("La sede principal seleccionada no es válida."));
        usuario.setEmpleado(empleado);
        boolean cambioCredencial = !emailTrim.equalsIgnoreCase(usuario.getEmail())
                || StringUtils.hasText(contrasenaTrim);
@@ -263,7 +280,24 @@ public class UsuarioService implements IUsuarioService {
        }
        usuario.setRol(rol);
        usuario.setSede(sede);
+       usuario.setSedes(resolverSedesAsignadas(sedeId, sedeIds));
        return usuarioRepository.save(usuario);
+   }
+
+   private java.util.Set<Sede> resolverSedesAsignadas(Integer sedePrincipalId, List<Integer> sedeIds) {
+       java.util.Set<Integer> ids = new java.util.LinkedHashSet<>();
+       if (sedeIds != null) {
+           sedeIds.stream().filter(java.util.Objects::nonNull).forEach(ids::add);
+       }
+       ids.add(sedePrincipalId);
+       List<Sede> sedes = sedeRepository.findAllById(ids);
+       java.util.Map<Integer, Sede> sedesPorId = sedes.stream()
+               .collect(java.util.stream.Collectors.toMap(Sede::getIdSede, sede -> sede));
+       if (sedesPorId.size() != ids.size()) {
+           throw new IllegalArgumentException("Una o más sedes asignadas no son válidas.");
+       }
+       return ids.stream().map(sedesPorId::get)
+               .collect(java.util.stream.Collectors.toCollection(java.util.LinkedHashSet::new));
    }
 
    @Override
@@ -275,6 +309,11 @@ public class UsuarioService implements IUsuarioService {
 
        Usuario usuario = usuarioRepository.findById(idUsuario)
                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado."));
+       if (usuario.esSuperAdministrador()) {
+           usuario.getPermisosDirectos().clear();
+           usuario.setPermisosSuperAdministrador(new java.util.LinkedHashSet<>(permisoRepository.findAll()));
+           return usuarioRepository.save(usuario);
+       }
        java.util.Set<Integer> idsUnicos = permisoIds == null
                ? java.util.Set.of()
                : new java.util.HashSet<>(permisoIds);
@@ -337,13 +376,19 @@ public class UsuarioService implements IUsuarioService {
                    .orElseThrow(() -> new IllegalArgumentException("El rol seleccionado no existe."));
        }
 
+       List<Permiso> permisosDisponibles = permisoRepository.findAll();
        java.util.Set<Integer> idsUnicos = permisoIds == null
                ? java.util.Set.of()
                : new java.util.HashSet<>(permisoIds);
-       List<Permiso> permisos = idsUnicos.isEmpty() ? List.of() : permisoRepository.findAllById(idsUnicos);
-       if (permisos.size() != idsUnicos.size()) {
+       java.util.Set<Integer> permisosDisponiblesIds = permisosDisponibles.stream()
+               .map(Permiso::getIdPermiso)
+               .collect(java.util.stream.Collectors.toSet());
+       if (!permisosDisponiblesIds.containsAll(idsUnicos)) {
            throw new IllegalArgumentException("La lista de permisos contiene opciones no válidas.");
        }
+       List<Permiso> permisos = "SUPERADMINISTRADOR".equalsIgnoreCase(rol.getCodigo())
+               ? permisosDisponibles
+               : idsUnicos.isEmpty() ? List.of() : permisoRepository.findAllById(idsUnicos);
        rol.setPermisos(new java.util.HashSet<>(permisos));
        return rolRepository.save(rol);
    }

@@ -52,8 +52,10 @@ public interface IUsuarioService {
     Usuario obtenerUsuarioAutenticado();
 
     /**
-     * Qué hace: Extrae la entidad Usuario desde un objeto Authentication dado (OAuth2 o formulario nativo).
-     * A dónde apunta: {@link com.palmera_junior.gestion_compras.security.UsuarioPrincipal} o {@link com.palmera_junior.gestion_compras.security.CustomOAuth2User}.
+     * Qué hace: Resuelve el usuario de la autenticación desde la base de datos para no reutilizar entidades
+     * potencialmente desconectadas almacenadas en el principal.
+     * A dónde apunta: {@link com.palmera_junior.gestion_compras.security.UsuarioPrincipal},
+     * {@link com.palmera_junior.gestion_compras.security.CustomOAuth2User} y {@link com.palmera_junior.gestion_compras.repository.UsuarioRepository}.
      */
     Usuario obtenerUsuarioAutenticado(Authentication authentication);
 
@@ -69,8 +71,9 @@ public interface IUsuarioService {
      */
     String obtenerVistaLogin(Authentication authentication);
 
+    /** Guarda usuario y reemplaza la lista de sedes asignadas; la sede principal siempre queda incluida. */
     Usuario guardarUsuario(Integer idUsuario, Integer empleadoId, String nombreUsuario,
-            String contrasena, String email, Integer rolId, Integer sedeId);
+            String contrasena, String email, Integer rolId, Integer sedeId, List<Integer> sedeIds);
 
     /**
      * Reemplaza los permisos directos asignados a un usuario.

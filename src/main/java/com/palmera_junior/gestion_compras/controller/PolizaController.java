@@ -43,6 +43,7 @@ import com.palmera_junior.gestion_compras.entity.Poliza;
 import com.palmera_junior.gestion_compras.entity.PolizaAdjunto;
 import com.palmera_junior.gestion_compras.entity.PolizaRenovacion;
 import com.palmera_junior.gestion_compras.entity.EstadoAprobacionSede;
+import com.palmera_junior.gestion_compras.entity.Sede;
 import com.palmera_junior.gestion_compras.entity.Usuario;
 import com.palmera_junior.gestion_compras.entity.Proveedor;
 import com.palmera_junior.gestion_compras.service.catalogo.IProveedorService;
@@ -92,13 +93,36 @@ public class PolizaController {
             @RequestParam(defaultValue = "") String fechaDesde,
             @RequestParam(defaultValue = "") String fechaHasta,
             @RequestParam(required = false) String estado,
+            @RequestParam(required = false) Integer sedeId,
             Model model,
             Authentication authentication) {
 
         Usuario usuario = usuarioService.obtenerUsuarioAutenticado();
-        Integer idSede = usuario.getSede() != null ? usuario.getSede().getIdSede() : null;
         boolean esNacional = usuario.getSede() != null
             && "Sede Nacional".equalsIgnoreCase(usuario.getSede().getNombre());
+        boolean puedeConsultarTodasLasSedes = esNacional || usuario.esSuperAdministrador();
+        List<Sede> sedesDisponibles = sedeService.listarTodos();
+        List<Integer> idsSedesUsuario = usuario.getIdsSedesAsignadas().stream().toList();
+        List<Integer> idsSedesVisibles = puedeConsultarTodasLasSedes
+                ? sedesDisponibles.stream().map(Sede::getIdSede).toList()
+                : idsSedesUsuario;
+        boolean filtroTodasLasSedes = Integer.valueOf(0).equals(sedeId);
+        Integer sedeSeleccionada = filtroTodasLasSedes ? null : sedeId;
+        if (sedeSeleccionada == null && !filtroTodasLasSedes
+                && !puedeConsultarTodasLasSedes && usuario.getSede() != null) {
+            sedeSeleccionada = usuario.getSede().getIdSede();
+        }
+        if (sedeSeleccionada != null && !idsSedesVisibles.contains(sedeSeleccionada)) {
+            throw new SecurityException("No tiene acceso a la sede seleccionada.");
+        }
+        if (sedeSeleccionada == null && !filtroTodasLasSedes
+                && !puedeConsultarTodasLasSedes && !idsSedesVisibles.isEmpty()) {
+            sedeSeleccionada = idsSedesVisibles.get(0);
+        }
+        List<Integer> idsSedesConsulta = sedeSeleccionada == null
+                ? idsSedesVisibles
+                : List.of(sedeSeleccionada);
+        boolean consultarTodasLasSedes = puedeConsultarTodasLasSedes && sedeSeleccionada == null;
 
         if ((fechaDesde == null || fechaDesde.isBlank())
                 && (fechaHasta == null || fechaHasta.isBlank())) {
@@ -115,8 +139,8 @@ public class PolizaController {
                 q,
                 fechaDesde,
                 fechaHasta,
-                idSede,
-                esNacional,
+                idsSedesConsulta,
+                consultarTodasLasSedes,
                 estado);
 
         Page<Poliza> polizasResumenPage = polizaService.polizasPaginadas(
@@ -124,8 +148,8 @@ public class PolizaController {
                 q,
                 fechaDesde,
                 fechaHasta,
-                idSede,
-                esNacional,
+                idsSedesConsulta,
+                consultarTodasLasSedes,
                 estado);
         List<Poliza> polizasResumen = polizasResumenPage.getContent();
         long totalPolizas = polizasResumen.stream()
@@ -143,8 +167,27 @@ public class PolizaController {
         model.addAttribute("tamanoPagina", tamanoSeguro);
         model.addAttribute("paginaActual", Math.max(polizasPage.getNumber(), 0) + 1);
         model.addAttribute("polizasResumen", polizasResumen);
-        model.addAttribute("sedes", sedeService.listarTodos());
-        model.addAttribute("sedeActualId", usuario.getSede() != null ? usuario.getSede().getIdSede() : null);
+        model.addAttribute("sedes", sedesDisponibles);
+        model.addAttribute("sedesVisibles", sedesDisponibles.stream()
+                .filter(sede -> idsSedesVisibles.contains(sede.getIdSede())).toList());
+        model.addAttribute("puedeConsultarTodasLasSedes", puedeConsultarTodasLasSedes);
+        model.addAttribute("sedeActualId",
+                usuario.getSede() == null ? null : usuario.getSede().getIdSede());
+        model.addAttribute("sedeSeleccionadaId", sedeSeleccionada);
+        model.addAttribute("sedeFiltroId", sedeSeleccionada == null ? 0 : sedeSeleccionada);
+        List<Integer> sedesAprobablesUsuario = usuario.esSuperAdministrador()
+                ? sedesDisponibles.stream()
+                        .map(Sede::getIdSede)
+                        .toList()
+                : esNacional
+                        ? sedeSeleccionada == null ? List.of() : List.of(sedeSeleccionada)
+                        : idsSedesUsuario;
+        List<Integer> idsSedesAprobables = sedeSeleccionada == null
+                ? sedesAprobablesUsuario
+                : sedesAprobablesUsuario.contains(sedeSeleccionada)
+                        ? List.of(sedeSeleccionada)
+                        : List.of();
+        model.addAttribute("idsSedesAprobables", idsSedesAprobables);
         model.addAttribute("polizaSedeNacional", esNacional);
         model.addAttribute("totalPolizas", totalPolizas);
         model.addAttribute("polizasAnuladas", polizasResumen.stream().filter(p -> p.getEstado() == EstadoPoliza.ANULADA).count());
@@ -264,7 +307,7 @@ public class PolizaController {
      * Actualiza una póliza existente y mantiene la misma respuesta dual para formularios convencionales y peticiones AJAX.
      */
     @PostMapping("/{id}/editar")
-    @PreAuthorize("hasAuthority('PERM_POLIZAS_GESTIONAR')")
+    @PreAuthorize("hasAnyAuthority('PERM_POLIZAS_VER', 'PERM_POLIZAS_GESTIONAR', 'PERM_POLIZAS_APROBAR') or hasRole('SUPERADMINISTRADOR')")
     public Object actualizarPoliza(
             @PathVariable Integer id,
             @ModelAttribute PolizaDTO dto,
@@ -283,8 +326,10 @@ public class PolizaController {
      */
     @PostMapping("/{id}/aprobar")
     @PreAuthorize("hasAuthority('PERM_POLIZAS_APROBAR')")
-    public String aprobarPoliza(@PathVariable Integer id, RedirectAttributes redirectAttributes) {
-        polizaService.aprobar(id);
+    public String aprobarPoliza(@PathVariable Integer id,
+            @RequestParam(required = false) Integer sedeId,
+            RedirectAttributes redirectAttributes) {
+        polizaService.aprobarPorSede(id, sedeId);
         redirectAttributes.addFlashAttribute("mensajeExito", "Póliza aprobada correctamente.");
         return "redirect:/polizas";
     }
@@ -359,12 +404,13 @@ public class PolizaController {
 
     @GetMapping("/{id}/contrato-adjunto")
     @PreAuthorize("hasAnyAuthority('PERM_POLIZAS_VER', 'PERM_POLIZAS_GESTIONAR', 'PERM_POLIZAS_APROBAR')")
-    public ResponseEntity<byte[]> descargarContratoAdjunto(@PathVariable Integer id) throws IOException {
+    public ResponseEntity<byte[]> descargarContratoAdjunto(@PathVariable Integer id,
+            @RequestParam(defaultValue = "false") boolean inline) throws IOException {
         PolizaAdjunto adjunto = polizaService.obtenerContratoAdjunto(id);
         byte[] contenido = polizaService.leerContratoAdjunto(adjunto);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);
-        headers.setContentDisposition(ContentDisposition.attachment()
+        headers.setContentDisposition((inline ? ContentDisposition.inline() : ContentDisposition.attachment())
                 .filename(adjunto.getNombreOriginal(), StandardCharsets.UTF_8).build());
         return new ResponseEntity<>(contenido, headers, HttpStatus.OK);
     }
@@ -372,12 +418,13 @@ public class PolizaController {
     @GetMapping("/{id}/adjuntos/{idAdjunto}")
     @PreAuthorize("hasAnyAuthority('PERM_POLIZAS_VER', 'PERM_POLIZAS_GESTIONAR', 'PERM_POLIZAS_APROBAR')")
     public ResponseEntity<byte[]> descargarAdjuntoFisico(@PathVariable Integer id,
-            @PathVariable Integer idAdjunto) throws IOException {
+            @PathVariable Integer idAdjunto,
+            @RequestParam(defaultValue = "false") boolean inline) throws IOException {
         PolizaAdjunto adjunto = polizaService.obtenerAdjuntoFisico(id, idAdjunto);
         byte[] contenido = polizaService.leerContratoAdjunto(adjunto);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);
-        headers.setContentDisposition(ContentDisposition.attachment()
+        headers.setContentDisposition((inline ? ContentDisposition.inline() : ContentDisposition.attachment())
                 .filename(adjunto.getNombreOriginal(), StandardCharsets.UTF_8).build());
         return new ResponseEntity<>(contenido, headers, HttpStatus.OK);
     }
@@ -385,12 +432,13 @@ public class PolizaController {
     @GetMapping("/{id}/renovaciones/{idRenovacion}/adjuntos/{idAdjunto}")
     @PreAuthorize("hasAnyAuthority('PERM_POLIZAS_VER', 'PERM_POLIZAS_GESTIONAR', 'PERM_POLIZAS_APROBAR')")
     public ResponseEntity<byte[]> descargarAdjuntoRenovacion(@PathVariable Integer id,
-            @PathVariable Integer idRenovacion, @PathVariable Integer idAdjunto) throws IOException {
+            @PathVariable Integer idRenovacion, @PathVariable Integer idAdjunto,
+            @RequestParam(defaultValue = "false") boolean inline) throws IOException {
         PolizaAdjunto adjunto = polizaService.obtenerAdjuntoRenovacion(id, idRenovacion, idAdjunto);
         byte[] contenido = polizaService.leerAdjuntoRenovacion(adjunto);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);
-        headers.setContentDisposition(ContentDisposition.attachment()
+        headers.setContentDisposition((inline ? ContentDisposition.inline() : ContentDisposition.attachment())
             .filename(adjunto.getNombreOriginal(), StandardCharsets.UTF_8).build());
         return new ResponseEntity<>(contenido, headers, HttpStatus.OK);
     }

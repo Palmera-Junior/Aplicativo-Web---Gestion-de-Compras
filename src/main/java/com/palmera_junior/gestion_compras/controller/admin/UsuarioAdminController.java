@@ -3,6 +3,7 @@ package com.palmera_junior.gestion_compras.controller.admin;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -12,11 +13,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.Map;
 import java.util.List;
 
+import com.palmera_junior.gestion_compras.dto.EmpleadoAutocompleteDTO;
+import com.palmera_junior.gestion_compras.entity.Empleado;
 import com.palmera_junior.gestion_compras.entity.Permiso;
 import com.palmera_junior.gestion_compras.entity.Usuario;
 import com.palmera_junior.gestion_compras.repository.EmpleadoRepository;
@@ -185,10 +189,34 @@ public class UsuarioAdminController {
             @RequestParam(defaultValue = "10") int size) {
         Page<Usuario> usuariosPage = usuarioService.paginar(pageUsuarios, size);
         model.addAttribute("usuariosPage", usuariosPage);
-        model.addAttribute("empleados", empleadoRepository.findAllByOrderByPrimerApellidoAscPrimerNombreAsc());
         model.addAttribute("pageUsuarios", pageUsuarios);
         model.addAttribute("size", size);
         return "catalogos :: usuariosFragment";
+    }
+
+    @GetMapping("/admin/usuarios/empleados/buscar")
+    @PreAuthorize("hasRole('SUPERADMINISTRADOR')")
+    @ResponseBody
+    public List<EmpleadoAutocompleteDTO> buscarEmpleados(@RequestParam(required = false) String query) {
+        if (query == null || query.trim().length() < 3) {
+            return List.of();
+        }
+        return empleadoRepository.buscarPorNombre(query.trim(), PageRequest.of(0, 8)).stream()
+                .map(this::aEmpleadoAutocompleteDTO)
+                .toList();
+    }
+
+    private EmpleadoAutocompleteDTO aEmpleadoAutocompleteDTO(Empleado empleado) {
+        String nombre = String.join(" ", List.of(
+                empleado.getPrimerNombre(),
+                empleado.getSegundoNombre() == null ? "" : empleado.getSegundoNombre(),
+                empleado.getPrimerApellido(),
+                empleado.getSegundoApellido() == null ? "" : empleado.getSegundoApellido())
+                .stream()
+                .filter(valor -> !valor.isBlank())
+                .toList());
+        return new EmpleadoAutocompleteDTO(
+                empleado.getIdEmpleado(), empleado.getNumeroDocumento(), nombre);
     }
 
     /**
@@ -208,6 +236,7 @@ public class UsuarioAdminController {
      * @param email Correo electrónico institucional.
      * @param rol Rol del usuario (ADMINISTRADOR, COMPRADOR, etc.).
      * @param sedeId ID de la sede a la que pertenece el usuario.
+     * @param sedeIds IDs de las sedes adicionales asignadas al usuario.
      * @param redirectAttributes Atributos flash para mensajes temporales.
      * @return Redirección a la vista de administración.
      */
@@ -220,11 +249,12 @@ public class UsuarioAdminController {
             @RequestParam String email,
             @RequestParam Integer rolId,
             @RequestParam Integer sedeId,
+            @RequestParam(required = false) List<Integer> sedeIds,
             RedirectAttributes redirectAttributes) {
 
         try {
             usuarioService.guardarUsuario(idUsuario, empleadoId, nombreUsuario, contrasena,
-                    email, rolId, sedeId);
+                    email, rolId, sedeId, sedeIds);
             redirectAttributes.addAttribute("success",
                     idUsuario == null ? "Usuario creado correctamente." : "Usuario actualizado correctamente.");
             return "redirect:/admin/catalogos/usuarios";

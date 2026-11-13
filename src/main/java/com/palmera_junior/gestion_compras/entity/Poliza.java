@@ -126,6 +126,20 @@ public class Poliza {
         return aproboLaSedeSecundaria ? EstadoPoliza.APROBADA : estado;
     }
 
+    @Transient
+    public boolean isPendienteAprobacionParaSede(Integer idSede) {
+        if (idSede == null || estado != EstadoPoliza.BORRADOR) {
+            return false;
+        }
+        if (aprobacionesPorSede != null && !aprobacionesPorSede.isEmpty()) {
+            Optional<PolizaSedeAprobacion> aprobacion = obtenerAprobacionPorSede(idSede);
+            if (aprobacion.isPresent()) {
+                return aprobacion.get().getEstado() == EstadoAprobacionSede.PENDIENTE;
+            }
+        }
+        return sede != null && idSede.equals(sede.getIdSede());
+    }
+
     @Column(name = "valor_contrato", nullable = false, precision = 15, scale = 2)
     private BigDecimal valorContrato;
 

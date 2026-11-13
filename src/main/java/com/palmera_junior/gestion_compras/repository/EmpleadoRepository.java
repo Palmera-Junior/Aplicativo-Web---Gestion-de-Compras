@@ -2,6 +2,7 @@ package com.palmera_junior.gestion_compras.repository;
 
 import java.util.Optional;
 
+import org.springframework.data.domain.Pageable;
 import jakarta.persistence.LockModeType;
 
 import org.springframework.data.jpa.repository.Lock;
@@ -17,6 +18,18 @@ public interface EmpleadoRepository extends JpaRepository<Empleado, Integer> {
 
     @EntityGraph(attributePaths = {"cargo", "area", "centroCosto"})
     java.util.List<Empleado> findAllByOrderByPrimerApellidoAscPrimerNombreAsc();
+
+    @Query("""
+            select empleado from Empleado empleado
+            where lower(empleado.primerNombre) like lower(concat('%', :termino, '%'))
+                or lower(coalesce(empleado.segundoNombre, '')) like lower(concat('%', :termino, '%'))
+                or lower(empleado.primerApellido) like lower(concat('%', :termino, '%'))
+                or lower(coalesce(empleado.segundoApellido, '')) like lower(concat('%', :termino, '%'))
+                or lower(concat(concat(empleado.primerNombre, ' '), empleado.primerApellido))
+                    like lower(concat('%', :termino, '%'))
+            order by empleado.primerApellido, empleado.primerNombre
+            """)
+    java.util.List<Empleado> buscarPorNombre(@Param("termino") String termino, Pageable pageable);
 
     @Override
     @EntityGraph(attributePaths = {"cargo", "area", "centroCosto", "nivelEducativo"})

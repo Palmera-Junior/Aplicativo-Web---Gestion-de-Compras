@@ -13,6 +13,7 @@ import com.palmera_junior.gestion_compras.rrhh.entity.ContratoEmpleado;
 import com.palmera_junior.gestion_compras.rrhh.entity.EmpleadoAdjunto;
 import com.palmera_junior.gestion_compras.rrhh.entity.EmpleadoAdjuntoRequerido;
 import com.palmera_junior.gestion_compras.rrhh.entity.EtapaAdjuntoEmpleado;
+import com.palmera_junior.gestion_compras.rrhh.entity.NivelEducativo;
 import com.palmera_junior.gestion_compras.rrhh.repository.EmpleadoAdjuntoRepository;
 import com.palmera_junior.gestion_compras.rrhh.repository.EmpleadoAdjuntoRequeridoRepository;
 
@@ -36,8 +37,33 @@ public class EmpleadoCompletitudService {
             faltantes.add("Tipo de documento");
         }
         agregarSiVacio(faltantes, "Número de documento", empleado.getNumeroDocumento());
+        if (empleado.getFechaExpedicion() == null) {
+            faltantes.add("Fecha de expedición");
+        }
+        agregarSiVacio(faltantes, "Lugar de expedición", empleado.getLugarExpedicion());
         agregarSiVacio(faltantes, "Primer nombre", empleado.getPrimerNombre());
         agregarSiVacio(faltantes, "Primer apellido", empleado.getPrimerApellido());
+        if (empleado.getFechaNacimiento() == null) {
+            faltantes.add("Fecha de nacimiento");
+        }
+        agregarSiVacio(faltantes, "Lugar de nacimiento", empleado.getLugarNacimiento());
+        if (empleado.getTipoSangre() == null) {
+            faltantes.add("Grupo sanguíneo");
+        }
+        if (empleado.getRh() == null) {
+            faltantes.add("Factor RH");
+        }
+        agregarSiVacio(faltantes, "Celular", empleado.getCelular());
+        agregarSiVacio(faltantes, "Correo electrónico", empleado.getCorreoElectronico());
+        agregarSiVacio(faltantes, "Dirección de residencia", empleado.getDireccionResidencia());
+        agregarSiVacio(faltantes, "Barrio", empleado.getBarrio());
+        agregarSiVacio(faltantes, "Municipio", empleado.getMunicipio());
+        agregarSiVacio(faltantes, "Departamento", empleado.getDepartamento());
+        NivelEducativo nivelEducativo = empleado.getNivelEducativo();
+        if (nivelEducativo == null) {
+            faltantes.add("Nivel educativo");
+        }
+        agregarSiVacio(faltantes, "Profesión", empleado.getProfesion());
         if (empleado.getArea() == null) {
             faltantes.add("Área");
         }

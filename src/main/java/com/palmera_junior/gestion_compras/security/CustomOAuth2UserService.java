@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import com.palmera_junior.gestion_compras.entity.Usuario;
+import com.palmera_junior.gestion_compras.repository.PermisoRepository;
 import com.palmera_junior.gestion_compras.service.usuario.IUsuarioService;
 
 /**
@@ -27,12 +28,14 @@ import com.palmera_junior.gestion_compras.service.usuario.IUsuarioService;
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private final IUsuarioService usuarioService;
+    private final PermisoRepository permisoRepository;
 
     /**
      * Constructor para inyección del servicio de usuarios.
      */
-    public CustomOAuth2UserService(IUsuarioService usuarioService) {
+    public CustomOAuth2UserService(IUsuarioService usuarioService, PermisoRepository permisoRepository) {
         this.usuarioService = usuarioService;
+        this.permisoRepository = permisoRepository;
     }
 
     /**
@@ -144,6 +147,9 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         }
 
         Usuario usuario = usuarioOpt.get();
+        if (usuario.esSuperAdministrador()) {
+            usuario.setPermisosSuperAdministrador(new java.util.LinkedHashSet<>(permisoRepository.findAll()));
+        }
 
         if (!StringUtils.hasText(usuario.getEmail())) {
             throw new OAuth2AuthenticationException(

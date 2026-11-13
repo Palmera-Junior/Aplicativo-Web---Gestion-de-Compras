@@ -7,15 +7,18 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.palmera_junior.gestion_compras.entity.Usuario;
+import com.palmera_junior.gestion_compras.repository.PermisoRepository;
 import com.palmera_junior.gestion_compras.repository.UsuarioRepository;
 
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
     private final UsuarioRepository usuarioRepository;
+    private final PermisoRepository permisoRepository;
 
-    public CustomUserDetailsService(UsuarioRepository usuarioRepository) {
+    public CustomUserDetailsService(UsuarioRepository usuarioRepository, PermisoRepository permisoRepository) {
         this.usuarioRepository = usuarioRepository;
+        this.permisoRepository = permisoRepository;
     }
 
     @Override
@@ -26,6 +29,9 @@ public class CustomUserDetailsService implements UserDetailsService {
        
         if (usuario.getSede() != null){
             usuario.getSede().getNombre();
+        }
+        if (usuario.esSuperAdministrador()) {
+            usuario.setPermisosSuperAdministrador(new java.util.LinkedHashSet<>(permisoRepository.findAll()));
         }
         return new UsuarioPrincipal(usuario);
     }

@@ -22,7 +22,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
      * A dónde apunta: Tabla `usuario`.
      */
     @EntityGraph(attributePaths = {
-            "rol", "rol.permisos", "permisosDirectos", "permisosDirectos.permiso",
+            "rol", "rol.permisos", "permisosDirectos", "permisosDirectos.permiso", "sedes",
             "empleado", "empleado.cargo"
     })
     Optional<Usuario> findByNombreUsuario(String nombreUsuario);
@@ -32,7 +32,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
      * A dónde apunta: Tablas `usuario` y `sede`.
      */
     @EntityGraph(attributePaths = {
-            "rol", "rol.permisos", "permisosDirectos", "permisosDirectos.permiso",
+            "rol", "rol.permisos", "permisosDirectos", "permisosDirectos.permiso", "sedes",
             "empleado", "empleado.cargo"
     })
     @Query("""
@@ -49,8 +49,21 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
      */
     List<Usuario> findBySedeIdSede(Integer idSede);
 
-    /** Lista los aprobadores pertenecientes a cualquiera de las sedes indicadas. */
-    List<Usuario> findByRolCodigoAndSedeIdSedeIn(String codigo, List<Integer> idsSedes);
+    /** Lista usuarios cuya sede principal o alguna sede asignada está entre las indicadas. */
+    @EntityGraph(attributePaths = {
+            "rol", "rol.permisos", "permisosDirectos", "permisosDirectos.permiso", "sedes",
+            "empleado", "empleado.cargo"
+    })
+    @Query("""
+            SELECT DISTINCT u
+            FROM Usuario u
+            LEFT JOIN u.sedes sedeAsignada
+            WHERE u.sede.idSede IN :idsSedes
+               OR sedeAsignada.idSede IN :idsSedes
+            """)
+    List<Usuario> buscarUsuariosPorSedes(@Param("idsSedes") List<Integer> idsSedes);
+
+    List<Usuario> findDistinctByRolCodigoAndSedesIdSedeIn(String codigo, List<Integer> idsSedes);
 
     @Query("""
             SELECT u

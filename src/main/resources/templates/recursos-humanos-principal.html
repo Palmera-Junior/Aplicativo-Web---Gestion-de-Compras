@@ -6,7 +6,7 @@
     <title>Empleados | Gestión de Compras</title>
     <link rel="icon" type="image/png" th:href="@{/imgs/logo1.png}">
     <link rel="stylesheet" th:href="@{/css/compras.css}">
-    <link rel="stylesheet" th:href="@{/css/recursos-humanos.css(v=5)}">
+    <link rel="stylesheet" th:href="@{/css/recursos-humanos.css(v=6)}">
     <link rel="stylesheet" th:href="@{/css/catalogos.css}">
     <link rel="stylesheet" th:href="@{/css/navigation.css}">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap">
@@ -268,6 +268,9 @@
                     </button>
                 </div>
             </section>
+        </div>
+        <div class="rrhh-qr-dialog-actions">
+            <button class="btn-secondary" type="button" data-close-qr>Cancelar</button>
         </div>
     </dialog>
 
@@ -672,6 +675,7 @@
         <header class="rrhh-pdf-preview-heading">
             <h2 id="rrhh-pdf-preview-title">Vista previa PDF</h2>
             <form method="dialog">
+                <button class="btn-secondary" type="submit">Cancelar</button>
                 <button class="btn-icon" type="submit" aria-label="Cerrar vista previa">
                     <span class="material-symbols" aria-hidden="true">close</span>
                 </button>
@@ -1206,6 +1210,10 @@
     <script th:src="@{/js/toast.js(v=1)}"></script>
     <script>
         (() => {
+            document.querySelectorAll("dialog").forEach((dialogo) => {
+                dialogo.addEventListener("cancel", (evento) => evento.preventDefault());
+            });
+
             const hoyLocal = () => {
                 const ahora = new Date();
                 return `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, "0")}-${String(ahora.getDate()).padStart(2, "0")}`;
@@ -1406,14 +1414,14 @@
             });
             abrirQrSolicitado();
             const confirmacionQr = document.getElementById("rrhh-qr-confirm-dialog");
+            document.querySelectorAll("[data-close-qr]").forEach((boton) => {
+                boton.addEventListener("click", () => dialogoQr?.close());
+            });
             document.querySelectorAll("[data-open-qr-confirm]").forEach((boton) => {
                 boton.addEventListener("click", () => confirmacionQr?.showModal());
             });
             document.querySelectorAll("[data-close-qr-confirm]").forEach((boton) => {
                 boton.addEventListener("click", () => confirmacionQr?.close());
-            });
-            confirmacionQr?.addEventListener("click", (evento) => {
-                if (evento.target === confirmacionQr) confirmacionQr.close();
             });
             if (window.location.hash === "#ficha-asignaciones"
                     || new URLSearchParams(window.location.search).get("pestana") === "asignaciones") {

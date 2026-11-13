@@ -48,16 +48,16 @@ public class NavigationModelAdvice {
         boolean tienePermisoAprobacion = usuario != null && usuario.getPermisos() != null
                 && usuario.getPermisos().stream()
                 .anyMatch(permiso -> "ORDENES_APROBAR".equals(permiso.getCodigo()));
-        if (usuario == null || !tienePermisoAprobacion || usuario.getSede() == null
-                || usuario.getSede().getIdSede() == null) {
+        if (usuario == null || !tienePermisoAprobacion || usuario.getIdsSedesAsignadas().isEmpty()) {
             return;
         }
 
-        Integer idSede = usuario.getSede().getIdSede();
         model.addAttribute("borradoresOrdenesSede",
-            ordenCompraRepository.countPendientesAprobacionPorSede(EstadoOrdenCompra.BORRADOR, idSede));
+            ordenCompraRepository.countPendientesAprobacionPorSedes(
+                EstadoOrdenCompra.BORRADOR, usuario.getIdsSedesAsignadas().stream().toList()));
         model.addAttribute("borradoresPolizasSede",
-            polizaRepository.countPendientesAprobacionPorSede(
-                EstadoPoliza.BORRADOR, idSede, EstadoAprobacionSede.PENDIENTE));
+            polizaRepository.countPendientesAprobacionPorSedes(
+                EstadoPoliza.BORRADOR, usuario.getIdsSedesAsignadas().stream().toList(),
+                EstadoAprobacionSede.PENDIENTE));
     }
 }

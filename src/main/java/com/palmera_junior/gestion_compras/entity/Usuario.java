@@ -51,10 +51,22 @@ public class Usuario {
     @ToString.Exclude
     private Set<PermisoUsuario> permisosDirectos = new HashSet<>();
 
+    @Transient
+    @ToString.Exclude
+    private Set<Permiso> permisosSuperAdministrador = new LinkedHashSet<>();
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_sede", nullable = false)
     @ToString.Exclude
     private Sede sede;
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(name = "usuario_sede", schema = "core",
+            joinColumns = @JoinColumn(name = "id_usuario"),
+            inverseJoinColumns = @JoinColumn(name = "id_sede"))
+    @JsonIgnore
+    @ToString.Exclude
+    private Set<Sede> sedes = new LinkedHashSet<>();
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_empleado", unique = true)
@@ -88,6 +100,35 @@ public class Usuario {
                 : empleado.getCargo().getNombre();
     }
 
+    @Transient
+    @JsonIgnore
+    public String getSedeIdsCsv() {
+        Set<Integer> ids = getIdsSedesAsignadas();
+        return ids.stream().map(String::valueOf).collect(java.util.stream.Collectors.joining(","));
+    }
+
+    @Transient
+    @JsonIgnore
+    public Set<Integer> getIdsSedesAsignadas() {
+        Set<Integer> ids = new LinkedHashSet<>();
+        if (sedes != null) {
+            sedes.stream()
+                    .map(Sede::getIdSede)
+                    .filter(java.util.Objects::nonNull)
+                    .forEach(ids::add);
+        }
+        if (sede != null && sede.getIdSede() != null) {
+            ids.add(sede.getIdSede());
+        }
+        return ids;
+    }
+
+    @Transient
+    @JsonIgnore
+    public boolean tieneSedeAsignada(Integer idSede) {
+        return idSede != null && getIdsSedesAsignadas().contains(idSede);
+    }
+
     private static String unirNombres(String primero, String segundo) {
         if (primero == null || primero.isBlank()) {
             return segundo == null ? "" : segundo;
@@ -100,6 +141,12 @@ public class Usuario {
         if (rol != null && rol.getPermisos() != null) {
             permisosEfectivos.addAll(rol.getPermisos());
         }
+        if (esSuperAdministrador()) {
+            if (permisosSuperAdministrador != null) {
+                permisosEfectivos.addAll(permisosSuperAdministrador);
+            }
+            return permisosEfectivos;
+        }
         for (PermisoUsuario permisoUsuario : permisosDirectos == null ? Set.<PermisoUsuario>of() : permisosDirectos) {
             if (permisoUsuario.isConcedido()) {
                 permisosEfectivos.add(permisoUsuario.getPermiso());
@@ -108,6 +155,12 @@ public class Usuario {
             }
         }
         return permisosEfectivos;
+    }
+
+    @Transient
+    @JsonIgnore
+    public boolean esSuperAdministrador() {
+        return rol != null && "SUPERADMINISTRADOR".equalsIgnoreCase(rol.getCodigo());
     }
 
     public void setPermisos(Set<Permiso> permisos) {

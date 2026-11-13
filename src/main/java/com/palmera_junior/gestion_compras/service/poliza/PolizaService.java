@@ -45,6 +45,7 @@ import com.palmera_junior.gestion_compras.repository.PolizaRenovacionRepository;
 import com.palmera_junior.gestion_compras.repository.ProveedorRepository;
 import com.palmera_junior.gestion_compras.events.PolizaAprobadaEvent;
 import com.palmera_junior.gestion_compras.events.NuevaPolizaCreadaEvent;
+import com.palmera_junior.gestion_compras.events.PolizaModificadaEvent;
 import com.palmera_junior.gestion_compras.events.PolizaProximaAVencerEvent;
 import com.palmera_junior.gestion_compras.events.PolizaTerminadaEvent;
 import com.palmera_junior.gestion_compras.service.correo.CorreoPolizaOutboxService;
@@ -107,7 +108,10 @@ public class PolizaService implements IPolizaService {
     @Transactional
     @PreAuthorize("hasAnyAuthority('PERM_POLIZAS_VER', 'PERM_POLIZAS_GESTIONAR', 'PERM_POLIZAS_APROBAR')")
     public Page<Poliza> polizasPaginadas(Pageable pageable, String search, String fechaDesde,
-            String fechaHasta, Integer idSede, boolean esNacional, String estado) {
+            String fechaHasta, List<Integer> idsSedes, boolean consultarTodasLasSedes, String estado) {
+        if (!consultarTodasLasSedes && (idsSedes == null || idsSedes.isEmpty())) {
+            return Page.empty(pageable);
+        }
         marcarVencidas();
         Specification<Poliza> specification = Specification.where((root, query, criteriaBuilder) ->
                 criteriaBuilder.conjunction());
@@ -137,13 +141,13 @@ public class PolizaService implements IPolizaService {
                     criteriaBuilder.lessThanOrEqualTo(root.get("fechaCreacion"), fin));
         }
 
-        if (!esNacional && idSede != null) {
+        if (!consultarTodasLasSedes) {
             specification = specification.and((root, query, criteriaBuilder) -> {
                 query.distinct(true);
                 var aprobaciones = root.join("aprobacionesPorSede", JoinType.LEFT);
                 return criteriaBuilder.or(
-                        criteriaBuilder.equal(root.get("sede").get("idSede"), idSede),
-                        criteriaBuilder.equal(aprobaciones.get("sede").get("idSede"), idSede));
+                        root.get("sede").get("idSede").in(idsSedes),
+                        aprobaciones.get("sede").get("idSede").in(idsSedes));
             });
         }
 
@@ -188,13 +192,16 @@ public class PolizaService implements IPolizaService {
         if (esNacional(usuario)) {
             return polizaRepository.findAll(Sort.by(Sort.Direction.DESC, "idPoliza"));
         }
-        Integer idSedeUsuario = usuario.getSede().getIdSede();
+        List<Integer> idsSedesUsuario = usuario.getIdsSedesAsignadas().stream().toList();
+        if (idsSedesUsuario.isEmpty()) {
+            return List.of();
+        }
         return polizaRepository.findAll((root, query, criteriaBuilder) -> {
                 query.distinct(true);
                 var aprobaciones = root.join("aprobacionesPorSede", JoinType.LEFT);
                 return criteriaBuilder.or(
-                    criteriaBuilder.equal(root.get("sede").get("idSede"), idSedeUsuario),
-                    criteriaBuilder.equal(aprobaciones.get("sede").get("idSede"), idSedeUsuario));
+                    root.get("sede").get("idSede").in(idsSedesUsuario),
+                    aprobaciones.get("sede").get("idSede").in(idsSedesUsuario));
             },
                 Sort.by(Sort.Direction.DESC, "idPoliza"));
     }
@@ -248,7 +255,7 @@ public class PolizaService implements IPolizaService {
 
     @Override
     @Transactional
-    @PreAuthorize("hasAuthority('PERM_POLIZAS_GESTIONAR')")
+    @PreAuthorize("hasAnyAuthority('PERM_POLIZAS_VER', 'PERM_POLIZAS_GESTIONAR', 'PERM_POLIZAS_APROBAR') or hasRole('SUPERADMINISTRADOR')")
     public Poliza actualizarDesdeDTO(Integer idPoliza, PolizaDTO dto) {
         if (dto == null) {
             throw new IllegalArgumentException("Los datos de la póliza son obligatorios");
@@ -256,7 +263,7 @@ public class PolizaService implements IPolizaService {
         Usuario usuario = usuarioService.obtenerUsuarioAutenticado();
         Poliza poliza = polizaRepository.findById(idPoliza)
                 .orElseThrow(() -> new IllegalArgumentException("Póliza no encontrada"));
-        assertPuedeModificar(poliza, usuario);
+        assertPuedeEditar(poliza, usuario);
         if (poliza.getEstado() != EstadoPoliza.BORRADOR) {
             throw new IllegalStateException("Solo se pueden editar pólizas en estado BORRADOR");
         }
@@ -277,7 +284,9 @@ public class PolizaService implements IPolizaService {
         try {
             aplicarDatos(poliza, dto);
             actualizarAprobacionesPorSede(poliza, dto.getIdsSedes(), usuario);
-            if (habiaSedeAprobada && (eraMultiSede || poliza.getAprobacionesPorSede().size() > 1)) {
+            boolean reiniciarAprobaciones = habiaSedeAprobada
+                    && (eraMultiSede || poliza.getAprobacionesPorSede().size() > 1);
+            if (reiniciarAprobaciones) {
                 poliza.getAprobacionesPorSede().forEach(PolizaSedeAprobacion::reiniciar);
             }
             if (eliminarAdjunto && adjuntoAnterior != null) {
@@ -287,7 +296,11 @@ public class PolizaService implements IPolizaService {
                 poliza.addAdjunto(crearAdjunto(contenidoAdjunto, dto.getContratoAdjunto().getOriginalFilename(),
                         TipoAdjuntoPoliza.CONTRATO));
             }
-            return polizaRepository.save(poliza);
+            Poliza polizaGuardada = polizaRepository.save(poliza);
+            if (reiniciarAprobaciones) {
+                publicarNotificacionPolizaModificada(polizaGuardada);
+            }
+            return polizaGuardada;
         } catch (RuntimeException exception) {
             throw exception;
         }
@@ -634,6 +647,20 @@ public class PolizaService implements IPolizaService {
         eventPublisher.publishEvent(new NuevaPolizaCreadaEvent(poliza.getIdPoliza(), idsSedes));
     }
 
+    private void publicarNotificacionPolizaModificada(Poliza poliza) {
+        if (eventPublisher == null || poliza == null || poliza.getAprobacionesPorSede() == null) {
+            return;
+        }
+        List<Integer> idsSedes = poliza.getAprobacionesPorSede().stream()
+                .map(PolizaSedeAprobacion::getSede)
+                .filter(java.util.Objects::nonNull)
+                .map(Sede::getIdSede)
+                .filter(java.util.Objects::nonNull)
+                .distinct()
+                .toList();
+        eventPublisher.publishEvent(new PolizaModificadaEvent(poliza.getIdPoliza(), idsSedes));
+    }
+
     private void publicarNotificacionPolizaTerminada(Poliza poliza) {
         if (eventPublisher == null || poliza == null || poliza.getAprobacionesPorSede() == null) {
             return;
@@ -752,16 +779,16 @@ public class PolizaService implements IPolizaService {
         if (tienePermiso(usuario, "PANEL_ADMINISTRACION")) {
             return;
         }
-        if (usuario.getSede() == null) {
+        if (usuario.getIdsSedesAsignadas().isEmpty()) {
             throw new SecurityException("Solo puede gestionar pólizas de su sede");
         }
-        Integer idSedeUsuario = usuario.getSede().getIdSede();
+        java.util.Set<Integer> idsSedesUsuario = usuario.getIdsSedesAsignadas();
         boolean esSedePrincipal = poliza.getSede() != null
-            && idSedeUsuario.equals(poliza.getSede().getIdSede());
+            && idsSedesUsuario.contains(poliza.getSede().getIdSede());
         boolean esSedeInvolucrada = poliza.getAprobacionesPorSede() != null
             && poliza.getAprobacionesPorSede().stream()
                 .anyMatch(aprobacion -> aprobacion.getSede() != null
-                    && idSedeUsuario.equals(aprobacion.getSede().getIdSede()));
+                    && idsSedesUsuario.contains(aprobacion.getSede().getIdSede()));
         if (!esSedePrincipal && !esSedeInvolucrada) {
             throw new SecurityException("Solo puede gestionar pólizas de su sede");
         }
@@ -779,6 +806,15 @@ public class PolizaService implements IPolizaService {
         }
     }
 
+    private void assertPuedeEditar(Poliza poliza, Usuario usuario) {
+        boolean esCreador = usuario != null && usuario.getIdUsuario() != null
+                && poliza.getUsuario() != null
+                && usuario.getIdUsuario().equals(poliza.getUsuario().getIdUsuario());
+        if (usuario == null || (!usuario.esSuperAdministrador() && !esCreador)) {
+            throw new SecurityException("Solo el creador o un superadministrador puede editar la póliza.");
+        }
+    }
+
     private void assertPuedeAnular(Poliza poliza, Usuario usuario) {
         if (usuario == null || (!tienePermiso(usuario, "POLIZAS_GESTIONAR")
                 && !esAprobadorDeSedeInvolucrada(poliza, usuario))) {
@@ -790,16 +826,16 @@ public class PolizaService implements IPolizaService {
     private boolean esAprobadorDeSedeInvolucrada(Poliza poliza, Usuario usuario) {
         if (poliza == null || usuario == null
                 || !tienePermiso(usuario, "POLIZAS_APROBAR")
-                || usuario.getSede() == null || usuario.getSede().getIdSede() == null) {
+                || usuario.getIdsSedesAsignadas().isEmpty()) {
             return false;
         }
-        Integer idSedeUsuario = usuario.getSede().getIdSede();
+        java.util.Set<Integer> idsSedesUsuario = usuario.getIdsSedesAsignadas();
         if (poliza.getAprobacionesPorSede() != null && !poliza.getAprobacionesPorSede().isEmpty()) {
             return poliza.getAprobacionesPorSede().stream()
                     .anyMatch(aprobacion -> aprobacion.getSede() != null
-                            && idSedeUsuario.equals(aprobacion.getSede().getIdSede()));
+                            && idsSedesUsuario.contains(aprobacion.getSede().getIdSede()));
         }
-        return poliza.getSede() != null && idSedeUsuario.equals(poliza.getSede().getIdSede());
+        return poliza.getSede() != null && idsSedesUsuario.contains(poliza.getSede().getIdSede());
     }
 
     private void assertPuedeAprobar(Poliza poliza, Usuario usuario) {
@@ -810,7 +846,7 @@ public class PolizaService implements IPolizaService {
         if (tienePermiso(usuario, "PANEL_ADMINISTRACION")) {
             return;
         }
-        if (usuario == null || usuario.getSede() == null || idSedeAprobador == null) {
+        if (usuario == null || idSedeAprobador == null || !usuario.tieneSedeAsignada(idSedeAprobador)) {
             throw new SecurityException("No tiene permisos para aprobar polizas de otras sedes");
         }
         if (poliza == null || poliza.getAprobacionesPorSede() == null || poliza.getAprobacionesPorSede().isEmpty()) {
@@ -822,7 +858,9 @@ public class PolizaService implements IPolizaService {
         boolean perteneceASedeInvolucrada = poliza.getAprobacionesPorSede().stream()
                 .anyMatch(aprobacion -> aprobacion.getSede() != null
                         && idSedeAprobador.equals(aprobacion.getSede().getIdSede()));
-        if (!perteneceASedeInvolucrada) {
+        boolean esSedePrincipal = poliza.getSede() != null
+                && idSedeAprobador.equals(poliza.getSede().getIdSede());
+        if (!perteneceASedeInvolucrada && !esSedePrincipal) {
             throw new SecurityException("No tiene permisos para aprobar polizas de otras sedes");
         }
     }
@@ -855,8 +893,9 @@ public class PolizaService implements IPolizaService {
     }
 
     private boolean tienePermiso(Usuario usuario, String codigo) {
-        return usuario != null && usuario.getPermisos() != null
-                && usuario.getPermisos().stream().anyMatch(permiso -> codigo.equals(permiso.getCodigo()));
+        return usuario != null && (usuario.esSuperAdministrador()
+                || usuario.getPermisos() != null
+                        && usuario.getPermisos().stream().anyMatch(permiso -> codigo.equals(permiso.getCodigo())));
     }
 
     private boolean esSedeNacional(Usuario usuario) {

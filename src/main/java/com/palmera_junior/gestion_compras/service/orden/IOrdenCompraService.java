@@ -32,7 +32,7 @@ public interface IOrdenCompraService {
      * @return Página de entidades {@link OrdenCompra}.
      */
     Page<OrdenCompra> ordenesDeCompraPaginadas(Pageable pageable, String search, String fechaDesde,
-            String fechaHasta, Integer idSede, boolean esNacional, String estado, boolean soloModificadas);
+            String fechaHasta, List<Integer> idsSedes, boolean esNacional, String estado, boolean soloModificadas);
 
     /**
      * Qué hace:
@@ -159,4 +159,3 @@ public interface IOrdenCompraService {
     boolean tieneDiferenciasRecepcion(Integer idOrden);
 
 }
-

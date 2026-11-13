@@ -53,6 +53,7 @@ function mostrarConfirmacion(mensaje, titulo = '¿Está seguro?', textoDestacado
                         <span class="material-symbols">${variante === 'info' ? 'info' : 'warning'}</span>
                     </div>
                     <h2 id="confirmacion-titulo"></h2>
+                    <button type="button" class="confirmacion-cerrar" aria-label="Cerrar">×</button>
                 </div>
                 <div class="confirmacion-body">
                     <p class="confirmacion-mensaje"></p>
@@ -64,12 +65,8 @@ function mostrarConfirmacion(mensaje, titulo = '¿Está seguro?', textoDestacado
             </div>`;
 
         const cerrar = (resultado) => {
-            document.removeEventListener('keydown', manejarTecla);
             modal.remove();
             resolve(resultado);
-        };
-        const manejarTecla = (event) => {
-            if (event.key === 'Escape') cerrar(false);
         };
 
         modal.querySelector('#confirmacion-titulo').textContent = titulo;
@@ -92,14 +89,10 @@ function mostrarConfirmacion(mensaje, titulo = '¿Está seguro?', textoDestacado
                 mensajeElemento.append(document.createTextNode(' '), nombreElemento, document.createTextNode('?'));
             }
         }
+        modal.querySelector('.confirmacion-cerrar').addEventListener('click', () => cerrar(false));
         modal.querySelector('.confirmacion-cancelar').addEventListener('click', () => cerrar(false));
         modal.querySelector('.confirmacion-confirmar').addEventListener('click', () => cerrar(true));
-        modal.addEventListener('click', (event) => {
-            if (event.target === modal) cerrar(false);
-        });
-        document.addEventListener('keydown', manejarTecla);
         document.body.appendChild(modal);
         modal.querySelector('.confirmacion-confirmar').focus();
     });
 }
-

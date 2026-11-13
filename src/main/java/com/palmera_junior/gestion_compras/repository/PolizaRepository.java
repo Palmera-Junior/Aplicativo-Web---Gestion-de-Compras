@@ -66,6 +66,13 @@ public interface PolizaRepository extends JpaRepository<Poliza, Integer>, JpaSpe
             @Param("idSede") Integer idSede,
             @Param("estadoAprobacion") EstadoAprobacionSede estadoAprobacion);
 
+    @Query("select count(distinct p) from Poliza p join p.aprobacionesPorSede aprobacion "
+            + "where p.estado = :estado and aprobacion.sede.idSede in :idsSedes "
+            + "and aprobacion.estado = :estadoAprobacion")
+    long countPendientesAprobacionPorSedes(@Param("estado") EstadoPoliza estado,
+            @Param("idsSedes") List<Integer> idsSedes,
+            @Param("estadoAprobacion") EstadoAprobacionSede estadoAprobacion);
+
     @EntityGraph(attributePaths = {
             "proveedor", "sede",
             "usuario", "usuario.empleado",
@@ -77,6 +84,14 @@ public interface PolizaRepository extends JpaRepository<Poliza, Integer>, JpaSpe
     })
     @Query("select p from Poliza p where p.idPoliza = :idPoliza")
     Optional<Poliza> findWithRelationsByIdPoliza(@Param("idPoliza") Integer idPoliza);
+
+    @EntityGraph(attributePaths = {
+            "proveedor", "sede",
+            "usuario", "usuario.empleado",
+            "aprobacionesPorSede.sede"
+    })
+    @Query("select p from Poliza p where p.idPoliza = :idPoliza")
+    Optional<Poliza> findWithSedesAprobacionByIdPoliza(@Param("idPoliza") Integer idPoliza);
 
     /**
      * Carga exclusivamente el grafo necesario para consultar aprobaciones por sede.

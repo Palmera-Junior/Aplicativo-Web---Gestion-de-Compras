@@ -2553,6 +2553,12 @@ body:has(.rrhh-operation-view:target) {
     border-bottom: 1px solid #e3e8ee;
 }
 
+.rrhh-pdf-preview-heading form {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
 .rrhh-pdf-preview-heading h2 {
     margin: 0;
     color: #384960;
@@ -3377,6 +3383,12 @@ body:has(.rrhh-operation-view:target) {
     justify-content: space-between;
     gap: 18px;
     margin-bottom: 20px;
+}
+
+.rrhh-qr-dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 18px;
 }
 
 .rrhh-qr-dialog-header h2 {

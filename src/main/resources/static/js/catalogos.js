@@ -104,6 +104,124 @@ function initializeCatalogDrawers() {
     });
 }
 
+function initializeUsuarioEmpleadoSearch() {
+    const form = document.getElementById('usuarioForm');
+    const empleadoId = document.getElementById('empleadoUsuario');
+    const busqueda = document.getElementById('empleadoUsuarioBuscar');
+    const resultados = document.getElementById('empleadoUsuarioResultados');
+    const buscador = busqueda?.closest('.usuario-empleado-search');
+    const tarjeta = document.getElementById('empleadoUsuarioSeleccionado');
+    const nombreSeleccionado = document.getElementById('empleadoUsuarioNombre');
+    const empleadoSoloLectura = document.getElementById('empleadoUsuarioSoloLectura');
+    const nombreSoloLectura = document.getElementById('empleadoUsuarioNombreActual');
+    const botonCambiar = document.getElementById('cambiarEmpleadoUsuario');
+    if (!form || !empleadoId || !busqueda || !resultados || !buscador || !tarjeta
+            || !nombreSeleccionado || !empleadoSoloLectura || !nombreSoloLectura || !botonCambiar) {
+        return;
+    }
+
+    let temporizador = null;
+    let controlador = null;
+
+    const ocultarResultados = (abortar = false) => {
+        window.clearTimeout(temporizador);
+        if (abortar) {
+            controlador?.abort();
+            controlador = null;
+        }
+        resultados.replaceChildren();
+        resultados.style.display = 'none';
+        busqueda.setAttribute('aria-expanded', 'false');
+    };
+
+    const limpiarSeleccion = () => {
+        ocultarResultados(true);
+        empleadoId.value = '';
+        busqueda.value = '';
+        busqueda.required = true;
+        busqueda.disabled = false;
+        buscador.hidden = false;
+        tarjeta.hidden = true;
+        empleadoSoloLectura.hidden = true;
+        nombreSeleccionado.textContent = '';
+        nombreSoloLectura.textContent = '';
+        botonCambiar.hidden = false;
+    };
+    form.addEventListener('usuario-empleado-reset', limpiarSeleccion);
+
+    const seleccionarEmpleado = (empleado) => {
+        ocultarResultados(true);
+        empleadoId.value = empleado.idEmpleado;
+        busqueda.value = '';
+        busqueda.required = false;
+        buscador.hidden = true;
+        nombreSeleccionado.textContent =
+            `${empleado.numeroDocumento} - ${empleado.nombre}`;
+        tarjeta.hidden = false;
+        empleadoSoloLectura.hidden = true;
+        botonCambiar.hidden = false;
+    };
+
+    busqueda.addEventListener('input', () => {
+        const termino = busqueda.value.trim();
+        ocultarResultados(true);
+        empleadoId.value = '';
+        tarjeta.hidden = true;
+        empleadoSoloLectura.hidden = true;
+        busqueda.required = true;
+        if (termino.length < 3) return;
+
+        temporizador = window.setTimeout(async () => {
+            const solicitud = new AbortController();
+            controlador = solicitud;
+            try {
+                const response = await fetch(
+                    `/admin/usuarios/empleados/buscar?query=${encodeURIComponent(termino)}`,
+                    { signal: solicitud.signal, headers: { Accept: 'application/json' } }
+                );
+                if (!response.ok) throw new Error('No fue posible buscar empleados.');
+                const empleados = await response.json();
+                if (solicitud.signal.aborted || busqueda.value.trim() !== termino) return;
+
+                if (!empleados.length) {
+                    const sinResultados = document.createElement('div');
+                    sinResultados.className = 'autocomplete-item usuario-empleado-sin-resultados';
+                    sinResultados.textContent = 'No se encontraron empleados.';
+                    resultados.appendChild(sinResultados);
+                } else {
+                    empleados.forEach((empleado) => {
+                        const opcion = document.createElement('button');
+                        opcion.type = 'button';
+                        opcion.className = 'autocomplete-item usuario-empleado-option';
+                        opcion.setAttribute('role', 'option');
+                        opcion.textContent = `${empleado.numeroDocumento} - ${empleado.nombre}`;
+                        opcion.addEventListener('mousedown', (event) => event.preventDefault());
+                        opcion.addEventListener('click', () => seleccionarEmpleado(empleado));
+                        resultados.appendChild(opcion);
+                    });
+                }
+                resultados.style.display = 'block';
+                busqueda.setAttribute('aria-expanded', 'true');
+            } catch (error) {
+                if (error.name !== 'AbortError') {
+                    reportCatalogError('No fue posible buscar empleados.', error);
+                    mostrarCatalogToast('No fue posible buscar empleados.');
+                }
+            } finally {
+                if (controlador === solicitud) controlador = null;
+            }
+        }, 250);
+    });
+
+    botonCambiar.addEventListener('click', limpiarSeleccion);
+    form.addEventListener('submit', (event) => {
+        if (empleadoId.value) return;
+        event.preventDefault();
+        mostrarCatalogToast('Selecciona un empleado de los resultados de búsqueda.');
+        busqueda.focus();
+    });
+}
+
 // Abre o cierra el panel lateral que contiene el formulario de la entidad.
 function controlarFormulario(entity, open) {
     const formIds = {
@@ -246,6 +364,21 @@ function resetForm(entity) {
     if (entity === 'usuario') {
         const password = document.getElementById('contrasena');
         if (password) password.required = true;
+        document.getElementById('empleadoUsuarioBuscar')?.removeAttribute('readonly');
+        document.getElementById('empleadoUsuarioBuscar')?.removeAttribute('disabled');
+        document.getElementById('empleadoUsuarioBuscar')?.closest('.usuario-empleado-search')?.removeAttribute('hidden');
+        document.getElementById('empleadoUsuarioSeleccionado')?.setAttribute('hidden', 'hidden');
+        document.getElementById('empleadoUsuarioSoloLectura')?.setAttribute('hidden', 'hidden');
+        const busqueda = document.getElementById('empleadoUsuarioBuscar');
+        if (busqueda) {
+            busqueda.value = '';
+            busqueda.required = true;
+        }
+        document.getElementById('usuarioForm')?.dispatchEvent(
+            new Event('usuario-empleado-reset'));
+        document.querySelectorAll('#usuarioForm input[name="sedeIds"]').forEach(input => {
+            input.checked = false;
+        });
     }
     if (entity === 'proveedor') {
         delete document.getElementById('nit')?.dataset.nitToastShown;
@@ -313,10 +446,21 @@ function editEntity(entity, element) {
     } else if (entity === 'usuario') {
         document.getElementById('idUsuario').value = row.dataset.id || '';
         document.getElementById('empleadoUsuario').value = row.dataset.empleadoId || '';
+        document.getElementById('empleadoUsuarioBuscar').required = false;
+        document.getElementById('empleadoUsuarioBuscar').value = '';
+        document.getElementById('empleadoUsuarioBuscar').closest('.usuario-empleado-search').hidden = true;
+        document.getElementById('empleadoUsuarioSeleccionado').hidden = true;
+        document.getElementById('empleadoUsuarioSoloLectura').hidden = false;
+        document.getElementById('empleadoUsuarioNombreActual').textContent =
+            row.dataset.empleadoLabel || 'Empleado asociado';
         document.getElementById('nombreUsuario').value = row.dataset.nombreUsuario || '';
         document.getElementById('email').value = row.dataset.email || '';
         document.getElementById('rol').value = row.dataset.rol || '';
         document.getElementById('sedeUsuario').value = row.dataset.sedeId || '';
+        const sedeIds = (row.dataset.sedeIds || '').split(',');
+        document.querySelectorAll('#usuarioForm input[name="sedeIds"]').forEach(input => {
+            input.checked = sedeIds.includes(input.value);
+        });
         document.getElementById('contrasena').required = false;
         setButtonLabel('userSubmitButton', 'save', 'Guardar cambios');
     } else if (entity === 'proveedor') {
@@ -460,6 +604,7 @@ async function cargarPaginaCatalogo(link, tableId) {
 // Registra filtros reactivos, paginación, filas de presentaciones y avisos temporales.
 document.addEventListener('DOMContentLoaded', () => {
     initializeCatalogDrawers();
+    initializeUsuarioEmpleadoSearch();
 
     const nitProveedor = document.getElementById('nit');
     const formularioProveedor = document.getElementById('proveedorForm');
