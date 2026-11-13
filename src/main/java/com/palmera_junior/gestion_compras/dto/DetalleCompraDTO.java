@@ -3,6 +3,8 @@ package com.palmera_junior.gestion_compras.dto;
 import java.math.BigDecimal;
 
 public class DetalleCompraDTO {
+
+    private Integer idDetalle;
     
     private Long idProducto; // FK a producto (opcional si es nuevo)
     
@@ -21,6 +23,9 @@ public class DetalleCompraDTO {
     private BigDecimal valorTotalLinea;
 
     // Getters y Setters
+    public Integer getIdDetalle() { return idDetalle; }
+    public void setIdDetalle(Integer idDetalle) { this.idDetalle = idDetalle; }
+
     public Long getIdProducto() { return idProducto; }
     public void setIdProducto(Long idProducto) { this.idProducto = idProducto; }
 

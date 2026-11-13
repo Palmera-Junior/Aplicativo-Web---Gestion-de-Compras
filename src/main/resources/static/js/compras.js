@@ -2503,8 +2503,13 @@ document.addEventListener("click", async function (e) {
             const filas = document.querySelectorAll('#recepcion-productos-body tr');
             filas.forEach(fila => {
                 const detId = fila.dataset.idDetalle ? String(fila.dataset.idDetalle) : null;
-                const prodId = fila.dataset.idProducto ? String(fila.dataset.idProducto) : null;
-                const match = ordenesModificadas[idOrdenSeleccionada].find(p => String(p.idDetalle) === detId || String(p.idProducto) === prodId);
+                 const uniqueKey = (fila.dataset.idDetalle || '') + '||' + (fila.dataset.presentacion || '') + '||' + (fila.dataset.idProducto || '');
+                const match = ordenesModificadas[idOrdenSeleccionada].find(p => {
+                    if (detId && p.idDetalle != null) {
+                        return String(p.idDetalle) === detId;
+                    }
+                    return p.uniqueKey === uniqueKey;
+                });
                 if (match) {
                     const checkbox = fila.querySelector('.recepcion-producto-checkbox');
                     const inputCantidad = fila.querySelector('.recepcion-cantidad-input');

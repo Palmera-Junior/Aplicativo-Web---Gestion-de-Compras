@@ -896,6 +896,7 @@ public class OrdenCompraService implements IOrdenCompraService {
 
         return orden.getDetalles().stream().map(detalle -> {
             DetalleCompraDTO detalleDTO = new DetalleCompraDTO();
+            detalleDTO.setIdDetalle(detalle.getIdDetalle());
             if (detalle.getProducto() != null) {
                 detalleDTO.setIdProducto(detalle.getProducto().getIdProducto() != null
                         ? detalle.getProducto().getIdProducto().longValue()
