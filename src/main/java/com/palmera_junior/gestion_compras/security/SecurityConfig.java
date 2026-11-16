@@ -115,6 +115,12 @@ public class SecurityConfig {
                                 "/error"
                         ).permitAll()
                         .requestMatchers("/recursos-humanos/tarjeta/**").permitAll()
+                        .requestMatchers("/recursos-humanos/**")
+                        .hasAnyAuthority(
+                                "PERM_RRHH_VER", "PERM_RRHH_GESTIONAR", "PERM_RRHH_APROBAR",
+                                "PERM_RRHH_REGISTRO_EDITAR", "PERM_RRHH_PERFIL_EDITAR",
+                                "PERM_RRHH_CONTRATO_TERMINAR", "PERM_RRHH_CONTRATO_ANULAR",
+                                "PERM_RRHH_ASIGNACIONES_GESTIONAR", "PERM_RRHH_QR_GESTIONAR")
 
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                         .requestMatchers("/actuator/**").denyAll()
@@ -123,7 +129,8 @@ public class SecurityConfig {
                         .hasAnyAuthority(
                                 "PERM_PANEL_ADMINISTRACION",
                                 "PERM_PRODUCTOS_GESTIONAR", "PERM_PROVEEDORES_GESTIONAR",
-                                "PERM_SEDES_GESTIONAR", "PERM_CENTROS_COSTO_GESTIONAR")
+                                "PERM_SEDES_GESTIONAR", "PERM_CENTROS_COSTO_GESTIONAR",
+                                "ROLE_SUPERADMINISTRADOR")
 
                         .requestMatchers("/polizas", "/polizas/**")
                         .hasAnyAuthority(

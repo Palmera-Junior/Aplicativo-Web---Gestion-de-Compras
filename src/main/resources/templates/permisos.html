@@ -91,13 +91,21 @@
                                     Los permisos marcados vienen del rol. Puedes concederlos o quitarlos solo para este usuario;
                                     esas excepciones se mantienen aunque cambien los permisos del rol.
                                 </p>
-                                <div class="user-permissions-grid">
-                                    <label th:each="permiso : ${permisos}" class="permission-toggle">
-                                        <input type="checkbox" name="permisoIds" th:value="${permiso.idPermiso}"
-                                            th:checked="${usuarioSeleccionado.permisos.contains(permiso)}">
-                                        <span class="permission-toggle-slider" aria-hidden="true"></span>
-                                        <span class="permission-toggle-name" th:text="${permiso.nombre}">Permiso</span>
-                                    </label>
+                                <div class="permission-modules">
+                                    <section th:each="grupo : ${permisosPorModulo}" class="permission-module">
+                                        <h2 class="permission-module-title" th:text="${grupo.key}">Módulo</h2>
+                                        <div class="user-permissions-grid">
+                                            <label th:each="permiso : ${grupo.value}" class="permission-toggle">
+                                                <input type="checkbox" name="permisoIds" th:value="${permiso.idPermiso}"
+                                                    th:checked="${usuarioSeleccionado.permisos.contains(permiso)}">
+                                                <span class="permission-toggle-slider" aria-hidden="true"></span>
+                                                <span class="permission-toggle-name" th:text="${permiso.nombre}">Permiso</span>
+                                            </label>
+                                        </div>
+                                        <p th:if="${grupo.key == 'GENERAL'}" class="permission-module-note">
+                                            Gestionar usuarios es exclusivo del SUPERADMINISTRADOR y no se asigna desde esta matriz.
+                                        </p>
+                                    </section>
                                 </div>
                             </fieldset>
 
@@ -161,13 +169,21 @@
 
                                 <fieldset class="user-permissions">
                                     <legend>Permisos predeterminados</legend>
-                                    <div class="user-permissions-grid">
-                                        <label th:each="permiso : ${permisos}" class="permission-toggle">
-                                            <input type="checkbox" name="permisoIds" th:value="${permiso.idPermiso}"
-                                                th:checked="${rolSeleccionado != null and rolSeleccionado.permisos.contains(permiso)}">
-                                            <span class="permission-toggle-slider" aria-hidden="true"></span>
-                                            <span class="permission-toggle-name" th:text="${permiso.nombre}">Permiso</span>
-                                        </label>
+                                    <div class="permission-modules">
+                                        <section th:each="grupo : ${permisosPorModulo}" class="permission-module">
+                                            <h3 class="permission-module-title" th:text="${grupo.key}">Módulo</h3>
+                                            <div class="user-permissions-grid">
+                                                <label th:each="permiso : ${grupo.value}" class="permission-toggle">
+                                                    <input type="checkbox" name="permisoIds" th:value="${permiso.idPermiso}"
+                                                        th:checked="${rolSeleccionado != null and rolSeleccionado.permisos.contains(permiso)}">
+                                                    <span class="permission-toggle-slider" aria-hidden="true"></span>
+                                                    <span class="permission-toggle-name" th:text="${permiso.nombre}">Permiso</span>
+                                                </label>
+                                            </div>
+                                            <p th:if="${grupo.key == 'GENERAL'}" class="permission-module-note">
+                                                Gestionar usuarios es exclusivo del SUPERADMINISTRADOR y no se asigna desde esta matriz.
+                                            </p>
+                                        </section>
                                     </div>
                                 </fieldset>
 

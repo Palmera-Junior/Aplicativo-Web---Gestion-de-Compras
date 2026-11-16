@@ -169,12 +169,17 @@ public class RecursosHumanosController {
     }
 
     @GetMapping("/recursos-humanos/dashboard")
+    @PreAuthorize("hasAnyAuthority('PERM_RRHH_VER', 'PERM_RRHH_GESTIONAR', 'PERM_RRHH_APROBAR', "
+            + "'PERM_RRHH_REGISTRO_EDITAR', 'PERM_RRHH_PERFIL_EDITAR', 'PERM_RRHH_CONTRATO_TERMINAR', "
+            + "'PERM_RRHH_CONTRATO_ANULAR', 'PERM_RRHH_ASIGNACIONES_GESTIONAR', 'PERM_RRHH_QR_GESTIONAR')")
     public String dashboard() {
         return "recursos-humanos-dashboard";
     }
 
     @GetMapping("/recursos-humanos/principal")
-    @PreAuthorize("hasAnyAuthority('PERM_RRHH_VER', 'PERM_RRHH_GESTIONAR', 'PERM_RRHH_APROBAR', 'PERM_RRHH_REGISTRO_EDITAR')")
+    @PreAuthorize("hasAnyAuthority('PERM_RRHH_VER', 'PERM_RRHH_GESTIONAR', 'PERM_RRHH_APROBAR', "
+            + "'PERM_RRHH_REGISTRO_EDITAR', 'PERM_RRHH_PERFIL_EDITAR', 'PERM_RRHH_CONTRATO_TERMINAR', "
+            + "'PERM_RRHH_CONTRATO_ANULAR', 'PERM_RRHH_ASIGNACIONES_GESTIONAR', 'PERM_RRHH_QR_GESTIONAR')")
     public String principal(
             @RequestParam(required = false) Integer empleadoId,
             @RequestParam(required = false) Integer editarEmpleadoId,

@@ -45,19 +45,22 @@ public class NavigationModelAdvice {
         }
 
         Usuario usuario = usuarioService.obtenerUsuarioAutenticado(authentication);
-        boolean tienePermisoAprobacion = usuario != null && usuario.getPermisos() != null
-                && usuario.getPermisos().stream()
-                .anyMatch(permiso -> "ORDENES_APROBAR".equals(permiso.getCodigo()));
-        if (usuario == null || !tienePermisoAprobacion || usuario.getIdsSedesAsignadas().isEmpty()) {
+        if (usuario == null || usuario.getPermisos() == null || usuario.getIdsSedesAsignadas().isEmpty()) {
             return;
         }
 
-        model.addAttribute("borradoresOrdenesSede",
-            ordenCompraRepository.countPendientesAprobacionPorSedes(
-                EstadoOrdenCompra.BORRADOR, usuario.getIdsSedesAsignadas().stream().toList()));
-        model.addAttribute("borradoresPolizasSede",
-            polizaRepository.countPendientesAprobacionPorSedes(
-                EstadoPoliza.BORRADOR, usuario.getIdsSedesAsignadas().stream().toList(),
-                EstadoAprobacionSede.PENDIENTE));
+        var permisos = usuario.getPermisos().stream()
+                .map(permiso -> permiso.getCodigo())
+                .collect(java.util.stream.Collectors.toSet());
+        var sedes = usuario.getIdsSedesAsignadas().stream().toList();
+        if (permisos.contains("ORDENES_APROBAR")) {
+            model.addAttribute("borradoresOrdenesSede",
+                    ordenCompraRepository.countPendientesAprobacionPorSedes(EstadoOrdenCompra.BORRADOR, sedes));
+        }
+        if (permisos.contains("POLIZAS_APROBAR")) {
+            model.addAttribute("borradoresPolizasSede",
+                    polizaRepository.countPendientesAprobacionPorSedes(
+                            EstadoPoliza.BORRADOR, sedes, EstadoAprobacionSede.PENDIENTE));
+        }
     }
 }

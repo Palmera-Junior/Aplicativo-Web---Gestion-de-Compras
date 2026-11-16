@@ -278,6 +278,7 @@
                                 <span class="material-symbols">check</span>
                             </span>
                             <button th:if="${estadoCorreo != null and estadoCorreo.name() == 'FALLIDO'}" type="button"
+                                sec:authorize="hasAnyAuthority('PERM_ORDENES_GESTIONAR', 'PERM_ORDENES_APROBAR')"
                                 class="correo-estado-icon fallido correo-marcar-enviado" th:data-id="${orden.idOrden}"
                                 th:data-tipo-envio="'APROBACION'" th:data-numero-orden="${orden.numeroOrden}"
                                 title="El correo al proveedor no pudo enviarse. Haga clic para marcarlo como enviado manualmente.">
@@ -298,6 +299,7 @@
                                 <span class="material-symbols">check</span>
                             </span>
                             <button th:if="${estadoCorreo != null and estadoCorreo.name() == 'FALLIDO'}" type="button"
+                                sec:authorize="hasAnyAuthority('PERM_ORDENES_GESTIONAR', 'PERM_ORDENES_APROBAR')"
                                 class="correo-estado-icon fallido correo-marcar-enviado" th:data-id="${orden.idOrden}"
                                 th:data-tipo-envio="'FACTURACION'" th:data-numero-orden="${orden.numeroOrden}"
                                 title="El correo de facturación no pudo enviarse. Haga clic para marcarlo como enviado manualmente.">
@@ -325,6 +327,7 @@
                                 <span class="material-symbols">download</span>
                             </button>
                             <button title="Recibir Orden de Compra"
+                                sec:authorize="hasAuthority('PERM_ORDENES_GESTIONAR')"
                                 th:if="${orden.estado.name() == 'APROBADA' or orden.estado.name() == 'FACTURADA'}"
                                 class="btn-icon receive" th:data-id="${orden.idOrden}"
                                 th:data-numero-orden="${orden.numeroOrden}"
@@ -336,6 +339,7 @@
 
                             <!-- Botón para facturar: abre modal de facturación separado -->
                             <button title="Facturar Orden de Compra"
+                                sec:authorize="hasAuthority('PERM_ORDENES_GESTIONAR')"
                                 th:if="${orden.estado.name() == 'APROBADA' or orden.estado.name() == 'RECIBIDA'}"
                                 class="btn-icon facturar" th:data-id="${orden.idOrden}"
                                 th:data-numero-orden="${orden.numeroOrden}"

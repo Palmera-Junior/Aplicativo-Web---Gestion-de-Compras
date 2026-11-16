@@ -26,6 +26,11 @@ public final class RutaInicialUsuario {
         if (tieneAlguna(autoridades, "PERM_POLIZAS_VER", "PERM_POLIZAS_GESTIONAR", "PERM_POLIZAS_APROBAR")) {
             return Optional.of("/polizas");
         }
+        if (tieneAlguna(autoridades, "PERM_RRHH_VER", "PERM_RRHH_GESTIONAR", "PERM_RRHH_APROBAR",
+                "PERM_RRHH_REGISTRO_EDITAR", "PERM_RRHH_PERFIL_EDITAR", "PERM_RRHH_CONTRATO_TERMINAR",
+                "PERM_RRHH_CONTRATO_ANULAR", "PERM_RRHH_ASIGNACIONES_GESTIONAR", "PERM_RRHH_QR_GESTIONAR")) {
+            return Optional.of("/recursos-humanos/dashboard");
+        }
 
         return Optional.empty();
     }

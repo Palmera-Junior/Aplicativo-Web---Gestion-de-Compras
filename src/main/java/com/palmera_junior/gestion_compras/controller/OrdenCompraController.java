@@ -4,6 +4,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,6 +32,11 @@ import com.palmera_junior.gestion_compras.service.orden.IPdfService;
 @RestController
 @RequestMapping("/orden-compra")
 public class OrdenCompraController {
+
+    private static final String PUEDE_GESTIONAR_ORDENES = "hasAuthority('PERM_ORDENES_GESTIONAR')";
+    private static final String PUEDE_APROBAR_ORDENES = "hasAuthority('PERM_ORDENES_APROBAR')";
+    private static final String PUEDE_CONSULTAR_ORDENES =
+            "hasAnyAuthority('PERM_ORDENES_VER', 'PERM_ORDENES_GESTIONAR', 'PERM_ORDENES_APROBAR')";
 
     private final IOrdenCompraService ordenCompraService;
     private final IPdfService pdfService;
@@ -60,6 +66,7 @@ public class OrdenCompraController {
      * @return {@link ResponseEntity} indicando el resultado de la operación.
      */
     @PostMapping
+    @PreAuthorize(PUEDE_GESTIONAR_ORDENES)
     public ResponseEntity<String> guardarOrden(
             @RequestBody OrdenCompraDTO dto) {
 
@@ -91,6 +98,7 @@ public class OrdenCompraController {
      * @return {@link ResponseEntity} indicando el resultado de la actualización.
      */
     @PutMapping("/{id}")
+    @PreAuthorize(PUEDE_GESTIONAR_ORDENES)
     public ResponseEntity<String> actualizarOrden(
             @PathVariable Integer id,
             @RequestBody OrdenCompraDTO dto) {
@@ -124,6 +132,7 @@ public class OrdenCompraController {
      * @return 200 OK con confirmación o 400 Bad Request en caso de error de negocio.
      */
     @PutMapping("/{id}/aprobar")
+    @PreAuthorize(PUEDE_APROBAR_ORDENES)
     public ResponseEntity<?> aprobarOrden(
             @PathVariable Integer id) {
 
@@ -153,6 +162,7 @@ public class OrdenCompraController {
      * @return DTO con la estructura de la orden o 404 si no existe.
      */
     @GetMapping("/{id}/detalles")
+    @PreAuthorize(PUEDE_CONSULTAR_ORDENES)
     public ResponseEntity<?> obtenerDetallesOrden(@PathVariable Integer id) {
         try {
             OrdenCompra orden = ordenCompraService.obtenerPorId(id);
@@ -177,6 +187,7 @@ public class OrdenCompraController {
      * @return JSON con booleano {"hasDifferences": true/false}.
      */
     @GetMapping("/{id}/has-diferencias-recepcion")
+    @PreAuthorize(PUEDE_CONSULTAR_ORDENES)
     public ResponseEntity<?> tieneDiferenciasRecepcion(@PathVariable Integer id) {
         try {
             boolean tiene = ordenCompraService.tieneDiferenciasRecepcion(id);
@@ -198,6 +209,7 @@ public class OrdenCompraController {
      * @return JSON con lista de IDs que tienen discrepancias {"ids": [1, 5]}.
      */
     @GetMapping("/has-diferencias")
+    @PreAuthorize(PUEDE_CONSULTAR_ORDENES)
     public ResponseEntity<?> tieneDiferenciasMultiple(@RequestParam(name = "ids") String idsCsv) {
         try {
             if (idsCsv == null || idsCsv.trim().isEmpty()) {
@@ -242,6 +254,7 @@ public class OrdenCompraController {
      * @return 200 OK con confirmación o 400 Bad Request en caso de error.
      */
     @PutMapping("/{id}/recibir")
+    @PreAuthorize(PUEDE_GESTIONAR_ORDENES)
     public ResponseEntity<?> recibirOrden(
             @PathVariable Integer id,
             @RequestBody RecibirOrdenDTO dto) {
@@ -274,6 +287,7 @@ public class OrdenCompraController {
      * @return 200 OK con confirmación.
      */
     @PutMapping("/{id}/facturar")
+    @PreAuthorize(PUEDE_GESTIONAR_ORDENES)
     public ResponseEntity<?> facturarOrden(
             @PathVariable Integer id,
             @RequestBody FacturarOrdenDTO dto) {
@@ -302,6 +316,7 @@ public class OrdenCompraController {
      * @return 200 OK o 400 Bad Request.
      */
     @PutMapping("/{id}/anular")
+    @PreAuthorize(PUEDE_APROBAR_ORDENES)
     public ResponseEntity<?> anularOrden(
             @PathVariable Integer id) {
         try {
@@ -326,6 +341,7 @@ public class OrdenCompraController {
      * @return 200 OK con confirmación.
      */
     @PutMapping("/{id}/correo/marcar-enviado")
+    @PreAuthorize("hasAnyAuthority('PERM_ORDENES_GESTIONAR', 'PERM_ORDENES_APROBAR')")
     public ResponseEntity<?> marcarCorreoEnviadoManualmente(
             @PathVariable Integer id,
             @RequestBody MarcarCorreoEnviadoDTO dto) {
@@ -361,6 +377,7 @@ public class OrdenCompraController {
      * @return {@link ResponseEntity} con el arreglo de bytes del PDF y cabeceras de descarga.
      */
     @GetMapping("/{id}/pdf")
+    @PreAuthorize(PUEDE_CONSULTAR_ORDENES)
     public ResponseEntity<byte[]> descargarPdf(@PathVariable Integer id) {
         try {
             OrdenCompra orden = ordenCompraService.obtenerPorId(id);

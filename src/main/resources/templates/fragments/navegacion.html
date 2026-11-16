@@ -2,7 +2,7 @@
 <html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <body>
     <aside th:fragment="principal(vista)" class="app-navigation" aria-label="Navegación principal">
-        <nav id="main-admin-sidebar" sec:authorize="hasAnyAuthority('PERM_PANEL_ADMINISTRACION', 'PERM_PRODUCTOS_GESTIONAR', 'PERM_PROVEEDORES_GESTIONAR', 'PERM_SEDES_GESTIONAR', 'PERM_CENTROS_COSTO_GESTIONAR') or hasAuthority('PERM_PRODUCTOS_GESTIONAR') or hasAuthority('PERM_PROVEEDORES_GESTIONAR') or hasAuthority('PERM_SEDES_GESTIONAR') or hasAuthority('PERM_CENTROS_COSTO_GESTIONAR') or hasAuthority('PERM_POLIZAS_VER') or hasAuthority('PERM_POLIZAS_GESTIONAR') or hasAuthority('PERM_POLIZAS_APROBAR') or hasAuthority('PERM_ORDENES_VER') or hasAuthority('PERM_ORDENES_GESTIONAR') or hasAuthority('PERM_ORDENES_APROBAR')" class="app-sidebar">
+        <nav id="main-admin-sidebar" sec:authorize="hasRole('SUPERADMINISTRADOR') or hasAnyAuthority('PERM_PANEL_ADMINISTRACION', 'PERM_PRODUCTOS_GESTIONAR', 'PERM_PROVEEDORES_GESTIONAR', 'PERM_SEDES_GESTIONAR', 'PERM_CENTROS_COSTO_GESTIONAR', 'PERM_POLIZAS_VER', 'PERM_POLIZAS_GESTIONAR', 'PERM_POLIZAS_APROBAR', 'PERM_ORDENES_VER', 'PERM_ORDENES_GESTIONAR', 'PERM_ORDENES_APROBAR', 'PERM_RRHH_VER', 'PERM_RRHH_GESTIONAR', 'PERM_RRHH_APROBAR', 'PERM_RRHH_REGISTRO_EDITAR', 'PERM_RRHH_PERFIL_EDITAR', 'PERM_RRHH_CONTRATO_TERMINAR', 'PERM_RRHH_CONTRATO_ANULAR', 'PERM_RRHH_ASIGNACIONES_GESTIONAR', 'PERM_RRHH_QR_GESTIONAR')" class="app-sidebar">
             <button type="button" class="sidebar-mobile-toggle" aria-label="Expandir navegación"
                 aria-expanded="false" aria-controls="main-admin-sidebar" title="Expandir navegación">
                 <span class="material-symbols" aria-hidden="true">menu</span>
@@ -22,7 +22,7 @@
                     th:classappend="${vista == 'compras'} ? ' is-current' : ''"
                     th:attr="aria-current=${vista == 'compras'} ? 'page' : null">
                     <span class="material-symbols" aria-hidden="true">shopping_cart</span><span>Compras</span>
-                    <span sec:authorize="hasRole('APROBADOR')" th:if="${borradoresOrdenesSede > 0}"
+                    <span sec:authorize="hasAuthority('PERM_ORDENES_APROBAR')" th:if="${borradoresOrdenesSede > 0}"
                         class="sidebar-pending-count" th:text="${borradoresOrdenesSede}"
                         th:title="${'Órdenes pendientes por aprobar: ' + borradoresOrdenesSede}"
                         th:attr="aria-label=${borradoresOrdenesSede + ' órdenes pendientes por aprobar'}">0</span>
@@ -31,14 +31,14 @@
                     th:classappend="${vista == 'polizas'} ? ' is-current' : ''"
                     th:attr="aria-current=${vista == 'polizas'} ? 'page' : null">
                     <span class="material-symbols" aria-hidden="true">verified_user</span><span>Pólizas</span>
-                    <span sec:authorize="hasRole('APROBADOR')" th:if="${borradoresPolizasSede > 0}"
+                    <span sec:authorize="hasAuthority('PERM_POLIZAS_APROBAR')" th:if="${borradoresPolizasSede > 0}"
                         class="sidebar-pending-count" th:text="${borradoresPolizasSede}"
                         th:title="${'Pólizas pendientes por aprobar: ' + borradoresPolizasSede}"
                         th:attr="aria-label=${borradoresPolizasSede + ' pólizas pendientes por aprobar'}">0</span>
                 </a>
             </div>
 
-            <div class="sidebar-section">
+            <div sec:authorize="hasAnyAuthority('PERM_RRHH_VER', 'PERM_RRHH_GESTIONAR', 'PERM_RRHH_APROBAR', 'PERM_RRHH_REGISTRO_EDITAR', 'PERM_RRHH_PERFIL_EDITAR', 'PERM_RRHH_CONTRATO_TERMINAR', 'PERM_RRHH_CONTRATO_ANULAR', 'PERM_RRHH_ASIGNACIONES_GESTIONAR', 'PERM_RRHH_QR_GESTIONAR')" class="sidebar-section">
                 <p class="sidebar-label">Recursos Humanos</p>
                 <a th:href="@{/recursos-humanos/dashboard}" class="sidebar-link js-page-transition"
                     aria-label="Dashboard RRHH" title="Dashboard RRHH"
@@ -54,7 +54,7 @@
                 </a>
             </div>
 
-            <div class="sidebar-section sidebar-system">
+            <div sec:authorize="hasRole('SUPERADMINISTRADOR') or hasAnyAuthority('PERM_PRODUCTOS_GESTIONAR', 'PERM_PROVEEDORES_GESTIONAR', 'PERM_SEDES_GESTIONAR', 'PERM_CENTROS_COSTO_GESTIONAR')" class="sidebar-section sidebar-system">
                 <p class="sidebar-label">Sistema</p>
                 <div class="sidebar-system-group"
                     th:classappend="${catalogoActivo != null} ? ' is-open' : ''">

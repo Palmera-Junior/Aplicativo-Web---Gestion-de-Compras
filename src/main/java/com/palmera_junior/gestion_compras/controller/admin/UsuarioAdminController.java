@@ -18,6 +18,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.Map;
 import java.util.List;
+import java.util.LinkedHashMap;
 
 import com.palmera_junior.gestion_compras.dto.EmpleadoAutocompleteDTO;
 import com.palmera_junior.gestion_compras.entity.Empleado;
@@ -82,10 +83,7 @@ public class UsuarioAdminController {
                 : roles.stream().filter(rol -> rolId.equals(rol.getIdRol())).findFirst().orElse(null);
 
         model.addAttribute("usuarios", usuarios);
-        model.addAttribute("permisos", permisoRepository.findAll().stream()
-                .sorted(java.util.Comparator.comparing(Permiso::getNombre,
-                        java.util.Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)))
-                .toList());
+        model.addAttribute("permisosPorModulo", agruparPermisosPorModulo(permisoRepository.findAll()));
         model.addAttribute("usuarioSeleccionado", usuarioSeleccionado);
         model.addAttribute("usuarioId", usuarioSeleccionado == null ? null : usuarioSeleccionado.getIdUsuario());
         model.addAttribute("roles", roles);
@@ -99,6 +97,44 @@ public class UsuarioAdminController {
                 : usuarioId != null && usuarioSeleccionado == null ? "El usuario seleccionado no existe."
                 : rolId != null && rolSeleccionado == null ? "El rol seleccionado no existe." : null);
         return "permisos";
+    }
+
+    static Map<String, List<Permiso>> agruparPermisosPorModulo(List<Permiso> permisos) {
+        Map<String, List<Permiso>> grupos = new LinkedHashMap<>();
+        grupos.put("ORDENES DE COMPRA", new java.util.ArrayList<>());
+        grupos.put("POLIZAS", new java.util.ArrayList<>());
+        grupos.put("RRHH", new java.util.ArrayList<>());
+        grupos.put("GENERAL", new java.util.ArrayList<>());
+
+        for (Permiso permiso : permisos) {
+            String codigo = permiso.getCodigo();
+            String modulo = codigo != null && codigo.startsWith("ORDENES_") ? "ORDENES DE COMPRA"
+                    : codigo != null && codigo.startsWith("POLIZAS_") ? "POLIZAS"
+                    : codigo != null && codigo.startsWith("RRHH_") ? "RRHH"
+                    : "GENERAL";
+            grupos.get(modulo).add(permiso);
+        }
+
+        java.util.Comparator<Permiso> ordenPermisos = java.util.Comparator
+                .comparingInt(UsuarioAdminController::ordenPermiso)
+                .thenComparing(Permiso::getNombre,
+                        java.util.Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));
+        grupos.values().forEach(permisosDelModulo -> permisosDelModulo.sort(ordenPermisos));
+        return grupos;
+    }
+
+    private static int ordenPermiso(Permiso permiso) {
+        return switch (permiso.getCodigo() == null ? "" : permiso.getCodigo()) {
+            case "ORDENES_GESTIONAR", "POLIZAS_GESTIONAR" -> 0;
+            case "ORDENES_APROBAR", "POLIZAS_APROBAR" -> 1;
+            case "ORDENES_VER", "POLIZAS_VER" -> 2;
+            case "PANEL_ADMINISTRACION" -> 0;
+            case "PRODUCTOS_GESTIONAR" -> 1;
+            case "PROVEEDORES_GESTIONAR" -> 2;
+            case "SEDES_GESTIONAR" -> 3;
+            case "CENTROS_COSTO_GESTIONAR" -> 4;
+            default -> 100;
+        };
     }
 
     @PostMapping("/admin/catalogos/permisos")
