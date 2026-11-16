@@ -12,6 +12,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
@@ -35,19 +37,21 @@ public class PasswordResetService {
     private final PasswordResetRateLimiter rateLimiter;
     private final IEmailService emailService;
     private final EmailTemplateService emailTemplateService;
+    private final TransactionTemplate transactionTemplate;
 
     public PasswordResetService(JdbcTemplate jdbcTemplate, UsuarioRepository usuarioRepository,
             PasswordEncoder passwordEncoder, PasswordResetRateLimiter rateLimiter,
-            IEmailService emailService, EmailTemplateService emailTemplateService) {
+            IEmailService emailService, EmailTemplateService emailTemplateService,
+            PlatformTransactionManager transactionManager) {
         this.jdbcTemplate = jdbcTemplate;
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
         this.rateLimiter = rateLimiter;
         this.emailService = emailService;
         this.emailTemplateService = emailTemplateService;
+        this.transactionTemplate = new TransactionTemplate(transactionManager);
     }
 
-    @Transactional
     public void solicitarRecuperacion(String email, String ipAddress) {
         if (!rateLimiter.allow("ip-reset-request", valorSeguro(ipAddress), 20)) {
             return;
@@ -57,17 +61,33 @@ public class PasswordResetService {
             return;
         }
 
+        SolicitudRecuperacion solicitud = transactionTemplate.execute(status -> crearSolicitud(emailNormalizado));
+        if (solicitud == null) {
+            return;
+        }
+
+        String url = emailTemplateService.urlRestablecimiento(solicitud.token());
+        String html = emailTemplateService.generarCorreoRecuperacion(solicitud.nombre(), url);
+        try {
+            emailService.enviarNotificacionHtml(solicitud.email(), "Recuperación de contraseña", html);
+        } catch (Exception ex) {
+            log.error("No se pudo enviar un correo de recuperación de contraseña.", ex);
+            throw new DeliveryException(ex);
+        }
+    }
+
+    private SolicitudRecuperacion crearSolicitud(String emailNormalizado) {
         Integer userId = jdbcTemplate.query("""
                 SELECT id_usuario FROM core.usuario
                 WHERE LOWER(email) = ? FOR UPDATE
                 """, rs -> rs.next() ? rs.getInt("id_usuario") : null, emailNormalizado);
         if (userId == null) {
-            return;
+            return null;
         }
         Usuario usuario = usuarioRepository.findById(userId)
                 .orElseThrow(() -> new IllegalStateException("La cuenta asociada al correo ya no existe."));
         if (!StringUtils.hasText(usuario.getEmail())) {
-            return;
+            return null;
         }
         jdbcTemplate.update(
                 "DELETE FROM core.password_reset_token WHERE id_usuario = ? AND usado_en IS NULL",
@@ -86,15 +106,7 @@ public class PasswordResetService {
                 VALUES (?, ?, CURRENT_TIMESTAMP + INTERVAL '20 minutes')
                 """, usuario.getIdUsuario(), tokenHash);
 
-        String url = emailTemplateService.urlRestablecimiento(rawToken);
-        String html = emailTemplateService.generarCorreoRecuperacion(
-                usuario.getNombre(), url);
-        try {
-            emailService.enviarNotificacionHtml(usuario.getEmail(), "Recuperación de contraseña", html);
-        } catch (Exception ex) {
-            log.error("No se pudo enviar un correo de recuperación de contraseña.", ex);
-            throw new DeliveryException(ex);
-        }
+        return new SolicitudRecuperacion(usuario.getEmail(), usuario.getNombre(), rawToken);
     }
 
     @Transactional(readOnly = true)
@@ -205,5 +217,8 @@ public class PasswordResetService {
     }
 
     private record TokenRecuperacion(long id, int idUsuario, java.sql.Timestamp usadoEn) {
+    }
+
+    private record SolicitudRecuperacion(String email, String nombre, String token) {
     }
 }

@@ -48,20 +48,34 @@ public class PasswordResetController {
         protegerPaginaDeToken(response);
         model.addAttribute("token", token);
         model.addAttribute("tokenValido", passwordResetService.tokenValido(token));
+        model.addAttribute("restablecimientoExitoso", false);
+        return "password-reset";
+    }
+
+    @GetMapping("/password/reset/completed")
+    public String mostrarConfirmacionRestablecimiento(HttpServletResponse response, Model model) {
+        protegerPaginaDeToken(response);
+        if (!Boolean.TRUE.equals(model.getAttribute("restablecimientoExitoso"))) {
+            return "redirect:/login";
+        }
+        model.addAttribute("tokenValido", false);
         return "password-reset";
     }
 
     @PostMapping("/password/reset")
     public String restablecer(@RequestParam(required = false) String token,
             @RequestParam String nuevaContrasena, @RequestParam String confirmarContrasena,
-            HttpServletRequest request, HttpServletResponse response, Model model) {
+            HttpServletRequest request, HttpServletResponse response, Model model,
+            RedirectAttributes redirectAttributes) {
         protegerPaginaDeToken(response);
         ResultadoRestablecimiento resultado = passwordResetService.restablecer(
                 token, nuevaContrasena, confirmarContrasena, request.getRemoteAddr());
         if (resultado == ResultadoRestablecimiento.EXITOSO) {
-            return "redirect:/login?passwordReset";
+            redirectAttributes.addFlashAttribute("restablecimientoExitoso", true);
+            return "redirect:/password/reset/completed";
         }
         model.addAttribute("token", token);
+        model.addAttribute("restablecimientoExitoso", false);
         model.addAttribute("tokenValido", resultado != ResultadoRestablecimiento.TOKEN_INVALIDO);
         model.addAttribute("errorRestablecimiento", switch (resultado) {
             case CONFIRMACION_INVALIDA -> "Las contraseñas no coinciden.";

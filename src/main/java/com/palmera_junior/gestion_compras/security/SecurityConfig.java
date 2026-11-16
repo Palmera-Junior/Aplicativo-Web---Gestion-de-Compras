@@ -105,6 +105,7 @@ public class SecurityConfig {
                                 "/login",
                                 "/password/forgot",
                                 "/password/reset",
+                                "/password/reset/completed",
                                 "/css/**",
                                 "/imgs/**",
                                 "/js/**",
