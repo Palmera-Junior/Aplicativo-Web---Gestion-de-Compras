@@ -14,6 +14,8 @@ public interface IContratoEmpleadoService {
 
     List<ContratoEmpleado> listarPorEmpleado(Integer idEmpleado);
 
+    List<ContratoEmpleado> listarVigentesPorEmpleados(List<Integer> idsEmpleados);
+
     Optional<ContratoEmpleado> buscarPorId(Integer idContratoEmpleado);
 
     ContratoEmpleado guardar(ContratoEmpleado contrato);

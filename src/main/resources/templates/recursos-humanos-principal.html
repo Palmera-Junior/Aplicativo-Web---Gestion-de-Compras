@@ -139,9 +139,9 @@
                             <td class="rrhh-document" th:text="${empleado.numeroDocumento}">Documento</td>
                             <td>
                                 <span class="rrhh-job-title"
-                                      th:text="${empleado.cargo != null ? empleado.cargo.nombre : 'Sin cargo'}">Cargo</span>
+                                      th:text="${contratosVigentesPorEmpleado[empleado.idEmpleado] != null and contratosVigentesPorEmpleado[empleado.idEmpleado].cargo != null ? contratosVigentesPorEmpleado[empleado.idEmpleado].cargo.nombre : 'SIN DEFINIR'}">Cargo</span>
                                 <span class="rrhh-area"
-                                      th:text="${empleado.area != null ? empleado.area.nombre : 'Sin área'}">Área</span>
+                                      th:text="${contratosVigentesPorEmpleado[empleado.idEmpleado] != null and contratosVigentesPorEmpleado[empleado.idEmpleado].area != null ? contratosVigentesPorEmpleado[empleado.idEmpleado].area.nombre : 'SIN DEFINIR'}">Área</span>
                             </td>
                             <td th:text="${empleado.centroCosto != null ? empleado.centroCosto.nombre : 'Sin centro de costo'}">Centro de costo</td>
                             <td>
@@ -206,32 +206,42 @@
                 <span class="rrhh-step-kicker">Vista de la tarjeta virtual</span>
                 <article class="rrhh-virtual-card rrhh-qr-virtual-card">
                     <div class="rrhh-virtual-card-brand">
-                        <span class="material-symbols" aria-hidden="true">verified_user</span>
-                        <span>PALMERA JUNIOR <small>IDENTIFICACIÓN DIGITAL</small></span>
+                        <img class="logo-palmera" th:src="@{/imgs/logo1.png}" alt="Palmera Junior">
+                        <span class="logo-divider" aria-hidden="true"></span>
+                        <img class="logo-anticimex" th:src="@{/imgs/logoAnticimex.png}" alt="Anticimex">
                     </div>
                     <div class="rrhh-virtual-card-person">
                         <span class="rrhh-virtual-photo">
                             <img th:if="${empleadoTieneFoto}"
                                  th:src="@{/recursos-humanos/empleados/{id}/qr/foto(id=${empleadoSeleccionado.idEmpleado})}"
                                  alt="Fotografía del empleado">
-                            <span th:unless="${empleadoTieneFoto}" class="material-symbols" aria-hidden="true">person</span>
-                            <small th:unless="${empleadoTieneFoto}">FOTO</small>
+                            <svg th:unless="${empleadoTieneFoto}" viewBox="0 0 48 48" aria-hidden="true">
+                                <circle cx="24" cy="15" r="7"></circle>
+                                <path d="M9 40c1.8-8 7.1-12 15-12s13.2 4 15 12"></path>
+                            </svg>
                         </span>
                         <span class="rrhh-card-state"
+                              th:classappend="${empleadoSeleccionado.estado.name() == 'RETIRADO' ? ' retirado' : (empleadoSeleccionado.estado.name() == 'REGISTRO_INICIAL' ? ' inicial' : (empleadoSeleccionado.estado.name() == 'PROCESO_CONTRATACION' ? ' proceso' : ' activo'))}"
                               th:text="${empleadoSeleccionado.estado.etiqueta}">Activo</span>
                     </div>
+                    <h3 class="rrhh-virtual-card-name"
+                        th:text="${empleadoSeleccionado.primerNombre + ' ' + (empleadoSeleccionado.segundoNombre != null ? empleadoSeleccionado.segundoNombre + ' ' : '') + empleadoSeleccionado.primerApellido + (empleadoSeleccionado.segundoApellido != null ? ' ' + empleadoSeleccionado.segundoApellido : '')}">Nombre del empleado</h3>
                     <div class="rrhh-virtual-card-info">
-                        <strong th:text="${empleadoSeleccionado.primerNombre + ' ' + (empleadoSeleccionado.segundoNombre != null ? empleadoSeleccionado.segundoNombre + ' ' : '') + empleadoSeleccionado.primerApellido + (empleadoSeleccionado.segundoApellido != null ? ' ' + empleadoSeleccionado.segundoApellido : '')}">Nombre del empleado</strong>
-                        <span th:text="${empleadoSeleccionado.cargo != null ? empleadoSeleccionado.cargo.nombre : 'Sin cargo'}">Cargo</span>
-                        <span th:text="${empleadoSeleccionado.area != null ? 'Área ' + empleadoSeleccionado.area.nombre : 'Sin área'}">Área</span>
-                        <span th:text="${empleadoSeleccionado.centroCosto != null and empleadoSeleccionado.centroCosto.sede != null ? 'Sede ' + empleadoSeleccionado.centroCosto.sede.nombre : 'Sede no especificada'}">Sede</span>
-                        <span th:text="${empleadoSeleccionado.tipoSangre != null and empleadoSeleccionado.rh != null ? 'RH ' + empleadoSeleccionado.tipoSangre.name() + (empleadoSeleccionado.rh.name() == 'POSITIVO' ? '+' : '-') : 'RH no especificado'}">RH</span>
+                        <div><span>Cargo</span><strong th:text="${contratoVigente != null and contratoVigente.cargo != null ? contratoVigente.cargo.nombre : 'SIN DEFINIR'}">SIN DEFINIR</strong></div>
+                        <div><span>Área</span><strong th:text="${contratoVigente != null and contratoVigente.area != null ? contratoVigente.area.nombre : 'SIN DEFINIR'}">SIN DEFINIR</strong></div>
+                        <div><span>Sede</span><strong th:text="${empleadoSeleccionado.centroCosto != null and empleadoSeleccionado.centroCosto.sede != null ? empleadoSeleccionado.centroCosto.sede.nombre : '—'}">Sede</strong></div>
+                        <div><span>RH</span><strong th:text="${empleadoSeleccionado.tipoSangre != null and empleadoSeleccionado.rh != null ? empleadoSeleccionado.tipoSangre.name() + (empleadoSeleccionado.rh.name() == 'POSITIVO' ? '+' : '-') : '—'}">O+</strong></div>
                     </div>
                     <div class="rrhh-virtual-card-documents">
-                        <span>Documento público</span>
-                        <strong th:text="${nombreArlPublico != null ? nombreArlPublico : 'No hay certificado ARL publicado'}">Documento ARL</strong>
+                        <span class="material-symbols rrhh-arl-shield" aria-hidden="true">verified_user</span>
+                        <div>
+                            <span>Afiliación ARL</span>
+                            <strong th:text="${'ARL ' + (contratoVigente != null and contratoVigente.arl != null ? contratoVigente.arl.nombre : 'no especificada')}">ARL no especificada</strong>
+                        </div>
+                        <span class="material-symbols rrhh-arl-view" th:if="${nombreArlPublico != null}"
+                              aria-label="Certificado ARL publicado" title="Certificado ARL publicado">visibility</span>
                     </div>
-                    <footer>Tarjeta pública · Datos autorizados para consulta</footer>
+                    <footer><span><strong>Carnet digital</strong> - SIGO.</span></footer>
                 </article>
             </section>
             <section class="rrhh-card-qr-panel rrhh-qr-management-panel" aria-label="Gestión del código QR">
@@ -365,8 +375,8 @@
                             <article class="rrhh-detail-card">
                                 <h3><span class="material-symbols" aria-hidden="true">work</span>Información laboral</h3>
                                 <dl class="rrhh-detail-fields">
-                                    <div><dt>Cargo</dt><dd th:text="${empleadoSeleccionado != null and empleadoSeleccionado.cargo != null ? empleadoSeleccionado.cargo.nombre : '—'}">Cargo</dd></div>
-                                    <div><dt>Área</dt><dd th:text="${empleadoSeleccionado != null and empleadoSeleccionado.area != null ? empleadoSeleccionado.area.nombre : '—'}">Área</dd></div>
+                                    <div><dt>Cargo</dt><dd th:text="${contratoVigente != null and contratoVigente.cargo != null ? contratoVigente.cargo.nombre : 'SIN DEFINIR'}">Cargo</dd></div>
+                                    <div><dt>Área</dt><dd th:text="${contratoVigente != null and contratoVigente.area != null ? contratoVigente.area.nombre : 'SIN DEFINIR'}">Área</dd></div>
                                     <div><dt>RH</dt><dd th:text="${empleadoSeleccionado != null and empleadoSeleccionado.tipoSangre != null and empleadoSeleccionado.rh != null ? empleadoSeleccionado.tipoSangre.name() + (empleadoSeleccionado.rh.name() == 'POSITIVO' ? '+' : '-') : '—'}">O+</dd></div>
                                     <div><dt>Centro de costo</dt><dd th:text="${empleadoSeleccionado != null and empleadoSeleccionado.centroCosto != null ? empleadoSeleccionado.centroCosto.nombre : '—'}">Centro de costo</dd></div>
                                     <div><dt>Fecha de ingreso</dt><dd th:text="${contratoVigente != null ? contratoVigente.fechaIngreso : '—'}">Fecha de ingreso</dd></div>
@@ -731,55 +741,60 @@
                     <div class="rrhh-card-preview-area">
                         <article class="rrhh-card-preview rrhh-card-preview-maria">
                             <div class="rrhh-virtual-card">
-                                <div class="rrhh-virtual-card-brand"><span class="material-symbols" aria-hidden="true">verified_user</span><span>PALMERA JUNIOR <small>IDENTIFICACIÓN DIGITAL</small></span></div>
-                                <div class="rrhh-virtual-card-person"><span class="rrhh-virtual-photo"><span class="material-symbols" aria-hidden="true">person</span><small>FOTO</small></span><span class="rrhh-card-state inicial">Registro inicial</span></div>
-                                <div class="rrhh-virtual-card-info"><strong>María Fernanda Rojas</strong><span>Analista de compras</span><span>Área Administrativa</span><span>Sede Bogotá</span><span>RH O+</span></div>
-                                <div class="rrhh-virtual-card-documents"><span>Documento público</span><strong>Solo certificado ARL marcado para publicación</strong><a class="rrhh-file-link" href="#tarjetas-empleados">Ver certificado ARL (si está publicado)</a></div>
-                                <footer>Tarjeta pública · Datos autorizados para consulta</footer>
+                                <div class="rrhh-virtual-card-brand"><img class="logo-palmera" th:src="@{/imgs/logo1.png}" alt="Palmera Junior"><span class="logo-divider" aria-hidden="true"></span><img class="logo-anticimex" th:src="@{/imgs/logoAnticimex.png}" alt="Anticimex"></div>
+                                <div class="rrhh-virtual-card-person"><span class="rrhh-virtual-photo"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="15" r="7"></circle><path d="M9 40c1.8-8 7.1-12 15-12s13.2 4 15 12"></path></svg></span><span class="rrhh-card-state inicial">Registro inicial</span></div>
+                                <h3 class="rrhh-virtual-card-name">María Fernanda Rojas</h3>
+                                <div class="rrhh-virtual-card-info"><div><span>Cargo</span><strong>Analista de compras</strong></div><div><span>Área</span><strong>Administrativa</strong></div><div><span>Sede</span><strong>Bogotá</strong></div><div><span>RH</span><strong>O+</strong></div></div>
+                                <div class="rrhh-virtual-card-documents"><span class="material-symbols rrhh-arl-shield" aria-hidden="true">verified_user</span><div><span>Afiliación ARL</span><strong>ARL Positiva</strong></div><span class="material-symbols rrhh-arl-view" aria-label="Certificado ARL publicado">visibility</span></div>
+                                <footer><span><strong>Carnet digital</strong> - SIGO.</span></footer>
                             </div>
                             <aside class="rrhh-card-qr-panel"><span class="material-symbols" aria-hidden="true">qr_code_2</span><span class="rrhh-qr-label">QR individual público</span><p>La URL contiene un token opaco, no datos personales. Renovar el QR invalida el enlace anterior.</p><button class="rrhh-qr-download" type="button"><span class="material-symbols" aria-hidden="true">autorenew</span>Generar / renovar QR</button></aside>
                         </article>
 
                         <article class="rrhh-card-preview rrhh-card-preview-juan">
                             <div class="rrhh-virtual-card">
-                                <div class="rrhh-virtual-card-brand"><span class="material-symbols" aria-hidden="true">verified_user</span><span>PALMERA JUNIOR <small>IDENTIFICACIÓN DIGITAL</small></span></div>
-                                <div class="rrhh-virtual-card-person"><span class="rrhh-virtual-photo"><span class="material-symbols" aria-hidden="true">person</span><small>FOTO</small></span><span class="rrhh-card-state proceso">Proceso de contratación</span></div>
-                                <div class="rrhh-virtual-card-info"><strong>Juan David Cárdenas</strong><span>Coordinador de operaciones</span><span>Área Operaciones</span><span>Sede Medellín</span><span>RH A+</span></div>
-                                <div class="rrhh-virtual-card-documents"><span>Documento público</span><strong>Solo certificado ARL marcado para publicación</strong><a class="rrhh-file-link" href="#tarjetas-empleados">Ver certificado ARL (si está publicado)</a></div>
-                                <footer>Tarjeta pública · Datos autorizados para consulta</footer>
+                                <div class="rrhh-virtual-card-brand"><img class="logo-palmera" th:src="@{/imgs/logo1.png}" alt="Palmera Junior"><span class="logo-divider" aria-hidden="true"></span><img class="logo-anticimex" th:src="@{/imgs/logoAnticimex.png}" alt="Anticimex"></div>
+                                <div class="rrhh-virtual-card-person"><span class="rrhh-virtual-photo"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="15" r="7"></circle><path d="M9 40c1.8-8 7.1-12 15-12s13.2 4 15 12"></path></svg></span><span class="rrhh-card-state proceso">Proceso de contratación</span></div>
+                                <h3 class="rrhh-virtual-card-name">Juan David Cárdenas</h3>
+                                <div class="rrhh-virtual-card-info"><div><span>Cargo</span><strong>Coordinador de operaciones</strong></div><div><span>Área</span><strong>Operaciones</strong></div><div><span>Sede</span><strong>Medellín</strong></div><div><span>RH</span><strong>A+</strong></div></div>
+                                <div class="rrhh-virtual-card-documents"><span class="material-symbols rrhh-arl-shield" aria-hidden="true">verified_user</span><div><span>Afiliación ARL</span><strong>ARL Positiva</strong></div><span class="material-symbols rrhh-arl-view" aria-label="Certificado ARL publicado">visibility</span></div>
+                                <footer><span><strong>Carnet digital</strong> - SIGO.</span></footer>
                             </div>
                             <aside class="rrhh-card-qr-panel"><span class="material-symbols" aria-hidden="true">qr_code_2</span><span class="rrhh-qr-label">QR individual público</span><p>La URL contiene un token opaco, no datos personales. Renovar el QR invalida el enlace anterior.</p><button class="rrhh-qr-download" type="button"><span class="material-symbols" aria-hidden="true">autorenew</span>Generar / renovar QR</button></aside>
                         </article>
 
                         <article class="rrhh-card-preview rrhh-card-preview-andres">
                             <div class="rrhh-virtual-card">
-                                <div class="rrhh-virtual-card-brand"><span class="material-symbols" aria-hidden="true">verified_user</span><span>PALMERA JUNIOR <small>IDENTIFICACIÓN DIGITAL</small></span></div>
-                                <div class="rrhh-virtual-card-person"><span class="rrhh-virtual-photo"><span class="material-symbols" aria-hidden="true">person</span><small>FOTO</small></span><span class="rrhh-card-state activo">Activo</span></div>
-                                <div class="rrhh-virtual-card-info"><strong>Andrés Felipe Torres</strong><span>Auxiliar de bodega</span><span>Área Operaciones</span><span>Sede Cali</span><span>RH O+</span></div>
-                                <div class="rrhh-virtual-card-documents"><span>Documento público</span><strong>Solo certificado ARL marcado para publicación</strong><a class="rrhh-file-link" href="#tarjetas-empleados">Ver certificado ARL (si está publicado)</a></div>
-                                <footer>Tarjeta pública · Datos autorizados para consulta</footer>
+                                <div class="rrhh-virtual-card-brand"><img class="logo-palmera" th:src="@{/imgs/logo1.png}" alt="Palmera Junior"><span class="logo-divider" aria-hidden="true"></span><img class="logo-anticimex" th:src="@{/imgs/logoAnticimex.png}" alt="Anticimex"></div>
+                                <div class="rrhh-virtual-card-person"><span class="rrhh-virtual-photo"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="15" r="7"></circle><path d="M9 40c1.8-8 7.1-12 15-12s13.2 4 15 12"></path></svg></span><span class="rrhh-card-state activo">Activo</span></div>
+                                <h3 class="rrhh-virtual-card-name">Andrés Felipe Torres</h3>
+                                <div class="rrhh-virtual-card-info"><div><span>Cargo</span><strong>Auxiliar de bodega</strong></div><div><span>Área</span><strong>Operaciones</strong></div><div><span>Sede</span><strong>Cali</strong></div><div><span>RH</span><strong>O+</strong></div></div>
+                                <div class="rrhh-virtual-card-documents"><span class="material-symbols rrhh-arl-shield" aria-hidden="true">verified_user</span><div><span>Afiliación ARL</span><strong>ARL Positiva</strong></div><span class="material-symbols rrhh-arl-view" aria-label="Certificado ARL publicado">visibility</span></div>
+                                <footer><span><strong>Carnet digital</strong> - SIGO.</span></footer>
                             </div>
                             <aside class="rrhh-card-qr-panel"><span class="material-symbols" aria-hidden="true">qr_code_2</span><span class="rrhh-qr-label">QR individual público</span><p>La URL contiene un token opaco, no datos personales. Renovar el QR invalida el enlace anterior.</p><button class="rrhh-qr-download" type="button"><span class="material-symbols" aria-hidden="true">autorenew</span>Generar / renovar QR</button></aside>
                         </article>
 
                         <article class="rrhh-card-preview rrhh-card-preview-laura">
                             <div class="rrhh-virtual-card">
-                                <div class="rrhh-virtual-card-brand"><span class="material-symbols" aria-hidden="true">verified_user</span><span>PALMERA JUNIOR <small>IDENTIFICACIÓN DIGITAL</small></span></div>
-                                <div class="rrhh-virtual-card-person"><span class="rrhh-virtual-photo"><span class="material-symbols" aria-hidden="true">person</span><small>FOTO</small></span><span class="rrhh-card-state retirado">Retirado</span></div>
-                                <div class="rrhh-virtual-card-info"><strong>Laura Camila Restrepo</strong><span>Asesora comercial</span><span>Área Comercial</span><span>Sede Medellín</span><span>RH B+</span></div>
-                                <div class="rrhh-virtual-card-documents"><span>Documento público</span><strong>Solo certificado ARL marcado para publicación</strong><a class="rrhh-file-link" href="#tarjetas-empleados">Ver certificado ARL (si está publicado)</a></div>
-                                <footer>Tarjeta pública · Datos autorizados para consulta</footer>
+                                <div class="rrhh-virtual-card-brand"><img class="logo-palmera" th:src="@{/imgs/logo1.png}" alt="Palmera Junior"><span class="logo-divider" aria-hidden="true"></span><img class="logo-anticimex" th:src="@{/imgs/logoAnticimex.png}" alt="Anticimex"></div>
+                                <div class="rrhh-virtual-card-person"><span class="rrhh-virtual-photo"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="15" r="7"></circle><path d="M9 40c1.8-8 7.1-12 15-12s13.2 4 15 12"></path></svg></span><span class="rrhh-card-state retirado">Retirado</span></div>
+                                <h3 class="rrhh-virtual-card-name">Laura Camila Restrepo</h3>
+                                <div class="rrhh-virtual-card-info"><div><span>Cargo</span><strong>Asesora comercial</strong></div><div><span>Área</span><strong>Comercial</strong></div><div><span>Sede</span><strong>Medellín</strong></div><div><span>RH</span><strong>B+</strong></div></div>
+                                <div class="rrhh-virtual-card-documents"><span class="material-symbols rrhh-arl-shield" aria-hidden="true">verified_user</span><div><span>Afiliación ARL</span><strong>ARL Positiva</strong></div><span class="material-symbols rrhh-arl-view" aria-label="Certificado ARL publicado">visibility</span></div>
+                                <footer><span><strong>Carnet digital</strong> - SIGO.</span></footer>
                             </div>
                             <aside class="rrhh-card-qr-panel"><span class="material-symbols" aria-hidden="true">qr_code_2</span><span class="rrhh-qr-label">QR individual público</span><p>La URL contiene un token opaco, no datos personales. Renovar el QR invalida el enlace anterior.</p><button class="rrhh-qr-download" type="button"><span class="material-symbols" aria-hidden="true">autorenew</span>Generar / renovar QR</button></aside>
                         </article>
 
                         <article class="rrhh-card-preview rrhh-card-preview-carlos">
                             <div class="rrhh-virtual-card">
-                                <div class="rrhh-virtual-card-brand"><span class="material-symbols" aria-hidden="true">verified_user</span><span>PALMERA JUNIOR <small>IDENTIFICACIÓN DIGITAL</small></span></div>
-                                <div class="rrhh-virtual-card-person"><span class="rrhh-virtual-photo"><span class="material-symbols" aria-hidden="true">person</span><small>FOTO</small></span><span class="rrhh-card-state activo">Activo</span></div>
-                                <div class="rrhh-virtual-card-info"><strong>Carlos Eduardo Méndez</strong><span>Técnico de servicio</span><span>Área Operaciones</span><span>Sede Bogotá</span><span>RH A+</span></div>
-                                <div class="rrhh-virtual-card-documents"><span>Documento público</span><strong>Solo certificado ARL marcado para publicación</strong><a class="rrhh-file-link" href="#tarjetas-empleados">Ver certificado ARL (si está publicado)</a></div>
-                                <footer>Tarjeta pública · Datos autorizados para consulta</footer>
+                                <div class="rrhh-virtual-card-brand"><img class="logo-palmera" th:src="@{/imgs/logo1.png}" alt="Palmera Junior"><span class="logo-divider" aria-hidden="true"></span><img class="logo-anticimex" th:src="@{/imgs/logoAnticimex.png}" alt="Anticimex"></div>
+                                <div class="rrhh-virtual-card-person"><span class="rrhh-virtual-photo"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="15" r="7"></circle><path d="M9 40c1.8-8 7.1-12 15-12s13.2 4 15 12"></path></svg></span><span class="rrhh-card-state activo">Activo</span></div>
+                                <h3 class="rrhh-virtual-card-name">Carlos Eduardo Méndez</h3>
+                                <div class="rrhh-virtual-card-info"><div><span>Cargo</span><strong>Técnico de servicio</strong></div><div><span>Área</span><strong>Operaciones</strong></div><div><span>Sede</span><strong>Bogotá</strong></div><div><span>RH</span><strong>A+</strong></div></div>
+                                <div class="rrhh-virtual-card-documents"><span class="material-symbols rrhh-arl-shield" aria-hidden="true">verified_user</span><div><span>Afiliación ARL</span><strong>ARL Positiva</strong></div><span class="material-symbols rrhh-arl-view" aria-label="Certificado ARL publicado">visibility</span></div>
+                                <footer><span><strong>Carnet digital</strong> - SIGO.</span></footer>
                             </div>
                             <aside class="rrhh-card-qr-panel"><span class="material-symbols" aria-hidden="true">qr_code_2</span><span class="rrhh-qr-label">QR individual público</span><p>La URL contiene un token opaco, no datos personales. Renovar el QR invalida el enlace anterior.</p><button class="rrhh-qr-download" type="button"><span class="material-symbols" aria-hidden="true">autorenew</span>Generar / renovar QR</button></aside>
                         </article>
@@ -856,8 +871,8 @@
                         <div class="rrhh-form-field"><label for="renovacion-tipo">Tipo de contrato <span>*</span></label><select class="input-control" id="renovacion-tipo" name="idTipoContrato" required><option value="">Selecciona</option><option th:each="tipo : ${tiposContratoRenovacion}" th:value="${tipo.id}" th:text="${tipo.nombre}" th:selected="${contratoVigente.tipoContrato != null and contratoVigente.tipoContrato.id == tipo.id}"></option></select></div>
                         <div class="rrhh-form-field"><label for="renovacion-inicio">Nueva fecha de inicio <span>*</span></label><input class="input-control" id="renovacion-inicio" name="fechaInicio" type="date" required th:attr="data-cubierto-hasta=${contratoVigente.fechaFin}"></div>
                         <div class="rrhh-form-field"><label for="renovacion-fin">Nueva fecha de vencimiento</label><input class="input-control" id="renovacion-fin" name="fechaFin" type="date"></div>
-                        <div class="rrhh-form-field"><label for="renovacion-cargo">Cargo <span>*</span></label><select class="input-control" id="renovacion-cargo" name="idCargo" required><option value="">Selecciona</option><option th:each="cargo : ${cargos}" th:value="${cargo.id}" th:text="${cargo.nombre}" th:selected="${contratoVigente.cargo != null ? contratoVigente.cargo.id == cargo.id : (empleadoSeleccionado.cargo != null and empleadoSeleccionado.cargo.id == cargo.id)}"></option></select></div>
-                        <div class="rrhh-form-field"><label for="renovacion-area">Área <span>*</span></label><select class="input-control" id="renovacion-area" name="idArea" required><option value="">Selecciona</option><option th:each="area : ${areas}" th:value="${area.id}" th:text="${area.nombre}" th:selected="${contratoVigente.area != null ? contratoVigente.area.id == area.id : (empleadoSeleccionado.area != null and empleadoSeleccionado.area.id == area.id)}"></option></select></div>
+                        <div class="rrhh-form-field"><label for="renovacion-cargo">Cargo <span>*</span></label><select class="input-control" id="renovacion-cargo" name="idCargo" required><option value="">Selecciona</option><option th:each="cargo : ${cargos}" th:value="${cargo.id}" th:text="${cargo.nombre}" th:selected="${contratoVigente.cargo != null and contratoVigente.cargo.id == cargo.id}"></option></select></div>
+                        <div class="rrhh-form-field"><label for="renovacion-area">Área <span>*</span></label><select class="input-control" id="renovacion-area" name="idArea" required><option value="">Selecciona</option><option th:each="area : ${areas}" th:value="${area.id}" th:text="${area.nombre}" th:selected="${contratoVigente.area != null and contratoVigente.area.id == area.id}"></option></select></div>
                         <div class="rrhh-form-field"><label for="renovacion-salario">Salario básico (COP) <span>*</span></label><div class="rrhh-input-prefix"><span>$</span><input class="input-control" id="renovacion-salario" name="salario" type="number" min="0" step="0.01" data-no-negativo data-numerico-decimal th:value="${contratoVigente.salarioBasico}" required></div></div>
                     </div>
                 </fieldset>
@@ -991,11 +1006,9 @@
 
                     <section class="rrhh-registration-step step-config" aria-labelledby="rrhh-config-heading">
                         <div class="rrhh-step-heading">
-                            <div><span class="rrhh-step-kicker">Pestaña 2</span><h2 id="rrhh-config-heading">Configuración del empleado</h2><p>Asigna su área, cargo y centro de costo; define los adjuntos requeridos para el registro inicial.</p></div>
+                            <div><span class="rrhh-step-kicker">Pestaña 2</span><h2 id="rrhh-config-heading">Configuración del empleado</h2><p>Asigna el centro de costo y define los adjuntos requeridos para el registro inicial.</p></div>
                         </div>
                         <div class="rrhh-form-grid rrhh-form-grid-three">
-                            <div class="rrhh-form-field"><label for="nuevo-area">Área <span>*</span></label><select class="input-control" id="nuevo-area" th:field="*{areaId}" required><option value="">Selecciona un área</option><option th:each="area : ${areas}" th:value="${area.id}" th:text="${area.nombre}"></option></select></div>
-                            <div class="rrhh-form-field"><label for="nuevo-cargo">Cargo <span>*</span></label><select class="input-control" id="nuevo-cargo" th:field="*{cargoId}" required><option value="">Selecciona un cargo</option><option th:each="cargo : ${cargos}" th:value="${cargo.id}" th:text="${cargo.nombre}"></option></select></div>
                             <div class="rrhh-form-field"><label for="nuevo-centro-costo">Centro de costo <span>*</span></label><select class="input-control" id="nuevo-centro-costo" th:field="*{centroCostoId}" required><option value="">Selecciona un centro</option><option th:each="centro : ${centrosCosto}" th:value="${centro.idCentroCosto}" th:text="${centro.nombre}"></option></select></div>
                             <div class="rrhh-form-field"><label for="nuevo-subcentro">Subcentro</label><input class="input-control" id="nuevo-subcentro" th:field="*{subcentro}" maxlength="100" placeholder="Ej. Servicios técnicos"></div>
                         </div>
@@ -1073,6 +1086,8 @@
                         </fieldset>
                         <fieldset class="rrhh-form-section"><legend>Vigencia y modalidad</legend>
                             <div class="rrhh-form-grid rrhh-form-grid-three">
+                                <div class="rrhh-form-field"><label for="contrato-cargo">Cargo <span>*</span></label><select class="input-control" id="contrato-cargo" th:field="*{cargoId}" required><option value="">Selecciona un cargo</option><option th:each="cargo : ${cargos}" th:value="${cargo.id}" th:text="${cargo.nombre}"></option></select></div>
+                                <div class="rrhh-form-field"><label for="contrato-area">Área <span>*</span></label><select class="input-control" id="contrato-area" th:field="*{areaId}" required><option value="">Selecciona un área</option><option th:each="area : ${areas}" th:value="${area.id}" th:text="${area.nombre}"></option></select></div>
                                 <div class="rrhh-form-field"><label for="tipo-contrato">Tipo de contrato <span>*</span></label><select class="input-control" id="tipo-contrato" th:field="*{tipoContratoId}" required><option value="">Selecciona</option><option th:each="tipo : ${tiposContrato}" th:value="${tipo.id}" th:text="${tipo.nombre}"></option></select></div>
                                 <div class="rrhh-form-field"><label for="tipo-pago">Tipo de pago <span>*</span></label><select class="input-control" id="tipo-pago" th:field="*{tipoPagoId}" required><option value="">Selecciona</option><option th:each="tipo : ${tiposPago}" th:value="${tipo.id}" th:text="${tipo.nombre}"></option></select></div>
                                 <div class="rrhh-contract-state-note"><span class="material-symbols" aria-hidden="true">event_repeat</span><span>Estado calculado automáticamente a partir de las fechas: Programado, Vigente o Vencido.</span></div>

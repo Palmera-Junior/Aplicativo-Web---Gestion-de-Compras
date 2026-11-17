@@ -149,8 +149,6 @@ public class EmpleadoRegistroWorkflowService {
         validarTamanoTotalAdjuntos(archivos);
         ContratoEmpleado contrato = obtenerContratoBorrador(idEmpleado, form);
         mapearContrato(form, contrato);
-        contrato.setCargo(empleado.getCargo());
-        contrato.setArea(empleado.getArea());
         validarMinimosBorrador(contrato);
         contrato.setEmpleado(empleado);
         contrato.setEstado(EstadoContratoEmpleado.BORRADOR);
@@ -174,8 +172,6 @@ public class EmpleadoRegistroWorkflowService {
         validarTamanoTotalAdjuntos(archivos);
         ContratoEmpleado contrato = obtenerContratoBorrador(idEmpleado, form);
         mapearContrato(form, contrato);
-        contrato.setCargo(empleado.getCargo());
-        contrato.setArea(empleado.getArea());
         contrato.setEmpleado(empleado);
         guardarRequisitos(
                 empleado, form.getTiposAdjuntoRequeridos(), EtapaAdjuntoEmpleado.CONTRATACION);
@@ -208,6 +204,12 @@ public class EmpleadoRegistroWorkflowService {
                 form.getTipoContratoId(), tipoContratoRepository, "tipo de contrato"));
         contrato.setTipoPago(buscarCatalogoOpcional(
                 form.getTipoPagoId(), tipoPagoRepository, "tipo de pago"));
+        contrato.setArea(form.getAreaId() == null ? null : areaRepository
+                .findByIdAndActivoTrue(form.getAreaId())
+                .orElseThrow(() -> new IllegalArgumentException("Selecciona un área activa")));
+        contrato.setCargo(form.getCargoId() == null ? null : cargoRepository
+                .findByIdAndActivoTrue(form.getCargoId())
+                .orElseThrow(() -> new IllegalArgumentException("Selecciona un cargo activo")));
         contrato.setEntidadBancaria(buscarCatalogoOpcional(
                 form.getEntidadBancariaId(), entidadBancariaRepository, "entidad bancaria"));
         contrato.setNumeroCuentaBancaria(normalizar(form.getNumeroCuentaBancaria()));
@@ -307,6 +309,8 @@ public class EmpleadoRegistroWorkflowService {
         form.setVersionContrato(contrato.getVersion());
         form.setTipoContratoId(contrato.getTipoContrato() == null
                 ? null : contrato.getTipoContrato().getId());
+        form.setAreaId(contrato.getArea() == null ? null : contrato.getArea().getId());
+        form.setCargoId(contrato.getCargo() == null ? null : contrato.getCargo().getId());
         form.setTipoPagoId(contrato.getTipoPago() == null
                 ? null : contrato.getTipoPago().getId());
         form.setEntidadBancariaId(contrato.getEntidadBancaria() == null
@@ -383,8 +387,6 @@ public class EmpleadoRegistroWorkflowService {
         empleado.setDepartamento(normalizar(form.getDepartamento()));
         empleado.setProfesion(normalizar(form.getProfesion()));
         empleado.setSubcentro(normalizar(form.getSubcentro()));
-        empleado.setArea(buscarCatalogo(areaRepository.findById(form.getAreaId()), "área"));
-        empleado.setCargo(buscarCatalogo(cargoRepository.findById(form.getCargoId()), "cargo"));
         empleado.setCentroCosto(buscarCatalogo(
                 centroCostoRepository.findById(form.getCentroCostoId()), "centro de costo"));
         if (form.getNivelEducativoId() != null) {
@@ -532,11 +534,9 @@ public class EmpleadoRegistroWorkflowService {
                 || vacio(form.getNumeroDocumento())
                 || vacio(form.getPrimerNombre())
                 || vacio(form.getPrimerApellido())
-                || form.getAreaId() == null
-                || form.getCargoId() == null
                 || form.getCentroCostoId() == null) {
             throw new IllegalArgumentException(
-                    "Completa tipo y número de documento, nombres, apellidos, área, cargo y centro de costo");
+                    "Completa tipo y número de documento, nombres, apellidos y centro de costo");
         }
         ValidacionDatosEmpleado.validarSoloDigitos(
                 form.getNumeroDocumento(), "El número de documento");

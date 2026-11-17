@@ -62,6 +62,15 @@ public class ContratoEmpleadoService implements IContratoEmpleadoService {
     }
 
     @Override
+    public List<ContratoEmpleado> listarVigentesPorEmpleados(List<Integer> idsEmpleados) {
+        if (idsEmpleados == null || idsEmpleados.isEmpty()) {
+            return List.of();
+        }
+        return contratoRepository.findAllByEmpleado_IdEmpleadoInAndEstado(
+                idsEmpleados, EstadoContratoEmpleado.VIGENTE);
+    }
+
+    @Override
     public Optional<ContratoEmpleado> buscarPorId(Integer idContratoEmpleado) {
         return contratoRepository.findById(idContratoEmpleado);
     }

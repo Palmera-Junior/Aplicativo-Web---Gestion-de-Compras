@@ -28,7 +28,9 @@ import com.palmera_junior.gestion_compras.rrhh.entity.EmpleadoAdjunto;
 import com.palmera_junior.gestion_compras.rrhh.entity.EmpleadoFoto;
 import com.palmera_junior.gestion_compras.rrhh.entity.EmpleadoQrToken;
 import com.palmera_junior.gestion_compras.rrhh.entity.EstadoEmpleado;
+import com.palmera_junior.gestion_compras.rrhh.entity.EstadoContratoEmpleado;
 import com.palmera_junior.gestion_compras.rrhh.repository.EmpleadoAdjuntoRepository;
+import com.palmera_junior.gestion_compras.rrhh.repository.ContratoEmpleadoRepository;
 import com.palmera_junior.gestion_compras.rrhh.repository.EmpleadoFotoRepository;
 import com.palmera_junior.gestion_compras.rrhh.repository.EmpleadoQrTokenRepository;
 import com.palmera_junior.gestion_compras.repository.EmpleadoRepository;
@@ -37,15 +39,18 @@ import com.palmera_junior.gestion_compras.repository.EmpleadoRepository;
 public class EmpleadoQrService {
 
     private final EmpleadoRepository empleadoRepository;
+    private final ContratoEmpleadoRepository contratoEmpleadoRepository;
     private final EmpleadoQrTokenRepository tokenRepository;
     private final EmpleadoFotoRepository fotoRepository;
     private final EmpleadoAdjuntoRepository adjuntoRepository;
     private final SecureRandom secureRandom = new SecureRandom();
 
     public EmpleadoQrService(EmpleadoRepository empleadoRepository,
+            ContratoEmpleadoRepository contratoEmpleadoRepository,
             EmpleadoQrTokenRepository tokenRepository, EmpleadoFotoRepository fotoRepository,
             EmpleadoAdjuntoRepository adjuntoRepository) {
         this.empleadoRepository = empleadoRepository;
+        this.contratoEmpleadoRepository = contratoEmpleadoRepository;
         this.tokenRepository = tokenRepository;
         this.fotoRepository = fotoRepository;
         this.adjuntoRepository = adjuntoRepository;
@@ -137,12 +142,14 @@ public class EmpleadoQrService {
     @Transactional(readOnly = true)
     public TarjetaPublica consultar(String secreto) {
         Empleado empleado = validarToken(secreto).getEmpleado();
-        String archivoArl = adjuntoRepository
+        boolean tieneArlPublica = adjuntoRepository
                 .findAllByEmpleado_IdEmpleadoAndPublicoQrTrueAndVigenteTrueOrderByFechaCargaDesc(
                         empleado.getIdEmpleado()).stream()
-                .filter(adjunto -> "3.1".equals(adjunto.getTipoAdjunto().getCodigo()))
-                .map(EmpleadoAdjunto::getNombreOriginal)
-                .findFirst().orElse(null);
+                .anyMatch(adjunto -> "3.1".equals(adjunto.getTipoAdjunto().getCodigo()));
+        var contratoVigente = contratoEmpleadoRepository.findByEmpleado_IdEmpleadoAndEstado(
+                empleado.getIdEmpleado(), EstadoContratoEmpleado.VIGENTE).orElse(null);
+        String nombreArl = contratoVigente == null || contratoVigente.getArl() == null
+                ? null : contratoVigente.getArl().getNombre();
         String sede = empleado.getCentroCosto() == null || empleado.getCentroCosto().getSede() == null
                 ? null : empleado.getCentroCosto().getSede().getNombre();
         String fotoUrl = fotoRepository.existsById(empleado.getIdEmpleado())
@@ -150,15 +157,17 @@ public class EmpleadoQrService {
                 : null;
         return new TarjetaPublica(empleado.getPrimerNombre(), empleado.getSegundoNombre(),
                 empleado.getPrimerApellido(), empleado.getSegundoApellido(),
-                empleado.getCargo() == null ? null : empleado.getCargo().getNombre(),
-                empleado.getArea() == null ? null : empleado.getArea().getNombre(),
+                contratoVigente == null || contratoVigente.getCargo() == null
+                        ? "SIN DEFINIR" : contratoVigente.getCargo().getNombre(),
+                contratoVigente == null || contratoVigente.getArea() == null
+                        ? "SIN DEFINIR" : contratoVigente.getArea().getNombre(),
                 sede, empleado.getEstado().getEtiqueta(),
                 empleado.getTipoSangre() == null || empleado.getRh() == null ? null
                         : empleado.getTipoSangre().name()
                                 + (empleado.getRh() == Rh.POSITIVO ? "+" : "-"),
-                archivoArl,
+                nombreArl == null ? "no especificada" : nombreArl,
                 fotoUrl,
-                archivoArl == null ? null : "/recursos-humanos/tarjeta/" + secreto + "/arl");
+                !tieneArlPublica ? null : "/recursos-humanos/tarjeta/" + secreto + "/arl");
     }
 
     @Transactional(readOnly = true)

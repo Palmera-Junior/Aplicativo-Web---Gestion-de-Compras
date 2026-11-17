@@ -10,7 +10,7 @@ import com.palmera_junior.gestion_compras.rrhh.entity.EmpleadoQrToken;
 public interface EmpleadoQrTokenRepository extends JpaRepository<EmpleadoQrToken, Long> {
 
     @EntityGraph(attributePaths = {
-            "empleado.cargo", "empleado.area", "empleado.centroCosto.sede"
+            "empleado.centroCosto.sede"
     })
     Optional<EmpleadoQrToken> findByTokenHashAndActivoTrue(String tokenHash);
 

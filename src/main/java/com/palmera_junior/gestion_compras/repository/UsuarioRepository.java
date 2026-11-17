@@ -23,7 +23,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
      */
     @EntityGraph(attributePaths = {
             "rol", "rol.permisos", "permisosDirectos", "permisosDirectos.permiso", "sedes",
-            "empleado", "empleado.cargo"
+            "empleado"
     })
     Optional<Usuario> findByNombreUsuario(String nombreUsuario);
 
@@ -33,7 +33,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
      */
     @EntityGraph(attributePaths = {
             "rol", "rol.permisos", "permisosDirectos", "permisosDirectos.permiso", "sedes",
-            "empleado", "empleado.cargo"
+            "empleado"
     })
     @Query("""
                 SELECT u
@@ -52,7 +52,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
     /** Lista usuarios cuya sede principal o alguna sede asignada está entre las indicadas. */
     @EntityGraph(attributePaths = {
             "rol", "rol.permisos", "permisosDirectos", "permisosDirectos.permiso", "sedes",
-            "empleado", "empleado.cargo"
+            "empleado"
     })
     @Query("""
             SELECT DISTINCT u

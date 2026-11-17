@@ -94,13 +94,6 @@ public class Usuario {
     }
 
     @Transient
-    public String getCargo() {
-        return empleado == null || empleado.getCargo() == null
-                ? null
-                : empleado.getCargo().getNombre();
-    }
-
-    @Transient
     @JsonIgnore
     public String getSedeIdsCsv() {
         Set<Integer> ids = getIdsSedesAsignadas();

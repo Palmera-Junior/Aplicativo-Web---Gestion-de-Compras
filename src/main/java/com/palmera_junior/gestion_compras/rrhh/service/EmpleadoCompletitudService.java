@@ -64,12 +64,6 @@ public class EmpleadoCompletitudService {
             faltantes.add("Nivel educativo");
         }
         agregarSiVacio(faltantes, "Profesión", empleado.getProfesion());
-        if (empleado.getArea() == null) {
-            faltantes.add("Área");
-        }
-        if (empleado.getCargo() == null) {
-            faltantes.add("Cargo");
-        }
         if (empleado.getCentroCosto() == null) {
             faltantes.add("Centro de costo");
         }
@@ -94,6 +88,12 @@ public class EmpleadoCompletitudService {
         }
         if (contrato.getTipoContrato() == null) {
             faltantes.add("Tipo de contrato");
+        }
+        if (contrato.getCargo() == null) {
+            faltantes.add("Cargo");
+        }
+        if (contrato.getArea() == null) {
+            faltantes.add("Área");
         }
         if (contrato.getTipoPago() == null) {
             faltantes.add("Tipo de pago");

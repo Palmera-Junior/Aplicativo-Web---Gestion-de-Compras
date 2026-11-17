@@ -16,7 +16,7 @@ import com.palmera_junior.gestion_compras.entity.TipoDocumentoEmpleado;
 
 public interface EmpleadoRepository extends JpaRepository<Empleado, Integer> {
 
-    @EntityGraph(attributePaths = {"cargo", "area", "centroCosto"})
+    @EntityGraph(attributePaths = {"centroCosto"})
     java.util.List<Empleado> findAllByOrderByPrimerApellidoAscPrimerNombreAsc();
 
     @Query("""
@@ -32,7 +32,7 @@ public interface EmpleadoRepository extends JpaRepository<Empleado, Integer> {
     java.util.List<Empleado> buscarPorNombre(@Param("termino") String termino, Pageable pageable);
 
     @Override
-    @EntityGraph(attributePaths = {"cargo", "area", "centroCosto", "nivelEducativo"})
+    @EntityGraph(attributePaths = {"centroCosto", "nivelEducativo"})
     Optional<Empleado> findById(Integer id);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)

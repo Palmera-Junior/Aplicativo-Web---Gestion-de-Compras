@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -101,6 +102,9 @@ public class RecursosHumanosController {
     private final ArlRepository arlRepository;
     private final CajaCompensacionRepository cajaCompensacionRepository;
 
+    @Value("${rrhh.qr.base-url:}")
+    private String qrBaseUrl = "";
+
     @Autowired
     public RecursosHumanosController(
             IEmpleadoService empleadoService,
@@ -192,7 +196,18 @@ public class RecursosHumanosController {
             editarEmpleadoId = null;
         }
         boolean formularioEnFlash = !nuevoEmpleado && model.containsAttribute("registroEmpleado");
+        if (contratoEmpleadoService != null) {
+            contratoEmpleadoService.sincronizarEstados();
+        }
         List<Empleado> empleados = empleadoService.listar();
+        java.util.Map<Integer, com.palmera_junior.gestion_compras.rrhh.entity.ContratoEmpleado>
+                contratosVigentesPorEmpleado = new java.util.HashMap<>();
+        if (contratoEmpleadoService != null && !empleados.isEmpty()) {
+            contratoEmpleadoService.listarVigentesPorEmpleados(empleados.stream()
+                    .map(Empleado::getIdEmpleado).toList())
+                    .forEach(contrato -> contratosVigentesPorEmpleado.put(
+                            contrato.getEmpleado().getIdEmpleado(), contrato));
+        }
         Usuario actor = usuarioService.obtenerUsuarioAutenticado(authentication);
         Set<String> permisos = actor.getPermisos().stream()
                 .map(permiso -> permiso.getCodigo())
@@ -205,6 +220,7 @@ public class RecursosHumanosController {
                 && empleadoEnEdicion.getEstado() == EstadoEmpleado.PROCESO_CONTRATACION;
 
         model.addAttribute("empleados", empleados);
+        model.addAttribute("contratosVigentesPorEmpleado", contratosVigentesPorEmpleado);
         model.addAttribute("herramientasCatalogo",
                 asignacionHerramientaService.listarCatalogoActivo());
         model.addAttribute("asignacionesHerramientas", List.of());
@@ -305,9 +321,6 @@ public class RecursosHumanosController {
         }
 
         if (empleadoId != null) {
-            if (contratoEmpleadoService != null) {
-                contratoEmpleadoService.sincronizarEstados();
-            }
             Empleado empleado = empleadoService.buscarPorId(empleadoId)
                     .orElseThrow(() -> new ResponseStatusException(
                             HttpStatus.NOT_FOUND, "No existe el empleado solicitado"));
@@ -716,10 +729,7 @@ public class RecursosHumanosController {
     public String renovarQr(@PathVariable Integer id, Authentication authentication,
             HttpServletRequest request, RedirectAttributes redirectAttributes) {
         try {
-            String urlBase = request.getScheme() + "://" + request.getServerName()
-                    + (request.getServerPort() == 80 || request.getServerPort() == 443
-                            ? "" : ":" + request.getServerPort())
-                    + request.getContextPath() + "/recursos-humanos/tarjeta/";
+            String urlBase = urlBaseQr(request) + "/recursos-humanos/tarjeta/";
             boolean yaTeniaQr = empleadoQrService.tieneQrActivo(id);
             empleadoQrService.renovar(id,
                     usuarioService.obtenerUsuarioAutenticado(authentication), urlBase);
@@ -817,10 +827,7 @@ public class RecursosHumanosController {
             HttpServletRequest request) {
         try {
             empleadoQrService.consultar(token);
-            String url = request.getScheme() + "://" + request.getServerName()
-                    + (request.getServerPort() == 80 || request.getServerPort() == 443
-                            ? "" : ":" + request.getServerPort())
-                    + request.getContextPath() + "/recursos-humanos/tarjeta/" + token;
+            String url = urlBaseQr(request) + "/recursos-humanos/tarjeta/" + token;
             var hints = new java.util.HashMap<EncodeHintType, Object>();
             hints.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.M);
             hints.put(EncodeHintType.MARGIN, 2);
@@ -874,6 +881,22 @@ public class RecursosHumanosController {
                 .header("X-Robots-Tag", "noindex, nofollow, noarchive")
                 .header(HttpHeaders.CACHE_CONTROL, "no-store, no-cache, must-revalidate")
                 .body(new ByteArrayResource(bytes));
+    }
+
+    private String urlBaseQr(HttpServletRequest request) {
+        String base = qrBaseUrl == null || qrBaseUrl.isBlank()
+                ? request.getScheme() + "://" + request.getServerName()
+                        + (request.getServerPort() == 80 || request.getServerPort() == 443
+                                ? "" : ":" + request.getServerPort())
+                : qrBaseUrl.trim();
+        while (base.endsWith("/")) {
+            base = base.substring(0, base.length() - 1);
+        }
+        String contextPath = request.getContextPath();
+        if (contextPath != null && !contextPath.isEmpty() && !base.endsWith(contextPath)) {
+            base += contextPath;
+        }
+        return base;
     }
 
     @GetMapping({
@@ -983,8 +1006,6 @@ public class RecursosHumanosController {
         form.setNivelEducativoId(empleado.getNivelEducativo() == null
                 ? null : empleado.getNivelEducativo().getId());
         form.setProfesion(empleado.getProfesion());
-        form.setAreaId(empleado.getArea() == null ? null : empleado.getArea().getId());
-        form.setCargoId(empleado.getCargo() == null ? null : empleado.getCargo().getId());
         form.setCentroCostoId(empleado.getCentroCosto() == null
                 ? null : empleado.getCentroCosto().getIdCentroCosto());
         form.setSubcentro(empleado.getSubcentro());

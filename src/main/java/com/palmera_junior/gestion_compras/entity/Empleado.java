@@ -2,8 +2,6 @@ package com.palmera_junior.gestion_compras.entity;
 
 import java.time.LocalDate;
 
-import com.palmera_junior.gestion_compras.rrhh.entity.Area;
-import com.palmera_junior.gestion_compras.rrhh.entity.Cargo;
 import com.palmera_junior.gestion_compras.rrhh.entity.EstadoEmpleado;
 import com.palmera_junior.gestion_compras.rrhh.entity.NivelEducativo;
 
@@ -55,16 +53,6 @@ public class Empleado {
 
     @Column(name = "segundo_apellido", length = 100)
     private String segundoApellido;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_cargo")
-    @ToString.Exclude
-    private Cargo cargo;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_area")
-    @ToString.Exclude
-    private Area area;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_centro_costo")
