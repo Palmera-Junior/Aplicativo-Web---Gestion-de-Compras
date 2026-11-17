@@ -77,12 +77,15 @@ public class PasswordResetController {
         model.addAttribute("token", token);
         model.addAttribute("restablecimientoExitoso", false);
         model.addAttribute("tokenValido", resultado != ResultadoRestablecimiento.TOKEN_INVALIDO);
-        model.addAttribute("errorRestablecimiento", switch (resultado) {
-            case CONFIRMACION_INVALIDA -> "Las contraseñas no coinciden.";
-            case CONTRASENA_INVALIDA -> "Usa al menos 12 caracteres y máximo 72 bytes UTF-8.";
-            case LIMITADO -> "Demasiados intentos. Espera 15 minutos e inténtalo nuevamente.";
-            default -> "El enlace no es válido, ya fue usado o expiró. Solicita uno nuevo.";
-        });
+        if (resultado != ResultadoRestablecimiento.TOKEN_INVALIDO) {
+            model.addAttribute("errorRestablecimiento", switch (resultado) {
+                case CONFIRMACION_INVALIDA -> "Las contraseñas no coinciden.";
+                case CONTRASENA_INVALIDA -> "Usa al menos 12 caracteres y máximo 72 bytes UTF-8.";
+                case LIMITADO -> "Demasiados intentos. Espera 15 minutos e inténtalo nuevamente.";
+                case EXITOSO, TOKEN_INVALIDO ->
+                        throw new IllegalStateException("Resultado de restablecimiento inesperado.");
+            });
+        }
         return "password-reset";
     }
 
