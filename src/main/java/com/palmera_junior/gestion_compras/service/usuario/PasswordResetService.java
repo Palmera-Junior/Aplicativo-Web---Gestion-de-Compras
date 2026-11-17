@@ -140,11 +140,8 @@ public class PasswordResetService {
                 ? new TokenRecuperacion(rs.getLong("id_password_reset_token"),
                         rs.getInt("id_usuario"), rs.getTimestamp("usado_en"))
                 : null, hash(rawToken));
-        if (token == null) {
+        if (token == null || token.usadoEn() != null) {
             return ResultadoRestablecimiento.TOKEN_INVALIDO;
-        }
-        if (token.usadoEn() != null) {
-            return ResultadoRestablecimiento.EXITOSO;
         }
         if (nuevaContrasena == null || !nuevaContrasena.equals(confirmacion)) {
             return ResultadoRestablecimiento.CONFIRMACION_INVALIDA;

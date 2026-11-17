@@ -65,14 +65,14 @@ public class PasswordResetController {
     @PostMapping("/password/reset")
     public String restablecer(@RequestParam(required = false) String token,
             @RequestParam String nuevaContrasena, @RequestParam String confirmarContrasena,
-            HttpServletRequest request, HttpServletResponse response, Model model,
-            RedirectAttributes redirectAttributes) {
+            HttpServletRequest request, HttpServletResponse response, Model model) {
         protegerPaginaDeToken(response);
         ResultadoRestablecimiento resultado = passwordResetService.restablecer(
                 token, nuevaContrasena, confirmarContrasena, request.getRemoteAddr());
         if (resultado == ResultadoRestablecimiento.EXITOSO) {
-            redirectAttributes.addFlashAttribute("restablecimientoExitoso", true);
-            return "redirect:/password/reset/completed";
+            model.addAttribute("restablecimientoExitoso", true);
+            model.addAttribute("tokenValido", false);
+            return "password-reset";
         }
         model.addAttribute("token", token);
         model.addAttribute("restablecimientoExitoso", false);
