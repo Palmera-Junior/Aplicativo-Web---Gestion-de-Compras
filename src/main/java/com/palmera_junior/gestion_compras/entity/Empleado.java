@@ -1,6 +1,7 @@
 package com.palmera_junior.gestion_compras.entity;
 
 import java.time.LocalDate;
+import java.util.Locale;
 
 import com.palmera_junior.gestion_compras.rrhh.entity.EstadoEmpleado;
 import com.palmera_junior.gestion_compras.rrhh.entity.NivelEducativo;
@@ -15,6 +16,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import lombok.Getter;
@@ -131,4 +134,40 @@ public class Empleado {
     @Version
     @Column(nullable = false)
     private Long version;
+
+    @PrePersist
+    @PreUpdate
+    void normalizarNombres() {
+        primerNombre = normalizarNombre(primerNombre);
+        segundoNombre = normalizarNombre(segundoNombre);
+        primerApellido = normalizarNombre(primerApellido);
+        segundoApellido = normalizarNombre(segundoApellido);
+    }
+
+    private static String normalizarNombre(String nombre) {
+        if (nombre == null || nombre.isBlank()) {
+            return nombre;
+        }
+
+        String minusculas = nombre.trim().toLowerCase(Locale.forLanguageTag("es"));
+        StringBuilder normalizado = new StringBuilder(minusculas.length());
+        boolean inicioDePalabra = true;
+
+        for (int indice = 0; indice < minusculas.length();) {
+            int caracter = minusculas.codePointAt(indice);
+            if (inicioDePalabra && Character.isLetter(caracter)) {
+                normalizado.appendCodePoint(Character.toUpperCase(caracter));
+                inicioDePalabra = false;
+            } else {
+                normalizado.appendCodePoint(caracter);
+                inicioDePalabra = Character.isWhitespace(caracter)
+                        || caracter == '-'
+                        || caracter == '\''
+                        || caracter == '’';
+            }
+            indice += Character.charCount(caracter);
+        }
+
+        return normalizado.toString();
+    }
 }
