@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.palmera_junior.gestion_compras.entity.Empleado;
 import com.palmera_junior.gestion_compras.entity.Permiso;
+import com.palmera_junior.gestion_compras.entity.Rh;
 import com.palmera_junior.gestion_compras.entity.Usuario;
 import com.palmera_junior.gestion_compras.rrhh.entity.EmpleadoAdjunto;
 import com.palmera_junior.gestion_compras.rrhh.entity.EmpleadoFoto;
@@ -152,7 +153,10 @@ public class EmpleadoQrService {
                 empleado.getCargo() == null ? null : empleado.getCargo().getNombre(),
                 empleado.getArea() == null ? null : empleado.getArea().getNombre(),
                 sede, empleado.getEstado().getEtiqueta(),
-                empleado.getRh() == null ? null : empleado.getRh().name(), archivoArl,
+                empleado.getTipoSangre() == null || empleado.getRh() == null ? null
+                        : empleado.getTipoSangre().name()
+                                + (empleado.getRh() == Rh.POSITIVO ? "+" : "-"),
+                archivoArl,
                 fotoUrl,
                 archivoArl == null ? null : "/recursos-humanos/tarjeta/" + secreto + "/arl");
     }

@@ -194,7 +194,7 @@
         <div><dt>Área</dt><dd th:text="${tarjeta.area ?: '—'}">Área</dd></div>
         <div><dt>Sede</dt><dd th:text="${tarjeta.sede ?: '—'}">Sede</dd></div>
         <div><dt>Estado</dt><dd th:text="${tarjeta.estado}">Estado</dd></div>
-        <div><dt>Factor RH</dt><dd th:text="${tarjeta.rh ?: '—'}">RH</dd></div>
+        <div><dt>RH</dt><dd th:text="${tarjeta.rh ?: '—'}">O+</dd></div>
     </dl>
     <a th:if="${tarjeta.arlUrl != null}" th:href="${tarjeta.arlUrl}"
        target="_blank" rel="nofollow noopener noreferrer">Abrir y ver certificado ARL</a>
