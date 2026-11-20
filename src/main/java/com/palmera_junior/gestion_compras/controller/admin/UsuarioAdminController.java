@@ -21,12 +21,14 @@ import java.util.List;
 import java.util.LinkedHashMap;
 
 import com.palmera_junior.gestion_compras.dto.EmpleadoAutocompleteDTO;
+import com.palmera_junior.gestion_compras.dto.UsuarioPermisoAutocompleteDTO;
 import com.palmera_junior.gestion_compras.entity.Empleado;
 import com.palmera_junior.gestion_compras.entity.Permiso;
 import com.palmera_junior.gestion_compras.entity.Usuario;
 import com.palmera_junior.gestion_compras.repository.EmpleadoRepository;
 import com.palmera_junior.gestion_compras.repository.PermisoRepository;
 import com.palmera_junior.gestion_compras.repository.RolRepository;
+import com.palmera_junior.gestion_compras.repository.UsuarioRepository;
 import com.palmera_junior.gestion_compras.service.usuario.IUsuarioService;
 
 /**
@@ -41,16 +43,18 @@ public class UsuarioAdminController {
     private final PermisoRepository permisoRepository;
     private final RolRepository rolRepository;
     private final EmpleadoRepository empleadoRepository;
+    private final UsuarioRepository usuarioRepository;
 
     /**
      * Constructor para inyección de dependencias del servicio de usuarios.
      */
     public UsuarioAdminController(IUsuarioService usuarioService, PermisoRepository permisoRepository,
-            RolRepository rolRepository, EmpleadoRepository empleadoRepository) {
+            RolRepository rolRepository, EmpleadoRepository empleadoRepository, UsuarioRepository usuarioRepository) {
         this.usuarioService = usuarioService;
         this.permisoRepository = permisoRepository;
         this.rolRepository = rolRepository;
         this.empleadoRepository = empleadoRepository;
+        this.usuarioRepository = usuarioRepository;
     }
 
     @GetMapping("/admin/catalogos/permisos")
@@ -61,19 +65,9 @@ public class UsuarioAdminController {
             @RequestParam(defaultValue = "usuarios") String vista,
             @RequestParam(required = false) String success,
             @RequestParam(required = false) String error) {
-        List<Usuario> usuarios = usuarioService.listarTodos().stream()
-                .sorted(java.util.Comparator.comparing(Usuario::getNombreUsuario,
-                        java.util.Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)))
-                .toList();
-        Usuario usuarioSeleccionado;
-        if (usuarioId == null && !usuarios.isEmpty()) {
-            usuarioSeleccionado = usuarios.get(0);
-        } else {
-            usuarioSeleccionado = usuarios.stream()
-                    .filter(usuario -> usuarioId != null && usuarioId.equals(usuario.getIdUsuario()))
-                    .findFirst()
-                    .orElse(null);
-        }
+        Usuario usuarioSeleccionado = usuarioId == null
+                ? null
+                : usuarioRepository.findById(usuarioId).orElse(null);
         List<com.palmera_junior.gestion_compras.entity.Rol> roles = rolRepository.findAll().stream()
                 .sorted(java.util.Comparator.comparing(com.palmera_junior.gestion_compras.entity.Rol::getCodigo,
                         java.util.Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)))
@@ -82,7 +76,7 @@ public class UsuarioAdminController {
                 ? null
                 : roles.stream().filter(rol -> rolId.equals(rol.getIdRol())).findFirst().orElse(null);
 
-        model.addAttribute("usuarios", usuarios);
+        model.addAttribute("hayUsuarios", usuarioRepository.count() > 0);
         model.addAttribute("permisosPorModulo", agruparPermisosPorModulo(permisoRepository.findAll()));
         model.addAttribute("usuarioSeleccionado", usuarioSeleccionado);
         model.addAttribute("usuarioId", usuarioSeleccionado == null ? null : usuarioSeleccionado.getIdUsuario());
@@ -97,6 +91,17 @@ public class UsuarioAdminController {
                 : usuarioId != null && usuarioSeleccionado == null ? "El usuario seleccionado no existe."
                 : rolId != null && rolSeleccionado == null ? "El rol seleccionado no existe." : null);
         return "permisos";
+    }
+
+    @GetMapping("/admin/catalogos/permisos/usuarios/buscar")
+    @PreAuthorize("hasRole('SUPERADMINISTRADOR')")
+    @ResponseBody
+    public List<UsuarioPermisoAutocompleteDTO> buscarUsuariosParaPermisos(
+            @RequestParam(required = false) String query) {
+        if (query == null || query.trim().length() < 3) {
+            return List.of();
+        }
+        return usuarioRepository.buscarParaPermisos(query.trim(), PageRequest.of(0, 8));
     }
 
     static Map<String, List<Permiso>> agruparPermisosPorModulo(List<Permiso> permisos) {

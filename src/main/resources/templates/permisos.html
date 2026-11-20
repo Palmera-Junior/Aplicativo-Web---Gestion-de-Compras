@@ -49,23 +49,30 @@
                     <section th:if="${vistaPermisos == 'usuarios'}" class="permission-tab-panel">
                         <form class="permission-user-picker" method="get" th:action="@{/admin/catalogos/permisos}">
                             <input type="hidden" name="vista" value="usuarios">
+                            <input type="hidden" id="usuarioId" name="usuarioId"
+                                th:value="${usuarioSeleccionado != null ? usuarioSeleccionado.idUsuario : ''}">
                             <div class="permission-user-picker-field">
-                                <label for="usuarioId">Seleccionar usuario</label>
-                                <select id="usuarioId" name="usuarioId" class="input-control" required>
-                                    <option value="" disabled th:selected="${usuarioSeleccionado == null}">Selecciona un usuario</option>
-                                    <option th:each="usuario : ${usuarios}" th:value="${usuario.idUsuario}"
-                                        th:selected="${usuarioSeleccionado != null and usuarioSeleccionado.idUsuario == usuario.idUsuario}"
-                                        th:text="${usuario.nombre + ' ' + usuario.apellido + ' (' + usuario.nombreUsuario + ')'}">
-                                    </option>
-                                </select>
+                                <label for="usuarioPermisosBuscar">Seleccionar empleado</label>
+                                <div class="autocomplete-container permission-user-search">
+                                    <input id="usuarioPermisosBuscar" class="input-control" type="text"
+                                        placeholder="Escribe al menos 3 letras del nombre..." autocomplete="off"
+                                        role="combobox" aria-autocomplete="list" aria-expanded="false"
+                                        aria-controls="usuarioPermisosResultados"
+                                        th:value="${usuarioSeleccionado == null ? '' :
+                                            (usuarioSeleccionado.cedula == null ? usuarioSeleccionado.nombreUsuario :
+                                            usuarioSeleccionado.cedula + ' - ' + usuarioSeleccionado.nombre + ' ' +
+                                            usuarioSeleccionado.apellido + ' (' + usuarioSeleccionado.nombreUsuario + ')')}">
+                                    <div id="usuarioPermisosResultados" class="autocomplete-dropdown" role="listbox"
+                                        aria-label="Usuarios coincidentes"></div>
+                                </div>
                             </div>
-                            <button type="submit" class="btn-secondary">
+                            <button type="submit" class="btn-secondary" th:disabled="${usuarioSeleccionado == null}">
                                 <span class="material-symbols" aria-hidden="true">manage_search</span>
                                 Cargar permisos
                             </button>
                         </form>
 
-                        <div th:if="${usuarios.isEmpty()}" class="permission-empty-state">
+                        <div th:unless="${hayUsuarios}" class="permission-empty-state">
                             <span class="material-symbols" aria-hidden="true">person_off</span>
                             <h2>No hay usuarios registrados</h2>
                             <p>Crea un usuario antes de asignarle permisos.</p>
@@ -212,6 +219,100 @@
     </main>
     <script th:src="@{/js/security.js(v=2)}"></script>
     <script>
+        const permissionPicker = document.querySelector('.permission-user-picker');
+        const permissionSearch = document.getElementById('usuarioPermisosBuscar');
+        const permissionUserId = document.getElementById('usuarioId');
+        const permissionResults = document.getElementById('usuarioPermisosResultados');
+        const permissionLoadButton = permissionPicker?.querySelector('button[type="submit"]');
+
+        if (permissionPicker && permissionSearch && permissionUserId && permissionResults && permissionLoadButton) {
+            let permissionSearchTimer = null;
+            let permissionSearchController = null;
+
+            const hidePermissionResults = (abort = false) => {
+                window.clearTimeout(permissionSearchTimer);
+                if (abort) {
+                    permissionSearchController?.abort();
+                    permissionSearchController = null;
+                }
+                permissionResults.replaceChildren();
+                permissionResults.style.display = 'none';
+                permissionSearch.setAttribute('aria-expanded', 'false');
+            };
+
+            const showPermissionMessage = (message) => {
+                const item = document.createElement('div');
+                item.className = 'autocomplete-item usuario-empleado-sin-resultados';
+                item.textContent = message;
+                permissionResults.replaceChildren(item);
+                permissionResults.style.display = 'block';
+                permissionSearch.setAttribute('aria-expanded', 'true');
+            };
+
+            permissionSearch.addEventListener('input', () => {
+                const term = permissionSearch.value.trim();
+                hidePermissionResults(true);
+                permissionUserId.value = '';
+                permissionLoadButton.disabled = true;
+                if (term.length < 3) return;
+
+                permissionSearchTimer = window.setTimeout(async () => {
+                    const requestController = new AbortController();
+                    permissionSearchController = requestController;
+                    try {
+                        const response = await fetch(
+                            `/admin/catalogos/permisos/usuarios/buscar?query=${encodeURIComponent(term)}`,
+                            { signal: requestController.signal, headers: { Accept: 'application/json' } }
+                        );
+                        if (!response.ok) throw new Error('No fue posible buscar usuarios.');
+                        const users = await response.json();
+                        if (requestController.signal.aborted || permissionSearch.value.trim() !== term) return;
+
+                        if (!users.length) {
+                            showPermissionMessage('No se encontraron empleados con usuario.');
+                            return;
+                        }
+
+                        users.forEach((user) => {
+                            const option = document.createElement('button');
+                            option.type = 'button';
+                            option.className = 'autocomplete-item usuario-empleado-option';
+                            option.setAttribute('role', 'option');
+                            option.textContent = user.numeroDocumento
+                                ? `${user.numeroDocumento} - ${user.nombre} (${user.nombreUsuario})`
+                                : user.nombreUsuario;
+                            option.addEventListener('mousedown', (event) => event.preventDefault());
+                            option.addEventListener('click', () => {
+                                permissionUserId.value = user.idUsuario;
+                                permissionSearch.value = option.textContent;
+                                permissionLoadButton.disabled = false;
+                                hidePermissionResults(true);
+                            });
+                            permissionResults.appendChild(option);
+                        });
+                        permissionResults.style.display = 'block';
+                        permissionSearch.setAttribute('aria-expanded', 'true');
+                    } catch (error) {
+                        if (error.name !== 'AbortError') {
+                            console.error('No fue posible buscar usuarios para consultar permisos.', error);
+                            showPermissionMessage('No fue posible buscar empleados. Intenta de nuevo.');
+                        }
+                    } finally {
+                        if (permissionSearchController === requestController) {
+                            permissionSearchController = null;
+                        }
+                    }
+                }, 250);
+            });
+
+            permissionSearch.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape') hidePermissionResults(true);
+            });
+            document.addEventListener('click', (event) => {
+                if (!permissionPicker.contains(event.target)) hidePermissionResults(true);
+            });
+        }
+
         document.addEventListener('submit', async (event) => {
             const form = event.target;
             if (!(form instanceof HTMLFormElement) || !form.matches('.js-confirm-role-delete')) {

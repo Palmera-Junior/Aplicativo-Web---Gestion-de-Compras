@@ -3,12 +3,14 @@ package com.palmera_junior.gestion_compras.repository;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.repository.query.Param;
 
+import com.palmera_junior.gestion_compras.dto.UsuarioPermisoAutocompleteDTO;
 import com.palmera_junior.gestion_compras.entity.Usuario;
 
 /**
@@ -100,4 +102,30 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
     boolean existsByEmpleado_IdEmpleadoAndIdUsuarioNot(Integer idEmpleado, Integer idUsuario);
 
     boolean existsByRolIdRol(Integer idRol);
+
+    @Query("""
+            SELECT new com.palmera_junior.gestion_compras.dto.UsuarioPermisoAutocompleteDTO(
+                usuario.idUsuario,
+                CASE WHEN empleado.idEmpleado IS NULL THEN NULL ELSE TRIM(CONCAT(
+                    CONCAT(CONCAT(CONCAT(COALESCE(empleado.primerNombre, ''), ' '),
+                                  COALESCE(empleado.segundoNombre, '')), ' '),
+                    CONCAT(COALESCE(empleado.primerApellido, ''),
+                           CONCAT(' ', COALESCE(empleado.segundoApellido, ''))))) END,
+                usuario.nombreUsuario,
+                empleado.numeroDocumento)
+            FROM Usuario usuario
+            LEFT JOIN usuario.empleado empleado
+            WHERE LOWER(COALESCE(usuario.nombreUsuario, '')) LIKE LOWER(CONCAT('%', :termino, '%'))
+               OR LOWER(COALESCE(usuario.email, '')) LIKE LOWER(CONCAT('%', :termino, '%'))
+               OR LOWER(COALESCE(empleado.numeroDocumento, '')) LIKE LOWER(CONCAT('%', :termino, '%'))
+               OR LOWER(COALESCE(empleado.primerNombre, '')) LIKE LOWER(CONCAT('%', :termino, '%'))
+               OR LOWER(COALESCE(empleado.segundoNombre, '')) LIKE LOWER(CONCAT('%', :termino, '%'))
+               OR LOWER(COALESCE(empleado.primerApellido, '')) LIKE LOWER(CONCAT('%', :termino, '%'))
+               OR LOWER(COALESCE(empleado.segundoApellido, '')) LIKE LOWER(CONCAT('%', :termino, '%'))
+               OR LOWER(CONCAT(CONCAT(COALESCE(empleado.primerNombre, ''), ' '),
+                               COALESCE(empleado.primerApellido, '')))
+                    LIKE LOWER(CONCAT('%', :termino, '%'))
+            ORDER BY empleado.primerApellido, empleado.primerNombre, usuario.nombreUsuario
+            """)
+    List<UsuarioPermisoAutocompleteDTO> buscarParaPermisos(@Param("termino") String termino, Pageable pageable);
 }
