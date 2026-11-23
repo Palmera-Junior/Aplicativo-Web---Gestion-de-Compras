@@ -7,7 +7,7 @@
                 aria-expanded="false" aria-controls="main-admin-sidebar" title="Expandir navegación">
                 <span class="material-symbols" aria-hidden="true">menu</span>
             </button>
-            <div sec:authorize="hasAnyAuthority('PERM_PANEL_ADMINISTRACION', 'PERM_PRODUCTOS_GESTIONAR', 'PERM_PROVEEDORES_GESTIONAR', 'PERM_SEDES_GESTIONAR', 'PERM_CENTROS_COSTO_GESTIONAR')" class="sidebar-section">
+            <div sec:authorize="hasRole('SUPERADMINISTRADOR') or hasAuthority('PERM_PANEL_ADMINISTRACION')" class="sidebar-section">
                 <p class="sidebar-label">Principal</p>
                 <a th:href="@{/admin}" class="sidebar-link js-page-transition" aria-label="Dashboard" title="Dashboard"
                     th:classappend="${vista == 'admin' and catalogoActivo == null} ? ' is-current' : ''"

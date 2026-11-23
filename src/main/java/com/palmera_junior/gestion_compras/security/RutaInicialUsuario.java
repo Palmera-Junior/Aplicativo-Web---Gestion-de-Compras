@@ -31,6 +31,18 @@ public final class RutaInicialUsuario {
                 "PERM_RRHH_CONTRATO_ANULAR", "PERM_RRHH_ASIGNACIONES_GESTIONAR", "PERM_RRHH_QR_GESTIONAR")) {
             return Optional.of("/recursos-humanos/dashboard");
         }
+        if (autoridades.contains("PERM_PRODUCTOS_GESTIONAR")) {
+            return Optional.of("/admin/catalogos/productos");
+        }
+        if (autoridades.contains("PERM_PROVEEDORES_GESTIONAR")) {
+            return Optional.of("/admin/catalogos/proveedores");
+        }
+        if (autoridades.contains("PERM_SEDES_GESTIONAR")) {
+            return Optional.of("/admin/catalogos/sedes");
+        }
+        if (autoridades.contains("PERM_CENTROS_COSTO_GESTIONAR")) {
+            return Optional.of("/admin/catalogos/centros");
+        }
 
         return Optional.empty();
     }

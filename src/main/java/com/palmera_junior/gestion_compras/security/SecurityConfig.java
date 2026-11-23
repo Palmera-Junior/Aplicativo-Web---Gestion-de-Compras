@@ -125,12 +125,37 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                         .requestMatchers("/actuator/**").denyAll()
 
-                        .requestMatchers("/admin/**")
-                        .hasAnyAuthority(
-                                "PERM_PANEL_ADMINISTRACION",
-                                "PERM_PRODUCTOS_GESTIONAR", "PERM_PROVEEDORES_GESTIONAR",
-                                "PERM_SEDES_GESTIONAR", "PERM_CENTROS_COSTO_GESTIONAR",
-                                "ROLE_SUPERADMINISTRADOR")
+                        .requestMatchers(
+                                "/admin/catalogos/permisos",
+                                "/admin/catalogos/permisos/**",
+                                "/admin/catalogos/usuarios",
+                                "/admin/usuarios/**")
+                        .hasRole("SUPERADMINISTRADOR")
+
+                        .requestMatchers("/admin", "/admin/catalogos")
+                        .hasAnyAuthority("PERM_PANEL_ADMINISTRACION", "ROLE_SUPERADMINISTRADOR")
+
+                        .requestMatchers(
+                                "/admin/catalogos/productos",
+                                "/admin/productos/**")
+                        .hasAuthority("PERM_PRODUCTOS_GESTIONAR")
+
+                        .requestMatchers(
+                                "/admin/catalogos/proveedores",
+                                "/admin/proveedores/**")
+                        .hasAuthority("PERM_PROVEEDORES_GESTIONAR")
+
+                        .requestMatchers(
+                                "/admin/catalogos/sedes",
+                                "/admin/sedes/**")
+                        .hasAuthority("PERM_SEDES_GESTIONAR")
+
+                        .requestMatchers(
+                                "/admin/catalogos/centros",
+                                "/admin/centros-costo/**")
+                        .hasAuthority("PERM_CENTROS_COSTO_GESTIONAR")
+
+                        .requestMatchers("/admin/**").denyAll()
 
                         .requestMatchers("/polizas", "/polizas/**")
                         .hasAnyAuthority(

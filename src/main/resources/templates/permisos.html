@@ -87,7 +87,7 @@
                                 <span class="permission-user-avatar material-symbols" aria-hidden="true">person</span>
                                 <div>
                                     <strong th:text="${usuarioSeleccionado.nombre + ' ' + usuarioSeleccionado.apellido}">Nombre del usuario</strong>
-                                    <span th:text="${usuarioSeleccionado.nombreUsuario + ' · ' + usuarioSeleccionado.rol.codigo}">usuario · ROL</span>
+                                    <span th:text="${usuarioSeleccionado.nombreUsuario}">usuario</span>
                                 </div>
                                 <span class="permission-role-badge" th:text="${usuarioSeleccionado.rol.codigo}">ROL</span>
                             </div>
@@ -95,8 +95,8 @@
                             <fieldset class="user-permissions">
                                 <legend>Permisos efectivos del usuario</legend>
                                 <p class="user-permissions-description">
-                                    Los permisos marcados vienen del rol. Puedes concederlos o quitarlos solo para este usuario;
-                                    esas excepciones se mantienen aunque cambien los permisos del rol.
+                                    Cada permiso marcado es independiente: puede concederse o retirarse solo para este usuario.
+                                    La selección directa tiene prioridad sobre el permiso predeterminado del rol y se conserva si cambia el rol.
                                 </p>
                                 <div class="permission-modules">
                                     <section th:each="grupo : ${permisosPorModulo}" class="permission-module">
@@ -127,10 +127,6 @@
                     </section>
 
                     <section th:if="${vistaPermisos == 'roles'}" class="permission-tab-panel role-management-panel">
-                        <div class="role-management-intro">
-                            <span class="material-symbols" aria-hidden="true">info</span>
-                            <p>Los permisos del rol aplican a sus usuarios. Las excepciones configuradas en la pestaña de usuario prevalecen.</p>
-                        </div>
 
                         <div class="role-management-layout">
                             <aside class="role-list-panel">
