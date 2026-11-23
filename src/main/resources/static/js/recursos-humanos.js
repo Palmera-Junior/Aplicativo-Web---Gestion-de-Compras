@@ -1,4 +1,8 @@
         (() => {
+            const filtrosRrhh = document.querySelector(".rrhh-filters");
+            filtrosRrhh?.querySelectorAll("select").forEach((select) => {
+                select.addEventListener("change", () => filtrosRrhh.requestSubmit());
+            });
             document.querySelectorAll("dialog").forEach((dialogo) => {
                 dialogo.addEventListener("cancel", (evento) => evento.preventDefault());
             });

@@ -73,29 +73,37 @@
             </div>
             <label class="rrhh-search-field">
                 <span class="material-symbols" aria-hidden="true">search</span>
-                <input type="search" name="q" placeholder="Buscar por nombre, documento o cargo...">
+                <input type="search" name="q" th:value="${q}"
+                    placeholder="Buscar por nombre, documento o cargo...">
             </label>
             <label class="sr-only" for="rrhh-filtro-estado">Estado</label>
             <select class="input-control rrhh-filter-control" id="rrhh-filtro-estado" name="estado">
                 <option value="">Todos los estados</option>
-                <option value="REGISTRO_INICIAL">Registro inicial</option>
-                <option value="PROCESO_CONTRATACION">Proceso de contratación</option>
-                <option value="ACTIVO">Activos</option>
-                <option value="RETIRADO">Retirados</option>
+                <option value="REGISTRO_INICIAL" th:selected="${estadoSeleccionado == 'REGISTRO_INICIAL'}">Registro inicial</option>
+                <option value="PROCESO_CONTRATACION" th:selected="${estadoSeleccionado == 'PROCESO_CONTRATACION'}">Proceso de contratación</option>
+                <option value="ACTIVO" th:selected="${estadoSeleccionado == 'ACTIVO'}">Activos</option>
+                <option value="RETIRADO" th:selected="${estadoSeleccionado == 'RETIRADO'}">Retirados</option>
             </select>
             <label class="sr-only" for="rrhh-filtro-area">Área</label>
-            <select class="input-control rrhh-filter-control" id="rrhh-filtro-area" name="area">
+            <select class="input-control rrhh-filter-control" id="rrhh-filtro-area" name="areaId">
                 <option value="">Todas las áreas</option>
-                <option value="Administrativa">Administrativa</option>
-                <option value="Comercial">Comercial</option>
-                <option value="Operaciones">Operaciones</option>
+                <option th:each="areaFiltro : ${areas}"
+                    th:value="${areaFiltro.id}"
+                    th:text="${areaFiltro.nombre}"
+                    th:selected="${areaSeleccionadaId != null and areaSeleccionadaId == areaFiltro.id}">
+                    Área
+                </option>
             </select>
             <label class="sr-only" for="rrhh-filtro-sede">Sede</label>
-            <select class="input-control rrhh-filter-control rrhh-branch-filter" id="rrhh-filtro-sede" name="sede">
-                <option value="">Todas las sedes</option>
-                <option value="bogota">Bogotá</option>
-                <option value="medellin">Medellín</option>
-                <option value="cali">Cali</option>
+            <select class="input-control rrhh-filter-control rrhh-branch-filter" id="rrhh-filtro-sede" name="sedeId">
+                <option th:if="${puedeConsultarTodasLasSedes}" value="0"
+                    th:selected="${sedeFiltroId == 0}">Todas las sedes</option>
+                <option th:each="sedeFiltro : ${sedesVisibles}"
+                    th:value="${sedeFiltro.idSede}"
+                    th:text="${sedeFiltro.nombre}"
+                    th:selected="${sedeSeleccionadaId != null and sedeSeleccionadaId == sedeFiltro.idSede}">
+                    Sede
+                </option>
             </select>
             <div class="rrhh-filter-actions">
                 <button class="btn-secondary rrhh-search-button" type="submit" title="Aplicar filtros" aria-label="Aplicar filtros">

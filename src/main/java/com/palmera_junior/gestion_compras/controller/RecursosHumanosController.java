@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.Locale;
 
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +38,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import com.palmera_junior.gestion_compras.entity.Empleado;
+import com.palmera_junior.gestion_compras.entity.Sede;
+import com.palmera_junior.gestion_compras.entity.CentroCosto;
 import com.palmera_junior.gestion_compras.entity.Usuario;
 import com.palmera_junior.gestion_compras.rrhh.entity.Area;
 import com.palmera_junior.gestion_compras.rrhh.entity.Afp;
@@ -180,6 +183,17 @@ public class RecursosHumanosController {
         return "recursos-humanos-dashboard";
     }
 
+    public String principal(
+            Integer empleadoId,
+            Integer editarEmpleadoId,
+            String error,
+            boolean nuevoEmpleado,
+            Authentication authentication,
+            Model model) {
+        return principal(empleadoId, editarEmpleadoId, error, nuevoEmpleado,
+                "", null, null, null, authentication, model);
+    }
+
     @GetMapping("/recursos-humanos/principal")
     @PreAuthorize("hasAnyAuthority('PERM_RRHH_VER', 'PERM_RRHH_GESTIONAR', 'PERM_RRHH_APROBAR', "
             + "'PERM_RRHH_REGISTRO_EDITAR', 'PERM_RRHH_PERFIL_EDITAR', 'PERM_RRHH_CONTRATO_TERMINAR', "
@@ -189,6 +203,10 @@ public class RecursosHumanosController {
             @RequestParam(required = false) Integer editarEmpleadoId,
             @RequestParam(required = false) String error,
             @RequestParam(required = false, defaultValue = "false") boolean nuevoEmpleado,
+            @RequestParam(required = false, defaultValue = "") String q,
+            @RequestParam(required = false) String estado,
+            @RequestParam(required = false) Integer areaId,
+            @RequestParam(required = false) Integer sedeId,
             Authentication authentication,
             Model model) {
         if (nuevoEmpleado) {
@@ -199,7 +217,36 @@ public class RecursosHumanosController {
         if (contratoEmpleadoService != null) {
             contratoEmpleadoService.sincronizarEstados();
         }
-        List<Empleado> empleados = empleadoService.listar();
+        Usuario actor = usuarioService.obtenerUsuarioAutenticado(authentication);
+        Set<String> permisos = actor.getPermisos().stream()
+                .map(permiso -> permiso.getCodigo())
+                .collect(Collectors.toSet());
+        boolean puedeConsultarTodasLasSedes = actor.esSuperAdministrador()
+                || (actor.getSede() != null
+                        && "Sede Nacional".equalsIgnoreCase(actor.getSede().getNombre()));
+        Set<Integer> idsSedesAsignadas = actor.getIdsSedesAsignadas();
+        Set<Integer> idsSedesVisibles = puedeConsultarTodasLasSedes
+                ? centroCostoRepository.findAll().stream()
+                        .map(CentroCosto::getSede)
+                        .filter(java.util.Objects::nonNull)
+                        .map(Sede::getIdSede)
+                        .filter(java.util.Objects::nonNull)
+                        .collect(Collectors.toCollection(java.util.LinkedHashSet::new))
+                : new java.util.LinkedHashSet<>(idsSedesAsignadas);
+        Integer sedeSolicitada = Integer.valueOf(0).equals(sedeId) ? null : sedeId;
+        if (sedeSolicitada != null && !idsSedesVisibles.contains(sedeSolicitada)) {
+            throw new SecurityException("No tiene acceso a la sede seleccionada.");
+        }
+        final Integer sedeSeleccionada = sedeSolicitada == null
+                && !puedeConsultarTodasLasSedes
+                && idsSedesVisibles.size() == 1
+                    ? idsSedesVisibles.iterator().next()
+                    : sedeSolicitada;
+
+        List<Empleado> empleados = empleadoService.listar().stream()
+                .filter(empleado -> empleadoEnSedeVisible(empleado, idsSedesVisibles,
+                        sedeSeleccionada, puedeConsultarTodasLasSedes))
+                .collect(Collectors.toList());
         java.util.Map<Integer, com.palmera_junior.gestion_compras.rrhh.entity.ContratoEmpleado>
                 contratosVigentesPorEmpleado = new java.util.HashMap<>();
         if (contratoEmpleadoService != null && !empleados.isEmpty()) {
@@ -207,15 +254,28 @@ public class RecursosHumanosController {
                     .map(Empleado::getIdEmpleado).toList())
                     .forEach(contrato -> contratosVigentesPorEmpleado.put(
                             contrato.getEmpleado().getIdEmpleado(), contrato));
+            for (Empleado empleado : empleados) {
+                if (!contratosVigentesPorEmpleado.containsKey(empleado.getIdEmpleado())) {
+                    contratoEmpleadoService.listarPorEmpleado(empleado.getIdEmpleado()).stream()
+                            .findFirst()
+                            .ifPresent(contrato -> contratosVigentesPorEmpleado.put(
+                                    empleado.getIdEmpleado(), contrato));
+                }
+            }
         }
-        Usuario actor = usuarioService.obtenerUsuarioAutenticado(authentication);
-        Set<String> permisos = actor.getPermisos().stream()
-                .map(permiso -> permiso.getCodigo())
-                .collect(Collectors.toSet());
+        empleados = empleados.stream()
+                .filter(empleado -> coincideFiltrosRrhh(empleado,
+                        contratosVigentesPorEmpleado, q, estado, areaId))
+                .collect(Collectors.toList());
         Empleado empleadoEnEdicion = editarEmpleadoId == null ? null
                 : empleadoService.buscarPorId(editarEmpleadoId)
                         .orElseThrow(() -> new ResponseStatusException(
                                 HttpStatus.NOT_FOUND, "No existe el empleado solicitado"));
+        if (empleadoEnEdicion != null
+                && !empleadoEnSedeVisible(empleadoEnEdicion, idsSedesVisibles,
+                        sedeSeleccionada, puedeConsultarTodasLasSedes)) {
+            throw new SecurityException("No tiene acceso al empleado seleccionado.");
+        }
         boolean esEdicionContratacion = empleadoEnEdicion != null
                 && empleadoEnEdicion.getEstado() == EstadoEmpleado.PROCESO_CONTRATACION;
 
@@ -241,6 +301,25 @@ public class RecursosHumanosController {
         model.addAttribute("factoresRh", com.palmera_junior.gestion_compras.entity.Rh.values());
         model.addAttribute("areas", areaRepository.findAll().stream()
                 .filter(Area::isActivo).toList());
+        List<Sede> sedesVisiblesCatalogo = centroCostoRepository.findAll().stream()
+                .map(CentroCosto::getSede)
+                .filter(java.util.Objects::nonNull)
+                .collect(Collectors.collectingAndThen(
+                        Collectors.toMap(Sede::getIdSede, sede -> sede,
+                                (primera, segunda) -> primera,
+                                java.util.LinkedHashMap::new),
+                        mapa -> mapa.values().stream()
+                                .filter(sede -> idsSedesVisibles.contains(sede.getIdSede()))
+                                .sorted(java.util.Comparator.comparing(Sede::getNombre,
+                                        String.CASE_INSENSITIVE_ORDER))
+                                .toList()));
+        model.addAttribute("sedesVisibles", sedesVisiblesCatalogo);
+        model.addAttribute("puedeConsultarTodasLasSedes", puedeConsultarTodasLasSedes);
+        model.addAttribute("q", q);
+        model.addAttribute("estadoSeleccionado", estado);
+        model.addAttribute("areaSeleccionadaId", areaId);
+        model.addAttribute("sedeSeleccionadaId", sedeSeleccionada);
+        model.addAttribute("sedeFiltroId", sedeSeleccionada == null ? 0 : sedeSeleccionada);
         model.addAttribute("cargos", cargoRepository.findAll().stream()
                 .filter(Cargo::isActivo).toList());
         model.addAttribute("centrosCosto", centroCostoRepository.findAll());
@@ -324,6 +403,10 @@ public class RecursosHumanosController {
             Empleado empleado = empleadoService.buscarPorId(empleadoId)
                     .orElseThrow(() -> new ResponseStatusException(
                             HttpStatus.NOT_FOUND, "No existe el empleado solicitado"));
+            if (!empleadoEnSedeVisible(empleado, idsSedesVisibles,
+                    sedeSeleccionada, puedeConsultarTodasLasSedes)) {
+                throw new SecurityException("No tiene acceso al empleado seleccionado.");
+            }
             List<EmpleadoHistorialEstado> historial =
                     empleadoService.listarHistorialEstado(empleadoId);
             model.addAttribute("empleadoSeleccionado", empleado);
@@ -1042,5 +1125,73 @@ public class RecursosHumanosController {
         return empleados.stream()
                 .filter(empleado -> empleado.getEstado() == estado)
                 .count();
+    }
+
+    private boolean empleadoEnSedeVisible(Empleado empleado, Set<Integer> idsSedesVisibles,
+            Integer sedeSeleccionada, boolean puedeConsultarTodasLasSedes) {
+        if (empleado == null || empleado.getCentroCosto() == null
+                || empleado.getCentroCosto().getSede() == null) {
+            return puedeConsultarTodasLasSedes || idsSedesVisibles.isEmpty();
+        }
+        Integer idSedeEmpleado = empleado.getCentroCosto().getSede().getIdSede();
+        if (idSedeEmpleado == null) {
+            return puedeConsultarTodasLasSedes;
+        }
+        if (sedeSeleccionada != null) {
+            return sedeSeleccionada.equals(idSedeEmpleado);
+        }
+        return idsSedesVisibles.contains(idSedeEmpleado);
+    }
+
+    private boolean coincideFiltrosRrhh(
+            Empleado empleado,
+            java.util.Map<Integer, ContratoEmpleado> contratos,
+            String q,
+            String estado,
+            Integer areaId) {
+        if (estado != null && !estado.isBlank()) {
+            try {
+                if (empleado.getEstado() != EstadoEmpleado.valueOf(estado.trim().toUpperCase(Locale.ROOT))) {
+                    return false;
+                }
+            } catch (IllegalArgumentException ex) {
+                return false;
+            }
+        }
+
+        ContratoEmpleado contrato = contratos.get(empleado.getIdEmpleado());
+        if (areaId != null
+                && (contrato == null || contrato.getArea() == null
+                        || !areaId.equals(contrato.getArea().getId()))) {
+            return false;
+        }
+
+        if (q != null && !q.isBlank()) {
+            String termino = quitarDiacriticos(q).toLowerCase(Locale.ROOT);
+            String nombre = quitarDiacriticos(
+                    ((empleado.getPrimerNombre() == null ? "" : empleado.getPrimerNombre()) + " "
+                            + (empleado.getSegundoNombre() == null ? "" : empleado.getSegundoNombre()) + " "
+                            + (empleado.getPrimerApellido() == null ? "" : empleado.getPrimerApellido()) + " "
+                            + (empleado.getSegundoApellido() == null ? "" : empleado.getSegundoApellido()))
+                            .trim()).toLowerCase(Locale.ROOT);
+            String documento = empleado.getNumeroDocumento() == null
+                    ? "" : empleado.getNumeroDocumento();
+            String cargo = contrato != null && contrato.getCargo() != null
+                    ? quitarDiacriticos(contrato.getCargo().getNombre()).toLowerCase(Locale.ROOT)
+                    : "";
+            if (!nombre.contains(termino) && !documento.toLowerCase(Locale.ROOT).contains(termino)
+                    && !cargo.contains(termino)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private String quitarDiacriticos(String valor) {
+        if (valor == null) {
+            return "";
+        }
+        return java.text.Normalizer.normalize(valor, java.text.Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "");
     }
 }
